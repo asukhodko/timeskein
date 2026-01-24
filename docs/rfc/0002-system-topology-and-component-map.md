@@ -76,6 +76,37 @@ macOS:    [Collectors Pack] —> [Device Agent]
 Android:  [Collectors Pack] —> [Device Agent] (внутри приложения/сервиса)
 ```
 
+```mermaid
+flowchart LR
+  subgraph Windows["Windows устройство"]
+    WSurface["Desktop Surface"]
+    WAgent["Device Agent"]
+    WCollectors["Collectors Pack"]
+    WSurface <-- "local IPC" --> WAgent
+    WCollectors --> WAgent
+  end
+
+  subgraph macOS["macOS устройство"]
+    MSurface["Desktop Surface"]
+    MAgent["Device Agent"]
+    MCollectors["Collectors Pack"]
+    MSurface <-- "local IPC" --> MAgent
+    MCollectors --> MAgent
+  end
+
+  subgraph Android["Android устройство"]
+    AApp["Android App UI + embedded Agent"]
+    ACollectors["Collectors Pack"]
+    ACollectors --> AApp
+  end
+
+  Hub["Hub Backend"]
+
+  WAgent <-- "HTTPS sync" --> Hub
+  MAgent <-- "HTTPS sync" --> Hub
+  AApp <-- "HTTPS sync" --> Hub
+```
+
 Ключевые принципы:
 
 * Surface всегда общается с локальным Agent (а не напрямую с Hub).
@@ -280,6 +311,35 @@ Android:  [Collectors Pack] —> [Device Agent] (внутри приложени
 * collectors от бизнес-правил,
 * hub от платформенной специфики.
 
+```mermaid
+flowchart LR
+  subgraph Surfaces["Surfaces"]
+    Desktop["TS-DESKTOP"]
+    Android["TS-ANDROID"]
+  end
+
+  Collectors["TS-COLLECTORS-*"]
+  Connectors["TS-CONNECTORS"]
+  Agent["TS-AGENT"]
+  Sync["TS-SYNC"]
+  Hub["TS-HUB"]
+  Storage["Local Storage"]
+  Schema["TS-SCHEMA"]
+
+  Desktop -->|"Local API"| Agent
+  Android -->|"Local API"| Agent
+  Collectors -->|"Event Ingest API"| Agent
+  Connectors -->|"Event Ingest API"| Agent
+  Agent --> Storage
+  Agent --> Sync --> Hub
+
+  Schema -.-> Desktop
+  Schema -.-> Android
+  Schema -.-> Agent
+  Schema -.-> Sync
+  Schema -.-> Hub
+```
+
 ---
 
 ## Потоки данных (чтобы было понятно “что куда течёт”)
@@ -300,6 +360,22 @@ Android:  [Collectors Pack] —> [Device Agent] (внутри приложени
 
 Никакой фоновой активности тут нет.
 
+```mermaid
+sequenceDiagram
+  actor User as Пользователь
+  participant UI as TS-DESKTOP
+  participant Agent as TS-AGENT
+  participant DB as Local Storage
+
+  User->>UI: Вызывает палитру
+  User->>UI: Выбирает действие
+  UI->>Agent: Local API (command/query)
+  Agent->>Agent: validate/normalize
+  Agent->>DB: write/update
+  Agent-->>UI: updated view
+  UI-->>User: Отображает
+```
+
 ---
 
 ### Поток B: Multi-device (Win + Mac + Android)
@@ -311,6 +387,22 @@ Android:  [Collectors Pack] —> [Device Agent] (внутри приложени
 5. TS-SYNC на Android подтягивает изменения
 6. TS-AGENT (Android) применяет изменения локально
 7. Android UI показывает обновлённый инвентарь
+
+```mermaid
+sequenceDiagram
+  participant WinAgent as TS-AGENT (Windows)
+  participant WinSync as TS-SYNC (Windows)
+  participant Hub as TS-HUB
+  participant AndroidSync as TS-SYNC (Android)
+  participant AndroidAgent as TS-AGENT (Android)
+  participant AndroidUI as TS-ANDROID UI
+
+  WinAgent->>WinSync: outbox change
+  WinSync->>Hub: push change
+  Hub-->>AndroidSync: pull change
+  AndroidSync->>AndroidAgent: apply change
+  AndroidAgent-->>AndroidUI: updated inventory
+```
 
 ---
 
@@ -324,6 +416,18 @@ Android:  [Collectors Pack] —> [Device Agent] (внутри приложени
    * сохраняет событие,
    * (позже) строит Episodes/Threads,
    * (позже) синхронизирует события с Hub
+
+```mermaid
+sequenceDiagram
+  participant Collector as TS-COLLECTORS-<platform>
+  participant Agent as TS-AGENT
+  participant Hub as TS-HUB
+
+  Collector->>Agent: Event Ingest API (ContextEvent)
+  Agent->>Agent: denylist/policies
+  Agent->>Agent: persist event
+  Agent-->>Hub: sync events (later)
+```
 
 Важно: collectors добавляют “богатство контекста” поверх manual-first основы, но не ломают Work Items как источник пользовательской истины (state/note/pin).
 

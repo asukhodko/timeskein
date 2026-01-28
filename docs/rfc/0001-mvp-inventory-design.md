@@ -1,14 +1,30 @@
 <!-- File: docs/rfc/0001-mvp-inventory-design.md -->
 
-# RFC-0001: Дизайн реализации MVP-фичи “Инвентарь текущей работы”
+# RFC-0001: Дизайн реализации MVP-фичи "Инвентарь текущей работы"
 
 ## Статус
 
 **Draft** (предложение к реализации).
 
-## 1. Проблема
+## Уровень зрелости
 
-Пользователь параллельно ведёт много задач и контекстов (тикеты, документы, чаты, репозитории). Через несколько часов/дней он теряет “карту текущей работы”:
+- **Part A:** Level 0 (Manual-first) — нормативная часть MVP
+- **Part B:** Level 2/3 — расширения (не входят в MVP)
+
+## Связанные документы
+
+- [ADR-0001: Начальная архитектура](../adr/0001-initial-architecture.md)
+- [ADR-0002: MVP = Manual-first](../adr/0002-mvp-manual-first.md)
+- [User Story: Ручной инвентарь](../mvp/02_user_story_manual_inventory.md)
+- [Глоссарий](../glossary.md)
+
+---
+
+# Part A: Level 0 (Manual-first) — Нормативная часть MVP
+
+## A.1. Проблема
+
+Пользователь параллельно ведёт много задач и контекстов (тикеты, документы, чаты, репозитории). Через несколько часов/дней он теряет "карту текущей работы":
 
 - что именно у меня сейчас актуально,
 - где это лежит (ссылка/файл/тикет),
@@ -17,237 +33,307 @@
 
 Цель MVP — дать быстрый, устойчивый и приватный способ восстановить эту карту в любой момент.
 
-## 2. Цели и не-цели
+## A.2. Цели и не-цели
 
-### Цели
-1) Дать “инвентарь” актуальных Work Items с состояниями.
-2) Позволить быстро создавать/привязывать Work Items к текущему контексту.
+### Цели (Level 0)
+1) Дать "инвентарь" актуальных Work Items с состояниями.
+2) Позволить вручную создавать Work Items и привязывать refs.
 3) Обеспечить ручное управление состоянием (как источник истины).
 4) Работать полностью локально, оффлайн.
-5) Минимизировать сбор чувствительных данных.
+5) Минимизировать сбор данных (только то, что вводит пользователь).
 
-### Не-цели (в рамках этого RFC)
-- Автоматическое построение Episodes и Threads (это следующий слой).
+### Не-цели (в рамках Part A)
+- Автоматический сбор контекста (collectors, ContextEvent) — см. Part B.
+- Автоматическое построение Episodes и Threads.
 - Семантический поиск по содержимому страниц/документов.
-- Скриншоты/аудио по умолчанию.
-- Полноценные интеграции с таск-трекерами.
+- Скриншоты/аудио.
 - Multi-device sync.
 
-## 3. Пользовательский опыт (UX) — минимальный, но жизнеспособный
+## A.3. Пользовательский опыт (UX) — Level 0
 
-### 3.1 Команда “Инвентарь”
+### A.3.1 Команда "Инвентарь"
 Открывает список Work Items:
 - Title
 - State (badge)
-- Last seen (например: “12 мин назад”)
+- Last seen (например: "12 мин назад")
 - Note (1–2 строки)
-- “Open last ref” (кнопка)
+- Refs (количество или "есть/нет")
 
 Быстрые действия:
 - смена state (hotkeys 1–6 или контекстное меню),
 - pin/unpin,
 - edit note,
-- attach current context,
+- add/open ref,
+- touch (явно отметить возврат),
 - delete (с подтверждением).
 
-### 3.2 Команда “Сохранить текущий контекст”
-В текущем окне/вкладке:
-- Timeskein показывает извлечённые refs (например, URL, `ABC-123`, `repo#123`).
-- Пользователь выбирает:
-  - создать новый Work Item, или
-  - привязать к существующему.
+### A.3.2 Создание Work Item (вручную)
+- Пользователь вводит title, опционально state, note, refs.
+- Refs добавляются вручную (paste/выбор файла).
+- Нет авто-извлечения из текущего контекста.
 
-MVP принцип: **автоматизация не должна создавать мусор**. Поэтому создание нового элемента должно быть явным действием.
+### A.3.3 Приватность в Level 0
+- **Нет фонового наблюдения.**
+- Refs добавляются только явным действием пользователя.
+- Настройка denylist доменов для URL refs.
 
-### 3.3 “Pause” и исключения
-- “Pause” мгновенно останавливает запись.
-- Настройки denylist: приложения и домены.
+## A.4. Дизайн данных (Level 0)
 
-## 4. Дизайн данных
+### A.4.1 WorkItem (таблица `work_items`)
 
-### 4.1 WorkItem (таблица `work_items`)
-Минимальные поля:
-- `id` (ULID/UUID)
-- `title` (TEXT)
-- `type` (TEXT, nullable; `task|project|question` — опционально)
-- `state` (TEXT: `active|waiting|blocked|done|someday|unknown`)
-- `pinned` (BOOL)
-- `created_at` (DATETIME)
-- `updated_at` (DATETIME)
-- `last_seen_at` (DATETIME, nullable)
-- `note` (TEXT, nullable)
-- `deleted_at` (DATETIME, nullable) — soft delete для MVP (опционально)
+| Поле | Тип | Описание |
+|------|-----|----------|
+| `id` | TEXT | ULID/UUID |
+| `title` | TEXT NOT NULL | Название |
+| `type` | TEXT NULL | `task\|project\|question` (опционально) |
+| `state` | TEXT NOT NULL | `active\|waiting\|blocked\|done\|someday\|unknown` |
+| `pinned` | INTEGER NOT NULL | 0/1 |
+| `note` | TEXT NULL | Следующий шаг / блокер |
+| `created_at` | DATETIME NOT NULL | |
+| `updated_at` | DATETIME NOT NULL | |
+| `last_seen_at` | DATETIME NULL | Обновляется по явным действиям пользователя |
+| `deleted_at` | DATETIME NULL | Soft delete |
 
-### 4.2 ContextEvent (таблица `context_events`)
-Append-only:
-- `id`
-- `ts`
-- `device_id` (опционально в MVP)
-- `source` (например: `window_watcher`, `browser_ext`)
-- `app_id` (TEXT)
-- `window_title` (TEXT, редактируемо/может быть NULL если приватно)
-- `url` (TEXT, может быть NULL)
-- `url_title` (TEXT, может быть NULL)
-- `is_private` (BOOL) — быстрый флаг приватности
-- `raw` (JSON, nullable) — для расширения без миграций
+### A.4.2 Refs (таблица `refs`)
 
-### 4.3 Refs (таблица `refs`)
-Нормализованные привязки:
-- `id`
-- `kind` (TEXT: `url|issue_key|repo_issue|file_path|domain|custom`)
-- `value` (TEXT) — нормализованное значение
-- `confidence` (REAL) — для будущего расширения
+| Поле | Тип | Описание |
+|------|-----|----------|
+| `id` | TEXT | ULID/UUID |
+| `kind` | TEXT | `url\|file_path\|issue_key\|custom` |
+| `value` | TEXT | Нормализованное значение |
+| `created_at` | DATETIME | |
 
-### 4.4 Связи
-- `work_item_refs(work_item_id, ref_id, created_at)`
-- `context_event_refs(context_event_id, ref_id)` — опционально (можно хранить refs прямо в raw JSON на старте)
+### A.4.3 Связи Work Item ↔ Ref
 
-### 4.5 WorkItemEvent (таблица `work_item_events`)
-Append-only:
-- `id`
-- `ts`
-- `work_item_id`
-- `kind` (`created|seen|state_changed|note_changed|pinned|unpinned|ref_attached|deleted`)
-- `payload` (JSON)
+Таблица `work_item_refs`:
 
-> Примечание: даже если в MVP мы обновляем `work_items` “в лоб”, наличие `work_item_events` оставляет путь к будущему event-sourcing и аудиту изменений.
+| Поле | Тип | Описание |
+|------|-----|----------|
+| `work_item_id` | TEXT | FK → work_items |
+| `ref_id` | TEXT | FK → refs |
+| `created_at` | DATETIME | |
+| `is_primary` | INTEGER | 0/1 (опционально) |
 
-## 5. Пайплайн обработки контекста
+### A.4.4 WorkItemEvent (таблица `work_item_events`)
 
-### 5.1 Сбор (Collectors)
-MVP достаточно двух источников:
-1) watcher активного окна (app_id + window_title),
-2) browser extension (active tab URL + title).
+Append-only журнал изменений:
 
-События пишутся с дебаунсом (например, не чаще раза в 1–2 секунды при “дёрганье” фокуса).
+| Поле | Тип | Описание |
+|------|-----|----------|
+| `id` | TEXT | ULID/UUID |
+| `ts` | DATETIME | Время события |
+| `work_item_id` | TEXT | FK → work_items |
+| `kind` | TEXT | `created\|touched\|state_changed\|note_changed\|pinned\|unpinned\|ref_attached\|ref_removed\|opened_ref\|deleted` |
+| `payload` | JSON/TEXT | Детали изменения |
 
-### 5.2 Извлечение refs (Ref Extractor)
-Детерминированные правила (без ML) + нормализация:
+## A.5. Нормализация refs
 
-- Если `url`:
-  - ref `url:<full>`
-  - ref `domain:<host>`
-  - ref “strong keys” из URL и title (регулярки):
-    - `ISSUE_KEY`: `\b[A-Z][A-Z0-9]+-\d+\b`
-    - GitHub: `/issues/\d+`, `/pull/\d+` + `owner/repo`
-    - (дальше расширяемо)
+### URL
+- Trim пробелов
+- Привести схему/хост к нижнему регистру
+- Убрать якорь `#...` (опционально)
+- (Опционально) убрать tracking параметры (utm_*)
 
-- Если нет URL:
-  - извлекаем “узнаваемое” из window_title (repo/file patterns), но с более низкой уверенностью.
+### File path
+- Trim
+- Нормализовать разделители под текущую OS
 
-### 5.3 Разрешение (WorkItem Resolver)
-Правила сопоставления `ContextEvent` → `WorkItem`:
+### Custom
+- Trim
+- Запретить пустые строки
 
-**Приоритет 1: сильные refs**
-- Если event содержит `ISSUE_KEY` или конкретный issue/pull URL,
-  и в базе есть WorkItem с таким ref → это он.
+## A.6. Определение "актуальности" и сортировка
 
-**Приоритет 2: явная привязка пользователя**
-- Если пользователь ранее “Attach current context” к WorkItem,
-  и текущий ref совпал → это он.
-
-**Иначе**
-- Не создаём WorkItem автоматически.
-- Просто сохраняем событие контекста (для возможной ручной привязки).
-
-### 5.4 Обновление last_seen
-Если `ContextEvent` однозначно сопоставился WorkItem:
-- обновляем `work_items.last_seen_at = event.ts`
-- добавляем `work_item_events(kind=seen)`
-
-## 6. Определение “актуальности” и сортировка
-
-### 6.1 Актуально (MVP правило)
+### Актуально (MVP правило)
 WorkItem попадает в инвентарь, если:
-- `state in (active, waiting, blocked)`  
-  **или**
-- `pinned = true`  
-  **или**
+- `state in (active, waiting, blocked)`, **или**
+- `pinned = true`, **или**
 - `state != done` и `last_seen_at >= now - recency_window`
 
-`recency_window` по умолчанию: 14 дней (настраиваемо).
+`recency_window` по умолчанию: 14 дней.
 
-### 6.2 Сортировка
+### Сортировка
 1) pinned (true) сверху
 2) state order: active → blocked → waiting → unknown → someday → done
 3) last_seen_at desc (NULL в конец)
 
-## 7. Политики приватности (MVP)
+## A.7. Политики приватности (Level 0)
 
-### 7.1 Denylist
-- список приложений (app_id) и доменов (domain), которые не записываются.
-- опция “в приватных приложениях записывать только app_id без window_title”.
+### Denylist
+- Список доменов, которые нельзя добавлять как refs.
+- Политика: `block` (отклонить) или `redact_to_domain` (сохранить только домен).
 
-### 7.2 Pause
-- флаг `paused=true` мгновенно прекращает сохранение `context_events` (и резолвинг).
+### Нет "Pause"
+- В Level 0 нет фонового сбора, поэтому Pause не требуется.
 
-### 7.3 Храним минимум
-- без скриншотов и без контента страниц по умолчанию.
-- только метаданные (title/url), которые уже часто содержат достаточно информации для refs и навигации.
+### Храним минимум
+- Только то, что пользователь явно ввёл.
+- Нет скриншотов, нет контента страниц.
 
-## 8. Варианты реализации и выбранный путь
+## A.8. API/интерфейсы (внутренние use-cases)
 
-### Вариант A: Manual-first ledger (явное создание/привязка)
-**Идея:** Work Items появляются только по действию пользователя.  
-**Плюсы:** мало мусора, высокое доверие, простота.  
-**Минусы:** нужна дисциплина “помечать”.
+Минимальные команды для Level 0:
 
-### Вариант B: Suggestions (предложение на основе сильных refs)
-**Идея:** система не создаёт автоматически, но предлагает: “это похоже на ABC-123 / этот PR”.  
-**Плюсы:** снижает трение, не создаёт мусор без подтверждения.  
-**Минусы:** надо сделать UI предложения.
+```
+list_inventory(now, window) -> WorkItemView[]
+create_work_item(title, state?, note?, refs[]) -> work_item_id
+touch_work_item(work_item_id)
+set_state(work_item_id, state)
+set_note(work_item_id, note)
+toggle_pin(work_item_id)
+add_ref(work_item_id, ref_kind, ref_value)
+remove_ref(work_item_id, ref_id)
+open_ref(work_item_id, ref_id? | last_primary)
+delete_work_item(work_item_id, mode=soft|hard)
+```
 
-### Вариант C: Auto-create из частых контекстов
-**Идея:** если часто открывается один и тот же домен/заголовок — создать Work Item.  
-**Плюсы:** меньше ручной работы.  
-**Минусы:** высокий риск мусора и “слипаний”.
+Везде, где есть действие пользователя:
+- Обновлять `work_items.updated_at`
+- Обновлять `work_items.last_seen_at`
+- Писать `work_item_events`
 
-**Решение для MVP:** **A + B**, без C.  
-То есть: manual-first, плюс подсказки по сильным refs.
+## A.9. Механизм дедупликации refs
 
-## 9. API/интерфейсы (внутренние)
+При `add_ref`:
+1. Найти `refs` по (`kind`, `value`) после нормализации
+2. Если нет — создать ref
+3. Если ref уже привязан к этому Work Item — no-op
+4. Если ref привязан к другому Work Item:
+   - Вернуть предупреждение "ref уже использован" + список кандидатов
+   - UI решает: открыть существующий / продолжить
 
-Минимальные команды (в терминах use-cases):
-- `capture_context(event)`
-- `extract_refs(event) -> refs[]`
-- `resolve_work_item(event, refs) -> work_item_id?`
-- `list_inventory(now, window) -> WorkItemView[]`
-- `create_work_item_from_current_context(title?, refs)`
-- `attach_current_context(work_item_id, refs)`
-- `set_state(work_item_id, state)`
-- `set_note(work_item_id, note)`
-- `toggle_pin(work_item_id)`
-- `delete_work_item(work_item_id, mode=soft|hard)`
+## A.10. Schema-first boundary
 
-## 10. Миграционный путь к будущим фичам
+Контракты между Surface и Agent должны быть строго типизированы:
 
-Этот дизайн оставляет пространство для:
-- Episodes: строятся как производное представление из `context_events`.
-- Threads: строятся поверх WorkItems и/или Episodes, используя refs и историю seen.
-- Семантика: добавление embeddings к WorkItems/Episodes без ломки схемы.
-- Коннекторы: добавление новых `source` и новых kinds of refs.
-- Sync: репликация таблиц (или журналов) позже; `work_item_events` пригодится для merge/аудита.
+- **DTO** для всех запросов/ответов
+- **Ошибки**: validation_error, conflict, not_found, privacy_blocked
+- **Версионирование**: схема имеет версию, совместимость документирована
 
-## 11. Риски и меры
+См. будущий RFC: Local API.
+
+---
+
+# Part B: Level 2/3 — Расширения (не входят в MVP)
+
+## B.1. ContextEvent log (Level 2+)
+
+Append-only журнал событий внешнего контекста:
+
+| Поле | Тип | Описание |
+|------|-----|----------|
+| `id` | TEXT | |
+| `ts` | DATETIME | |
+| `device_id` | TEXT | (опционально в начале) |
+| `source_id` | TEXT | Идентификатор SourceNode |
+| `app_id` | TEXT | Приложение |
+| `window_title` | TEXT NULL | Может быть NULL если приватно |
+| `url` | TEXT NULL | |
+| `url_title` | TEXT NULL | |
+| `is_private` | BOOL | Флаг приватности |
+| `raw` | JSON NULL | Для расширения |
+
+**Требует:** RFC Event Ingest + SourceNode.
+
+## B.2. Collectors и Connectors (Level 2/3)
+
+### Collectors (Level 3)
+- Active window watcher
+- Browser extension (always-on)
+- AFK/idle detector
+
+**Требуют системных разрешений.**
+
+### Connectors (Level 2)
+- "Захватить текущий контекст" по команде
+- Интеграции с приложениями
+
+**Требуют разрешений конкретных источников.**
+
+## B.3. Ref Extractor (Level 2+)
+
+Детерминированные правила извлечения refs из контекста:
+
+- Если `url`:
+  - ref `url:<full>`
+  - ref `domain:<host>`
+  - "strong keys" из URL и title:
+    - `ISSUE_KEY`: `\b[A-Z][A-Z0-9]+-\d+\b`
+    - GitHub: `/issues/\d+`, `/pull/\d+`
+
+- Если нет URL:
+  - Извлекаем "узнаваемое" из window_title (repo/file patterns)
+
+## B.4. WorkItem Resolver (Level 2+)
+
+Сопоставление `ContextEvent` → `WorkItem`:
+
+**Приоритет 1: сильные refs**
+- Если event содержит `ISSUE_KEY` или конкретный issue/pull URL, и в базе есть WorkItem с таким ref → это он.
+
+**Приоритет 2: явная привязка пользователя**
+- Если пользователь ранее привязал ref к WorkItem, и текущий ref совпал → это он.
+
+**Иначе**
+- Не создаём WorkItem автоматически.
+- Сохраняем событие контекста для возможной ручной привязки.
+
+## B.5. Автоматическое обновление last_seen (Level 2+)
+
+Если `ContextEvent` однозначно сопоставился WorkItem:
+- Обновляем `work_items.last_seen_at = event.ts`
+- Добавляем `work_item_events(kind=seen)`
+
+**Принцип:** автоматика не переписывает `state` и `note` — это источник истины пользователя.
+
+## B.6. Distill before forget (Level 2+)
+
+Перед удалением/сжатием сырых данных (ContextEvents, артефакты):
+1. Обновить Episodes/Threads на основе удаляемых данных
+2. Зафиксировать "итоги/выводы" если включено
+3. Записать provenance "что было дистиллировано и чем"
+
+**Требует:** RFC Retention/TTL + Distillation.
+
+## B.7. Артефакты с TTL (Level 3)
+
+Слои данных:
+- **Canonical** — события/журналы (append-only, долгоживущие)
+- **Derived** — эпизоды/нити (пересчитываемые)
+- **Ephemeral** — скриншоты, транскрипты (с TTL)
+
+TTL правила по уровням чувствительности.
+
+---
+
+# Приложения
+
+## Риски и меры
 
 1) **Мусорные Work Items**
-- мера: manual-first создание; подсказки вместо автогенерации.
+   - Мера: manual-first создание; подсказки вместо автогенерации.
 
 2) **Слипание разных задач в одну**
-- мера: сопоставление только по “сильным” refs; слабые сигналы не мержат автоматически.
+   - Мера: сопоставление только по "сильным" refs; слабые сигналы не мержат автоматически.
 
 3) **Приватность**
-- мера: denylist + pause + минимум данных; режим “без заголовков”.
+   - Мера: denylist + (в Level 2+) pause + минимум данных; режим "без заголовков".
 
 4) **Быстродействие**
-- мера: дебаунс событий; индексы по `ts`, `last_seen_at`, `state`.
+   - Мера: (в Level 2+) дебаунс событий; индексы по `ts`, `last_seen_at`, `state`.
 
-## 12. План реализации (в порядке ценности)
+## План реализации Level 0
 
-1) Storage schema + миграции.
-2) Collector активного окна.
-3) Browser extension (URL/title) или OS-канал (если доступно).
-4) Ref extractor (минимальный набор regex).
-5) Manual UI: create/attach + set_state + note + inventory list.
-6) Suggestions по сильным refs.
-7) Settings: denylist + pause.
+1) Storage schema + миграции
+2) Manual UI: create/touch/set_state/note/inventory list
+3) Refs engine: add/remove/open/normalize/dedup
+4) Settings: denylist доменов
+5) WorkItemEvents logging
+
+## Миграционный путь к Level 2/3
+
+При добавлении collectors/connectors:
+- Добавляется `context_events` таблица
+- Появляется Ref Extractor и Resolver
+- Появляется автоматический `last_seen_at`
+- Manual-first механика остаётся базовой

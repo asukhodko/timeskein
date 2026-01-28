@@ -2,6 +2,26 @@
 
 # RFC 0002: Топология системы и карта компонентов (multi-device)
 
+## Статус
+
+**Draft** (актуальный).
+
+## Уровень зрелости
+
+- Level 0: Manual-first основа
+- Level 1+: Sync и collectors
+
+## Связанные документы
+
+- [ADR-0001: Начальная архитектура](../adr/0001-initial-architecture.md)
+- [ADR-0002: MVP = Manual-first](../adr/0002-mvp-manual-first.md)
+- [Глоссарий](../glossary.md)
+- [RFC-0001: Дизайн MVP](0001-mvp-inventory-design.md)
+- RFC: Event Ingest + SourceNode (будущий)
+- RFC: Retention/TTL + Distillation (будущий)
+
+---
+
 ## Зачем этот документ
 
 Мы переходим от user-story и UX к проектированию независимых частей системы. Этот документ фиксирует:
@@ -145,6 +165,76 @@ flowchart LR
 
 * inbound: Local API (commands/queries) от Surface, Event Ingest API от Collectors
 * outbound: Storage, OS services (opener), Sync client
+
+---
+
+### Control Plane TS-AGENT (Level 0+)
+
+Агент — это не только хранилище и обработчик команд, но и **контрольная плоскость** системы.
+
+**Функции Control Plane:**
+
+| Функция | Уровень | Описание |
+|---------|---------|----------|
+| Health/Status | Level 0+ | Состояние агента, версия, uptime |
+| List Sources | Level 2+ | Список подключённых SourceNode |
+| Enable/Disable Source | Level 2+ | Включение/отключение источника событий |
+| Pause/Resume Ingestion | Level 2+ | Глобальная пауза сбора событий |
+| Source Pairing | Level 2+ | Одобрение новых источников |
+| Distillation Status | Level 2+ | Состояние задач дистилляции |
+
+**API Control Plane (примеры):**
+
+```
+get_agent_status() -> AgentStatus
+list_sources() -> SourceNode[]
+enable_source(source_id)
+disable_source(source_id)
+pause_ingestion()
+resume_ingestion()
+approve_source(source_id, permissions)
+revoke_source(source_id, delete_data: bool)
+get_distillation_status() -> DistillationStatus
+```
+
+---
+
+### SourceNode Manifest (Level 2+)
+
+Каждый источник событий (Collector, Connector, Extension) должен объявлять **манифест**:
+
+| Поле | Тип | Описание |
+|------|-----|----------|
+| `source_id` | string | Уникальный идентификатор |
+| `source_type` | enum | `collector` / `connector` / `extension` |
+| `version` | string | Версия источника |
+| `name` | string | Человекочитаемое название |
+| `description` | string | Описание функциональности |
+| `capabilities` | string[] | Список возможностей |
+| `permissions` | string[] | Требуемые системные разрешения |
+| `event_types` | string[] | Типы генерируемых событий |
+| `sensitivity_defaults` | object | Уровни чувствительности по умолчанию |
+
+**Пример манифеста:**
+
+```json
+{
+  "source_id": "timeskein.collector.active-window",
+  "source_type": "collector",
+  "version": "1.0.0",
+  "name": "Active Window Collector",
+  "description": "Отслеживает активное окно и заголовок",
+  "capabilities": ["window_title", "app_id"],
+  "permissions": ["accessibility"],
+  "event_types": ["context_event.window_change"],
+  "sensitivity_defaults": {
+    "window_title": "normal",
+    "app_id": "normal"
+  }
+}
+```
+
+**Подробности:** см. будущий RFC: Event Ingest + SourceNode + Pairing.
 
 ---
 
@@ -292,6 +382,34 @@ flowchart LR
 * работают как источники событий и общаются только с TS-AGENT,
 * scopes и permissions минимальные,
 * все чувствительные решения (редакция, denylist) на стороне агента либо на стороне коннектора (дублируемо).
+
+---
+
+### Memory Distillation Jobs (Level 2+)
+
+Агент запускает фоновые задачи **дистилляции** — превращения сырых данных в производные представления.
+
+**Типы задач:**
+
+| Задача | Периодичность | Описание |
+|--------|---------------|----------|
+| Daily Summary | Раз в день | Генерация итога дня из событий |
+| Episode Builder | По событиям | Построение эпизодов из ContextEvents |
+| Thread Update | По событиям | Обновление нитей при изменении эпизодов |
+| TTL GC | Периодически | Удаление данных с истёкшим TTL |
+| Artifact Cleanup | Периодически | Удаление тяжёлых артефактов (скриншоты) |
+
+**Принцип "Distill before forget":**
+
+Перед удалением данных (TTL GC, Artifact Cleanup):
+1. Проверить, что данные уже дистиллированы в Episodes/Threads
+2. Если нет — запустить дистилляцию
+3. Записать provenance удаления
+4. Удалить сырые данные
+
+**Работа оффлайн:** все задачи дистилляции выполняются локально на устройстве, не требуют сети.
+
+**Подробности:** см. будущий RFC: Retention/TTL + Distillation.
 
 ---
 

@@ -2,13 +2,52 @@
 
 # Roadmap 0001: MVP Execution Plan (Manual-first Inventory)
 
-Цель: довести до MVP реализацию `user-story-02 (Manual-first Work Inventory)` на Windows, macOS и Android, в архитектуре “web surfaces + device agent”, без фонового онлайн-наблюдения ОС.
+## Статус
+
+**Актуальный**.
+
+## Уровень зрелости
+
+**Level 0** (Manual-first)
+
+## Связанные документы
+
+- [ADR-0002: MVP = Manual-first](../adr/0002-mvp-manual-first.md)
+- [User Story: Ручной инвентарь](../mvp/02_user_story_manual_inventory.md)
+- [RFC-0001: Дизайн MVP](../rfc/0001-mvp-inventory-design.md)
+- [Глоссарий](../glossary.md)
+
+---
+
+Цель: довести до MVP реализацию `user-story-02 (Manual-first Work Inventory)` на Windows, macOS и Android, в архитектуре "web surfaces + device agent", без фонового онлайн-наблюдения ОС.
 
 Примечание: multi-device sync (Hub+Sync) — отдельный контур. Включаем в MVP только если это явно требуется; иначе выносим в следующий майлстоун.
 
 ---
 
-## 0. Документация и фиксация контуров (завершено)
+## 0. Миграция документации (предварительный этап)
+
+Перед началом разработки необходимо зафиксировать единую трактовку MVP.
+
+### Гейты миграции документации
+
+- [x] Устранить конфликт MVP: везде "MVP = Manual-first (Level 0)"
+- [x] Создать ADR-0002: MVP = Manual-first
+- [x] Создать глоссарий терминов
+- [x] Обновить project overview с уровнями зрелости
+- [x] Разделить RFC-0001 на Level 0 и Level 2/3
+- [x] Переквалифицировать user-story-01 как Level 2
+
+### Документы, готовые к реализации
+
+- `docs/00_project_overview.md` — общее описание
+- `docs/adr/0002-mvp-manual-first.md` — фиксация MVP
+- `docs/mvp/02_user_story_manual_inventory.md` — каноническая user story
+- `docs/rfc/0001-mvp-inventory-design.md` Part A — техническая спецификация
+
+---
+
+## 0.5. Документация и фиксация контуров (завершено)
 
 * user-story-02
 * UX документ для user-story-02
@@ -34,7 +73,7 @@
 
 ---
 
-## 2. Нулевой вертикальный срез end-to-end (без “смысла”, но со всеми стыками)
+## 2. Нулевой вертикальный срез end-to-end (без "смысла", но со всеми стыками)
 
 * Desktop:
 
@@ -56,7 +95,7 @@
 
 ---
 
-## 3. Реализация TS-AGENT “изнутри-наружу” без UI (user-story-02 как функциональный бэкенд)
+## 3. Реализация TS-AGENT "изнутри-наружу" без UI (user-story-02 как функциональный бэкенд)
 
 * Domain:
 
@@ -121,10 +160,10 @@
 ## 5. Подключение Android Surface к готовому agent (embedded)
 
 * Тот же web UI.
-* Android entrypoints (не “глобальный хоткей”):
+* Android entrypoints (не "глобальный хоткей"):
 
-  * launcher shortcut / кнопка “Inventory”,
-  * share sheet “Send to Timeskein” (как главный быстрый путь),
+  * launcher shortcut / кнопка "Inventory",
+  * share sheet "Send to Timeskein" (как главный быстрый путь),
   * опционально позже: tile/notification entrypoint.
 * Android adapters:
 
@@ -139,7 +178,7 @@
 
 ---
 
-## 6. Итеративная реализация сценариев user-story-02 (основное “мясо”)
+## 6. Итеративная реализация сценариев user-story-02 (основное "мясо")
 
 Принцип:
 
@@ -223,4 +262,39 @@
 
 Гейт:
 
-* MVP устойчив к реальному использованию и не разваливается при первой попытке “жить”.
+* MVP устойчив к реальному использованию и не разваливается при первой попытке "жить".
+
+---
+
+## 10. Будущие RFC (после MVP)
+
+Следующие RFC необходимы для развития системы до Level 2/3:
+
+### RFC-0004: Local API (Surface ↔ Agent)
+
+- Транспорт и модель запросов/ответов
+- DTO и модель ошибок
+- Subscriptions/notifications
+- Безопасность
+
+### RFC-0005: Event Ingest + SourceNode + Pairing
+
+- Манифест источников событий
+- Протокол сопряжения (pairing)
+- Разрешения и capabilities
+- Revocation и удаление данных по provenance
+
+### RFC-0006: Retention/TTL + Distillation
+
+- Слои данных (canonical/derived/ephemeral)
+- TTL правила по чувствительности
+- Процесс "distill before forget"
+- GC и аудит удаления
+
+### Дополнительные ADR/RFC
+
+- ADR: Episodes как производное из ContextEvent
+- ADR: Threads как граф поверх Episodes/WorkItems
+- ADR: Sync протокол и стратегия merge
+- ADR: Policy Gate и уровни чувствительности
+- RFC: Collector framework + event ingest contract

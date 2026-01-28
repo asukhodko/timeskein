@@ -19,6 +19,18 @@
 
 ---
 
+## Transport Note
+
+Этот RFC описывает API в REST-стиле (`POST /ingest/events`, `GET /control/sources`), в отличие от [RFC-0004: Local API](0004-local-api.md), который использует RPC-стиль (`inventory.list`, `work_item.create`).
+
+**Почему разные стили:**
+- **SourceNode API (этот RFC)** — инфраструктурный интерфейс для внешних источников; REST более естественен для HTTP-интеграций
+- **Local API (RFC-0004)** — UX-интерфейс для Surface; RPC удобнее для UI-клиентов
+
+Оба API используют общие DTO-типы из TS-SCHEMA и единые правила версионирования.
+
+---
+
 ## 1. Цель
 
 Определить контракт для подключения источников событий (Collectors, Connectors, Extensions) к Device Agent.

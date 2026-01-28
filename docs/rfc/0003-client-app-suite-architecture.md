@@ -17,7 +17,7 @@
 * [ADR-0002: MVP = Manual-first](../adr/0002-mvp-manual-first.md)
 * [User Story: Ручной инвентарь](../mvp/02_user_story_manual_inventory.md)
 * [Глоссарий](../glossary.md)
-* RFC: Event Ingest + SourceNode (будущий)
+* [RFC-0005: Event Ingest + SourceNode](0005-event-ingest-source-nodes.md)
 
 ---
 

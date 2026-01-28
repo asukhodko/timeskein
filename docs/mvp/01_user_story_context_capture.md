@@ -12,7 +12,7 @@
 - [User Story: Ручной инвентарь (Level 0)](02_user_story_manual_inventory.md) — базовая функциональность MVP
 - [ADR-0002: MVP = Manual-first](../adr/0002-mvp-manual-first.md)
 - [Глоссарий](../glossary.md)
-- RFC: Event Ingest + SourceNode (будущий)
+- [RFC-0005: Event Ingest + SourceNode](../rfc/0005-event-ingest-source-nodes.md)
 
 ---
 

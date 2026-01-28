@@ -17,8 +17,8 @@
 - [ADR-0002: MVP = Manual-first](../adr/0002-mvp-manual-first.md)
 - [Глоссарий](../glossary.md)
 - [RFC-0001: Дизайн MVP](0001-mvp-inventory-design.md)
-- RFC: Event Ingest + SourceNode (будущий)
-- RFC: Retention/TTL + Distillation (будущий)
+- [RFC-0005: Event Ingest + SourceNode](0005-event-ingest-source-nodes.md)
+- [RFC-0006: Retention/TTL + Distillation](0006-retention-ttl-distillation.md)
 
 ---
 

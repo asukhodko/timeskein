@@ -337,3 +337,31 @@ interface AgentStatus {
 ### 11.2. Mock server
 
 Для разработки UI без агента предоставляется mock server с фиксированными ответами.
+
+---
+
+## 12. Связь с SourceNode API
+
+### 12.1. Два API — две роли
+
+Timeskein имеет два разных API-интерфейса:
+
+| API | RFC | Назначение | Участники |
+|-----|-----|------------|-----------|
+| **Local API** | Этот документ | UX-взаимодействие | Surface ↔ Agent |
+| **SourceNode API** | [RFC-0005](0005-event-ingest-source-nodes.md) | Event ingest | SourceNode ↔ Agent |
+
+### 12.2. Почему разные стили
+
+- **Local API** использует RPC-стиль (методы через dot-notation: `inventory.list`, `work_item.create`), потому что это удобнее для UI-клиентов, работающих как "тонкие клиенты".
+
+- **SourceNode API** использует REST-стиль (`POST /ingest/events`, `GET /control/sources`), потому что это инфраструктурный интерфейс для внешних источников событий, где REST более естественен.
+
+### 12.3. Общие контракты
+
+Несмотря на разный стиль API, оба интерфейса используют:
+
+- **Общие DTO** — типы данных (WorkItem, Ref, Event) определены в TS-SCHEMA
+- **Общее версионирование** — те же правила MAJOR.MINOR
+- **Единый агент** — оба API реализованы одним TS-AGENT
+

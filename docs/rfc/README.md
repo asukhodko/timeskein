@@ -1,0 +1,35 @@
+# Technical Specifications (RFC)
+
+This directory contains Request for Comments (RFC) documents that describe technical designs for Timeskein components.
+
+## What is an RFC?
+
+An RFC is a detailed technical specification for a feature or system component. RFCs go through review before implementation.
+
+## RFC Index
+
+| RFC | Status | Maturity | Title |
+|-----|--------|----------|-------|
+| [RFC-0001](0001-mvp-inventory-design.md) | Draft | Level 0 | MVP inventory design |
+| [RFC-0002](0002-system-topology-and-component-map.md) | Draft | Level 0+ | System topology and component map |
+| [RFC-0003](0003-client-app-suite-architecture.md) | Draft | Level 0+ | Client application suite architecture |
+| [RFC-0004](0004-local-api.md) | Draft | Level 0+ | Local API (Surface - Agent) |
+| [RFC-0005](0005-event-ingest-source-nodes.md) | Draft | Level 2+ | Event Ingest + SourceNode + Pairing |
+| [RFC-0006](0006-retention-ttl-distillation.md) | Draft | Level 2+ | Retention, TTL, Distillation |
+
+## Maturity Levels
+
+- **Level 0** - Core for MVP (manual-first)
+- **Level 0+** - Applies to all levels
+- **Level 2+** - Required for context capture features (not in MVP)
+- **Level 3** - Required for always-on collectors
+
+## Status Legend
+
+- **Draft** - Under development/review
+- **Accepted** - Approved for implementation
+- **Implemented** - Fully implemented
+
+---
+
+[Back to Documentation Index](../index.md)

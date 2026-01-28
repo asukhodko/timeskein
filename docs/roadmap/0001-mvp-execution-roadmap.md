@@ -270,21 +270,21 @@
 
 Следующие RFC необходимы для развития системы до Level 2/3:
 
-### RFC-0004: Local API (Surface ↔ Agent)
+### [RFC-0004: Local API (Surface ↔ Agent)](../rfc/0004-local-api.md)
 
 - Транспорт и модель запросов/ответов
 - DTO и модель ошибок
 - Subscriptions/notifications
 - Безопасность
 
-### RFC-0005: Event Ingest + SourceNode + Pairing
+### [RFC-0005: Event Ingest + SourceNode + Pairing](../rfc/0005-event-ingest-source-nodes.md)
 
 - Манифест источников событий
 - Протокол сопряжения (pairing)
 - Разрешения и capabilities
 - Revocation и удаление данных по provenance
 
-### RFC-0006: Retention/TTL + Distillation
+### [RFC-0006: Retention/TTL + Distillation](../rfc/0006-retention-ttl-distillation.md)
 
 - Слои данных (canonical/derived/ephemeral)
 - TTL правила по чувствительности

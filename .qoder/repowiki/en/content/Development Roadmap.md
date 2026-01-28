@@ -2,7 +2,9 @@
 
 <cite>
 **Referenced Files in This Document**
+- [README.md](file://docs/roadmap/README.md)
 - [0001-mvp-execution-roadmap.md](file://docs/roadmap/0001-mvp-execution-roadmap.md)
+- [README.md](file://docs/mvp/README.md)
 - [02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md)
 - [02_manual_inventory_ui_ux.md](file://docs/mvp/02_manual_inventory_ui_ux.md)
 - [0002-mvp-manual-first.md](file://docs/adr/0002-mvp-manual-first.md)
@@ -10,20 +12,21 @@
 - [0002-system-topology-and-component-map.md](file://docs/rfc/0002-system-topology-and-component-map.md)
 - [0003-client-app-suite-architecture.md](file://docs/rfc/0003-client-app-suite-architecture.md)
 - [00_project_overview.md](file://docs/00_project_overview.md)
-- [docs-rework.md](file://docs/docs-rework.md)
+- [README.md](file://docs/rfc/README.md)
+- [glossary.md](file://docs/glossary.md)
 </cite>
 
 ## Update Summary
 **Changes Made**
-- Revised execution roadmap to align with manual-first emphasis as established in documentation rework
-- Updated milestones to reflect the new architectural approach with clear separation between MVP and future enhancement levels
-- Clarified the phased approach from manual-first inventory to advanced features
-- Enhanced documentation structure to show the evolution from Level 0 to Level 3 functionality
-- Added emphasis on the three-phase documentation migration process
+- Updated to reflect the new roadmap organization with docs/roadmap/README.md as the central hub
+- Revised execution roadmap to emphasize manual-first capabilities as the foundation
+- Clarified the separation between Level 0 (MVP) and Level 2+/Level 3 future features
+- Enhanced documentation structure to show the evolution from manual-first inventory to advanced features
+- Added emphasis on the three-phase documentation migration process and level-based maturity tracking
 
 ## Table of Contents
 1. [Introduction](#introduction)
-2. [Project Structure](#project-structure)
+2. [Roadmap Organization](#roadmap-organization)
 3. [Core Components](#core-components)
 4. [Architecture Overview](#architecture-overview)
 5. [Detailed Component Analysis](#detailed-component-analysis)
@@ -38,55 +41,67 @@ This document presents the comprehensive Development Roadmap for Timeskein, focu
 
 The manual-first emphasis represents a fundamental architectural decision that affects every aspect of the development timeline, from component design to user experience implementation. This approach prioritizes user trust, privacy, and control over automated intelligence, creating a sustainable foundation for future enhancements.
 
-## Project Structure
-The repository organizes development artifacts around three primary axes, with the manual-first approach as the central organizing principle:
+## Roadmap Organization
+The repository organizes development artifacts around a centralized roadmap structure with clear documentation migration gates:
 
-- **Roadmap and execution**: Time-bound plan for delivering manual-first inventory across platforms with clear documentation migration gates
-- **MVP user stories and acceptance criteria**: Functional specification for the manual-first feature set (Level 0)
-- **Architectural and system design documents**: Component topology, client suite architecture, and manual-first design principles
+- **Central Roadmap Hub**: docs/roadmap/README.md serves as the primary navigation point for all roadmap-related documentation
+- **Execution Plans**: Time-bound plans for delivering manual-first inventory across platforms with clear documentation migration gates
+- **MVP User Stories**: Functional specifications for manual-first feature sets (Level 0)
+- **Architectural Documents**: Component topology, client suite architecture, and manual-first design principles
+- **Level-Based Evolution**: Clear separation between MVP (Level 0) and future enhancement levels (Level 2+/Level 3)
 
 ```mermaid
 graph TB
+subgraph "Central Roadmap Hub"
+R1["docs/roadmap/README.md"]
+R2["docs/roadmap/0001-mvp-execution-roadmap.md"]
+end
 subgraph "Documentation Migration Process"
 DM1["Docs Migration Gates"]
 DM2["ADR-0002: MVP = Manual-first"]
 DM3["Glossary Establishment"]
 end
-subgraph "Documentation"
-R1["docs/roadmap/0001-mvp-execution-roadmap.md"]
-U1["docs/mvp/02_user_story_manual_inventory.md"]
-U2["docs/mvp/02_manual_inventory_ui_ux.md"]
+subgraph "MVP Documentation"
+U1["docs/mvp/README.md"]
+U2["docs/mvp/02_user_story_manual_inventory.md"]
+U3["docs/mvp/02_manual_inventory_ui_ux.md"]
+end
+subgraph "Architectural Documents"
 ADR["docs/adr/0002-mvp-manual-first.md"]
 RFC1["docs/rfc/0001-mvp-inventory-design.md"]
 RFC2["docs/rfc/0002-system-topology-and-component-map.md"]
 RFC3["docs/rfc/0003-client-app-suite-architecture.md"]
 OVER["docs/00_project_overview.md"]
-REWORK["docs/docs-rework.md"]
+GLOSS["docs/glossary.md"]
 end
 DM1 --> DM2
 DM2 --> R1
 R1 --> U1
+U1 --> U2
+U2 --> U3
 R1 --> RFC2
-U1 --> RFC1
 RFC2 --> RFC3
 ADR --> RFC1
 OVER --> ADR
-REWORK --> DM1
+RFC1 --> GLOSS
 ```
 
 **Diagram sources**
+- [README.md](file://docs/roadmap/README.md#L1-L20)
 - [0001-mvp-execution-roadmap.md](file://docs/roadmap/0001-mvp-execution-roadmap.md#L1-L301)
+- [README.md](file://docs/mvp/README.md#L1-L29)
 - [02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md#L1-L513)
+- [02_manual_inventory_ui_ux.md](file://docs/mvp/02_manual_inventory_ui_ux.md#L1-L570)
 - [0002-mvp-manual-first.md](file://docs/adr/0002-mvp-manual-first.md#L1-L124)
 - [0001-mvp-inventory-design.md](file://docs/rfc/0001-mvp-inventory-design.md#L1-L340)
 - [0002-system-topology-and-component-map.md](file://docs/rfc/0002-system-topology-and-component-map.md#L1-L606)
 - [0003-client-app-suite-architecture.md](file://docs/rfc/0003-client-app-suite-architecture.md#L1-L418)
 - [00_project_overview.md](file://docs/00_project_overview.md#L1-L187)
-- [docs-rework.md](file://docs/docs-rework.md#L1-L473)
+- [glossary.md](file://docs/glossary.md#L1-L244)
 
 **Section sources**
+- [README.md](file://docs/roadmap/README.md#L1-L20)
 - [0001-mvp-execution-roadmap.md](file://docs/roadmap/0001-mvp-execution-roadmap.md#L1-L301)
-- [docs-rework.md](file://docs/docs-rework.md#L1-L473)
 
 ## Core Components
 The roadmap centers on a clear set of components designed around the manual-first principle:
@@ -154,7 +169,7 @@ SCHEMA -.-> HUB
 
 **Section sources**
 - [0001-mvp-execution-roadmap.md](file://docs/roadmap/0001-mvp-execution-roadmap.md#L28-L47)
-- [docs-rework.md](file://docs/docs-rework.md#L11-L27)
+- [README.md](file://docs/mvp/README.md#L1-L29)
 
 ### Phase 1: Monorepo Skeleton and Shared Contracts
 - **Deliverables**: Initialize packages for TS-SCHEMA, TS-AGENT, TS-DESKTOP, TS-ANDROID, TS-HUB with manual-first boundaries
@@ -374,4 +389,18 @@ The manual-first emphasis creates a sustainable foundation for future enhancemen
 - **Phase 4**: Clean up remaining inconsistencies and establish final documentation standards
 
 **Section sources**
-- [docs-rework.md](file://docs/docs-rework.md#L431-L473)
+- [README.md](file://docs/mvp/README.md#L1-L29)
+- [README.md](file://docs/rfc/README.md#L1-L36)
+
+### Level-Based Maturity Tracking
+**New Section** Provides clarity on the three-level evolution from manual-first to advanced features.
+
+- **Level 0 (MVP)**: Pure manual operation with Work Item inventory
+- **Level 1 (Enhanced)**: Multi-device synchronization capabilities
+- **Level 2 (Advanced)**: Semantics-first connectors with explicit user consent
+- **Level 3 (Full Context)**: Always-on collectors with system-level permissions
+
+**Section sources**
+- [0002-mvp-manual-first.md](file://docs/adr/0002-mvp-manual-first.md#L58-L72)
+- [00_project_overview.md](file://docs/00_project_overview.md#L70-L81)
+- [glossary.md](file://docs/glossary.md#L217-L225)

@@ -11,21 +11,27 @@
 - [0004-local-api.md](file://docs/rfc/0004-local-api.md)
 - [0005-event-ingest-source-nodes.md](file://docs/rfc/0005-event-ingest-source-nodes.md)
 - [0006-retention-ttl-distillation.md](file://docs/rfc/0006-retention-ttl-distillation.md)
-- [01_user_story_inventory.md](file://docs/mvp/01_user_story_inventory.md)
-- [02_manual_inventory_ui_ux.md](file://docs/mvp/02_manual_inventory_ui_ux.md)
-- [02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md)
-- [0001-mvp-execution-roadmap.md](file://docs/roadmap/0001-mvp-execution-roadmap.md)
+- [0005-event-ingest-source-nodes.md](file://docs/rfc/0005-event-ingest-source-nodes.md)
+- [0006-retention-ttl-distillation.md](file://docs/rfc/0006-retention-ttl-distillation.md)
+- [0004-local-api.md](file://docs/rfc/0004-local-api.md)
+- [0003-client-app-suite-architecture.md](file://docs/rfc/0003-client-app-suite-architecture.md)
+- [0002-system-topology-and-component-map.md](file://docs/rfc/0002-system-topology-and-component-map.md)
+- [0001-mvp-inventory-design.md](file://docs/rfc/0001-mvp-inventory-design.md)
+- [00_project_overview.md](file://docs/00_project_overview.md)
 - [glossary.md](file://docs/glossary.md)
+- [index.md](file://docs/index.md)
+- [rfc/README.md](file://docs/rfc/README.md)
 </cite>
 
 ## Update Summary
 **Changes Made**
-- Added comprehensive documentation for Local API RFC (RFC-0004)
-- Integrated Event Ingest Source Nodes RFC (RFC-0005) with SourceNode manifest and pairing protocols
-- Enhanced retention, TTL, and distillation pipeline documentation (RFC-0006)
-- Updated system topology to reflect new component relationships
-- Refined client app suite architecture to align with manual-first approach
-- Enhanced documentation structure with new RFC-based organization
+- Integrated comprehensive RFC-0005 (Event Ingest + SourceNode + Pairing) documentation
+- Added detailed RFC-0006 (Retention/TTL + Distillation) specifications
+- Enhanced Local API documentation with new transport options and security model
+- Updated system topology to reflect new SourceNode management and retention pipeline
+- Expanded client app suite architecture to include advanced pairing and control plane features
+- Added comprehensive data lifecycle management documentation
+- Enhanced security model with token-based authentication and provenance tracking
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -41,7 +47,7 @@
 11. [Appendices](#appendices)
 
 ## Introduction
-This document presents the Technical Design Specifications for Timeskein's component architecture and system design. It focuses on the MVP inventory design, system topology, and client app suite architecture, with enhanced coverage of the newly added RFCs. It explains component relationships, data flow patterns, and integration mechanisms among TS-AGENT, TS-DESKTOP, TS-ANDROID, TS-HUB, and TS-SCHEMA. It documents the ports & adapters and hexagonal architecture patterns, event-driven communication protocols, and outlines API specifications for Local API, Event Ingest API, and sync protocols. The document now includes comprehensive coverage of SourceNode management, retention policies, and distillation pipelines, along with infrastructure requirements, scalability considerations, deployment topology, and the technical decisions, trade-offs, and constraints shaping the current design.
+This document presents the Technical Design Specifications for Timeskein's component architecture and system design. It focuses on the MVP inventory design, system topology, and client app suite architecture, with enhanced coverage of the newly integrated RFC-0005 (Event Ingest + SourceNode + Pairing) and RFC-0006 (Retention/TTL + Distillation) specifications. It explains component relationships, data flow patterns, and integration mechanisms among TS-AGENT, TS-DESKTOP, TS-ANDROID, TS-HUB, and TS-SCHEMA components. It documents the ports & adapters and hexagonal architecture patterns, event-driven communication protocols, and outlines API specifications for Local API, Event Ingest API, and sync protocols. The document now includes comprehensive coverage of SourceNode management, retention policies, and distillation pipelines, along with infrastructure requirements, scalability considerations, deployment topology, and the technical decisions, trade-offs, and constraints shaping the current design.
 
 ## Project Structure
 Timeskein's documentation is organized around:
@@ -49,7 +55,7 @@ Timeskein's documentation is organized around:
 - Functional designs for MVP features (RFCs)
 - User stories and UX for manual-first inventory
 - Execution roadmap for MVP delivery
-- Comprehensive RFC coverage for advanced features
+- Comprehensive RFC coverage for advanced features including SourceNode management and retention pipeline
 
 ```mermaid
 graph TB
@@ -64,35 +70,32 @@ UX["Manual Inventory UI/UX"] --> RFC3
 Roadmap["MVP Execution Roadmap"] --> RFC2
 Overview["Project Overview"] --> RFC2
 Glossary["Glossary"] --> RFC2
+RFCIndex["RFC Index"] --> RFC5
+RFCIndex --> RFC6
 ```
 
 **Diagram sources**
-- [0001-initial-architecture.md](file://docs/adr/0001-initial-architecture.md#L1-L190)
+- [index.md](file://docs/index.md#L58-L67)
+- [rfc/README.md](file://docs/rfc/README.md#L11-L18)
 - [0002-system-topology-and-component-map.md](file://docs/rfc/0002-system-topology-and-component-map.md#L1-L606)
 - [0003-client-app-suite-architecture.md](file://docs/rfc/0003-client-app-suite-architecture.md#L1-L498)
-- [0004-local-api.md](file://docs/rfc/0004-local-api.md#L1-L340)
-- [0005-event-ingest-source-nodes.md](file://docs/rfc/0005-event-ingest-source-nodes.md#L1-L370)
-- [0006-retention-ttl-distillation.md](file://docs/rfc/0006-retention-ttl-distillation.md#L1-L367)
-- [00_project_overview.md](file://docs/00_project_overview.md#L1-L187)
-- [glossary.md](file://docs/glossary.md#L1-L244)
+- [0004-local-api.md](file://docs/rfc/0004-local-api.md#L1-L368)
+- [0005-event-ingest-source-nodes.md](file://docs/rfc/0005-event-ingest-source-nodes.md#L1-L382)
+- [0006-retention-ttl-distillation.md](file://docs/rfc/0006-retention-ttl-distillation.md#L1-L376)
 
 **Section sources**
+- [index.md](file://docs/index.md#L58-L67)
+- [rfc/README.md](file://docs/rfc/README.md#L1-L36)
 - [00_project_overview.md](file://docs/00_project_overview.md#L1-L187)
 - [0001-initial-architecture.md](file://docs/adr/0001-initial-architecture.md#L1-L190)
 - [0002-system-topology-and-component-map.md](file://docs/rfc/0002-system-topology-and-component-map.md#L1-L606)
 - [0003-client-app-suite-architecture.md](file://docs/rfc/0003-client-app-suite-architecture.md#L1-L498)
-- [0004-local-api.md](file://docs/rfc/0004-local-api.md#L1-L340)
-- [0005-event-ingest-source-nodes.md](file://docs/rfc/0005-event-ingest-source-nodes.md#L1-L370)
-- [0006-retention-ttl-distillation.md](file://docs/rfc/0006-retention-ttl-distillation.md#L1-L367)
-- [0001-mvp-inventory-design.md](file://docs/rfc/0001-mvp-inventory-design.md#L1-L340)
-- [01_user_story_inventory.md](file://docs/mvp/01_user_story_inventory.md#L1-L85)
-- [02_manual_inventory_ui_ux.md](file://docs/mvp/02_manual_inventory_ui_ux.md#L1-L514)
-- [02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md#L1-L419)
-- [0001-mvp-execution-roadmap.md](file://docs/roadmap/0001-mvp-execution-roadmap.md#L1-L301)
-- [glossary.md](file://docs/glossary.md#L1-L244)
+- [0004-local-api.md](file://docs/rfc/0004-local-api.md#L1-L368)
+- [0005-event-ingest-source-nodes.md](file://docs/rfc/0005-event-ingest-source-nodes.md#L1-L382)
+- [0006-retention-ttl-distillation.md](file://docs/rfc/0006-retention-ttl-distillation.md#L1-L376)
 
 ## Core Components
-This section describes the core components and their responsibilities, focusing on the MVP inventory and the multi-device topology with enhanced coverage of new RFC-based features.
+This section describes the core components and their responsibilities, focusing on the MVP inventory and the multi-device topology with enhanced coverage of new RFC-based features including SourceNode management and retention pipeline.
 
 - **TS-AGENT**: Device Agent (local backend) on each device. Central point of truth for data, executes use-cases, stores locally, exposes Local API to Surfaces, accepts Event Ingest from Collectors/Connectors, integrates with Sync to Hub, and manages SourceNodes with pairing and revocation capabilities.
 - **TS-DESKTOP**: Desktop Surfaces (Windows/macOS). Thin UI hosts for command palette, tray/menubar, and optional full management UI. Communicates exclusively via Local API to TS-AGENT.

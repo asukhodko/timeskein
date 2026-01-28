@@ -2,6 +2,7 @@
 
 <cite>
 **Referenced Files in This Document**
+- [docs/adr/README.md](file://docs/adr/README.md)
 - [docs/adr/0001-initial-architecture.md](file://docs/adr/0001-initial-architecture.md)
 - [docs/adr/0002-mvp-manual-first.md](file://docs/adr/0002-mvp-manual-first.md)
 - [docs/00_project_overview.md](file://docs/00_project_overview.md)
@@ -10,33 +11,38 @@
 - [docs/rfc/0003-client-app-suite-architecture.md](file://docs/rfc/0003-client-app-suite-architecture.md)
 - [docs/mvp/02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md)
 - [docs/glossary.md](file://docs/glossary.md)
+- [docs/index.md](file://docs/index.md)
 </cite>
 
 ## Update Summary
 **Changes Made**
-- Added comprehensive coverage of ADR-0002 (MVP Manual-first) as a foundational decision
-- Consolidated architecture documentation structure to emphasize manual-first approach
+- Updated to reflect the new ADR system structure with centralized ADR documentation
+- Added comprehensive coverage of ADR-0002 (MVP Manual-first) as the foundational decision
+- Integrated the new ADR-0002 establishing manual-first as MVP foundation
 - Updated project structure visualization to reflect the shift toward manual-first emphasis
 - Enhanced focus on the philosophical and practical implications of manual-first design
-- Integrated new ADR into the overall architectural narrative
+- Integrated new ADR into the overall architectural narrative with proper status tracking
 
 ## Table of Contents
 1. [Introduction](#introduction)
-2. [Project Structure](#project-structure)
-3. [Core Components](#core-components)
-4. [Architecture Overview](#architecture-overview)
-5. [Manual-first Philosophy and Implementation](#manual-first-philosophy-and-implementation)
-6. [Detailed Component Analysis](#detailed-component-analysis)
-7. [Dependency Analysis](#dependency-analysis)
-8. [Performance Considerations](#performance-considerations)
-9. [Troubleshooting Guide](#troubleshooting-guide)
-10. [Conclusion](#conclusion)
-11. [Appendices](#appendices)
+2. [ADR System Overview](#adr-system-overview)
+3. [Project Structure](#project-structure)
+4. [Core Components](#core-components)
+5. [Architecture Overview](#architecture-overview)
+6. [Manual-first Philosophy and Implementation](#manual-first-philosophy-and-implementation)
+7. [Detailed Component Analysis](#detailed-component-analysis)
+8. [Dependency Analysis](#dependency-analysis)
+9. [Performance Considerations](#performance-considerations)
+10. [Troubleshooting Guide](#troubleshooting-guide)
+11. [Conclusion](#conclusion)
+12. [Appendices](#appendices)
 
 ## Introduction
 This document presents the Architecture Decision Records (ADRs) for Timeskein's foundational architecture, with a particular emphasis on the manual-first design philosophy that defines the system's core principles. The ADRs consolidate the initial architectural choices, design rationale, and trade-offs that shape Timeskein's approach to building a privacy-preserving, local-first context management system.
 
 The documentation now centers on the fundamental decision that Timeskein operates as a manual-first system, where user actions serve as the primary source of truth for work items and their states. This approach establishes clear boundaries between manual curation and automated context collection, creating a principled foundation for future evolution while maintaining immediate value and privacy guarantees.
+
+**Updated** The ADR system has been formalized with a centralized documentation structure that includes ADR-0002 establishing manual-first as the MVP foundation, replacing previous documentation rework approaches.
 
 Key architectural decisions include:
 - **Manual-first as the baseline**: User actions as the primary source of truth for work items
@@ -45,41 +51,87 @@ Key architectural decisions include:
 - **Component separation**: Clear boundaries between surfaces, agents, collectors, and hubs
 - **Privacy-first design**: Strict defaults with explicit user consent for data collection
 
+## ADR System Overview
+Timeskein maintains a formal ADR system with centralized documentation that tracks significant architectural decisions:
+
+```mermaid
+graph TB
+subgraph "ADR System"
+ADR_INDEX["ADR-0002<br/>MVP Manual-first<br/>Status: Accepted<br/>Level: 0"]
+ADR_0001["ADR-0001<br/>Initial Architecture<br/>Status: Accepted<br/>Level: 0"]
+end
+subgraph "Related Documentation"
+RFC1["RFC-0001<br/>MVP Inventory Design<br/>Part A: Level 0"]
+RFC2["RFC-0002<br/>System Topology & Component Map<br/>Level 0+"]
+RFC3["RFC-0003<br/>Client App Suite Architecture<br/>Level 0+"]
+end
+subgraph "User Stories"
+US1["User Story: Manual Inventory<br/>Level 0"]
+US2["User Story: Context Capture<br/>Level 2+"]
+end
+subgraph "Project Overview"
+OVERVIEW["Project Overview<br/>Core Principles & Levels"]
+end
+ADR_INDEX --> RFC1
+ADR_INDEX --> US1
+ADR_0001 --> RFC2
+ADR_0001 --> RFC3
+OVERVIEW --> ADR_INDEX
+OVERVIEW --> ADR_0001
+```
+
+**Diagram sources**
+- [docs/adr/README.md](file://docs/adr/README.md#L1-L25)
+- [docs/adr/0001-initial-architecture.md](file://docs/adr/0001-initial-architecture.md#L1-L190)
+- [docs/adr/0002-mvp-manual-first.md](file://docs/adr/0002-mvp-manual-first.md#L1-L124)
+- [docs/00_project_overview.md](file://docs/00_project_overview.md#L1-L187)
+
+**Section sources**
+- [docs/adr/README.md](file://docs/adr/README.md#L1-L25)
+- [docs/adr/0001-initial-architecture.md](file://docs/adr/0001-initial-architecture.md#L1-L190)
+- [docs/adr/0002-mvp-manual-first.md](file://docs/adr/0002-mvp-manual-first.md#L1-L124)
+- [docs/00_project_overview.md](file://docs/00_project_overview.md#L1-L187)
+
 ## Project Structure
 Timeskein organizes its architecture documentation around the manual-first principle, with ADRs serving as the primary decision-making framework:
 
 ```mermaid
 graph TB
-ADR1["ADR-0001<br/>Initial Architecture"] --> ADR2["ADR-0002<br/>MVP Manual-first"]
-ADR2 --> RFC1["RFC-0001<br/>MVP Inventory Design"]
-ADR2 --> RFC2["RFC-0002<br/>System Topology & Component Map"]
-ADR2 --> RFC3["RFC-0003<br/>Client App Suite Architecture"]
-RFC1 --> MVP["MVP Manual Inventory Story"]
-RFC2 --> MVP
-RFC3 --> MVP
-Overview["Project Overview"] --> ADR1
-Overview --> ADR2
-Overview --> RFC1
-Overview --> RFC2
-Overview --> RFC3
-Overview --> MVP
+subgraph "Documentation Structure"
+ADR_README["docs/adr/README.md<br/>Central ADR Index"]
+ADR_0001["docs/adr/0001-initial-architecture.md<br/>Initial Architecture"]
+ADR_0002["docs/adr/0002-mvp-manual-first.md<br/>MVP = Manual-first"]
+END
+subgraph "Supporting Documentation"
+OVERVIEW["docs/00_project_overview.md<br/>Core Concepts & Principles"]
+GLOS["docs/glossary.md<br/>Terminology & Definitions"]
+RFC1["docs/rfc/0001-mvp-inventory-design.md<br/>Part A: Level 0"]
+RFC2["docs/rfc/0002-system-topology-and-component-map.md<br/>Level 0+"]
+RFC3["docs/rfc/0003-client-app-suite-architecture.md<br/>Level 0+"]
+US1["docs/mvp/02_user_story_manual_inventory.md<br/>Level 0"]
+US2["docs/mvp/01_user_story_context_capture.md<br/>Level 2+"]
+END
+ADR_README --> ADR_0001
+ADR_README --> ADR_0002
+ADR_0002 --> RFC1
+ADR_0002 --> US1
+OVERVIEW --> ADR_0002
+GLOS --> ADR_0002
+RFC1 --> US1
+RFC2 --> US2
 ```
 
 **Diagram sources**
+- [docs/adr/README.md](file://docs/adr/README.md#L1-L25)
 - [docs/adr/0001-initial-architecture.md](file://docs/adr/0001-initial-architecture.md#L1-L190)
 - [docs/adr/0002-mvp-manual-first.md](file://docs/adr/0002-mvp-manual-first.md#L1-L124)
-- [docs/rfc/0001-mvp-inventory-design.md](file://docs/rfc/0001-mvp-inventory-design.md#L1-L340)
-- [docs/rfc/0002-system-topology-and-component-map.md](file://docs/rfc/0002-system-topology-and-component-map.md#L1-L606)
-- [docs/rfc/0003-client-app-suite-architecture.md](file://docs/rfc/0003-client-app-suite-architecture.md#L1-L498)
 - [docs/00_project_overview.md](file://docs/00_project_overview.md#L1-L187)
+- [docs/glossary.md](file://docs/glossary.md#L1-L244)
 
 **Section sources**
+- [docs/adr/README.md](file://docs/adr/README.md#L1-L25)
 - [docs/00_project_overview.md](file://docs/00_project_overview.md#L1-L187)
-- [docs/adr/0001-initial-architecture.md](file://docs/adr/0001-initial-architecture.md#L1-L190)
-- [docs/adr/0002-mvp-manual-first.md](file://docs/adr/0002-mvp-manual-first.md#L1-L124)
-- [docs/rfc/0001-mvp-inventory-design.md](file://docs/rfc/0001-mvp-inventory-design.md#L1-L340)
-- [docs/rfc/0002-system-topology-and-component-map.md](file://docs/rfc/0002-system-topology-and-component-map.md#L1-L606)
-- [docs/rfc/0003-client-app-suite-architecture.md](file://docs/rfc/0003-client-app-suite-architecture.md#L1-L498)
+- [docs/glossary.md](file://docs/glossary.md#L1-L244)
 
 ## Core Components
 Timeskein's architecture centers on the manual-first principle, with the device agent serving as the central point of truth on each device. The core components and their roles reflect this philosophy:
@@ -167,6 +219,8 @@ The manual-first approach represents a fundamental architectural decision that s
 
 ### Core Philosophy
 Manual-first establishes user actions as the primary source of truth for work items and their states. This philosophy creates clear boundaries between manual curation and automated context collection, ensuring that users maintain control over their data and system behavior.
+
+**Updated** ADR-0002 explicitly establishes manual-first as the MVP foundation, clarifying that "nikakogo fonovogo nablyudeniya" (no background monitoring) and "vse deystviya yavnye" (all actions explicit) define the core manual-first approach.
 
 ### Implementation Details
 - **User-driven state changes**: Work Item states (`active|waiting|blocked|done|someday|unknown`) are set exclusively through explicit user actions
@@ -406,13 +460,15 @@ The architectural decisions collectively define a system that:
 - Preserves backward compatibility via shared contracts
 - Enables gradual automation without compromising core values
 
+**Updated** The formal ADR system with centralized documentation ensures that architectural decisions are properly tracked, reviewed, and maintained as the project evolves from manual-first MVP to future levels of automation.
+
 ## Appendices
 
 ### Appendix A: MVP Data Model Highlights
 Manual-first influences the MVP data model:
 
 - **WorkItem**: title, type, state, pinned, note, timestamps, last_seen, deleted_at
-- **ContextEvent**: id, ts, device_id, source, app_id, window_title, url, url_title, is_private, raw
+- **ContextEvent**: id, ts, device_id, source_id, app_id, window_title, url, url_title, is_private, raw
 - **Refs**: id, kind, value, confidence
 - **WorkItemEvent**: id, ts, work_item_id, kind, payload
 
@@ -433,3 +489,15 @@ The manual-first approach provides clear evolution paths:
 **Section sources**
 - [docs/adr/0002-mvp-manual-first.md](file://docs/adr/0002-mvp-manual-first.md#L58-L73)
 - [docs/00_project_overview.md](file://docs/00_project_overview.md#L70-L81)
+
+### Appendix C: ADR Status and Maturity Tracking
+The ADR system maintains clear status indicators for architectural decisions:
+
+- **Status Legend**: Accepted (final and implemented), Draft (under discussion), Superseded (replaced by newer ADR)
+- **Maturity Levels**: Level 0 (Manual-first), Level 1 (Sync), Level 2 (Semantics-first), Level 3 (Full context)
+- **Decision Documentation**: Each ADR includes context, decision, consequences, and linked related documents
+
+**Section sources**
+- [docs/adr/README.md](file://docs/adr/README.md#L16-L21)
+- [docs/adr/0001-initial-architecture.md](file://docs/adr/0001-initial-architecture.md#L10-L13)
+- [docs/adr/0002-mvp-manual-first.md](file://docs/adr/0002-mvp-manual-first.md#L9-L11)

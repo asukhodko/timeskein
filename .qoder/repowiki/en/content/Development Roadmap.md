@@ -3,14 +3,23 @@
 <cite>
 **Referenced Files in This Document**
 - [0001-mvp-execution-roadmap.md](file://docs/roadmap/0001-mvp-execution-roadmap.md)
-- [01_user_story_inventory.md](file://docs/mvp/01_user_story_inventory.md)
 - [02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md)
-- [0001-initial-architecture.md](file://docs/adr/0001-initial-architecture.md)
+- [02_manual_inventory_ui_ux.md](file://docs/mvp/02_manual_inventory_ui_ux.md)
+- [0002-mvp-manual-first.md](file://docs/adr/0002-mvp-manual-first.md)
 - [0001-mvp-inventory-design.md](file://docs/rfc/0001-mvp-inventory-design.md)
 - [0002-system-topology-and-component-map.md](file://docs/rfc/0002-system-topology-and-component-map.md)
 - [0003-client-app-suite-architecture.md](file://docs/rfc/0003-client-app-suite-architecture.md)
 - [00_project_overview.md](file://docs/00_project_overview.md)
+- [docs-rework.md](file://docs/docs-rework.md)
 </cite>
+
+## Update Summary
+**Changes Made**
+- Revised execution roadmap to align with manual-first emphasis as established in documentation rework
+- Updated milestones to reflect the new architectural approach with clear separation between MVP and future enhancement levels
+- Clarified the phased approach from manual-first inventory to advanced features
+- Enhanced documentation structure to show the evolution from Level 0 to Level 3 functionality
+- Added emphasis on the three-phase documentation migration process
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -25,56 +34,70 @@
 10. [Appendices](#appendices)
 
 ## Introduction
-This document presents the comprehensive Development Roadmap for Timeskein, focusing on the MVP execution plan and the phased rollout toward advanced functionality. It outlines the manual-first inventory as the foundation, the transition to multi-device synchronization, and the future direction toward Episodes, Threads, semantic search, and connector integrations. The roadmap emphasizes local-first operation, minimal data collection, and a clear separation of concerns across surfaces, agents, collectors, and hubs.
+This document presents the comprehensive Development Roadmap for Timeskein, focusing on the MVP execution plan centered on manual-first inventory as the foundational approach. The roadmap emphasizes a deliberate shift from mixed "automatic + manual" contexts to a pure manual-first model, establishing clear boundaries between the current MVP (Level 0) and future enhancement levels (Level 1-3). This approach ensures that the system maintains its core principle of user-driven control while providing a solid foundation for eventual automatic context collection.
+
+The manual-first emphasis represents a fundamental architectural decision that affects every aspect of the development timeline, from component design to user experience implementation. This approach prioritizes user trust, privacy, and control over automated intelligence, creating a sustainable foundation for future enhancements.
 
 ## Project Structure
-The repository organizes development artifacts around three primary axes:
-- Roadmap and execution: a time-bound plan for delivering the manual-first inventory across platforms.
-- MVP user stories and acceptance criteria: functional specification for the initial feature set.
-- Architectural and system design documents: component topology, client suite architecture, and initial architecture decisions.
+The repository organizes development artifacts around three primary axes, with the manual-first approach as the central organizing principle:
+
+- **Roadmap and execution**: Time-bound plan for delivering manual-first inventory across platforms with clear documentation migration gates
+- **MVP user stories and acceptance criteria**: Functional specification for the manual-first feature set (Level 0)
+- **Architectural and system design documents**: Component topology, client suite architecture, and manual-first design principles
 
 ```mermaid
 graph TB
+subgraph "Documentation Migration Process"
+DM1["Docs Migration Gates"]
+DM2["ADR-0002: MVP = Manual-first"]
+DM3["Glossary Establishment"]
+end
 subgraph "Documentation"
 R1["docs/roadmap/0001-mvp-execution-roadmap.md"]
-U1["docs/mvp/01_user_story_inventory.md"]
-U2["docs/mvp/02_user_story_manual_inventory.md"]
-ADR["docs/adr/0001-initial-architecture.md"]
+U1["docs/mvp/02_user_story_manual_inventory.md"]
+U2["docs/mvp/02_manual_inventory_ui_ux.md"]
+ADR["docs/adr/0002-mvp-manual-first.md"]
 RFC1["docs/rfc/0001-mvp-inventory-design.md"]
 RFC2["docs/rfc/0002-system-topology-and-component-map.md"]
 RFC3["docs/rfc/0003-client-app-suite-architecture.md"]
 OVER["docs/00_project_overview.md"]
+REWORK["docs/docs-rework.md"]
 end
-R1 --> U2
+DM1 --> DM2
+DM2 --> R1
+R1 --> U1
 R1 --> RFC2
-U2 --> RFC1
+U1 --> RFC1
 RFC2 --> RFC3
 ADR --> RFC1
 OVER --> ADR
+REWORK --> DM1
 ```
 
 **Diagram sources**
-- [0001-mvp-execution-roadmap.md](file://docs/roadmap/0001-mvp-execution-roadmap.md#L1-L227)
-- [02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md#L1-L419)
-- [0001-initial-architecture.md](file://docs/adr/0001-initial-architecture.md#L1-L118)
-- [0001-mvp-inventory-design.md](file://docs/rfc/0001-mvp-inventory-design.md#L1-L254)
-- [0002-system-topology-and-component-map.md](file://docs/rfc/0002-system-topology-and-component-map.md#L1-L488)
+- [0001-mvp-execution-roadmap.md](file://docs/roadmap/0001-mvp-execution-roadmap.md#L1-L301)
+- [02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md#L1-L513)
+- [0002-mvp-manual-first.md](file://docs/adr/0002-mvp-manual-first.md#L1-L124)
+- [0001-mvp-inventory-design.md](file://docs/rfc/0001-mvp-inventory-design.md#L1-L340)
+- [0002-system-topology-and-component-map.md](file://docs/rfc/0002-system-topology-and-component-map.md#L1-L606)
 - [0003-client-app-suite-architecture.md](file://docs/rfc/0003-client-app-suite-architecture.md#L1-L418)
-- [00_project_overview.md](file://docs/00_project_overview.md#L1-L101)
+- [00_project_overview.md](file://docs/00_project_overview.md#L1-L187)
+- [docs-rework.md](file://docs/docs-rework.md#L1-L473)
 
 **Section sources**
-- [0001-mvp-execution-roadmap.md](file://docs/roadmap/0001-mvp-execution-roadmap.md#L1-L227)
-- [00_project_overview.md](file://docs/00_project_overview.md#L1-L101)
+- [0001-mvp-execution-roadmap.md](file://docs/roadmap/0001-mvp-execution-roadmap.md#L1-L301)
+- [docs-rework.md](file://docs/docs-rework.md#L1-L473)
 
 ## Core Components
-The roadmap centers on a clear set of components and their roles:
-- Device Agent (TS-AGENT): local backend that executes use-cases, stores data, and coordinates with surfaces and sync.
-- Surfaces (TS-DESKTOP, TS-ANDROID): thin UI hosts that expose commands and views via a shared bridge.
-- Hub and Sync (TS-HUB, TS-SYNC): optional server and client-side replication for multi-device.
-- Collectors and Connectors: platform-specific data sources and application integrations.
-- Shared Contracts (TS-SCHEMA): versioned DTOs and protocols for interoperability.
+The roadmap centers on a clear set of components designed around the manual-first principle:
 
-Key outcomes for each phase are defined by gates and acceptance criteria aligned with the manual-first inventory story.
+- **Device Agent (TS-AGENT)**: Local backend that executes use-cases, stores data, and coordinates with surfaces while maintaining strict manual-first boundaries
+- **Surfaces (TS-DESKTOP, TS-ANDROID)**: Thin UI hosts that expose commands and views via a shared bridge, operating exclusively on user-initiated actions
+- **Hub and Sync (TS-HUB, TS-SYNC)**: Optional server and client-side replication for multi-device synchronization, included only if multi-device is part of MVP scope
+- **Collectors and Connectors**: Platform-specific data sources and application integrations that operate as optional extensions with explicit user consent
+- **Shared Contracts (TS-SCHEMA)**: Versioned DTOs and protocols for interoperability, establishing clear boundaries between manual-first core and future enhancement layers
+
+Key outcomes for each phase are defined by gates and acceptance criteria aligned with the manual-first inventory story, ensuring that every enhancement builds upon the established trust foundation.
 
 **Section sources**
 - [0002-system-topology-and-component-map.md](file://docs/rfc/0002-system-topology-and-component-map.md#L118-L341)
@@ -82,11 +105,12 @@ Key outcomes for each phase are defined by gates and acceptance criteria aligned
 - [02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md#L76-L190)
 
 ## Architecture Overview
-The system follows a local-first, layered architecture:
-- Surfaces call the Device Agent via a local API.
-- Device Agent persists data locally and orchestrates operations.
-- Optional collectors send events to the Device Agent for ingestion.
-- Optional sync replicates changes across devices via a hub.
+The system follows a local-first, layered architecture built around manual-first principles:
+
+- Surfaces call the Device Agent via a local API for all user-initiated actions
+- Device Agent persists data locally and orchestrates operations while maintaining strict privacy boundaries
+- Optional collectors send events to the Device Agent for ingestion only when explicitly permitted by the user
+- Optional sync replicates changes across devices via a hub when multi-device is included in MVP scope
 
 ```mermaid
 graph TB
@@ -99,11 +123,11 @@ end
 HUB["TS-HUB"]
 SYNC["TS-SYNC"]
 SCHEMA["TS-SCHEMA"]
-D_UI --> |"Local API"| AG
-A_UI --> |"Local API"| AG
-COL --> |"Event Ingest API"| AG
-AG --> |"Replication"| SYNC
-SYNC --> |"HTTPS"| HUB
+D_UI --> |"Local API (Manual Actions Only)"| AG
+A_UI --> |"Local API (Manual Actions Only)"| AG
+COL --> |"Event Ingest API (Explicit Consent)"| AG
+AG --> |"Replication (Optional)"| SYNC
+SYNC --> |"HTTPS (Optional)"| HUB
 SCHEMA -.-> D_UI
 SCHEMA -.-> A_UI
 SCHEMA -.-> AG
@@ -121,94 +145,118 @@ SCHEMA -.-> HUB
 
 ## Detailed Component Analysis
 
-### Phase 0: Documentation and Contours
-- Deliverables: finalize user story, UX doc, and component topology/contract RFCs.
-- Success criteria: all stakeholders agree on scope and boundaries; documentation is ready for implementation.
+### Phase 0: Documentation Migration and Manual-First Foundation
+**Updated** Revised to emphasize the documentation migration process that establishes manual-first as the unifying principle across all development artifacts.
+
+- **Deliverables**: Complete documentation migration with clear manual-first gates, establish glossary, and create unified ADR-0002
+- **Success criteria**: All stakeholders agree on manual-first scope; documentation is ready for implementation; clear separation between MVP and future enhancement levels
+- **Gate**: Eliminate MVP contradictions between automatic and manual approaches
 
 **Section sources**
-- [0001-mvp-execution-roadmap.md](file://docs/roadmap/0001-mvp-execution-roadmap.md#L11-L18)
+- [0001-mvp-execution-roadmap.md](file://docs/roadmap/0001-mvp-execution-roadmap.md#L28-L47)
+- [docs-rework.md](file://docs/docs-rework.md#L11-L27)
 
 ### Phase 1: Monorepo Skeleton and Shared Contracts
-- Deliverables: initialize packages for TS-SCHEMA, TS-AGENT, TS-DESKTOP, TS-ANDROID, TS-HUB.
-- Success criteria: build passes, tests run, schema versions are visible across components.
+- **Deliverables**: Initialize packages for TS-SCHEMA, TS-AGENT, TS-DESKTOP, TS-ANDROID, TS-HUB with manual-first boundaries
+- **Success criteria**: Build passes, tests run, schema versions are visible across components, all contracts enforce manual-first constraints
+- **Gate**: Establish clear separation between manual core and optional enhancement layers
 
 **Section sources**
-- [0001-mvp-execution-roadmap.md](file://docs/roadmap/0001-mvp-execution-roadmap.md#L20-L34)
+- [0001-mvp-execution-roadmap.md](file://docs/roadmap/0001-mvp-execution-roadmap.md#L59-L73)
 
 ### Phase 2: Zero Vertical End-to-End (Web UI + Local Agent)
-- Deliverables: shared web UI on Windows, macOS, Android; bridge to local agent; basic ping/list.
-- Success criteria: identical UI works across platforms and calls the agent consistently.
+- **Deliverables**: Shared web UI on Windows, macOS, Android; bridge to local agent; basic ping/list with manual-first constraints
+- **Success criteria**: Identical UI works across platforms and calls the agent consistently for manual actions only
+- **Gate**: Verify manual-first boundary enforcement across all platforms
 
 **Section sources**
-- [0001-mvp-execution-roadmap.md](file://docs/roadmap/0001-mvp-execution-roadmap.md#L37-L56)
+- [0001-mvp-execution-roadmap.md](file://docs/roadmap/0001-mvp-execution-roadmap.md#L76-L95)
 
 ### Phase 3: TS-AGENT Implementation (Domain, Use Cases, Storage)
-- Deliverables: WorkItem/Ref/State domain, core use-cases, refs engine, SQLite storage, minimal event log.
-- Success criteria: all user-story scenarios run via CLI/scripts without UI; tests pass.
+**Updated** Enhanced to emphasize manual-first domain implementation and strict privacy boundaries.
+
+- **Deliverables**: WorkItem/Ref/State domain, core use-cases, refs engine, SQLite storage, minimal event log with manual-first enforcement
+- **Success criteria**: All user-story scenarios run via CLI/scripts without UI; tests pass; manual-first actions only trigger data changes
+- **Gate**: Verify that all agent operations respect manual-first constraints and privacy boundaries
 
 **Section sources**
-- [0001-mvp-execution-roadmap.md](file://docs/roadmap/0001-mvp-execution-roadmap.md#L59-L92)
+- [0001-mvp-execution-roadmap.md](file://docs/roadmap/0001-mvp-execution-roadmap.md#L98-L131)
 
 ### Phase 4: Desktop Surfaces Integration
-- Deliverables: palette, tray/menubar, hotkeys, opener, clipboard, file picker adapters.
-- Success criteria: full user-story-02 cycle on Windows; parity on macOS.
+- **Deliverables**: Palette, tray/menubar, hotkeys, opener, clipboard, file picker adapters with manual-first UI constraints
+- **Success criteria**: Full user-story-02 cycle on Windows; parity on macOS; all actions require explicit user initiation
+- **Gate**: Desktop surfaces successfully demonstrate manual-first interaction patterns
 
 **Section sources**
-- [0001-mvp-execution-roadmap.md](file://docs/roadmap/0001-mvp-execution-roadmap.md#L95-L118)
+- [0001-mvp-execution-roadmap.md](file://docs/roadmap/0001-mvp-execution-roadmap.md#L134-L157)
 
 ### Phase 5: Android Surface Integration
-- Deliverables: shared UI, launcher shortcuts, share sheet, opener/intents, clipboard/file picker.
-- Success criteria: user-story-02 equivalent on Android; activation via native entrypoints.
+- **Deliverables**: Shared UI, launcher shortcuts, share sheet, opener/intents, clipboard/file picker with manual-first constraints
+- **Success criteria**: User-story-02 equivalent on Android; activation via native entrypoints; all actions require explicit user initiation
+- **Gate**: Android surface demonstrates consistent manual-first behavior across all interaction patterns
 
 **Section sources**
-- [0001-mvp-execution-roadmap.md](file://docs/roadmap/0001-mvp-execution-roadmap.md#L121-L139)
+- [0001-mvp-execution-roadmap.md](file://docs/roadmap/0001-mvp-execution-roadmap.md#L160-L178)
 
 ### Phase 6: Iterative Implementation of User Story Scenarios
-- Approach: implement scenario in shared core/agent first, validate in shared web UI, then platform glue.
-- Success criteria: each scenario verified on all three platforms.
+**Updated** Emphasize iterative approach that maintains manual-first boundaries throughout implementation.
+
+- **Approach**: Implement scenario in shared core/agent first, validate in shared web UI, then platform glue with manual-first constraints
+- **Success criteria**: Each scenario verified on all three platforms with explicit user action requirements
+- **Gate**: Manual-first scenarios validated across all supported platforms
 
 **Section sources**
-- [0001-mvp-execution-roadmap.md](file://docs/roadmap/0001-mvp-execution-roadmap.md#L142-L153)
+- [0001-mvp-execution-roadmap.md](file://docs/roadmap/0001-mvp-execution-roadmap.md#L181-L192)
 
 ### Phase 7: Closure of Remaining Requirements
-- Deliverables: polish sorting/filtering, UX edge cases, denylist behavior, conflict handling.
-- Success criteria: checklist for user-story-02 closed.
+**Updated** Focus on manual-first completion criteria and privacy boundary enforcement.
+
+- **Deliverables**: Polish sorting/filtering, UX edge cases, denylist behavior, conflict handling with manual-first constraints
+- **Success criteria**: Checklist for user-story-02 closed; all privacy and manual-first requirements met
+- **Gate**: Final manual-first compliance verification across all features
 
 **Section sources**
-- [0001-mvp-execution-roadmap.md](file://docs/roadmap/0001-mvp-execution-roadmap.md#L156-L165)
+- [0001-mvp-execution-roadmap.md](file://docs/roadmap/0001-mvp-execution-roadmap.md#L195-L204)
 
 ### Phase 8: Optional Hub + Sync Layer
-- Inclusion depends on whether multi-device is part of MVP.
-- Deliverables: TS-HUB minimal registration and sync endpoints; TS-SYNC outbox/inbox with idempotency and minimal conflict strategy.
-- Success criteria: changes on one device appear on others; otherwise deferred to next milestone.
+**Updated** Clarify that multi-device sync is optional and separate from manual-first MVP.
+
+- **Inclusion depends on whether multi-device is part of MVP scope**
+- **Deliverables**: TS-HUB minimal registration and sync endpoints; TS-SYNC outbox/inbox with idempotency and minimal conflict strategy
+- **Success criteria**: Changes on one device appear on others if included; otherwise deferred to next milestone
+- **Gate**: Optional sync inclusion decision based on MVP scope determination
 
 **Section sources**
-- [0001-mvp-execution-roadmap.md](file://docs/roadmap/0001-mvp-execution-roadmap.md#L168-L193)
+- [0001-mvp-execution-roadmap.md](file://docs/roadmap/0001-mvp-execution-roadmap.md#L207-L232)
 
 ### Phase 9: Non-functional Requirements (MVP)
-- Performance: fast agent start, palette, list/search.
-- Reliability: migrations, crash recovery, DB integrity.
-- Security: local API isolation, minimal permissions, denylist enforcement.
-- Diagnostics: logs, debug mode, manual export/backup.
-- Delivery: installers/signatures/packages, autostart, basic update strategy.
-- Success criteria: MVP resilient under real usage.
+**Updated** Emphasize manual-first privacy and security requirements.
+
+- **Performance**: Fast agent start, palette, list/search with manual-first constraints
+- **Reliability**: Migrations, crash recovery, DB integrity with privacy preservation
+- **Security**: Local API isolation, minimal permissions, denylist enforcement, manual-first action verification
+- **Diagnostics**: Logs, debug mode, manual export/backup with privacy controls
+- **Delivery**: Installers/signatures/packages, autostart, basic update strategy with manual-first compliance
+- **Success criteria**: MVP resilient under real usage with strict manual-first adherence
 
 **Section sources**
-- [0001-mvp-execution-roadmap.md](file://docs/roadmap/0001-mvp-execution-roadmap.md#L196-L227)
+- [0001-mvp-execution-roadmap.md](file://docs/roadmap/0001-mvp-execution-roadmap.md#L235-L266)
 
 ### Transition from MVP to Enhanced Functionality
-- Levels of maturity:
-  - Level 0: Manual-first inventory (user-story-02).
-  - Level 1: Sync (multi-device).
-  - Level 2: Lightweight context (semantics-first connectors).
-  - Level 3: Full context collection (collectors per platform, Episodes/Threads).
-- Gates: each level introduces new components and APIs while preserving the manual-first Work Item model.
+**Updated** Clarify the evolution from manual-first foundation to advanced features.
+
+- **Levels of maturity**:
+  - **Level 0**: Manual-first inventory (user-story-02) - pure manual operation
+  - **Level 1**: Sync (multi-device) - optional device synchronization
+  - **Level 2**: Lightweight context (semantics-first connectors) - explicit user action context capture
+  - **Level 3**: Full context collectors - always-on collectors with explicit user consent
+- **Gates**: Each level introduces new components and APIs while preserving the manual-first Work Item model as the source of truth
 
 ```mermaid
 flowchart TD
-L0["Level 0: Manual-first Inventory"] --> L1["Level 1: Sync (Multi-device)"]
-L1 --> L2["Level 2: Lightweight Context (Semantics-first Connectors)"]
-L2 --> L3["Level 3: Full Context Collection (Collectors, Episodes/Threads)"]
+L0["Level 0: Manual-first Inventory<br/>(Pure Manual Operation)"] --> L1["Level 1: Sync (Multi-device)<br/>(Optional)"]
+L1 --> L2["Level 2: Lightweight Context<br/>(Semantics-first Connectors)"]
+L2 --> L3["Level 3: Full Context Collectors<br/>(Always-on with Consent)"]
 ```
 
 **Diagram sources**
@@ -218,39 +266,48 @@ L2 --> L3["Level 3: Full Context Collection (Collectors, Episodes/Threads)"]
 - [0003-client-app-suite-architecture.md](file://docs/rfc/0003-client-app-suite-architecture.md#L308-L335)
 
 ### Future Development: Connectors and Integrations
-- Connector scope: Obsidian, Slack, GitHub, Jira, and other applications/services.
-- Strategy: event ingest from connectors into the Device Agent; minimal permissions; explicit user actions; denylist policies.
-- Integration model: connectors emit structured context; Agent applies policies and enriches Work Items.
+**Updated** Emphasize explicit user consent and manual-first boundaries for future integrations.
+
+- **Connector scope**: Obsidian, Slack, GitHub, Jira, and other applications/services with explicit user consent
+- **Strategy**: Event ingest from connectors into the Device Agent requires explicit user actions; minimal permissions; denylist policies
+- **Integration model**: Connectors emit structured context with provenance; Agent applies policies and enriches Work Items while maintaining manual-first control
+- **Gate**: Explicit user consent required for all connector integrations
 
 **Section sources**
 - [0002-system-topology-and-component-map.md](file://docs/rfc/0002-system-topology-and-component-map.md#L280-L296)
 - [0001-mvp-inventory-design.md](file://docs/rfc/0001-mvp-inventory-design.md#L28-L35)
 
 ### Optional Server Architecture and Conflict Resolution
-- Hub backend: registration, device/user identity, sync endpoints.
-- Sync engine: outbox/inbox, idempotency, minimal conflict strategy.
-- Conflict resolution: keep user-driven state/note as source of truth; merge strategies evolve post-MVP.
+**Updated** Clarify that server architecture is optional and separate from manual-first MVP.
+
+- **Hub backend**: Registration, device/user identity, sync endpoints (optional)
+- **Sync engine**: Outbox/inbox, idempotency, minimal conflict strategy (optional)
+- **Conflict resolution**: Keep user-driven state/note as source of truth; merge strategies evolve post-MVP
+- **Gate**: Optional inclusion based on MVP scope determination
 
 **Section sources**
 - [0002-system-topology-and-component-map.md](file://docs/rfc/0002-system-topology-and-component-map.md#L199-L235)
 
 ### Timeline and Milestones
-- The roadmap is structured as a series of gates and deliverables across 9 phases, with optional inclusion of multi-device sync depending on MVP scope.
-- Each phase includes acceptance criteria and success indicators to guide progress.
+**Updated** Emphasize the documentation migration gates and manual-first alignment.
+
+- **The roadmap is structured as a series of gates and deliverables across 9 phases**, with optional inclusion of multi-device sync depending on MVP scope
+- **Each phase includes acceptance criteria and success indicators** to guide progress while maintaining manual-first principles
+- **Documentation migration gates ensure consistency** across all development artifacts
 
 **Section sources**
-- [0001-mvp-execution-roadmap.md](file://docs/roadmap/0001-mvp-execution-roadmap.md#L1-L227)
+- [0001-mvp-execution-roadmap.md](file://docs/roadmap/0001-mvp-execution-roadmap.md#L1-L301)
 
 ## Dependency Analysis
-The components depend on each other in a layered fashion, with shared contracts mediating communication.
+The components depend on each other in a layered fashion, with shared contracts mediating communication while enforcing manual-first boundaries.
 
 ```mermaid
 graph LR
-SURF["Surfaces (Desktop/Android)"] --> |Local API| AG["TS-AGENT"]
-COL["Collectors/Connectors"] --> |Event Ingest API| AG
-AG --> |Storage| DB["Local Storage"]
-AG --> |Sync| SYNC["TS-SYNC"]
-SYNC --> |HTTPS| HUB["TS-HUB"]
+SURF["Surfaces (Desktop/Android)"] --> |"Local API (Manual Actions Only)"| AG["TS-AGENT"]
+COL["Collectors/Connectors"] --> |"Event Ingest API (Explicit Consent)"| AG
+AG --> |"Storage (Manual-first Only)"| DB["Local Storage"]
+AG --> |"Sync (Optional)"| SYNC["TS-SYNC"]
+SYNC --> |"HTTPS (Optional)"| HUB["TS-HUB"]
 SCHEMA["TS-SCHEMA"] -.-> SURF
 SCHEMA -.-> AG
 SCHEMA -.-> SYNC
@@ -264,40 +321,57 @@ SCHEMA -.-> HUB
 - [0002-system-topology-and-component-map.md](file://docs/rfc/0002-system-topology-and-component-map.md#L298-L341)
 
 ## Performance Considerations
-- Fast startup and responsiveness for agent, palette, and inventory/search.
-- Indexing and transactional writes for SQLite.
-- Debounce and batching for context events to reduce overhead.
-- Offline-first design to avoid network-dependent latency.
-
-[No sources needed since this section provides general guidance]
+- **Fast startup and responsiveness** for agent, palette, and inventory/search with manual-first constraints
+- **Indexing and transactional writes** for SQLite with privacy-preserving operations
+- **Debounce and batching** for context events to reduce overhead while maintaining manual-first boundaries
+- **Offline-first design** to avoid network-dependent latency and maintain user control
+- **Manual-first optimization** to minimize computational overhead while preserving user experience
 
 ## Troubleshooting Guide
-- Logs and debug mode enable diagnostics.
-- Export/backup capability for recovery and inspection.
-- Denylist and pause modes to isolate privacy-sensitive contexts.
-- Contract testing and schema versioning to prevent integration regressions.
+- **Logs and debug mode** enable diagnostics while maintaining privacy boundaries
+- **Export/backup capability** for recovery and inspection with manual-first controls
+- **Denylist and pause modes** to isolate privacy-sensitive contexts with explicit user consent
+- **Contract testing and schema versioning** to prevent integration regressions while enforcing manual-first constraints
+- **Manual-first verification** to ensure all troubleshooting activities respect user control principles
 
 **Section sources**
 - [0001-mvp-execution-roadmap.md](file://docs/roadmap/0001-mvp-execution-roadmap.md#L213-L222)
 - [0001-initial-architecture.md](file://docs/adr/0001-initial-architecture.md#L77-L86)
 
 ## Conclusion
-The Timeskein Development Roadmap establishes a pragmatic, local-first path from manual-first inventory to multi-device synchronization and beyond. By keeping the Work Item model as the source of truth, deferring heavy automation until later, and modularizing surfaces, agents, collectors, and hubs, the project balances rapid delivery with long-term extensibility. Contributors and stakeholders can track progress against clear gates and acceptance criteria, ensuring steady advancement toward Episodes, Threads, semantic search, and robust connector ecosystems.
+The Timeskein Development Roadmap establishes a pragmatic, manual-first path from pure manual inventory to optional multi-device synchronization and eventual automatic context collection. By keeping the Work Item model as the source of truth and maintaining strict manual-first boundaries, the project balances rapid delivery with long-term extensibility while building user trust. The documentation migration process ensures consistency across all development artifacts, and contributors and stakeholders can track progress against clear gates and acceptance criteria that prioritize user control, privacy, and manual-first principles.
 
-[No sources needed since this section summarizes without analyzing specific files]
+The manual-first emphasis creates a sustainable foundation for future enhancements, ensuring that any automatic intelligence serves user control rather than replacing it. This approach provides clear pathways for evolution while maintaining the core values that make Timeskein valuable for personal context management.
 
 ## Appendices
 
 ### Acceptance Criteria Alignment
-- Manual-first inventory acceptance criteria define the MVP scope and success measures for each user story.
-- These criteria inform gates and deliverables across roadmap phases.
+- **Manual-first inventory acceptance criteria** define the MVP scope and success measures for each user story
+- **These criteria inform gates and deliverables** across roadmap phases while maintaining manual-first boundaries
+- **Privacy and user control requirements** are integrated into every acceptance criterion
 
 **Section sources**
-- [01_user_story_inventory.md](file://docs/mvp/01_user_story_inventory.md#L33-L60)
+- [02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md#L93-L206)
 - [02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md#L76-L190)
 
 ### Initial Architecture Principles
-- Local-first, minimal data, privacy-first, and extensible design anchor the roadmap’s evolution.
+**Updated** Emphasize manual-first as the foundational principle.
+
+- **Local-first, minimal data, privacy-first, and extensible design** anchor the roadmap's evolution while maintaining manual-first boundaries
+- **Manual-first as the baseline** ensures user control remains paramount throughout all development phases
+- **Clear separation** between manual core and optional enhancement layers prevents feature creep
 
 **Section sources**
-- [0001-initial-architecture.md](file://docs/adr/0001-initial-architecture.md#L18-L86)
+- [0002-mvp-manual-first.md](file://docs/adr/0002-mvp-manual-first.md#L18-L92)
+- [00_project_overview.md](file://docs/00_project_overview.md#L47-L82)
+
+### Documentation Migration Process
+**New Section** Details the systematic approach to aligning all documentation with manual-first principles.
+
+- **Phase 1**: Stabilize manual-first meaning through ADR-0002 and glossary establishment
+- **Phase 2**: Develop contract-based documentation with clear separation between MVP and future levels  
+- **Phase 3**: Close documentation gaps with RFCs for Local API, Event Ingest, and Retention/TTL
+- **Phase 4**: Clean up remaining inconsistencies and establish final documentation standards
+
+**Section sources**
+- [docs-rework.md](file://docs/docs-rework.md#L431-L473)

@@ -3,12 +3,20 @@
 <cite>
 **Referenced Files in This Document**
 - [00_project_overview.md](file://docs/00_project_overview.md)
-- [01_user_story_inventory.md](file://docs/mvp/01_user_story_inventory.md)
 - [02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md)
 - [02_manual_inventory_ui_ux.md](file://docs/mvp/02_manual_inventory_ui_ux.md)
+- [01_user_story_context_capture.md](file://docs/mvp/01_user_story_context_capture.md)
 - [0001-mvp-inventory-design.md](file://docs/rfc/0001-mvp-inventory-design.md)
-- [0001-initial-architecture.md](file://docs/adr/0001-initial-architecture.md)
+- [0002-mvp-manual-first.md](file://docs/adr/0002-mvp-manual-first.md)
 </cite>
+
+## Update Summary
+**Changes Made**
+- Consolidated user story documentation with enhanced manual inventory story replacing the previous inventory story
+- Added new context capture user story for Level 2 functionality
+- Updated UI/UX documentation to reflect manual-first approach consolidation
+- Revised project structure to reflect the new documentation organization
+- Updated references to reflect the removal of the old user story file
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -23,36 +31,36 @@
 10. [Appendices](#appendices)
 
 ## Introduction
-This document consolidates the MVP specifications for manual inventory management in Timeskein. It focuses on the user story for manual-first work inventory, acceptance criteria, user interaction scenarios, UI/UX design principles, and how these requirements translate into system functionality. It is intended for both beginners who want to understand what the MVP delivers and developers who need implementation details.
+This document consolidates the MVP specifications for manual inventory management in Timeskein. It focuses on the user story for manual-first work inventory, acceptance criteria, user interaction scenarios, UI/UX design principles, and how these requirements translate into system functionality. The documentation now reflects the consolidated approach where the manual inventory user story serves as the canonical specification for MVP, with context capture functionality reserved for future levels.
 
 ## Project Structure
-The MVP documentation is organized around three primary sources:
-- A user story describing the manual inventory feature and its acceptance criteria
+The MVP documentation is organized around the consolidated user story and supporting specifications:
+- A comprehensive user story describing the manual inventory feature and its acceptance criteria
 - A UI/UX specification for the manual inventory experience
+- A context capture user story for future expansion
 - An RFC detailing the MVP design, including data model, pipeline, and privacy policies
-- An ADR establishing the initial architecture and principles for MVP
+- An ADR establishing the manual-first architecture and principles for MVP
 
 ```mermaid
 graph TB
-A["Project Overview<br/>docs/00_project_overview.md"] --> B["MVP User Story<br/>docs/mvp/01_user_story_inventory.md"]
-A --> C["Manual Inventory User Story<br/>docs/mvp/02_user_story_manual_inventory.md"]
-C --> D["Manual Inventory UI/UX<br/>docs/mvp/02_manual_inventory_ui_ux.md"]
-C --> E["RFC: MVP Inventory Design<br/>docs/rfc/0001-mvp-inventory-design.md"]
-E --> F["ADR: Initial Architecture<br/>docs/adr/0001-initial-architecture.md"]
-B --> E
-D --> E
+A["Project Overview<br/>docs/00_project_overview.md"] --> B["Manual Inventory User Story<br/>docs/mvp/02_user_story_manual_inventory.md"]
+B --> C["Manual Inventory UI/UX<br/>docs/mvp/02_manual_inventory_ui_ux.md"]
+B --> D["RFC: MVP Inventory Design<br/>docs/rfc/0001-mvp-inventory-design.md"]
+B --> E["Context Capture User Story<br/>docs/mvp/01_user_story_context_capture.md"]
+D --> F["ADR: Manual-first Architecture<br/>docs/adr/0002-mvp-manual-first.md"]
+E --> D
 ```
 
 **Diagram sources**
-- [00_project_overview.md](file://docs/00_project_overview.md#L1-L101)
-- [01_user_story_inventory.md](file://docs/mvp/01_user_story_inventory.md#L1-L85)
-- [02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md#L1-L419)
-- [02_manual_inventory_ui_ux.md](file://docs/mvp/02_manual_inventory_ui_ux.md#L1-L514)
-- [0001-mvp-inventory-design.md](file://docs/rfc/0001-mvp-inventory-design.md#L1-L254)
-- [0001-initial-architecture.md](file://docs/adr/0001-initial-architecture.md#L1-L118)
+- [00_project_overview.md](file://docs/00_project_overview.md#L1-L187)
+- [02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md#L1-L513)
+- [02_manual_inventory_ui_ux.md](file://docs/mvp/02_manual_inventory_ui_ux.md#L1-L570)
+- [01_user_story_context_capture.md](file://docs/mvp/01_user_story_context_capture.md#L1-L135)
+- [0001-mvp-inventory-design.md](file://docs/rfc/0001-mvp-inventory-design.md#L1-L340)
+- [0002-mvp-manual-first.md](file://docs/adr/0002-mvp-manual-first.md#L1-L124)
 
 **Section sources**
-- [00_project_overview.md](file://docs/00_project_overview.md#L62-L92)
+- [00_project_overview.md](file://docs/00_project_overview.md#L116-L136)
 
 ## Core Components
 - Work Item: The core entity representing a task/project/question. It includes title, state, note, pinned flag, last_seen_at, timestamps, and optional type.
@@ -69,12 +77,12 @@ Key acceptance criteria covered:
 - Full offline operation with local storage
 
 **Section sources**
-- [01_user_story_inventory.md](file://docs/mvp/01_user_story_inventory.md#L13-L60)
-- [02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md#L37-L64)
-- [0001-mvp-inventory-design.md](file://docs/rfc/0001-mvp-inventory-design.md#L66-L113)
+- [02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md#L54-L81)
+- [02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md#L93-L206)
+- [0001-mvp-inventory-design.md](file://docs/rfc/0001-mvp-inventory-design.md#L80-L128)
 
 ## Architecture Overview
-The MVP architecture centers on a local-first agent that persists minimal context and maintains a human-readable Work Item state. Data is stored locally (SQLite), and UI surfaces are designed for speed and clarity.
+The MVP architecture centers on a local-first agent that persists minimal context and maintains a human-readable Work Item state. Data is stored locally (SQLite), and UI surfaces are designed for speed and clarity. The manual-first approach ensures that all actions require explicit user initiation.
 
 ```mermaid
 graph TB
@@ -87,7 +95,7 @@ subgraph "Data Model"
 WI["Work Items"]
 REFS["Refs"]
 WIE["Work Item Events"]
-end
+END
 UI --> INV
 INV --> DB
 DB --> WI
@@ -96,13 +104,13 @@ DB --> WIE
 ```
 
 **Diagram sources**
-- [0001-initial-architecture.md](file://docs/adr/0001-initial-architecture.md#L23-L53)
-- [0001-mvp-inventory-design.md](file://docs/rfc/0001-mvp-inventory-design.md#L66-L113)
+- [0002-mvp-manual-first.md](file://docs/adr/0002-mvp-manual-first.md#L40-L57)
+- [0001-mvp-inventory-design.md](file://docs/rfc/0001-mvp-inventory-design.md#L80-L128)
 
 ## Detailed Component Analysis
 
 ### Manual Inventory User Story
-This story defines the manual-first ledger for Work Items:
+This story defines the manual-first ledger for Work Items, serving as the canonical specification for MVP:
 - Work Item lifecycle: create, set state, add note, pin, attach refs, touch, open last ref
 - Inventory sorting: pinned first, then by state rank, then by last_seen descending
 - Offline-first behavior with explicit user actions updating last_seen
@@ -127,12 +135,12 @@ Acceptance criteria mapping:
 - Privacy controls via denylist and pause
 
 **Section sources**
-- [02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md#L29-L190)
-- [02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md#L190-L280)
+- [02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md#L46-L254)
+- [02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md#L93-L206)
 
 ### UI/UX Specification for Manual Inventory
-The UI/UX emphasizes speed and clarity:
-- Global hotkey overlay as the primary surface
+The UI/UX emphasizes speed and clarity through a global hotkey overlay and tray menu:
+- Global hotkey overlay as the primary surface for instant access
 - Tray/menu bar for quick access and settings
 - Minimal screens and keyboard-driven navigation
 - Clear affordances for fast actions: Enter (open), T (touch), N (note), S (state), R (refs), P (pin)
@@ -157,11 +165,27 @@ Privacy and error handling:
 - Conflict dialog with clear choices
 
 **Section sources**
-- [02_manual_inventory_ui_ux.md](file://docs/mvp/02_manual_inventory_ui_ux.md#L15-L61)
-- [02_manual_inventory_ui_ux.md](file://docs/mvp/02_manual_inventory_ui_ux.md#L138-L227)
-- [02_manual_inventory_ui_ux.md](file://docs/mvp/02_manual_inventory_ui_ux.md#L229-L367)
-- [02_manual_inventory_ui_ux.md](file://docs/mvp/02_manual_inventory_ui_ux.md#L369-L432)
-- [02_manual_inventory_ui_ux.md](file://docs/mvp/02_manual_inventory_ui_ux.md#L434-L455)
+- [02_manual_inventory_ui_ux.md](file://docs/mvp/02_manual_inventory_ui_ux.md#L80-L122)
+- [02_manual_inventory_ui_ux.md](file://docs/mvp/02_manual_inventory_ui_ux.md#L194-L226)
+- [02_manual_inventory_ui_ux.md](file://docs/mvp/02_manual_inventory_ui_ux.md#L246-L383)
+- [02_manual_inventory_ui_ux.md](file://docs/mvp/02_manual_inventory_ui_ux.md#L386-L401)
+
+### Context Capture User Story (Level 2)
+This user story describes future functionality for Level 2 expansion:
+- Users can capture current context (active window, URL) via explicit command
+- Automatic extraction of refs from current context (URL, window title, issue keys)
+- Suggestions for existing Work Items based on strong refs
+- Optional automatic last_seen updates for previously linked refs
+
+Dependencies and limitations:
+- Requires SourceNode infrastructure and explicit user approval
+- Works only when sources are connected and approved
+- Does not replace manual-first as the base functionality
+- Maintains user control over state and note values
+
+**Section sources**
+- [01_user_story_context_capture.md](file://docs/mvp/01_user_story_context_capture.md#L39-L83)
+- [01_user_story_context_capture.md](file://docs/mvp/01_user_story_context_capture.md#L55-L83)
 
 ### Inventory View and Sorting Logic
 The inventory view is computed from persisted Work Items with deterministic rules:
@@ -178,10 +202,10 @@ Sort --> Output["Return WorkItemView[]"]
 ```
 
 **Diagram sources**
-- [02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md#L353-L364)
+- [0001-mvp-inventory-design.md](file://docs/rfc/0001-mvp-inventory-design.md#L145-L159)
 
 **Section sources**
-- [02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md#L353-L364)
+- [0001-mvp-inventory-design.md](file://docs/rfc/0001-mvp-inventory-design.md#L145-L159)
 
 ### Ref Normalization and Deduplication
 Refs are normalized and deduplicated to maintain data quality:
@@ -209,12 +233,13 @@ Create --> Attach
 ```
 
 **Diagram sources**
-- [02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md#L333-L352)
-- [02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md#L385-L396)
+- [02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md#L402-L413)
+- [0001-mvp-inventory-design.md](file://docs/rfc/0001-mvp-inventory-design.md#L195-L204)
 
 **Section sources**
-- [02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md#L333-L352)
-- [02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md#L385-L396)
+- [02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md#L402-L413)
+- [0001-mvp-inventory-design.md](file://docs/rfc/0001-mvp-inventory-design.md#L129-L144)
+- [0001-mvp-inventory-design.md](file://docs/rfc/0001-mvp-inventory-design.md#L195-L204)
 
 ### Privacy Controls and Denylist Policy
 Manual-first privacy is enforced at ref-attachment time:
@@ -231,10 +256,11 @@ Policy --> |Redact_to_domain| Redact["Store domain-only ref"]
 ```
 
 **Diagram sources**
-- [02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md#L397-L410)
+- [02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md#L414-L427)
 
 **Section sources**
-- [02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md#L397-L410)
+- [02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md#L193-L206)
+- [02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md#L414-L427)
 
 ### Data Model and Event Logs
 The MVP data model supports the manual inventory feature with minimal fields and append-only event logs for auditability.
@@ -276,10 +302,10 @@ REFS ||--o{ WORK_ITEM_REFS : "attached_to"
 ```
 
 **Diagram sources**
-- [02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md#L286-L326)
+- [0001-mvp-inventory-design.md](file://docs/rfc/0001-mvp-inventory-design.md#L82-L128)
 
 **Section sources**
-- [02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md#L286-L326)
+- [0001-mvp-inventory-design.md](file://docs/rfc/0001-mvp-inventory-design.md#L80-L128)
 
 ### API/Use Cases (UI-Agnostic)
 The following internal use cases capture the core functionality:
@@ -296,33 +322,33 @@ The following internal use cases capture the core functionality:
 Each user action updates timestamps and emits events for auditability.
 
 **Section sources**
-- [02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md#L365-L384)
+- [0001-mvp-inventory-design.md](file://docs/rfc/0001-mvp-inventory-design.md#L173-L194)
+- [02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md#L382-L401)
 
 ## Dependency Analysis
-The MVP relies on a small set of cohesive documents that define requirements, UX, and implementation scaffolding. There are no external code dependencies in this repository snapshot.
+The MVP relies on a cohesive set of documents that define requirements, UX, and implementation scaffolding. The manual-first approach ensures that the documentation remains focused and actionable.
 
 ```mermaid
 graph LR
-A["Project Overview"] --> B["MVP User Story"]
-A --> C["Manual Inventory Story"]
-C --> D["Manual Inventory UI/UX"]
-C --> E["RFC: MVP Inventory Design"]
-E --> F["ADR: Initial Architecture"]
-B --> E
-D --> E
+A["Project Overview"] --> B["Manual Inventory Story"]
+B --> C["Manual Inventory UI/UX"]
+B --> D["RFC: MVP Inventory Design"]
+D --> E["ADR: Manual-first Architecture"]
+B --> F["Context Capture Story"]
+F --> D
 ```
 
 **Diagram sources**
-- [00_project_overview.md](file://docs/00_project_overview.md#L62-L92)
-- [01_user_story_inventory.md](file://docs/mvp/01_user_story_inventory.md#L1-L85)
-- [02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md#L1-L419)
-- [02_manual_inventory_ui_ux.md](file://docs/mvp/02_manual_inventory_ui_ux.md#L1-L514)
-- [0001-mvp-inventory-design.md](file://docs/rfc/0001-mvp-inventory-design.md#L1-L254)
-- [0001-initial-architecture.md](file://docs/adr/0001-initial-architecture.md#L1-L118)
+- [00_project_overview.md](file://docs/00_project_overview.md#L116-L136)
+- [02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md#L13-L18)
+- [02_manual_inventory_ui_ux.md](file://docs/mvp/02_manual_inventory_ui_ux.md#L13-L18)
+- [01_user_story_context_capture.md](file://docs/mvp/01_user_story_context_capture.md#L10-L15)
+- [0001-mvp-inventory-design.md](file://docs/rfc/0001-mvp-inventory-design.md#L14-L20)
+- [0002-mvp-manual-first.md](file://docs/adr/0002-mvp-manual-first.md#L13-L18)
 
 **Section sources**
-- [00_project_overview.md](file://docs/00_project_overview.md#L62-L92)
-- [0001-initial-architecture.md](file://docs/adr/0001-initial-architecture.md#L23-L53)
+- [00_project_overview.md](file://docs/00_project_overview.md#L116-L136)
+- [0002-mvp-manual-first.md](file://docs/adr/0002-mvp-manual-first.md#L40-L57)
 
 ## Performance Considerations
 - Keep UI responsive by minimizing DOM updates and using virtualization for long lists
@@ -339,11 +365,11 @@ Common UX issues and expectations:
 - Denylist policy triggered: explain the action as a privacy protection and offer alternatives
 
 **Section sources**
-- [02_manual_inventory_ui_ux.md](file://docs/mvp/02_manual_inventory_ui_ux.md#L411-L432)
-- [02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md#L159-L169)
+- [02_manual_inventory_ui_ux.md](file://docs/mvp/02_manual_inventory_ui_ux.md#L428-L449)
+- [02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md#L187-L206)
 
 ## Conclusion
-The MVP manual inventory feature provides a fast, private, and offline-first way to track current work. It centers on explicit user actions to manage Work Items, with a clean UI that supports rapid state changes, note-taking, and ref management. The RFC and ADR establish a solid foundation for future enhancements while preserving the simplicity and trust of manual-first operation.
+The MVP manual inventory feature provides a fast, private, and offline-first way to track current work. It centers on explicit user actions to manage Work Items, with a clean UI that supports rapid state changes, note-taking, and ref management. The consolidated documentation establishes a clear foundation for implementation while preserving the simplicity and trust of manual-first operation. Future context capture functionality will build upon this foundation without compromising the core manual-first principles.
 
 ## Appendices
 
@@ -360,11 +386,11 @@ Representative scenarios derived from the user stories:
   - When they create a Work Item from the current context
   - Then a Work Item is created with a title from the page and a ref to the URL
 
-- Scenario: Set a “waiting” state with a note
-  - Given a Work Item “Designer review” exists
-  - When the user sets state to waiting and adds a note “awaiting review by Friday”
+- Scenario: Set a "waiting" state with a note
+  - Given a Work Item "Designer review" exists
+  - When the user sets state to waiting and adds a note "awaiting review by Friday"
   - Then the Work Item appears in the inventory as waiting with the note
 
 **Section sources**
-- [01_user_story_inventory.md](file://docs/mvp/01_user_story_inventory.md#L61-L77)
-- [02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md#L238-L278)
+- [02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md#L255-L284)
+- [02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md#L257-L270)

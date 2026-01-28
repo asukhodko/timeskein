@@ -3,99 +3,98 @@
 <cite>
 **Referenced Files in This Document**
 - [docs/adr/0001-initial-architecture.md](file://docs/adr/0001-initial-architecture.md)
+- [docs/adr/0002-mvp-manual-first.md](file://docs/adr/0002-mvp-manual-first.md)
 - [docs/00_project_overview.md](file://docs/00_project_overview.md)
 - [docs/rfc/0001-mvp-inventory-design.md](file://docs/rfc/0001-mvp-inventory-design.md)
 - [docs/rfc/0002-system-topology-and-component-map.md](file://docs/rfc/0002-system-topology-and-component-map.md)
 - [docs/rfc/0003-client-app-suite-architecture.md](file://docs/rfc/0003-client-app-suite-architecture.md)
 - [docs/mvp/02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md)
+- [docs/glossary.md](file://docs/glossary.md)
 </cite>
+
+## Update Summary
+**Changes Made**
+- Added comprehensive coverage of ADR-0002 (MVP Manual-first) as a foundational decision
+- Consolidated architecture documentation structure to emphasize manual-first approach
+- Updated project structure visualization to reflect the shift toward manual-first emphasis
+- Enhanced focus on the philosophical and practical implications of manual-first design
+- Integrated new ADR into the overall architectural narrative
 
 ## Table of Contents
 1. [Introduction](#introduction)
 2. [Project Structure](#project-structure)
 3. [Core Components](#core-components)
 4. [Architecture Overview](#architecture-overview)
-5. [Detailed Component Analysis](#detailed-component-analysis)
-6. [Dependency Analysis](#dependency-analysis)
-7. [Performance Considerations](#performance-considerations)
-8. [Troubleshooting Guide](#troubleshooting-guide)
-9. [Conclusion](#conclusion)
-10. [Appendices](#appendices)
+5. [Manual-first Philosophy and Implementation](#manual-first-philosophy-and-implementation)
+6. [Detailed Component Analysis](#detailed-component-analysis)
+7. [Dependency Analysis](#dependency-analysis)
+8. [Performance Considerations](#performance-considerations)
+9. [Troubleshooting Guide](#troubleshooting-guide)
+10. [Conclusion](#conclusion)
+11. [Appendices](#appendices)
 
 ## Introduction
-This document presents the Architecture Decision Records (ADRs) for Timeskein’s foundational architecture. It consolidates the initial architectural choices, design rationale, and trade-offs that shape the system. The focus areas include:
-- Local-first architecture and offline-first operation
-- Event sourcing patterns and append-only logs
-- Component separation strategies and integration boundaries
-- Architectural patterns: Ports & Adapters, Hexagonal Architecture, and Local-first principles
-- Decision-making process, constraints, and future evolution considerations
+This document presents the Architecture Decision Records (ADRs) for Timeskein's foundational architecture, with a particular emphasis on the manual-first design philosophy that defines the system's core principles. The ADRs consolidate the initial architectural choices, design rationale, and trade-offs that shape Timeskein's approach to building a privacy-preserving, local-first context management system.
 
-These decisions define how Timeskein collects, stores, and exposes minimal, privacy-preserving context to support a manual-first “current work inventory,” while preserving a clear migration path to richer features like episodes, threads, semantic search, connectors, and multi-device synchronization.
+The documentation now centers on the fundamental decision that Timeskein operates as a manual-first system, where user actions serve as the primary source of truth for work items and their states. This approach establishes clear boundaries between manual curation and automated context collection, creating a principled foundation for future evolution while maintaining immediate value and privacy guarantees.
+
+Key architectural decisions include:
+- **Manual-first as the baseline**: User actions as the primary source of truth for work items
+- **Local-first architecture**: Device agents handle all business logic and storage locally
+- **Event sourcing patterns**: Append-only logs for context and work item changes
+- **Component separation**: Clear boundaries between surfaces, agents, collectors, and hubs
+- **Privacy-first design**: Strict defaults with explicit user consent for data collection
 
 ## Project Structure
-Timeskein organizes its architecture documentation into layered artifacts:
-- ADRs capture accepted architectural decisions and their outcomes
-- RFCs define component topology, client suite architecture, and MVP data design
-- MVP documents describe user stories and acceptance criteria for manual-first inventory
-- Project overview outlines principles and model of the world
+Timeskein organizes its architecture documentation around the manual-first principle, with ADRs serving as the primary decision-making framework:
 
 ```mermaid
 graph TB
-ADR["ADR-0001<br/>Initial Architecture"] --> RFC2["RFC-0002<br/>Topology & Component Map"]
-RFC2 --> RFC3["RFC-0003<br/>Client Suite Architecture"]
-RFC2 --> RFC1["RFC-0001<br/>MVP Inventory Design"]
+ADR1["ADR-0001<br/>Initial Architecture"] --> ADR2["ADR-0002<br/>MVP Manual-first"]
+ADR2 --> RFC1["RFC-0001<br/>MVP Inventory Design"]
+ADR2 --> RFC2["RFC-0002<br/>System Topology & Component Map"]
+ADR2 --> RFC3["RFC-0003<br/>Client App Suite Architecture"]
 RFC1 --> MVP["MVP Manual Inventory Story"]
-Overview["Project Overview"] --> ADR
+RFC2 --> MVP
+RFC3 --> MVP
+Overview["Project Overview"] --> ADR1
+Overview --> ADR2
+Overview --> RFC1
 Overview --> RFC2
 Overview --> RFC3
-Overview --> RFC1
 Overview --> MVP
 ```
 
 **Diagram sources**
-- [docs/adr/0001-initial-architecture.md](file://docs/adr/0001-initial-architecture.md#L1-L118)
-- [docs/rfc/0002-system-topology-and-component-map.md](file://docs/rfc/0002-system-topology-and-component-map.md#L1-L488)
-- [docs/rfc/0003-client-app-suite-architecture.md](file://docs/rfc/0003-client-app-suite-architecture.md#L1-L418)
-- [docs/rfc/0001-mvp-inventory-design.md](file://docs/rfc/0001-mvp-inventory-design.md#L1-L254)
-- [docs/mvp/02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md#L1-L419)
-- [docs/00_project_overview.md](file://docs/00_project_overview.md#L1-L101)
+- [docs/adr/0001-initial-architecture.md](file://docs/adr/0001-initial-architecture.md#L1-L190)
+- [docs/adr/0002-mvp-manual-first.md](file://docs/adr/0002-mvp-manual-first.md#L1-L124)
+- [docs/rfc/0001-mvp-inventory-design.md](file://docs/rfc/0001-mvp-inventory-design.md#L1-L340)
+- [docs/rfc/0002-system-topology-and-component-map.md](file://docs/rfc/0002-system-topology-and-component-map.md#L1-L606)
+- [docs/rfc/0003-client-app-suite-architecture.md](file://docs/rfc/0003-client-app-suite-architecture.md#L1-L498)
+- [docs/00_project_overview.md](file://docs/00_project_overview.md#L1-L187)
 
 **Section sources**
-- [docs/00_project_overview.md](file://docs/00_project_overview.md#L1-L101)
-- [docs/adr/0001-initial-architecture.md](file://docs/adr/0001-initial-architecture.md#L1-L118)
-- [docs/rfc/0002-system-topology-and-component-map.md](file://docs/rfc/0002-system-topology-and-component-map.md#L1-L488)
-- [docs/rfc/0003-client-app-suite-architecture.md](file://docs/rfc/0003-client-app-suite-architecture.md#L1-L418)
-- [docs/rfc/0001-mvp-inventory-design.md](file://docs/rfc/0001-mvp-inventory-design.md#L1-L254)
-- [docs/mvp/02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md#L1-L419)
+- [docs/00_project_overview.md](file://docs/00_project_overview.md#L1-L187)
+- [docs/adr/0001-initial-architecture.md](file://docs/adr/0001-initial-architecture.md#L1-L190)
+- [docs/adr/0002-mvp-manual-first.md](file://docs/adr/0002-mvp-manual-first.md#L1-L124)
+- [docs/rfc/0001-mvp-inventory-design.md](file://docs/rfc/0001-mvp-inventory-design.md#L1-L340)
+- [docs/rfc/0002-system-topology-and-component-map.md](file://docs/rfc/0002-system-topology-and-component-map.md#L1-L606)
+- [docs/rfc/0003-client-app-suite-architecture.md](file://docs/rfc/0003-client-app-suite-architecture.md#L1-L498)
 
 ## Core Components
-Timeskein’s architecture centers around a local-first device agent that isolates business logic, storage, and synchronization concerns from UI surfaces and external collectors. The core components and their roles are:
+Timeskein's architecture centers on the manual-first principle, with the device agent serving as the central point of truth on each device. The core components and their roles reflect this philosophy:
 
-- Device Agent (TS-AGENT)
-  - Central point of truth on each device
-  - Executes use-cases, manages storage, applies policies, and communicates with surfaces and hub
-  - Implements core-first / ports & adapters to keep domain logic independent of platform specifics
+- **Device Agent (TS-AGENT)**: Central point of truth that executes use-cases, manages storage, applies policies, and communicates with surfaces and hub. Implements core-first/ports & adapters to keep domain logic independent of platform specifics.
 
-- Surfaces (TS-DESKTOP, TS-ANDROID)
-  - Thin UI hosts that call into the device agent via a local API
-  - Provide command palette, tray, and quick interactions
-  - On Android, the surface embeds the agent as a service
+- **Surfaces (TS-DESKTOP, TS-ANDROID)**: Thin UI hosts that call into the device agent via a local API. Provide command palette, tray, and quick interactions. On Android, the surface embeds the agent as a service.
 
-- Collectors/Connectors
-  - Platform-specific or application-specific event sources
-  - Send normalized events to the device agent via an event ingest API
-  - Do not write to storage or business rules directly
+- **Collectors/Connectors**: Platform-specific or application-specific event sources that operate only when explicitly enabled by the user. Send normalized events to the device agent via an event ingest API when permitted.
 
-- Hub Backend (TS-HUB)
-  - Centralized backend for multi-device synchronization
-  - Stores synchronized data and serves incremental updates to devices
+- **Hub Backend (TS-HUB)**: Centralized backend for multi-device synchronization, storing synchronized data and serving incremental updates to devices.
 
-- Sync Engine (TS-SYNC)
-  - Replication module inside the device agent
-  - Manages outbox/inbox, conflict resolution, retries, and idempotency
+- **Sync Engine (TS-SYNC)**: Replication module inside the device agent that manages outbox/inbox, conflict resolution, retries, and idempotency.
 
-- Shared Contracts (TS-SCHEMA)
-  - Versioned DTOs and serialization contracts used across surfaces, agents, hub, and sync
+- **Shared Contracts (TS-SCHEMA)**: Versioned DTOs and serialization contracts used across surfaces, agents, hub, and sync.
 
 ```mermaid
 graph TB
@@ -109,12 +108,12 @@ Desktop["TS-DESKTOP"]
 Android["TS-ANDROID"]
 end
 subgraph "External"
-Collectors["Collectors/Connectors"]
+Collectors["Collectors/Connectors<br/>(Manual-enabled)"]
 Hub["TS-HUB"]
 end
 Desktop --> |"Local API"| Agent
 Android --> |"Local API"| Agent
-Collectors --> |"Event Ingest API"| Agent
+Collectors --> |"Event Ingest API<br/>(Explicit Consent)"| Agent
 Agent --> Store
 Agent --> Sync --> Hub
 Agent -.->|"Shared Contracts"| Desktop
@@ -124,26 +123,27 @@ Agent -.->|"Shared Contracts"| Hub
 ```
 
 **Diagram sources**
-- [docs/rfc/0002-system-topology-and-component-map.md](file://docs/rfc/0002-system-topology-and-component-map.md#L124-L341)
-- [docs/rfc/0003-client-app-suite-architecture.md](file://docs/rfc/0003-client-app-suite-architecture.md#L111-L129)
+- [docs/rfc/0002-system-topology-and-component-map.md](file://docs/rfc/0002-system-topology-and-component-map.md#L144-L346)
+- [docs/rfc/0003-client-app-suite-architecture.md](file://docs/rfc/0003-client-app-suite-architecture.md#L141-L286)
 
 **Section sources**
-- [docs/rfc/0002-system-topology-and-component-map.md](file://docs/rfc/0002-system-topology-and-component-map.md#L124-L341)
-- [docs/rfc/0003-client-app-suite-architecture.md](file://docs/rfc/0003-client-app-suite-architecture.md#L111-L129)
+- [docs/rfc/0002-system-topology-and-component-map.md](file://docs/rfc/0002-system-topology-and-component-map.md#L144-L346)
+- [docs/rfc/0003-client-app-suite-architecture.md](file://docs/rfc/0003-client-app-suite-architecture.md#L141-L286)
 
 ## Architecture Overview
-Timeskein adopts a local-first, offline-first design with clear separation of concerns:
-- Surfaces remain thin and delegate all business logic to the device agent
-- Device agent encapsulates domain logic, storage, and policies
-- Collectors/Connectors feed normalized events into the agent without touching storage
-- Hub and Sync enable multi-device replication with idempotent, event-centric updates
-- Shared contracts ensure compatibility across platforms and evolve over time
+Timeskein adopts a local-first, offline-first design with clear separation of concerns, emphasizing manual-first as the baseline philosophy:
+
+- **Manual-first baseline**: Surfaces remain thin and delegate all business logic to the device agent, with user actions as the primary source of truth
+- **Device agent encapsulation**: Core logic, storage, and policies remain isolated from UI surfaces and external collectors
+- **Consent-based collection**: Collectors/Connectors feed normalized events into the agent only when explicitly permitted by the user
+- **Multi-device synchronization**: Hub and Sync enable multi-device replication with idempotent, event-centric updates
+- **Shared contracts**: Ensure compatibility across platforms and evolve over time
 
 ```mermaid
 flowchart LR
-UI["Surface UI"] --> LA["Local API"]
-LA --> DA["Device Agent"]
-COL["Collectors/Connectors"] --> EI["Event Ingest API"]
+UI["Surface UI<br/>(Manual Actions)"] --> LA["Local API"]
+LA --> DA["Device Agent<br/>(Manual-first Core)"]
+COL["Collectors/Connectors<br/>(User-Enabled)"] --> EI["Event Ingest API<br/>(Explicit Consent)"]
 EI --> DA
 DA --> ST["Local Storage"]
 DA --> SYNC["Sync Engine"]
@@ -155,113 +155,140 @@ SC -.-> HB
 ```
 
 **Diagram sources**
-- [docs/rfc/0002-system-topology-and-component-map.md](file://docs/rfc/0002-system-topology-and-component-map.md#L345-L433)
-- [docs/rfc/0003-client-app-suite-architecture.md](file://docs/rfc/0003-client-app-suite-architecture.md#L266-L306)
+- [docs/rfc/0002-system-topology-and-component-map.md](file://docs/rfc/0002-system-topology-and-component-map.md#L463-L551)
+- [docs/rfc/0003-client-app-suite-architecture.md](file://docs/rfc/0003-client-app-suite-architecture.md#L275-L380)
 
 **Section sources**
-- [docs/rfc/0002-system-topology-and-component-map.md](file://docs/rfc/0002-system-topology-and-component-map.md#L345-L433)
-- [docs/rfc/0003-client-app-suite-architecture.md](file://docs/rfc/0003-client-app-suite-architecture.md#L266-L306)
+- [docs/rfc/0002-system-topology-and-component-map.md](file://docs/rfc/0002-system-topology-and-component-map.md#L463-L551)
+- [docs/rfc/0003-client-app-suite-architecture.md](file://docs/rfc/0003-client-app-suite-architecture.md#L275-L380)
+
+## Manual-first Philosophy and Implementation
+The manual-first approach represents a fundamental architectural decision that shapes every aspect of Timeskein's design:
+
+### Core Philosophy
+Manual-first establishes user actions as the primary source of truth for work items and their states. This philosophy creates clear boundaries between manual curation and automated context collection, ensuring that users maintain control over their data and system behavior.
+
+### Implementation Details
+- **User-driven state changes**: Work Item states (`active|waiting|blocked|done|someday|unknown`) are set exclusively through explicit user actions
+- **Manual ref management**: References to external contexts are added only through deliberate user actions
+- **Explicit last_seen updates**: Timestamps are updated only when users explicitly interact with work items
+- **Privacy-by-default**: No automatic data collection occurs without user consent
+
+### Evolutionary Path
+The manual-first approach provides a clear evolutionary path:
+- **Level 0**: Manual-first inventory with user-driven curation
+- **Level 1**: Multi-device synchronization while maintaining manual-first core
+- **Level 2**: Semantics-first with user-enabled connectors for explicit context capture
+- **Level 3**: Full-context collection with explicit user consent for always-on collectors
+
+**Section sources**
+- [docs/adr/0002-mvp-manual-first.md](file://docs/adr/0002-mvp-manual-first.md#L40-L73)
+- [docs/00_project_overview.md](file://docs/00_project_overview.md#L67-L81)
+- [docs/mvp/02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md#L40-L91)
 
 ## Detailed Component Analysis
 
 ### Local-first and Offline-first Principles
-- Device agent runs locally and persists data on-device
-- Surfaces operate without network connectivity
-- Synchronization is additive and resilient to offline periods
-- Privacy-sensitive defaults: denylist, pause, and minimal data collection
+Manual-first reinforces Timeskein's commitment to local-first and offline-first operation:
 
-Trade-offs:
-- Increased surface complexity to manage local-only operations
-- Additional engineering effort for robust offline-first behavior
+- **Device agent runs locally**: Persists data on-device and operates independently of network connectivity
+- **Surface independence**: UI surfaces function without network connectivity, relying on local agent communication
+- **Resilient synchronization**: Multi-device replication is additive and tolerant of offline periods
+- **Privacy-sensitive defaults**: Strict denylists, pause modes, and minimal data collection by default
 
-Implications:
-- Enables immediate value with minimal infrastructure risk
-- Provides a strong foundation for future online features without breaking manual-first guarantees
+Trade-offs and implications:
+- **Increased surface complexity**: Additional engineering effort required to manage local-only operations
+- **Enhanced privacy guarantees**: Reduced risk of unintended data exposure
+- **Future-proof foundation**: Enables gradual automation without compromising user control
 
 **Section sources**
-- [docs/adr/0001-initial-architecture.md](file://docs/adr/0001-initial-architecture.md#L18-L32)
-- [docs/rfc/0003-client-app-suite-architecture.md](file://docs/rfc/0003-client-app-suite-architecture.md#L90-L101)
+- [docs/adr/0001-initial-architecture.md](file://docs/adr/0001-initial-architecture.md#L32-L36)
+- [docs/rfc/0003-client-app-suite-architecture.md](file://docs/rfc/0003-client-app-suite-architecture.md#L99-L111)
 
 ### Data Model and Event Sourcing Patterns
-- Two append-only logs underpin the data model:
-  - ContextEvent log: normalized context signals (active window, browser tab, idle)
-  - WorkItemEvent log: immutable audit trail of state/note/ref changes
-- Strongly anchored references (Refs) normalize URLs, domains, issue keys, and file paths
-- WorkItem captures human-readable state and metadata
+Manual-first influences Timeskein's data model and event sourcing approach:
 
-Rationale:
-- Preserve facts (events) and derive views (inventory) deterministically
-- Enable future semantic search and episode/thread construction
-- Maintain auditability and migration path to richer semantics
+- **Two append-only logs**: ContextEvent log for normalized context signals and WorkItemEvent log for immutable audit trails
+- **Strongly anchored references**: Refs normalize URLs, domains, issue keys, and file paths for reliable linking
+- **Human-readable work items**: WorkItem captures state and metadata that reflects user intent
 
-Trade-offs:
-- Requires careful normalization and conflict resolution for refs
-- Adds complexity to storage and query planning
+Rationale for manual-first alignment:
+- **Preserve user intent**: Events reflect explicit user actions rather than inferred behaviors
+- **Enable deterministic derivation**: Views can be recomputed from user-driven events
+- **Maintain auditability**: Clear provenance of manual decisions and state changes
 
 **Section sources**
-- [docs/adr/0001-initial-architecture.md](file://docs/adr/0001-initial-architecture.md#L34-L42)
-- [docs/rfc/0001-mvp-inventory-design.md](file://docs/rfc/0001-mvp-inventory-design.md#L66-L113)
-- [docs/mvp/02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md#L49-L64)
+- [docs/adr/0001-initial-architecture.md](file://docs/adr/0001-initial-architecture.md#L51-L59)
+- [docs/rfc/0001-mvp-inventory-design.md](file://docs/rfc/0001-mvp-inventory-design.md#L82-L128)
+- [docs/mvp/02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md#L54-L81)
 
 ### Storage Choice: SQLite as Single Local Database
-- Low friction, atomicity, and indexing for fast queries
-- Extensible schema for future features (FTS, additional tables)
-- No separate server required for MVP
+Manual-first informs storage decisions:
+
+- **Low friction deployment**: SQLite requires no separate server process for MVP
+- **Atomic operations**: Supports reliable transactional updates to work items and events
+- **Indexing for performance**: Enables fast queries on timestamps and last_seen fields
+- **Extensible schema**: Supports future features like FTS and additional tables
 
 Trade-offs:
-- Not a distributed system by default
-- Requires careful migration strategy and schema versioning
+- **Not a distributed system**: Requires careful migration strategy and schema versioning
+- **Single point of failure**: Relies on local backup and recovery mechanisms
 
 **Section sources**
-- [docs/adr/0001-initial-architecture.md](file://docs/adr/0001-initial-architecture.md#L44-L52)
-- [docs/rfc/0001-mvp-inventory-design.md](file://docs/rfc/0001-mvp-inventory-design.md#L66-L80)
+- [docs/adr/0001-initial-architecture.md](file://docs/adr/0001-initial-architecture.md#L61-L67)
+- [docs/rfc/0001-mvp-inventory-design.md](file://docs/rfc/0001-mvp-inventory-design.md#L303-L320)
 
 ### Component Separation Strategies
-- Surfaces communicate exclusively via a local API to the device agent
-- Collectors/Connectors send normalized events to the agent’s ingest API
-- Hub and Sync isolate multi-device concerns from UI and collectors
-- Shared contracts govern versioning and compatibility
+Manual-first emphasizes clear separation of concerns:
 
-Rationale:
-- Clear boundaries reduce coupling and improve testability
-- Enables independent evolution of UI, collectors, and backend
-
-**Section sources**
-- [docs/rfc/0002-system-topology-and-component-map.md](file://docs/rfc/0002-system-topology-and-component-map.md#L298-L341)
-- [docs/rfc/0003-client-app-suite-architecture.md](file://docs/rfc/0003-client-app-suite-architecture.md#L111-L129)
-
-### Architectural Patterns: Ports & Adapters and Hexagonal Architecture
-- Core-first / Ports & Adapters: domain and use-cases at the center, platform specifics as adapters
-- Deterministic time (clock port), transactional use-cases, and consistent model across platforms
-- Thin surfaces, isolated agent, and pluggable collectors
+- **Surface-local API**: Surfaces communicate exclusively via a local API to the device agent
+- **Consent-based ingestion**: Collectors/Connectors send normalized events only when explicitly permitted
+- **Isolated multi-device concerns**: Hub and Sync separate multi-device concerns from UI and collectors
+- **Versioned contracts**: Shared contracts govern compatibility across platforms
 
 Benefits:
-- Testability and portability across platforms
-- Ability to add new collectors and platforms without rewriting core logic
+- **Reduced coupling**: Clear boundaries improve testability and maintainability
+- **Independent evolution**: UI, collectors, and backend can develop separately
+- **Privacy enforcement**: User consent required for data collection and processing
 
 **Section sources**
-- [docs/rfc/0002-system-topology-and-component-map.md](file://docs/rfc/0002-system-topology-and-component-map.md#L138-L148)
-- [docs/rfc/0003-client-app-suite-architecture.md](file://docs/rfc/0003-client-app-suite-architecture.md#L78-L89)
+- [docs/rfc/0002-system-topology-and-component-map.md](file://docs/rfc/0002-system-topology-and-component-map.md#L416-L431)
+- [docs/rfc/0003-client-app-suite-architecture.md](file://docs/rfc/0003-client-app-suite-architecture.md#L77-L86)
+
+### Architectural Patterns: Ports & Adapters and Hexagonal Architecture
+Manual-first aligns with core architectural patterns:
+
+- **Core-first approach**: Domain and use-cases at the center, platform specifics as adapters
+- **Deterministic time handling**: Clock port for consistent timestamp management
+- **Transactional use-cases**: Consistent model across platforms with manual-first constraints
+- **Thin surfaces, isolated agent**: Pluggable collectors with explicit user consent
+
+Benefits:
+- **Testability and portability**: Core logic independent of platform specifics
+- **Gradual automation**: New collectors and platforms can be added without rewriting core logic
+- **Privacy compliance**: Explicit user consent required for data collection
+
+**Section sources**
+- [docs/rfc/0002-system-topology-and-component-map.md](file://docs/rfc/0002-system-topology-and-component-map.md#L158-L162)
+- [docs/rfc/0003-client-app-suite-architecture.md](file://docs/rfc/0003-client-app-suite-architecture.md#L87-L97)
 
 ### Decision-making Process, Constraints, and Future Evolution
-- MVP prioritizes minimal value with low privacy risk and no heavy artifact collection
-- Manual-first inventory establishes Work Items as the source of truth for state and notes
-- Future evolution paths include:
-  - Episodes derived from ContextEvent logs
-  - Threads built on WorkItems and Episodes
-  - Semantic search and embeddings
-  - Connectors and collectors for richer context
-  - Multi-device sync with idempotent event replication
+Manual-first establishes clear constraints and evolution paths:
+
+- **MVP constraints**: Minimal value with low privacy risk and no heavy artifact collection
+- **Manual-first foundation**: Work Items as the source of truth for state and notes
+- **Evolutionary path**: Episodes, Threads, semantic search, connectors, and multi-device sync
+- **Privacy preservation**: Local-first and offline-first must remain intact throughout evolution
 
 Constraints:
-- Local-first and offline-first must remain intact
-- Privacy defaults must be strict
-- Changes must preserve backward compatibility via shared contracts
+- **Manual-first integrity**: User actions remain the primary source of truth
+- **Privacy defaults**: Strict privacy controls enforced by design
+- **Backward compatibility**: Changes preserved via shared contracts
 
 **Section sources**
-- [docs/adr/0001-initial-architecture.md](file://docs/adr/0001-initial-architecture.md#L100-L118)
-- [docs/00_project_overview.md](file://docs/00_project_overview.md#L54-L101)
-- [docs/rfc/0001-mvp-inventory-design.md](file://docs/rfc/0001-mvp-inventory-design.md#L222-L229)
+- [docs/adr/0001-initial-architecture.md](file://docs/adr/0001-initial-architecture.md#L156-L190)
+- [docs/00_project_overview.md](file://docs/00_project_overview.md#L116-L187)
+- [docs/adr/0002-mvp-manual-first.md](file://docs/adr/0002-mvp-manual-first.md#L58-L84)
 
 ### Data Flow Sequences
 
@@ -279,10 +306,11 @@ Agent->>Agent : validate/normalize
 Agent->>DB : write/update
 Agent-->>UI : updated view
 UI-->>User : render inventory
+Note over Agent,DB : Manual-first : user actions drive all changes
 ```
 
 **Diagram sources**
-- [docs/rfc/0002-system-topology-and-component-map.md](file://docs/rfc/0002-system-topology-and-component-map.md#L345-L377)
+- [docs/rfc/0002-system-topology-and-component-map.md](file://docs/rfc/0002-system-topology-and-component-map.md#L465-L495)
 
 #### Multi-device Sync Flow
 ```mermaid
@@ -298,34 +326,38 @@ WinSync->>Hub : push change
 Hub-->>AndroidSync : pull change
 AndroidSync->>AndroidAgent : apply change
 AndroidAgent-->>AndroidUI : updated inventory
+Note over WinAgent,AndroidAgent : Sync preserves manual-first state
 ```
 
 **Diagram sources**
-- [docs/rfc/0002-system-topology-and-component-map.md](file://docs/rfc/0002-system-topology-and-component-map.md#L381-L405)
+- [docs/rfc/0002-system-topology-and-component-map.md](file://docs/rfc/0002-system-topology-and-component-map.md#L499-L523)
 
-#### Full Context Collection Flow (Future)
+#### Manual-enabled Context Collection Flow (Future)
 ```mermaid
 sequenceDiagram
+participant User as "User"
 participant Collector as "TS-COLLECTORS-*"
 participant Agent as "TS-AGENT"
 participant Hub as "TS-HUB"
+User->>Collector : Enable collector (explicit consent)
 Collector->>Agent : Event Ingest API (ContextEvent)
 Agent->>Agent : apply denylist/policies
 Agent->>Agent : persist event
 Agent-->>Hub : sync events (later)
+Note over Collector,Agent : Manual-first : user consent required
 ```
 
 **Diagram sources**
-- [docs/rfc/0002-system-topology-and-component-map.md](file://docs/rfc/0002-system-topology-and-component-map.md#L409-L431)
+- [docs/rfc/0002-system-topology-and-component-map.md](file://docs/rfc/0002-system-topology-and-component-map.md#L527-L548)
 
 ## Dependency Analysis
-The system exhibits a clean dependency graph with the device agent at the center, isolating UI, collectors, and hub concerns.
+The system exhibits a clean dependency graph with the device agent at the center, reflecting manual-first principles:
 
 ```mermaid
 graph LR
-UI["Surfaces"] --> LA["Local API"]
-COL["Collectors/Connectors"] --> EI["Event Ingest API"]
-LA --> AG["TS-AGENT"]
+UI["Surfaces<br/>(Manual-first UI)"] --> LA["Local API"]
+COL["Collectors/Connectors<br/>(User-enabled)"] --> EI["Event Ingest API<br/>(Explicit Consent)"]
+LA --> AG["TS-AGENT<br/>(Manual-first Core)"]
 EI --> AG
 AG --> ST["Local Storage"]
 AG --> SY["TS-SYNC"]
@@ -337,48 +369,67 @@ SC -.-> HB
 ```
 
 **Diagram sources**
-- [docs/rfc/0002-system-topology-and-component-map.md](file://docs/rfc/0002-system-topology-and-component-map.md#L298-L341)
+- [docs/rfc/0002-system-topology-and-component-map.md](file://docs/rfc/0002-system-topology-and-component-map.md#L416-L431)
 
 **Section sources**
-- [docs/rfc/0002-system-topology-and-component-map.md](file://docs/rfc/0002-system-topology-and-component-map.md#L298-L341)
+- [docs/rfc/0002-system-topology-and-component-map.md](file://docs/rfc/0002-system-topology-and-component-map.md#L416-L431)
 
 ## Performance Considerations
-- Append-only logs minimize write amplification and simplify auditing
-- Indexes on timestamps and last_seen fields optimize inventory queries
-- Debounce collector events to reduce churn
-- Prefer idempotent, event-centric replication to avoid costly reconciliation
+Manual-first influences performance characteristics:
 
-[No sources needed since this section provides general guidance]
+- **Append-only logs**: Minimize write amplification and simplify auditing of user-driven changes
+- **Indexed queries**: Optimized inventory queries on timestamps and last_seen fields
+- **Debounced collection**: Reduced churn when collectors are eventually enabled
+- **Idempotent replication**: Avoid costly reconciliation through event-centric replication
 
 ## Troubleshooting Guide
-Common issues and mitigations:
-- Inventory not updating
-  - Verify Local API connectivity and that the agent is running
-  - Confirm that manual actions update last_seen and produce work_item_events
-- Ref conflicts
-  - Normalize refs consistently; detect duplicates and prompt user choice
-- Privacy violations
-  - Enforce denylist and pause modes; avoid collecting sensitive artifacts by default
-- Sync failures
-  - Ensure idempotent event delivery and robust retry/backoff logic
+Common issues and manual-first-aligned mitigations:
+
+- **Inventory not updating**: Verify Local API connectivity and that the agent is running
+- **Manual actions not reflected**: Confirm that user actions trigger state changes and last_seen updates
+- **Ref conflicts**: Manual-first: normalize refs consistently; detect duplicates and prompt user choice
+- **Privacy violations**: Manual-first: enforce denylist and pause modes; avoid collecting sensitive artifacts
+- **Sync failures**: Ensure idempotent event delivery and robust retry/backoff logic
 
 **Section sources**
-- [docs/rfc/0002-system-topology-and-component-map.md](file://docs/rfc/0002-system-topology-and-component-map.md#L381-L405)
-- [docs/mvp/02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md#L176-L189)
+- [docs/rfc/0002-system-topology-and-component-map.md](file://docs/rfc/0002-system-topology-and-component-map.md#L499-L523)
+- [docs/mvp/02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md#L187-L206)
 
 ## Conclusion
-Timeskein’s ADRs establish a robust, local-first foundation that balances immediate value with long-term evolution. By adopting event sourcing, clear component separation, and shared contracts, the system preserves privacy, ensures offline resilience, and enables future enhancements like episodes, threads, semantic search, and multi-device synchronization. These decisions collectively define a principled path forward while maintaining simplicity and trust at the core.
+Timeskein's ADRs establish a robust, manual-first foundation that balances immediate value with long-term evolution. The addition of ADR-0002 (MVP Manual-first) solidifies the philosophical and practical foundations that distinguish Timeskein from systems that rely on automated context collection.
 
-[No sources needed since this section summarizes without analyzing specific files]
+By adopting manual-first as the baseline, Timeskein preserves privacy, ensures offline resilience, and maintains user control over their data while enabling future enhancements like episodes, threads, semantic search, and multi-device synchronization. The manual-first approach creates clear boundaries between user-driven curation and automated context collection, establishing a principled path forward that maintains simplicity and trust at the core.
+
+The architectural decisions collectively define a system that:
+- Prioritizes user control and privacy through manual-first design
+- Maintains local-first and offline-first principles throughout evolution
+- Preserves backward compatibility via shared contracts
+- Enables gradual automation without compromising core values
 
 ## Appendices
 
 ### Appendix A: MVP Data Model Highlights
-- WorkItem: title, type, state, pinned, note, timestamps, last_seen, deleted_at
-- ContextEvent: id, ts, device_id, source, app_id, window_title, url, url_title, is_private, raw
-- Refs: id, kind, value, confidence
-- WorkItemEvent: id, ts, work_item_id, kind, payload
+Manual-first influences the MVP data model:
+
+- **WorkItem**: title, type, state, pinned, note, timestamps, last_seen, deleted_at
+- **ContextEvent**: id, ts, device_id, source, app_id, window_title, url, url_title, is_private, raw
+- **Refs**: id, kind, value, confidence
+- **WorkItemEvent**: id, ts, work_item_id, kind, payload
 
 **Section sources**
-- [docs/rfc/0001-mvp-inventory-design.md](file://docs/rfc/0001-mvp-inventory-design.md#L66-L113)
-- [docs/mvp/02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md#L290-L325)
+- [docs/rfc/0001-mvp-inventory-design.md](file://docs/rfc/0001-mvp-inventory-design.md#L82-L128)
+- [docs/mvp/02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md#L309-L349)
+
+### Appendix B: Manual-first Evolution Matrix
+The manual-first approach provides clear evolution paths:
+
+| Level | Name | Description | Manual-first Impact |
+|-------|------|-------------|-------------------|
+| **Level 0** | Manual-first | User-driven inventory without automated collection | Baseline: user actions as source of truth |
+| **Level 1** | Sync | Multi-device synchronization | Preserves manual-first state across devices |
+| **Level 2** | Semantics-first | User-enabled connectors for explicit context capture | Manual consent required for data collection |
+| **Level 3** | Full context | Always-on collectors with explicit user consent | User control maintained through consent |
+
+**Section sources**
+- [docs/adr/0002-mvp-manual-first.md](file://docs/adr/0002-mvp-manual-first.md#L58-L73)
+- [docs/00_project_overview.md](file://docs/00_project_overview.md#L70-L81)

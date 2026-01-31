@@ -6,17 +6,22 @@
 - [02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md)
 - [02_manual_inventory_ui_ux.md](file://docs/mvp/02_manual_inventory_ui_ux.md)
 - [01_user_story_context_capture.md](file://docs/mvp/01_user_story_context_capture.md)
+- [03_user_story_evidence_mode.md](file://docs/mvp/03_user_story_evidence_mode.md)
+- [03_evidence_mode_ui_ux.md](file://docs/mvp/03_evidence_mode_ui_ux.md)
 - [0001-mvp-inventory-design.md](file://docs/rfc/0001-mvp-inventory-design.md)
 - [0002-mvp-manual-first.md](file://docs/adr/0002-mvp-manual-first.md)
+- [0003-evidence-mode-opt-in.md](file://docs/adr/0003-evidence-mode-opt-in.md)
+- [0002-level3-evidence-mode-roadmap.md](file://docs/roadmap/0002-level3-evidence-mode-roadmap.md)
 - [index.md](file://docs/index.md)
 </cite>
 
 ## Update Summary
 **Changes Made**
-- Updated to reflect the new consolidated MVP organization with docs/mvp/README.md as the central hub
-- Clarified the separation between Level 0 manual inventory features and future Level 2+ context capture capabilities
-- Enhanced documentation structure to align with the new Level-based maturity system
-- Updated references to reflect the new documentation hierarchy and maturity tagging
+- Enhanced documentation with comprehensive Evidence-Mode user stories and UI/UX specifications
+- Reorganized to clearly separate Level 0 MVP from Level 3 Evidence-Mode functionality
+- Added detailed Evidence-Mode acceptance criteria, privacy controls, and user interaction scenarios
+- Updated architecture diagrams to reflect the new Level-based maturity system
+- Expanded context capture documentation to distinguish between Level 2 and Level 3 features
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -35,7 +40,8 @@ This document consolidates the MVP specifications for manual inventory managemen
 
 The MVP documentation is organized around three core user stories and specifications:
 - **Level 0 (MVP)**: Manual inventory user story and UI/UX specification
-- **Level 2+ (Future)**: Context capture user story for automated context extraction
+- **Level 2 (Future)**: Context capture user story for automated context extraction
+- **Level 3 (Future)**: Evidence-Mode user story for opt-in screen evidence capture
 - **Supporting documents**: RFC design specifications and ADR architectural decisions
 
 ## MVP Organization and Structure
@@ -46,22 +52,28 @@ The MVP documentation follows a hierarchical structure that clearly separates cu
 graph TB
 A["MVP Documentation Hub<br/>docs/mvp/README.md"] --> B["Level 0: Manual Inventory<br/>02_user_story_manual_inventory.md"]
 B --> C["UI/UX Specification<br/>02_manual_inventory_ui_ux.md"]
-A --> D["Level 2+: Context Capture<br/>01_user_story_context_capture.md"]
-A --> E["Supporting Specifications"]
-E --> F["RFC-0001: MVP Design<br/>rfc/0001-mvp-inventory-design.md"]
-E --> G["ADR-0002: Manual-first<br/>adr/0002-mvp-manual-first.md"]
+A --> D["Level 2: Context Capture<br/>01_user_story_context_capture.md"]
+A --> E["Level 3: Evidence-Mode<br/>03_user_story_evidence_mode.md"]
+E --> F["Evidence-Mode UI/UX<br/>03_evidence_mode_ui_ux.md"]
+A --> G["Supporting Specifications"]
+G --> H["RFC-0001: MVP Design<br/>rfc/0001-mvp-inventory-design.md"]
+G --> I["ADR-0002: Manual-first<br/>adr/0002-mvp-manual-first.md"]
+G --> J["ADR-0003: Evidence-Mode Opt-in<br/>adr/0003-evidence-mode-opt-in.md"]
 ```
 
 **Diagram sources**
-- [README.md](file://docs/mvp/README.md#L1-L29)
+- [README.md](file://docs/mvp/README.md#L1-L43)
 - [02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md#L1-L513)
-- [02_manual_inventory_ui_ux.md](file://docs/mvp/02_manual_inventory_ui_ux.md#L1-L570)
-- [01_user_story_context_capture.md](file://docs/mvp/01_user_story_context_capture.md#L1-L135)
-- [0001-mvp-inventory-design.md](file://docs/rfc/0001-mvp-inventory-design.md#L1-L340)
-- [0002-mvp-manual-first.md](file://docs/adr/0002-mvp-manual-first.md#L1-L124)
+- [02_manual_inventory_ui_ux.md](file://docs/mvp/02_manual_inventory_ui_ux.md#L1-L606)
+- [01_user_story_context_capture.md](file://docs/mvp/01_user_story_context_capture.md#L1-L150)
+- [03_user_story_evidence_mode.md](file://docs/mvp/03_user_story_evidence_mode.md#L1-L324)
+- [03_evidence_mode_ui_ux.md](file://docs/mvp/03_evidence_mode_ui_ux.md#L1-L528)
+- [0001-mvp-inventory-design.md](file://docs/rfc/0001-mvp-inventory-design.md#L1-L387)
+- [0002-mvp-manual-first.md](file://docs/adr/0002-mvp-manual-first.md#L1-L127)
+- [0003-evidence-mode-opt-in.md](file://docs/adr/0003-evidence-mode-opt-in.md#L1-L200)
 
 **Section sources**
-- [README.md](file://docs/mvp/README.md#L1-L29)
+- [README.md](file://docs/mvp/README.md#L1-L43)
 - [index.md](file://docs/index.md#L95-L105)
 
 ## Core Components
@@ -74,15 +86,22 @@ The core entity representing a task/project/question under manual-first operatio
 **Inventory List**: Filtered and sorted view based on pinned state, state rank, and recency
 **Events**: Append-only logs capturing user actions and system updates for auditability
 
-### Level 2+: Context Capture (Future)
+### Level 2: Context Capture (Future)
 **Context Extraction**: Automated extraction of refs from current context (active window, URL, issue keys)
 **SourceNode Integration**: Mechanism for connecting external data sources with explicit user approval
 **Automatic State Management**: Optional automatic last_seen updates for previously linked refs
+
+### Level 3: Evidence-Mode (Future)
+**Screen Evidence Capture**: Strictly opt-in functionality for capturing screen evidence chunks with privacy controls
+**Chunking Model**: Canonical artifact type `chunk` (series of frames over time period) with TTL enforcement
+**Timeline Cards**: Derived view of Episodes with summary, extracted refs, and distraction marks
+**Privacy-First Design**: Short TTL (72h), pause/resume, purge, and redaction rules
 
 **Section sources**
 - [02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md#L54-L81)
 - [02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md#L93-L206)
 - [01_user_story_context_capture.md](file://docs/mvp/01_user_story_context_capture.md#L29-L37)
+- [03_user_story_evidence_mode.md](file://docs/mvp/03_user_story_evidence_mode.md#L74-L106)
 
 ## Architecture Overview
 The MVP architecture centers on a local-first agent that persists minimal context and maintains a human-readable Work Item state. The manual-first approach ensures that all actions require explicit user initiation, with future context capture capabilities built as optional extensions.
@@ -94,16 +113,22 @@ UI["Manual UI/Commands"]
 INV["Manual Inventory View"]
 DB["SQLite Storage"]
 end
-subgraph "Level 2+: Context Extensions"
+subgraph "Level 2: Context Extensions"
 CN["Context Extractor"]
 SN["SourceNode Manager"]
 AE["Auto Events"]
+end
+subgraph "Level 3: Evidence-Mode"
+EC["Evidence Collector"]
+SC["Screen Capture"]
+PR["Provider Abstraction"]
 end
 subgraph "Data Model"
 WI["Work Items"]
 REFS["Refs"]
 WIE["Work Item Events"]
 CE["Context Events"]
+EE["Evidence Artifacts"]
 END
 UI --> INV
 INV --> DB
@@ -114,12 +139,16 @@ CN --> CE
 SN --> CN
 AE --> CE
 CE --> DB
+EC --> EE
+SC --> EC
+PR --> EC
 ```
 
 **Diagram sources**
 - [0002-mvp-manual-first.md](file://docs/adr/0002-mvp-manual-first.md#L40-L57)
 - [0001-mvp-inventory-design.md](file://docs/rfc/0001-mvp-inventory-design.md#L80-L128)
 - [01_user_story_context_capture.md](file://docs/mvp/01_user_story_context_capture.md#L45-L54)
+- [03_user_story_evidence_mode.md](file://docs/mvp/03_user_story_evidence_mode.md#L74-L106)
 
 ## Detailed Component Analysis
 
@@ -188,7 +217,7 @@ The UI/UX emphasizes speed and clarity through a global hotkey overlay and tray 
 - [02_manual_inventory_ui_ux.md](file://docs/mvp/02_manual_inventory_ui_ux.md#L246-L383)
 - [02_manual_inventory_ui_ux.md](file://docs/mvp/02_manual_inventory_ui_ux.md#L386-L401)
 
-### Level 2+: Context Capture User Story
+### Level 2: Context Capture User Story
 This user story describes future functionality for Level 2 expansion:
 
 **Context Capture Capabilities**:
@@ -208,6 +237,84 @@ This user story describes future functionality for Level 2 expansion:
 **Section sources**
 - [01_user_story_context_capture.md](file://docs/mvp/01_user_story_context_capture.md#L39-L83)
 - [01_user_story_context_capture.md](file://docs/mvp/01_user_story_context_capture.md#L55-L83)
+
+### Level 3: Evidence-Mode User Story
+This user story defines the strictly opt-in Level 3 functionality for screen evidence capture:
+
+**Evidence-Mode Capabilities**:
+- Strictly opt-in functionality that never activates by default
+- Screen evidence chunk capture with privacy controls
+- Timeline Cards with summary, extracted refs, and distraction marks
+- Provider selection (local/remote) with privacy indicators
+- Storage budget management with automatic garbage collection
+- Redaction Rules for sensitive content exclusion
+
+**Privacy-First Design**:
+- 72-hour TTL for evidence artifacts by default
+- Explicit opt-in with comprehensive privacy information
+- Pause/resume functionality for immediate control
+- Purge capability to remove evidence while preserving distilled snapshots
+- Revocation mechanism to remove all data from specific sources
+
+**User Interaction Scenarios**:
+- Enable Evidence-Mode through explicit consent process
+- Monitor capture status via tray indicator
+- Manage storage budget and receive warnings at thresholds
+- Configure redaction rules for sensitive applications and domains
+- Review Timeline Cards with evidence purged indicators
+- Purge specific time ranges or all evidence with confirmation
+
+**Acceptance Criteria Mapping**:
+- Opt-in requirement with explicit privacy information display
+- Status indicator visibility in tray and settings
+- Pause/resume functionality with preserved configuration
+- Timeline Cards display with evidence availability indicators
+- Purge confirmation dialog with scope selection
+- Redaction Rules configuration with multiple pattern types
+- Provider selection with privacy attribute indicators
+- Storage Budget warnings at 80% and critical at 95%
+- Distraction Mark classification for self-analysis
+
+**Section sources**
+- [03_user_story_evidence_mode.md](file://docs/mvp/03_user_story_evidence_mode.md#L125-L252)
+- [03_user_story_evidence_mode.md](file://docs/mvp/03_user_story_evidence_mode.md#L255-L289)
+- [03_user_story_evidence_mode.md](file://docs/mvp/03_user_story_evidence_mode.md#L292-L324)
+
+### Evidence-Mode UI/UX Specification
+The Evidence-Mode UI emphasizes privacy transparency and user control:
+
+**Settings Interface**:
+- Dedicated Evidence-Mode panel in Settings → Privacy → Evidence-Mode
+- Status section showing capture progress and storage usage
+- Provider selection with privacy indicators (🔒 local, ☁️ remote)
+- Redaction Rules management with multiple pattern types
+- Storage Budget configuration with visual indicators
+
+**Status Indicators**:
+- Tray menu with Evidence-Mode status and quick controls
+- Color-coded status: Enabled (🔴), Paused (🟡), Error (🟠)
+- Persistent indicator showing capture activity level
+- Storage usage percentage with warning/critical states
+
+**Timeline View**:
+- Timeline Cards showing time ranges, summaries, and extracted refs
+- Distraction Mark indicators for off-task activities
+- Evidence purged state with preserved snapshot information
+- Preview buttons for accessible evidence artifacts
+- Action menus for purge, linking to Work Items, and management
+
+**Privacy Controls**:
+- Comprehensive redaction rules for apps, domains, and content patterns
+- Sensitivity classification system (normal/private/high)
+- Provider privacy attributes (data stays on device, encryption)
+- Consent dialogs for remote provider usage
+- Storage budget warnings with automatic pause at critical levels
+
+**Section sources**
+- [03_evidence_mode_ui_ux.md](file://docs/mvp/03_evidence_mode_ui_ux.md#L34-L98)
+- [03_evidence_mode_ui_ux.md](file://docs/mvp/03_evidence_mode_ui_ux.md#L100-L130)
+- [03_evidence_mode_ui_ux.md](file://docs/mvp/03_evidence_mode_ui_ux.md#L133-L231)
+- [03_evidence_mode_ui_ux.md](file://docs/mvp/03_evidence_mode_ui_ux.md#L234-L292)
 
 ### Inventory View and Sorting Logic
 The inventory view is computed from persisted Work Items with deterministic rules:
@@ -272,6 +379,27 @@ Policy --> |Redact_to_domain| Redact["Store domain-only ref"]
 - [02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md#L193-L206)
 - [02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md#L414-L427)
 
+### Evidence-Mode Privacy and Trust Guarantees
+Evidence-Mode provides comprehensive privacy guarantees through explicit opt-in and granular controls:
+
+```mermaid
+flowchart TD
+Start(["Enable Evidence-Mode"]) --> Consent["Show privacy information"]
+Consent --> Permission["Request screen capture permission"]
+Permission --> Provider["Select provider (local/remote)"]
+Provider --> Activate["Activate capture"]
+Activate --> Monitor["Monitor status and storage"]
+Monitor --> Control["User control: pause/resume/purge/revoke"]
+```
+
+**Diagram sources**
+- [03_user_story_evidence_mode.md](file://docs/mvp/03_user_story_evidence_mode.md#L127-L145)
+- [03_evidence_mode_ui_ux.md](file://docs/mvp/03_evidence_mode_ui_ux.md#L296-L324)
+
+**Section sources**
+- [03_user_story_evidence_mode.md](file://docs/mvp/03_user_story_evidence_mode.md#L110-L122)
+- [03_evidence_mode_ui_ux.md](file://docs/mvp/03_evidence_mode_ui_ux.md#L326-L334)
+
 ### Data Model and Event Logs
 The MVP data model supports the manual inventory feature with minimal fields and append-only event logs for auditability.
 
@@ -331,10 +459,20 @@ The following internal use cases capture the core functionality:
 - remove_ref(work_item_id, ref_id)
 - open_ref(work_item_id, ref_id? | last_primary)
 
-**Level 2+ Use Cases**:
+**Level 2 Use Cases**:
 - capture_context() - extract context from active window/browser
 - suggest_existing_item(refs) - propose existing Work Items based on refs
 - auto_update_last_seen(context_event) - update last_seen for linked refs
+
+**Level 3 Use Cases**:
+- enable_evidence_mode() - activate screen evidence capture with consent
+- disable_evidence_mode() - deactivate capture and optionally purge artifacts
+- pause_capture() - temporarily stop evidence collection
+- resume_capture() - restart capture with preserved settings
+- purge_evidence(scope) - remove evidence artifacts with confirmation
+- add_redaction_rule(rule) - configure privacy rules
+- select_provider(provider) - choose local/remote processing
+- manage_storage_budget(budget) - configure storage limits
 
 Each user action updates timestamps and emits events for auditability.
 
@@ -342,6 +480,7 @@ Each user action updates timestamps and emits events for auditability.
 - [0001-mvp-inventory-design.md](file://docs/rfc/0001-mvp-inventory-design.md#L173-L194)
 - [02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md#L382-L401)
 - [01_user_story_context_capture.md](file://docs/mvp/01_user_story_context_capture.md#L55-L83)
+- [03_user_story_evidence_mode.md](file://docs/mvp/03_user_story_evidence_mode.md#L125-L252)
 
 ## Dependency Analysis
 The MVP relies on a cohesive set of documents that define requirements, UX, and implementation scaffolding. The manual-first approach ensures that the documentation remains focused and actionable, with clear separation between current capabilities and future enhancements.
@@ -352,23 +491,28 @@ A["Project Overview"] --> B["MVP Documentation Hub"]
 B --> C["Level 0: Manual Inventory"]
 C --> D["Manual Inventory Story"]
 C --> E["Manual Inventory UI/UX"]
-B --> F["Level 2+: Context Capture"]
+B --> F["Level 2: Context Capture"]
 F --> G["Context Capture Story"]
-B --> H["Supporting Specs"]
-H --> I["RFC-0001: MVP Design"]
-H --> J["ADR-0002: Manual-first"]
-I --> K["RFC-0005: SourceNode"]
-I --> L["RFC-0006: Retention/TTL"]
+B --> H["Level 3: Evidence-Mode"]
+H --> I["Evidence-Mode Story"]
+H --> J["Evidence-Mode UI/UX"]
+B --> K["Supporting Specs"]
+K --> L["RFC-0001: MVP Design"]
+K --> M["ADR-0002: Manual-first"]
+K --> N["ADR-0003: Evidence-Mode Opt-in"]
 ```
 
 **Diagram sources**
 - [index.md](file://docs/index.md#L95-L105)
-- [README.md](file://docs/mvp/README.md#L1-L29)
+- [README.md](file://docs/mvp/README.md#L1-L43)
 - [02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md#L13-L18)
 - [02_manual_inventory_ui_ux.md](file://docs/mvp/02_manual_inventory_ui_ux.md#L13-L18)
 - [01_user_story_context_capture.md](file://docs/mvp/01_user_story_context_capture.md#L10-L15)
+- [03_user_story_evidence_mode.md](file://docs/mvp/03_user_story_evidence_mode.md#L13-L18)
+- [03_evidence_mode_ui_ux.md](file://docs/mvp/03_evidence_mode_ui_ux.md#L13-L18)
 - [0001-mvp-inventory-design.md](file://docs/rfc/0001-mvp-inventory-design.md#L14-L20)
 - [0002-mvp-manual-first.md](file://docs/adr/0002-mvp-manual-first.md#L13-L18)
+- [0003-evidence-mode-opt-in.md](file://docs/adr/0003-evidence-mode-opt-in.md#L13-L18)
 
 **Section sources**
 - [index.md](file://docs/index.md#L95-L105)
@@ -381,6 +525,9 @@ I --> L["RFC-0006: Retention/TTL"]
 - Persist changes immediately to reduce latency and improve reliability
 - Avoid network operations during manual inventory tasks to maintain offline-first behavior
 - Design Level 2+ features to be opt-in and configurable to minimize performance impact
+- Implement Evidence-Mode chunking model to limit storage growth and processing overhead
+- Use background processing for evidence capture to minimize UI blocking
+- Cache frequently accessed Timeline Cards to improve responsiveness
 
 ## Troubleshooting Guide
 Common UX issues and expectations:
@@ -391,17 +538,28 @@ Common UX issues and expectations:
 - Conflicting ref already exists: present choice to open existing item or proceed
 - Denylist policy triggered: explain action as privacy protection and offer alternatives
 
-**Level 2+ Issues**:
+**Level 2 Issues**:
 - SourceNode not connected: prompt user to approve and connect source
 - Context extraction fails: fallback to manual ref entry
 - Auto-update conflicts: respect user's manual state/note decisions
 
+**Level 3 Issues**:
+- Evidence-Mode not enabled: explain opt-in requirement and privacy benefits
+- Storage budget exceeded: show warning and suggest purge or increase budget
+- Screen capture permission denied: guide user through system permission settings
+- Provider selection issues: explain privacy implications and offer alternatives
+- Redaction Rules conflicts: show which content was excluded and why
+- Timeline Card rendering problems: check evidence availability and purged state
+
 **Section sources**
 - [02_manual_inventory_ui_ux.md](file://docs/mvp/02_manual_inventory_ui_ux.md#L428-L449)
 - [02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md#L187-L206)
+- [03_evidence_mode_ui_ux.md](file://docs/mvp/03_evidence_mode_ui_ux.md#L402-L400)
 
 ## Conclusion
 The MVP manual inventory feature provides a fast, private, and offline-first way to track current work, establishing a robust foundation for future context capture capabilities. The new organizational structure with docs/mvp/README.md as the central hub clarifies the distinction between Level 0 manual-first operation and Level 2+ automated context capture, ensuring that the core manual-first principles remain intact while providing a clear migration path for future enhancements.
+
+The enhanced Evidence-Mode documentation demonstrates the evolution toward Level 3 functionality while maintaining strict opt-in requirements and comprehensive privacy controls. Evidence-Mode serves as a strictly opt-in enhancement that preserves manual-first principles while adding screen evidence capture capabilities with granular user control.
 
 The consolidated documentation establishes a clear foundation for implementation while preserving the simplicity and trust of manual-first operation. Future context capture functionality will build upon this foundation without compromising the core manual-first principles, maintaining user control and privacy throughout the evolution.
 
@@ -426,7 +584,7 @@ Representative scenarios derived from the user stories:
   - When the user sets state to waiting and adds a note "awaiting review by Friday"
   - Then the Work Item appears in the inventory as waiting with the note
 
-**Level 2+ Scenarios**:
+**Level 2 Scenarios**:
 - Scenario: Capture context automatically
   - Given a browser extension is connected as SourceNode
   - When the user triggers "Capture current context"
@@ -437,7 +595,24 @@ Representative scenarios derived from the user stories:
   - When the user returns to the same URL
   - Then the system updates last_seen automatically
 
+**Level 3 Scenarios**:
+- Scenario: Enable Evidence-Mode with privacy consent
+  - Given the user wants to capture screen evidence
+  - When they enable Evidence-Mode through explicit consent
+  - Then the system requests screen capture permission and explains privacy controls
+
+- Scenario: Manage storage budget warnings
+  - Given Evidence-Mode is capturing screen evidence
+  - When storage reaches 80% capacity
+  - Then the system shows warning and suggests purge or increase budget
+
+- Scenario: Configure redaction rules
+  - Given Evidence-Mode is enabled
+  - When the user adds redaction rules for sensitive applications
+  - Then the system excludes those applications from evidence capture
+
 **Section sources**
 - [02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md#L255-L284)
 - [02_user_story_manual_inventory.md](file://docs/mvp/02_user_story_manual_inventory.md#L257-L270)
 - [01_user_story_context_capture.md](file://docs/mvp/01_user_story_context_capture.md#L93-L120)
+- [03_user_story_evidence_mode.md](file://docs/mvp/03_user_story_evidence_mode.md#L255-L289)

@@ -16,6 +16,7 @@ An RFC is a detailed technical specification for a feature or system component. 
 | [RFC-0004](0004-local-api.md) | Draft | Level 0+ | Local API (Surface - Agent) |
 | [RFC-0005](0005-event-ingest-source-nodes.md) | Draft | Level 2+ | Event Ingest + SourceNode + Pairing |
 | [RFC-0006](0006-retention-ttl-distillation.md) | Draft | Level 2+ | Retention, TTL, Distillation |
+| [RFC-0007](0007-evidence-mode-screen-evidence-source-node.md) | Draft | Level 3 | Screen Evidence Source Node (Evidence-Mode) |
 
 ## Maturity Levels
 

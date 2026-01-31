@@ -15,6 +15,8 @@
 
 - [ADR-0001: Начальная архитектура](../adr/0001-initial-architecture.md)
 - [ADR-0002: MVP = Manual-first](../adr/0002-mvp-manual-first.md)
+- [ADR-0003: Evidence-Mode Opt-in](../adr/0003-evidence-mode-opt-in.md) (Level 3)
+- [RFC-0007: Screen Evidence Source Node](0007-evidence-mode-screen-evidence-source-node.md) (Level 3)
 - [User Story: Ручной инвентарь](../mvp/02_user_story_manual_inventory.md)
 - [Глоссарий](../glossary.md)
 
@@ -337,3 +339,48 @@ TTL правила по уровням чувствительности.
 - Появляется Ref Extractor и Resolver
 - Появляется автоматический `last_seen_at`
 - Manual-first механика остаётся базовой
+
+---
+
+# Part C: Level 3 Evidence-Mode (не входит в MVP)
+
+## C.1. Обзор Evidence-Mode
+
+**Evidence-Mode** — строго opt-in функция Level 3 для захвата screen evidence chunks и их дистилляции в Timeline Cards/Episodes.
+
+**Ключевые принципы:**
+- **Строго opt-in:** Evidence-Mode никогда не включается по умолчанию
+- **Chunking model:** канонический тип артефакта — `chunk` (серия кадров за период времени)
+- **Privacy-first:** короткий TTL (72h), pause/resume, purge, redaction rules
+- **Manual-first сохраняется:** Evidence-Mode расширяет, но не заменяет ручное управление Work Items
+
+**Важно:** Evidence-Mode не меняет manual-first подход MVP. Work Items остаются источником истины для управления работой. Evidence-Mode — сенсор для восстановления контекста, не трекер дисциплины.
+
+## C.2. Связь с MVP
+
+| Аспект | MVP (Level 0) | Evidence-Mode (Level 3) |
+|--------|---------------|-------------------------|
+| Создание Work Items | Ручное | Ручное (без изменений) |
+| Управление state/note | Ручное | Ручное (без изменений) |
+| Refs | Ручное добавление | + Автоматическое извлечение из evidence |
+| Контекст | Нет фонового сбора | Screen evidence chunks (opt-in) |
+| Timeline | Нет | Timeline Cards из evidence |
+
+## C.3. Техническая спецификация
+
+Детальная техническая спецификация Evidence-Mode описана в:
+- [RFC-0007: Screen Evidence Source Node](0007-evidence-mode-screen-evidence-source-node.md) — SourceNode manifest, Pipeline, Privacy Controls
+- [RFC-0006: Retention, TTL и Distillation](0006-retention-ttl-distillation.md) — TTL политики, Purge, Revocation
+- [ADR-0003: Evidence-Mode Opt-in](../adr/0003-evidence-mode-opt-in.md) — архитектурное решение
+
+## C.4. Гарантии доверия
+
+Evidence-Mode предоставляет следующие гарантии:
+
+| Гарантия | Описание |
+|----------|----------|
+| Explicit Opt-in | Захват начинается только после явного включения |
+| Pause/Resume | Приостановка захвата без потери настроек |
+| TTL | Автоматическое удаление по истечении времени (72h default) |
+| Purge | Удаление evidence по команде (derived сохраняются) |
+| Revoke | Отзыв источника с удалением всех данных |

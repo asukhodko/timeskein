@@ -14,7 +14,9 @@
 
 - [RFC-0002: Топология системы](0002-system-topology-and-component-map.md)
 - [RFC-0003: Архитектура клиентов](0003-client-app-suite-architecture.md)
+- [RFC-0007: Screen Evidence Source Node](0007-evidence-mode-screen-evidence-source-node.md) — детальная спецификация Screen Evidence SourceNode (Level 3)
 - [ADR-0002: MVP = Manual-first](../adr/0002-mvp-manual-first.md)
+- [ADR-0003: Evidence-Mode Opt-in](../adr/0003-evidence-mode-opt-in.md) — решение о Evidence-Mode как строго opt-in Level 3
 - [Глоссарий](../glossary.md)
 
 ---
@@ -48,6 +50,18 @@
 | `collector` | Фоновый сбор (always-on) | Level 3 |
 | `connector` | Интеграция с приложением | Level 2 |
 | `extension` | Плагин/расширение | Level 2 |
+
+#### Collector: Screen Evidence (Level 3, opt-in)
+
+**Screen Evidence Collector** — специализированный collector для захвата screen evidence chunks. Это строго opt-in функция Level 3.
+
+**Ключевые характеристики:**
+- **Chunking model:** канонический тип артефакта — `chunk` (серия кадров за период времени). Frames — derived/temporary для дистилляции, не хранятся как отдельные артефакты.
+- **События:** генерирует ContextEvent subtypes с kind `evidence.*` (см. раздел 2.4)
+- **Permissions:** требует `screen_capture` system permission
+- **Privacy:** pause/resume, purge, redaction rules
+
+> **Детальная спецификация:** см. [RFC-0007: Screen Evidence Source Node](0007-evidence-mode-screen-evidence-source-node.md)
 
 ### 2.2. Манифест SourceNode
 
@@ -100,6 +114,45 @@
 | `description` | string | Описание функциональности |
 | `permissions` | object | Требуемые разрешения |
 | `event_types` | string[] | Типы генерируемых событий |
+
+### 2.4. Evidence Events (Level 3)
+
+Evidence events — это подтипы ContextEvent с kind `evidence.*`. Используются Screen Evidence Collector для передачи информации о захваченных chunks.
+
+**Типы evidence events:**
+
+| Event Type | Kind | Описание |
+|------------|------|----------|
+| `context_event.evidence.chunk_captured` | `evidence.chunk_captured` | Chunk захвачен и сохранён |
+| `context_event.evidence.chunk_processed` | `evidence.chunk_processed` | Chunk обработан (дистилляция завершена) |
+| `context_event.evidence.artifact_purged` | `evidence.artifact_purged` | Артефакт удалён по команде purge (tombstone) |
+
+**Пример evidence event:**
+
+```json
+{
+  "event_id": "uuid",
+  "idempotency_key": "timeskein.collector.screen-evidence:chunk:456",
+  "ts": "2025-01-28T10:00:00Z",
+  "event_type": "context_event.evidence.chunk_captured",
+  "payload": {
+    "chunk_id": "chunk-uuid",
+    "ts_start": "2025-01-28T09:59:45Z",
+    "ts_end": "2025-01-28T10:00:00Z",
+    "format": "webp",
+    "size_bytes": 524288,
+    "sensitivity": "normal"
+  },
+  "provenance": {
+    "source_id": "timeskein.collector.screen-evidence",
+    "source_version": "1.0.0",
+    "device_id": "device-uuid",
+    "collected_at": "2025-01-28T10:00:00Z"
+  }
+}
+```
+
+> **Примечание:** Evidence events доступны только при включённом Evidence-Mode (Level 3, opt-in). Детальная спецификация артефактов, pipeline и privacy controls — см. [RFC-0007](0007-evidence-mode-screen-evidence-source-node.md).
 
 ---
 

@@ -15,8 +15,10 @@ Level 2/3 — заложенные расширения.
 ## Связанные документы
 
 - [ADR-0002: MVP = Manual-first](0002-mvp-manual-first.md)
+- [ADR-0003: Evidence-Mode Opt-in](0003-evidence-mode-opt-in.md) (Level 3)
 - [Глоссарий](../glossary.md)
 - [RFC-0001: Дизайн реализации MVP](../rfc/0001-mvp-inventory-design.md)
+- [RFC-0007: Screen Evidence Source Node](../rfc/0007-evidence-mode-screen-evidence-source-node.md) (Level 3)
 - [User Story: Ручной инвентарь](../mvp/02_user_story_manual_inventory.md)
 
 ---
@@ -179,11 +181,26 @@ Append-only журнал событий внешнего контекста:
 
 ## Связанные решения (ожидаемые будущие ADR/RFC)
 
-- RFC: Local API (Surface ↔ Agent)
-- RFC: Event Ingest + SourceNode + Pairing
-- RFC: Retention/TTL + Distillation
+- RFC-0004: Local API (Surface ↔ Agent)
+- RFC-0005: Event Ingest + SourceNode + Pairing
+- RFC-0006: Retention/TTL + Distillation
+- RFC-0007: Screen Evidence Source Node (Evidence-Mode)
+- ADR-0003: Evidence-Mode Opt-in (Level 3)
 - ADR: "Episodes как производное представление из ContextEvent"
 - ADR: "Threads как граф поверх Episodes/WorkItems"
 - ADR: "Sync протокол и стратегия merge"
 - ADR: "Policy Gate и уровни чувствительности"
 - ADR: "Плагинная модель коннекторов и их sandbox"
+
+---
+
+## Расширение: Evidence-Mode (Level 3)
+
+**Evidence-Mode** — строго opt-in функция Level 3 для захвата screen evidence chunks и их дистилляции в Timeline Cards/Episodes.
+
+Это расширение базовой архитектуры, которое:
+- Не меняет Manual-first философию (Work Items остаются источником истины)
+- Добавляет новый тип SourceNode (Screen Evidence Collector)
+- Требует явного включения пользователем
+
+См. [ADR-0003: Evidence-Mode Opt-in](0003-evidence-mode-opt-in.md) для деталей.

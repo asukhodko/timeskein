@@ -10,9 +10,12 @@
 ## Связанные документы
 
 - [User Story: Ручной инвентарь (Level 0)](02_user_story_manual_inventory.md) — базовая функциональность MVP
+- [User Story: Evidence-Mode (Level 3)](03_user_story_evidence_mode.md) — opt-in захват экрана (следующий уровень)
 - [ADR-0002: MVP = Manual-first](../adr/0002-mvp-manual-first.md)
+- [ADR-0003: Evidence-Mode Opt-in](../adr/0003-evidence-mode-opt-in.md)
 - [Глоссарий](../glossary.md)
 - [RFC-0005: Event Ingest + SourceNode](../rfc/0005-event-ingest-source-nodes.md)
+- [RFC-0007: Screen Evidence Source Node](../rfc/0007-evidence-mode-screen-evidence-source-node.md)
 
 ---
 
@@ -124,6 +127,18 @@
 - Автоматическое создание Work Items без подтверждения пользователя
 - Episodes и Threads
 - Семантический поиск по содержимому
+
+## Путь к Evidence-Mode (Level 3)
+
+Эта user story (Level 2) является промежуточным шагом между Manual-first (Level 0) и Evidence-Mode (Level 3).
+
+При переходе к Level 3:
+- Появится возможность opt-in захвата экрана (см. [User Story: Evidence-Mode](03_user_story_evidence_mode.md))
+- Evidence-Mode работает как SourceNode с типом `screen_evidence`
+- Захват экрана требует явного включения пользователем
+- Подробности в [RFC-0007: Screen Evidence Source Node](../rfc/0007-evidence-mode-screen-evidence-source-node.md)
+
+**Важно:** Evidence-Mode — это строго opt-in функция, которая никогда не включается по умолчанию.
 
 ## Миграционный путь от Level 0
 

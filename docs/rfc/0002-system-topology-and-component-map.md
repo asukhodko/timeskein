@@ -413,6 +413,50 @@ get_distillation_status() -> DistillationStatus
 
 ---
 
+### TS-SCREEN-EVIDENCE: Screen Evidence SourceNode (Level 3, opt-in)
+
+Что это: специализированный Collector для захвата screen evidence chunks в рамках Evidence-Mode.
+
+**Уровень:** Level 3 (строго opt-in)
+
+Отвечает за:
+
+* захват screen evidence chunks (серии кадров за период времени),
+* применение Redaction Rules на этапе захвата,
+* доставку chunks в TS-AGENT через Event Ingest API,
+* генерацию событий `evidence.chunk_captured`.
+
+Архитектурное направление:
+
+* строго opt-in — никогда не включается по умолчанию,
+* chunking model — канонический тип артефакта = chunk (frames — derived/temporary),
+* privacy-first — короткий TTL (72h), pause/resume, purge,
+* интеграция с Provider для дистилляции.
+
+**Манифест:**
+
+```json
+{
+  "source_id": "timeskein.collector.screen-evidence",
+  "source_type": "collector",
+  "version": "1.0.0",
+  "name": "Screen Evidence Collector",
+  "capabilities": ["screen_capture", "chunking", "frame_sampling"],
+  "permissions": ["screen_capture"],
+  "event_types": [
+    "context_event.evidence.chunk_captured",
+    "context_event.evidence.chunk_processed",
+    "context_event.evidence.artifact_purged"
+  ],
+  "level": 3,
+  "opt_in_required": true
+}
+```
+
+**Подробности:** см. [RFC-0007: Screen Evidence Source Node](0007-evidence-mode-screen-evidence-source-node.md).
+
+---
+
 ## Как они связаны (граф зависимостей)
 
 Упрощённая схема зависимостей по направлению:

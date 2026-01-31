@@ -298,3 +298,36 @@
 - ADR: Sync протокол и стратегия merge
 - ADR: Policy Gate и уровни чувствительности
 - RFC: Collector framework + event ingest contract
+
+---
+
+## 11. Путь к Level 3: Evidence-Mode (post-MVP)
+
+После завершения MVP и Level 2 (Context Capture) можно переходить к Evidence-Mode.
+
+**Evidence-Mode** — это строго opt-in функция Level 3, позволяющая захватывать экранные свидетельства.
+
+### Предварительные требования
+
+- MVP Manual-first (Level 0) завершён
+- Level 2 Context Capture реализован
+- RFC-0005, RFC-0006 реализованы
+
+### Roadmap Evidence-Mode
+
+Подробный план реализации Evidence-Mode описан в отдельном документе:
+
+→ **[Roadmap 0002: Level 3 Evidence-Mode](0002-level3-evidence-mode-roadmap.md)**
+
+### Ключевые принципы
+
+1. **Opt-in only**: Evidence-Mode никогда не включается по умолчанию
+2. **Chunking model**: canonical artifact = chunk (не отдельные frames)
+3. **Privacy first**: Purge, Revocation, Redaction Rules
+4. **Work Items = source of truth**: Evidence-Mode — сенсор, не источник истины
+
+### Связанные документы
+
+- [ADR-0003: Evidence-Mode Opt-in](../adr/0003-evidence-mode-opt-in.md)
+- [RFC-0007: Screen Evidence Source Node](../rfc/0007-evidence-mode-screen-evidence-source-node.md)
+- [User Story: Evidence-Mode](../mvp/03_user_story_evidence_mode.md)

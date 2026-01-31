@@ -365,3 +365,140 @@ Timeskein имеет два разных API-интерфейса:
 - **Общее версионирование** — те же правила MAJOR.MINOR
 - **Единый агент** — оба API реализованы одним TS-AGENT
 
+---
+
+## 13. Evidence-Mode API (Level 3, Draft)
+
+Дополнительные методы Local API для управления Evidence-Mode. Эти методы доступны только при включённом Level 3.
+
+**Статус:** Draft — финальные имена и структура TBD.
+
+### 13.1. Evidence Control
+
+```
+evidence.enable() -> void
+evidence.disable() -> void
+evidence.pause() -> void
+evidence.resume() -> void
+evidence.status() -> EvidenceStatus
+```
+
+### 13.2. Evidence Purge
+
+```
+evidence.purge(scope: PurgeScope, confirm: "CONFIRM_PURGE") -> PurgeResult
+```
+
+**PurgeScope:**
+- `all` — все evidence artifacts
+- `time_range` — за указанный период
+- `app` — связанные с приложением
+
+### 13.3. Evidence DTO
+
+```typescript
+interface EvidenceStatus {
+  enabled: boolean;
+  paused: boolean;
+  provider: Provider;
+  storage: StorageStatus;
+  last_capture_at?: string;
+  chunks_today: number;
+}
+
+interface PurgeResult {
+  success: boolean;
+  artifacts_purged: number;
+  bytes_freed: number;
+  distilled_snapshots_created: number;
+  tombstones_created: number;
+}
+```
+
+---
+
+## 14. Provider API (Level 2+, Draft)
+
+Методы для управления AI-провайдерами.
+
+**Статус:** Draft — финальные имена и структура TBD.
+
+### 14.1. Provider Methods
+
+```
+providers.list() -> Provider[]
+providers.get_active() -> Provider
+providers.set_active(provider_id: string) -> void
+providers.get_status(provider_id: string) -> ProviderStatus
+```
+
+### 14.2. Provider DTO
+
+```typescript
+interface Provider {
+  id: string;
+  name: string;
+  type: "local" | "remote";
+  capabilities: string[];
+  privacy: {
+    data_leaves_device: boolean;
+    encryption: boolean;
+    retention_policy?: string;
+    consent_required: boolean;
+  };
+  status: "active" | "inactive" | "error";
+}
+
+interface ProviderStatus {
+  provider_id: string;
+  status: "active" | "inactive" | "error";
+  last_used_at?: string;
+  error_message?: string;
+}
+```
+
+---
+
+## 15. Retention API (Level 2+, Draft)
+
+Методы для управления политиками хранения.
+
+**Статус:** Draft — финальные имена и структура TBD.
+
+### 15.1. Retention Methods
+
+```
+retention.get() -> RetentionSettings
+retention.set(settings: RetentionSettings) -> void
+retention.get_storage_status() -> StorageStatus
+retention.trigger_gc(target?: string) -> GCResult
+```
+
+### 15.2. Retention DTO
+
+```typescript
+interface RetentionSettings {
+  ttl_policies: {
+    context_events: Record<SensitivityLevel, string>;
+    artifacts: Record<string, string>;
+    evidence_artifacts?: Record<string, string>;
+  };
+  storage_budget_mb?: number;
+  gc_interval_min?: number;
+}
+
+interface StorageStatus {
+  used_mb: number;
+  budget_mb: number;
+  usage_pct: number;
+  level: "normal" | "warning" | "critical";
+  artifacts_count: number;
+  oldest_artifact_at?: string;
+  newest_artifact_at?: string;
+}
+
+type SensitivityLevel = "normal" | "sensitive" | "private" | "high";
+```
+
+**Подробности:** см. [RFC-0006: Retention, TTL и Distillation](0006-retention-ttl-distillation.md) и [RFC-0007: Screen Evidence Source Node](0007-evidence-mode-screen-evidence-source-node.md).
+

@@ -12,6 +12,7 @@ An ADR documents a significant architectural decision made during the project. I
 |-----|--------|----------|-------|
 | [ADR-0001](0001-initial-architecture.md) | Accepted | Level 0 | Initial architecture for MVP "Work Inventory" |
 | [ADR-0002](0002-mvp-manual-first.md) | Accepted | Level 0 | MVP = Manual-first |
+| [ADR-0003](0003-evidence-mode-opt-in.md) | Proposed | Level 3 | Evidence-Mode as opt-in Level 3 |
 
 ## Status Legend
 

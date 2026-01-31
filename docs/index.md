@@ -54,6 +54,7 @@ All documentation below is the **source of truth** for the project.
 |----------|--------|---------|
 | [ADR-0001](adr/0001-initial-architecture.md) | Accepted | Initial architecture for MVP |
 | [ADR-0002](adr/0002-mvp-manual-first.md) | Accepted | MVP = Manual-first (Level 0) |
+| [ADR-0003](adr/0003-evidence-mode-opt-in.md) | Proposed | Evidence-Mode as opt-in Level 3 |
 
 ### Technical Specifications (RFC)
 
@@ -65,20 +66,24 @@ All documentation below is the **source of truth** for the project.
 | [RFC-0004](rfc/0004-local-api.md) | Level 0+ | Local API (Surface - Agent) |
 | [RFC-0005](rfc/0005-event-ingest-source-nodes.md) | Level 2+ | Event Ingest + SourceNode + Pairing |
 | [RFC-0006](rfc/0006-retention-ttl-distillation.md) | Level 2+ | Retention, TTL, Distillation |
+| [RFC-0007](rfc/0007-evidence-mode-screen-evidence-source-node.md) | Level 3 | Screen Evidence Source Node (Evidence-Mode) |
 
-### MVP User Stories
+### User Stories
 
-| Document | Description |
-|----------|-------------|
-| [01_user_story_context_capture.md](mvp/01_user_story_context_capture.md) | Context capture (Level 2+, future) |
-| [02_user_story_manual_inventory.md](mvp/02_user_story_manual_inventory.md) | Manual inventory (Level 0, MVP) |
-| [02_manual_inventory_ui_ux.md](mvp/02_manual_inventory_ui_ux.md) | UI/UX for manual inventory |
+| Document | Level | Description |
+|----------|-------|-------------|
+| [01_user_story_context_capture.md](mvp/01_user_story_context_capture.md) | Level 2+ | Context capture (future) |
+| [02_user_story_manual_inventory.md](mvp/02_user_story_manual_inventory.md) | Level 0 | Manual inventory (MVP) |
+| [02_manual_inventory_ui_ux.md](mvp/02_manual_inventory_ui_ux.md) | Level 0 | UI/UX for manual inventory |
+| [03_user_story_evidence_mode.md](mvp/03_user_story_evidence_mode.md) | Level 3 | Evidence-Mode (post-MVP, opt-in) |
+| [03_evidence_mode_ui_ux.md](mvp/03_evidence_mode_ui_ux.md) | Level 3 | UI/UX for Evidence-Mode |
 
 ### Roadmap
 
 | Document | Description |
 |----------|-------------|
 | [0001-mvp-execution-roadmap.md](roadmap/0001-mvp-execution-roadmap.md) | MVP execution plan and phases |
+| [0002-level3-evidence-mode-roadmap.md](roadmap/0002-level3-evidence-mode-roadmap.md) | Level 3 Evidence-Mode roadmap (post-MVP) |
 
 ---
 

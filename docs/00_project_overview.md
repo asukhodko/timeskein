@@ -11,6 +11,7 @@
 - [Глоссарий](glossary.md) — определения терминов
 - [ADR-0001: Начальная архитектура](adr/0001-initial-architecture.md)
 - [ADR-0002: MVP = Manual-first](adr/0002-mvp-manual-first.md)
+- [ADR-0003: Evidence-Mode Opt-in](adr/0003-evidence-mode-opt-in.md) (Level 3)
 - [User Story: Ручной инвентарь](mvp/02_user_story_manual_inventory.md)
 
 ---
@@ -90,17 +91,57 @@ Timeskein проектируется как система, которая:
   - **WorkItemEvent** — изменение Work Item (Level 0+)
   - **ContextEvent** — событие внешнего контекста (Level 2+)
 - **Artifact** — вложение к событию (скриншот, текст, транскрипт) — опционально (Level 3).
+- **Evidence Artifact** — chunk screen evidence с TTL (Level 3, opt-in). Канонический тип = chunk.
 - **Episode** — интервал с единым контекстом (производное, Level 2+).
+- **Timeline Card** — derived view/presentation of Episode (Level 2+). Cards = UI view, Episodes = domain model.
 - **Thread** — сквозная тема/проект, связывающая эпизоды (производное, Level 2+).
 - **Mark** — пользовательский маркер ("важно", "закрыл", "вернуться").
+- **Distraction Mark** — авто-mark для классификации off-task активности (Level 3).
+
+### Capture Profile
+
+Профиль захвата данных, определяющий уровень автоматизации:
+
+| Уровень | Название | Описание |
+|---------|----------|----------|
+| Level 0 | Manual-first | Без фонового сбора |
+| Level 2 | Semantics-first | Явный захват по команде |
+| Level 3 | Full context | Always-on collectors (opt-in) |
+
+### Evidence-Mode (Level 3, opt-in)
+
+**Evidence-Mode** — строго opt-in функция Level 3 для захвата screen evidence chunks и их дистилляции в Timeline Cards/Episodes.
+
+**Ключевые принципы:**
+- **Строго opt-in:** никогда не включается по умолчанию
+- **Chunking model:** канонический тип артефакта — `chunk` (серия кадров)
+- **Privacy-first:** короткий TTL (72h), pause/resume, purge, redaction rules
+- **Manual-first сохраняется:** Evidence-Mode расширяет, но не заменяет ручное управление
+
+**Важно:** Evidence-Mode — сенсор для восстановления контекста, НЕ трекер дисциплины. Work Items остаются источником истины.
+
+См. [ADR-0003: Evidence-Mode Opt-in](adr/0003-evidence-mode-opt-in.md) и [RFC-0007: Screen Evidence Source Node](rfc/0007-evidence-mode-screen-evidence-source-node.md).
 
 ### Архитектурные компоненты
 
 - **TS-AGENT** — локальный агент, центральная точка правды на устройстве.
 - **Surface** — UI-клиент (CLI, трей, мобильное приложение).
 - **SourceNode** — источник событий (Collector, Connector, Extension) — Level 2+.
+- **Screen Evidence SourceNode** — специализированный Collector для Evidence-Mode (Level 3, opt-in).
+- **Provider** — абстракция AI-провайдера для обработки артефактов (local/remote) — Level 2+.
 - **PolicyGate** — шлюз политик приватности на входе событий.
 - **Hub** — серверный компонент для синхронизации — Level 1+.
+
+### Pipeline (обработка данных)
+
+Цепочка обработки данных Evidence-Mode:
+
+**Capture → Distill → Present → Cleanup**
+
+- **Capture:** захват screen evidence chunks
+- **Distill:** извлечение ценности через Provider (OCR, summarization)
+- **Present:** отображение в Timeline Cards
+- **Cleanup:** удаление по TTL с сохранением Distilled Snapshots
 
 ### Слои данных
 
@@ -174,13 +215,17 @@ MVP ориентирован на одну функцию:
 
 ### Level 3: Full context
 - Always-on collectors (active window, idle)
+- **Evidence-Mode (opt-in):** screen evidence chunks с дистилляцией в Timeline Cards
 - Threads и граф связей
 - Семантический поиск (эмбеддинги)
 - Артефакты (скриншоты, транскрипты) с TTL
 - Политики чувствительности и редакции (PII)
+- Provider abstraction (local/remote AI)
+- Storage Budget и GC для Evidence Artifacts
 
 ### Обеспечивающие RFC
 
-- RFC: Local API (Surface ↔ Agent)
-- RFC: Event Ingest + SourceNode + Pairing
-- RFC: Retention/TTL + Distillation
+- RFC-0004: Local API (Surface ↔ Agent)
+- RFC-0005: Event Ingest + SourceNode + Pairing
+- RFC-0006: Retention/TTL + Distillation
+- RFC-0007: Screen Evidence Source Node (Evidence-Mode)

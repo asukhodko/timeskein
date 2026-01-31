@@ -495,3 +495,82 @@ Android:
 2. UI-поверхности (surfaces) реализуем web‑first и упаковываем в платформенные хосты.
 3. Нативные возможности и "секретарские" функции реализуются через отдельный нативный контур адаптеров и collectors, подключаемых к agent.
 4. Это сохраняет единый UI, ускоряет разработку и не блокирует будущее "full context collection".
+
+---
+
+## 18. Evidence-Mode UI Components (Level 3, opt-in)
+
+При включении Evidence-Mode (Level 3) в клиентских приложениях появляются дополнительные UI-компоненты.
+
+### 18.1. Evidence-Mode Settings Panel
+
+Панель настроек Evidence-Mode в Settings UI:
+
+| Компонент | Описание |
+|-----------|----------|
+| Enable/Disable toggle | Главный переключатель Evidence-Mode (opt-in) |
+| Status indicator | Текущий статус: enabled/disabled/paused |
+| Provider selector | Выбор AI-провайдера (local/remote) с privacy indicators |
+| Storage Budget display | Использование и лимит хранилища |
+| TTL configuration | Настройка времени жизни артефактов |
+| Capture settings | fps, chunk_duration (advanced) |
+
+### 18.2. Evidence-Mode Status Indicator
+
+Постоянный индикатор в tray/menubar:
+
+| Состояние | Индикатор | Описание |
+|-----------|-----------|----------|
+| Disabled | Нет иконки | Evidence-Mode выключен |
+| Enabled | 🔴 Красная точка | Активный захват |
+| Paused | ⏸️ Пауза | Захват приостановлен |
+| Error | ⚠️ Предупреждение | Ошибка (нет места, provider недоступен) |
+
+### 18.3. Timeline View (Evidence-Mode)
+
+Расширение Timeline для отображения Evidence-based данных:
+
+| Компонент | Описание |
+|-----------|----------|
+| Timeline Cards | Карточки эпизодов с evidence_pointers |
+| Evidence preview | Опциональный превью артефакта (если не purged) |
+| Distraction marks | Визуальная индикация off-task активности |
+| Purge controls | Кнопки purge для отдельных карточек или периодов |
+
+### 18.4. Privacy Controls UI
+
+Компоненты для управления приватностью:
+
+| Компонент | Описание |
+|-----------|----------|
+| Pause/Resume button | Быстрая приостановка захвата |
+| Purge dialog | Диалог подтверждения purge с выбором scope |
+| Redaction Rules editor | Управление правилами исключения |
+| Provider privacy info | Информация о privacy-атрибутах провайдера |
+
+### 18.5. Bridge API Extensions (Evidence-Mode)
+
+Дополнительные методы Bridge API для Evidence-Mode:
+
+```typescript
+// Evidence-Mode control
+evidence.enable(): void
+evidence.disable(): void
+evidence.pause(): void
+evidence.resume(): void
+evidence.status(): EvidenceStatus
+
+// Purge
+evidence.purge(scope: PurgeScope, confirm: string): PurgeResult
+
+// Provider
+providers.list(): Provider[]
+providers.getActive(): Provider
+providers.setActive(providerId: string): void
+
+// Storage
+storage.status(): StorageStatus
+storage.setbudget(budgetMb: number): void
+```
+
+**Подробности:** см. [RFC-0007: Screen Evidence Source Node](0007-evidence-mode-screen-evidence-source-node.md).

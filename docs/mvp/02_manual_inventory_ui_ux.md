@@ -522,6 +522,42 @@ Onboarding нужен не "про фичи", а про доверие и при
 
 ---
 
+## Будущее: Evidence-Mode (Level 3)
+
+Evidence-Mode — это строго opt-in функция Level 3, которая добавляет возможность захвата экрана. Она **не входит в MVP** и требует явного согласия пользователя.
+
+### Интеграция с Manual-first UX
+
+При включении Evidence-Mode в будущем:
+
+* **Палитра остаётся главным интерфейсом** — Evidence-Mode добавляет новые команды, но не меняет базовую модель
+* **Timeline Cards** — новый способ просмотра Evidence Artifacts (см. [03_evidence_mode_ui_ux.md](03_evidence_mode_ui_ux.md))
+* **Новые команды**: pause/resume capture, purge evidence, manage providers
+* **Storage Budget** — управление объёмом хранимых evidence artifacts
+
+### Новые элементы UX (Level 3)
+
+* **Evidence indicator в трее**: показывает статус захвата (active/paused/disabled)
+* **Provider selector**: выбор источника захвата (local/remote)
+* **Purge controls**: удаление evidence artifacts с сохранением Distilled Snapshots
+* **Redaction Rules**: настройка правил приватности для исключения контента
+
+### Принципы интеграции
+
+1. **Opt-in only**: Evidence-Mode никогда не включается по умолчанию
+2. **Явный контроль**: пользователь всегда видит, что захват активен
+3. **Приватность**: Redaction Rules и Sensitivity Levels защищают данные
+4. **Обратимость**: Purge удаляет evidence, но сохраняет Distilled Snapshots
+
+### Связанные документы
+
+* [User Story: Evidence-Mode](03_user_story_evidence_mode.md)
+* [UI/UX: Evidence-Mode](03_evidence_mode_ui_ux.md)
+* [ADR-0003: Evidence-Mode Opt-in](../adr/0003-evidence-mode-opt-in.md)
+* [RFC-0007: Screen Evidence Source Node](../rfc/0007-evidence-mode-screen-evidence-source-node.md)
+
+---
+
 ## Приложение: ASCII-макеты (условные)
 
 ### Палитра: Inventory

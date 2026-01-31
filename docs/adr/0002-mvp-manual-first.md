@@ -13,6 +13,7 @@
 ## Связанные документы
 
 - [ADR-0001: Начальная архитектура](0001-initial-architecture.md) — уточняется настоящим ADR
+- [ADR-0003: Evidence-Mode Opt-in](0003-evidence-mode-opt-in.md) — расширение для Level 3
 - [User Story: Ручной инвентарь](../mvp/02_user_story_manual_inventory.md) — каноническое описание MVP
 - [RFC-0001: Дизайн реализации MVP](../rfc/0001-mvp-inventory-design.md) — техническая спецификация
 - [Глоссарий](../glossary.md) — определения терминов
@@ -118,6 +119,8 @@ Collectors есть в коде, но выключены по умолчанию
 
 ## Связанные будущие решения
 
-- **RFC: Event Ingest + SourceNode + Pairing** — как добавлять источники событий в Level 2/3
-- **RFC: Local API** — контракт Surface ↔ Agent
-- **RFC: Retention/TTL + Distillation** — как обрабатывать автоматически собранные данные
+- **RFC-0005: Event Ingest + SourceNode + Pairing** — как добавлять источники событий в Level 2/3
+- **RFC-0004: Local API** — контракт Surface ↔ Agent
+- **RFC-0006: Retention/TTL + Distillation** — как обрабатывать автоматически собранные данные
+- **RFC-0007: Screen Evidence Source Node** — техническая спецификация Evidence-Mode
+- **ADR-0003: Evidence-Mode Opt-in** — решение о Evidence-Mode как строго opt-in Level 3

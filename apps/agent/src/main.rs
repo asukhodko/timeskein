@@ -1,0 +1,77 @@
+//! Timeskein Agent - Main Entry Point
+//!
+//! Local-first work inventory backend with SQLite storage and Local API.
+
+mod api;
+mod db;
+mod domain;
+mod runtime;
+
+use std::net::SocketAddr;
+use std::sync::Arc;
+
+use anyhow::Result;
+use axum::Router;
+use tokio::sync::RwLock;
+use tracing::{info, Level};
+use tracing_subscriber::FmtSubscriber;
+
+use crate::db::Database;
+use crate::runtime::{ensure_data_dir, write_port_file, SingleInstanceLock};
+
+/// Application state shared across handlers
+pub struct AppState {
+    pub db: Database,
+    pub start_time: std::time::Instant,
+}
+
+#[tokio::main]
+async fn main() -> Result<()> {
+    // Initialize logging
+    let subscriber = FmtSubscriber::builder()
+        .with_max_level(Level::INFO)
+        .with_target(false)
+        .with_thread_ids(false)
+        .compact()
+        .init();
+
+    info!("Starting Timeskein Agent v{}", env!("CARGO_PKG_VERSION"));
+
+    // Ensure data directory exists
+    let data_dir = ensure_data_dir()?;
+    info!("Data directory: {}", data_dir.display());
+
+    // Acquire single-instance lock
+    let _lock = SingleInstanceLock::acquire(&data_dir)?;
+    info!("Single-instance lock acquired");
+
+    // Initialize database
+    let db_path = data_dir.join("timeskein.db");
+    let db = Database::new(&db_path).await?;
+    info!("Database initialized: {}", db_path.display());
+
+    // Create application state
+    let state = Arc::new(RwLock::new(AppState {
+        db,
+        start_time: std::time::Instant::now(),
+    }));
+
+    // Build router
+    let app = api::create_router(state);
+
+    // Find available port and start server
+    let addr = SocketAddr::from(([127, 0, 0, 1], 0));
+    let listener = tokio::net::TcpListener::bind(addr).await?;
+    let actual_addr = listener.local_addr()?;
+    
+    // Write port file for UI discovery
+    write_port_file(&data_dir, actual_addr.port())?;
+    
+    info!("Timeskein Agent listening on http://{}", actual_addr);
+    info!("API endpoint: POST http://{}/api", actual_addr);
+
+    // Run server
+    axum::serve(listener, app).await?;
+
+    Ok(())
+}

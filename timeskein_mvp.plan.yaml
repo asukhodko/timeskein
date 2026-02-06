@@ -1,0 +1,531 @@
+# timeskein_mvp.plan.yaml
+version: 1
+
+meta:
+  id: "timeskein_mvp"
+  title: "Timeskein — MVP (Level 0 Manual-first Work Inventory)"
+
+x:
+  assumptions:
+    calendar: "workdays; weekends excluded in views"
+    start_anchor: "2026-02-02"
+    sizing_note: "Durations are rough single-stream estimates; adjust for team size/parallelism."
+  scope:
+    in_mvp:
+      - "Manual-first Work Inventory (Work Items + Refs)"
+      - "Desktop UI: global palette (hotkey overlay) + tray/menubar"
+      - "Local-first agent with SQLite + Local API (127.0.0.1)"
+      - "Denylist policies for refs (block/redact)"
+      - "Tests: contract + smoke + e2e golden path"
+    out_of_scope:
+      - "Level 1 Sync"
+      - "Level 2 Context Capture (SourceNode)"
+      - "Level 3 Evidence-Mode (screen evidence capture)"
+
+statuses:
+  not_started: { label: "Не начато", color: "#9ca3af" }
+  in_progress: { label: "В работе",  color: "#0ea5e9" }
+  done:        { label: "Готово",    color: "#22c55e" }
+  blocked:     { label: "Блокер",    color: "#fecaca" }
+
+nodes:
+  root:
+    title: "MVP v0.1: Manual-first desktop app + local agent"
+    kind: summary
+    status: not_started
+    start: "2026-02-02"
+    duration: "45d"
+    notes: |
+      Цель: доставить Level 0 (Manual-first) — быстрый инвентарь Work Items с refs.
+      Принципы:
+      - никаких фоновых collectors/наблюдения в MVP
+      - данные попадают в систему только по явным действиям в Timeskein
+      - local-first: агент — единственная точка истины, UI — тонкий клиент через Local API
+
+  # ------------------------------------------------------------
+  # Phase A — Foundation (contract-first)
+  # ------------------------------------------------------------
+  phase_foundation:
+    title: "Phase A — Foundation (contract-first)"
+    kind: phase
+    status: not_started
+    parent: root
+    start: "2026-02-02"
+    duration: "9d"
+    notes: |
+      Результаты фазы:
+      - фиксирован scope MVP и DoD
+      - зафиксирован tech stack / packaging strategy
+      - контракт Local API (DTO + ошибки + версия)
+      - mock server для параллельной разработки UI
+      - CI baseline + cross-platform CI (win/mac)
+
+  kickoff:
+    title: "Kickoff: границы MVP + Definition of Done"
+    kind: task
+    status: not_started
+    parent: phase_foundation
+    start: "2026-02-02"
+    duration: "1d"
+    notes: |
+      Выходы:
+      - MVP = Level 0 Manual-first (без collectors/evidence/sync)
+      - список обязательных потоков (палитра: create/touch/state/note/refs/open)
+      - чёткий DoD: lint/test green + golden path e2e
+
+  mvp_scope_freeze:
+    title: "MVP scope freeze: потоки, UX-ядро, non-goals"
+    kind: task
+    status: not_started
+    parent: phase_foundation
+    after: [kickoff]
+    duration: "1d"
+
+  tech_stack_lock:
+    title: "Tech stack lock: выбрать стек Agent/UI + форматы/инструменты"
+    kind: task
+    status: not_started
+    parent: phase_foundation
+    after: [mvp_scope_freeze]
+    duration: "1d"
+    notes: |
+      Выходы (фиксируются письменно в repo):
+      - стек Agent (язык/фреймворк/HTTP)
+      - стек UI (framework, desktop shell)
+      - единая стратегия запуска: dev/prod (как стартует агент)
+      - команды: fmt/lint/test/run
+
+  packaging_strategy:
+    title: "Packaging strategy lock: артефакты, data paths, (опц.) signing/notarization"
+    kind: task
+    status: not_started
+    parent: phase_foundation
+    after: [tech_stack_lock]
+    duration: "1d"
+    notes: |
+      Выходы:
+      - как собираем Windows/macOS, где храним data dir
+      - политика автообновлений (в MVP обычно off)
+      - политика подписи/нотаризации (если требуется)
+
+  repo_scaffold:
+    title: "Repo scaffold: монорепо, пакеты agent/desktop, базовые скрипты"
+    kind: task
+    status: not_started
+    parent: phase_foundation
+    after: [tech_stack_lock]
+    duration: "2d"
+
+  local_api_contract:
+    title: "Local API contract: методы, DTO, ошибки, версионирование"
+    kind: task
+    status: not_started
+    parent: phase_foundation
+    after: [mvp_scope_freeze]
+    duration: "3d"
+    notes: |
+      Выходы:
+      - методы: inventory.*, work_item.*, ref.*, settings.*, agent.*
+      - DTO: WorkItemView, RefView
+      - ошибки: validation/not_found/conflict/privacy_blocked/version_mismatch
+      - версия API и совместимость
+
+  e2e_golden_path_spec:
+    title: "E2E golden path spec: сценарии + чеклист приёмки (машиночитаемо)"
+    kind: task
+    status: not_started
+    parent: phase_foundation
+    after: [local_api_contract]
+    duration: "1d"
+    notes: |
+      Сценарии (минимум):
+      - create item → add ref → open ref → touch → state → note → pin
+      - refs conflict resolution
+      - denylist: block / redact_to_domain
+      - recovery: restart agent/app, данные сохраняются
+
+  ci_tooling:
+    title: "CI/tooling baseline: lint, tests, pre-commit, быстрый smoke"
+    kind: task
+    status: not_started
+    parent: phase_foundation
+    after: [repo_scaffold]
+    duration: "2d"
+
+  ci_cross_platform:
+    title: "CI cross-platform: сборка и тесты на Windows + macOS"
+    kind: task
+    status: not_started
+    parent: phase_foundation
+    after: [ci_tooling, packaging_strategy]
+    duration: "2d"
+    notes: |
+      Выходы:
+      - CI jobs на win + mac: build + unit tests (минимум)
+      - артефакт сборки (опц.) для smoke
+
+  mock_server:
+    title: "Mock Local API server: реалистичные фикстуры и поведение"
+    kind: task
+    status: not_started
+    parent: phase_foundation
+    after: [local_api_contract]
+    duration: "2d"
+
+  milestone_foundation_complete:
+    title: "Milestone: Foundation ready (contract + mock + CI + stack locked)"
+    kind: task
+    status: not_started
+    parent: phase_foundation
+    milestone: true
+    after: [ci_cross_platform, mock_server, e2e_golden_path_spec]
+    notes: |
+      Гейт:
+      - UI может развиваться на mock server
+      - Agent развивается по фиксированному контракту
+      - стек и стратегия сборки зафиксированы
+
+  # ------------------------------------------------------------
+  # Phase B — Agent (local core + Local API)
+  # ------------------------------------------------------------
+  phase_agent:
+    title: "Phase B — Agent (SQLite + domain + Local API)"
+    kind: phase
+    status: not_started
+    parent: root
+    after: [milestone_foundation_complete]
+    duration: "18d"
+    notes: |
+      Цель: timeskein-agent — локальный бэкенд и единственная точка истины:
+      - SQLite + миграции
+      - доменная логика Work Items/Refs/Settings
+      - Local API server 127.0.0.1
+      - контрактные и персистентные тесты
+
+  agent_db_schema:
+    title: "Agent: SQLite schema + migrations (WorkItems/Refs/Settings)"
+    kind: task
+    status: not_started
+    parent: phase_agent
+    after: [milestone_foundation_complete]
+    duration: "3d"
+
+  agent_domain_logic:
+    title: "Agent: доменная логика Work Items (create/touch/state/note/pin/delete)"
+    kind: task
+    status: not_started
+    parent: phase_agent
+    after: [agent_db_schema]
+    duration: "4d"
+
+  agent_local_api_scaffold:
+    title: "Agent: Local API scaffold (server, routing, versioning, error envelope)"
+    kind: task
+    status: not_started
+    parent: phase_agent
+    after: [agent_domain_logic]
+    duration: "2d"
+
+  agent_api_work_items:
+    title: "Agent API: inventory.* + work_item.* методы"
+    kind: task
+    status: not_started
+    parent: phase_agent
+    after: [agent_local_api_scaffold]
+    duration: "2d"
+
+  agent_api_refs_settings:
+    title: "Agent API: ref.* + settings.* + agent.* методы"
+    kind: task
+    status: not_started
+    parent: phase_agent
+    after: [agent_api_work_items]
+    duration: "2d"
+
+  agent_lifecycle_single_instance:
+    title: "Agent: lifecycle + single-instance + port management + health"
+    kind: task
+    status: not_started
+    parent: phase_agent
+    after: [agent_local_api_scaffold]
+    duration: "2d"
+    notes: |
+      Выходы:
+      - предсказуемый старт/стоп агента (dev/prod)
+      - защита от двух инстансов
+      - стабильный выбор порта/endpoint
+      - agent.status()/ping/version() работают всегда
+
+  agent_subscriptions:
+    title: "Agent: inventory updates (ETag/polling или subscribe — закрепить реализацию)"
+    kind: task
+    status: not_started
+    parent: phase_agent
+    after: [agent_local_api_scaffold]
+    duration: "1d"
+    notes: |
+      Важно: выбрать один путь и закрепить в контракте/реализации.
+      Для MVP чаще всего достаточно polling с ETag/updated_at.
+
+  agent_settings_denylist:
+    title: "Agent: settings + denylist policies (block/redact_to_domain)"
+    kind: task
+    status: not_started
+    parent: phase_agent
+    after: [agent_api_refs_settings]
+    duration: "1d"
+
+  agent_ref_conflict_open:
+    title: "Agent: refs normalize + conflicts + primary + open handlers"
+    kind: task
+    status: not_started
+    parent: phase_agent
+    after: [agent_api_refs_settings]
+    duration: "2d"
+
+  agent_tests_contract:
+    title: "Agent: contract tests + persistence & edge cases"
+    kind: task
+    status: not_started
+    parent: phase_agent
+    after: [agent_ref_conflict_open, agent_settings_denylist, agent_subscriptions, agent_lifecycle_single_instance]
+    duration: "3d"
+    notes: |
+      Покрыть:
+      - соответствие DTO/ошибок контракту
+      - миграции БД
+      - конфликт refs
+      - denylist block/redact
+      - last_seen обновляется только по явным действиям
+
+  milestone_agent_ready:
+    title: "Milestone: Agent ready (API stable + tests green)"
+    kind: task
+    status: not_started
+    parent: phase_agent
+    milestone: true
+    after: [agent_tests_contract]
+
+  # ------------------------------------------------------------
+  # Phase C — Desktop UI (palette + tray)
+  # ------------------------------------------------------------
+  phase_ui:
+    title: "Phase C — Desktop UI (palette + tray/menubar)"
+    kind: phase
+    status: not_started
+    parent: root
+    after: [milestone_foundation_complete]
+    duration: "24d"
+    notes: |
+      Цель: timeskein-desktop:
+      - global hotkey → overlay palette
+      - список + поиск
+      - действия: open/touch/state/note/pin/refs
+      - tray/menubar, настройки, onboarding
+      Разработка до готовности агента — на mock server.
+
+  ui_shell_overlay:
+    title: "UI: desktop shell + overlay palette window (show/hide, ESC)"
+    kind: task
+    status: not_started
+    parent: phase_ui
+    after: [milestone_foundation_complete]
+    duration: "3d"
+
+  ui_hotkey_focus:
+    title: "UI: global hotkey + focus/activation correctness"
+    kind: task
+    status: not_started
+    parent: phase_ui
+    after: [ui_shell_overlay]
+    duration: "2d"
+
+  ui_palette_list_search:
+    title: "UI: inventory list + search + keyboard navigation"
+    kind: task
+    status: not_started
+    parent: phase_ui
+    after: [ui_hotkey_focus]
+    duration: "5d"
+
+  ui_e2e_harness_mock:
+    title: "UI: e2e harness on mock server (golden path automation)"
+    kind: task
+    status: not_started
+    parent: phase_ui
+    after: [ui_palette_list_search, e2e_golden_path_spec]
+    duration: "2d"
+    notes: |
+      Выходы:
+      - автоматизация минимум 1 сценария golden path на mock server
+      - запуск в CI (хотя бы headless/smoke)
+
+  ui_actions_workitem:
+    title: "UI: core actions — create + touch + pin (API + optimistic UI)"
+    kind: task
+    status: not_started
+    parent: phase_ui
+    after: [ui_palette_list_search]
+    duration: "3d"
+
+  ui_actions_state_note_pin:
+    title: "UI: core actions — state change + note editor (keyboard-first)"
+    kind: task
+    status: not_started
+    parent: phase_ui
+    after: [ui_actions_workitem]
+    duration: "2d"
+
+  ui_error_handling_optimistic:
+    title: "UI: error handling envelope (conflict/blocked/version mismatch) + rollback rules"
+    kind: task
+    status: not_started
+    parent: phase_ui
+    after: [ui_actions_state_note_pin]
+    duration: "1d"
+
+  ui_refs_add:
+    title: "UI: refs — add flows (clipboard/paste/custom)"
+    kind: task
+    status: not_started
+    parent: phase_ui
+    after: [ui_error_handling_optimistic]
+    duration: "2d"
+
+  ui_refs_conflict:
+    title: "UI: refs — conflict UX (already bound) + resolution paths"
+    kind: task
+    status: not_started
+    parent: phase_ui
+    after: [ui_refs_add]
+    duration: "2d"
+
+  ui_refs_open_filepicker:
+    title: "UI: refs — open + file picker integration + primary ref UX"
+    kind: task
+    status: not_started
+    parent: phase_ui
+    after: [ui_refs_conflict]
+    duration: "2d"
+
+  ui_tray_menu:
+    title: "UI: tray/menubar integration + quick actions"
+    kind: task
+    status: not_started
+    parent: phase_ui
+    after: [ui_hotkey_focus]
+    duration: "3d"
+
+  ui_settings_ui:
+    title: "UI: settings minimal (hotkey, denylist, export/backup stub)"
+    kind: task
+    status: not_started
+    parent: phase_ui
+    after: [ui_palette_list_search]
+    duration: "3d"
+
+  ui_onboarding:
+    title: "UI: first-run onboarding + trust guarantees copy"
+    kind: task
+    status: not_started
+    parent: phase_ui
+    after: [ui_settings_ui]
+    duration: "2d"
+
+  ui_smoke_tests:
+    title: "UI: smoke/regression + keyboard-only pass"
+    kind: task
+    status: not_started
+    parent: phase_ui
+    after: [ui_refs_open_filepicker, ui_onboarding, ui_e2e_harness_mock]
+    duration: "2d"
+
+  milestone_ui_ready:
+    title: "Milestone: UI ready (palette UX complete)"
+    kind: task
+    status: not_started
+    parent: phase_ui
+    milestone: true
+    after: [ui_smoke_tests]
+
+  # ------------------------------------------------------------
+  # Phase D — Integration & Release
+  # ------------------------------------------------------------
+  phase_integration:
+    title: "Phase D — Integration, packaging, release"
+    kind: phase
+    status: not_started
+    parent: root
+    after: [milestone_agent_ready, milestone_ui_ready]
+    duration: "12d"
+    notes: |
+      Цель: склеить UI и Agent, прогнать e2e, упаковать дистрибутивы, стабилизировать и выпустить MVP.
+
+  integrate_ui_agent:
+    title: "Integration: UI ↔ Agent (mock → real, lifecycle, versioning)"
+    kind: task
+    status: not_started
+    parent: phase_integration
+    after: [milestone_agent_ready, milestone_ui_ready]
+    duration: "3d"
+
+  e2e_tests:
+    title: "QA: end-to-end (golden path) + конфликтные случаи (real agent)"
+    kind: task
+    status: not_started
+    parent: phase_integration
+    after: [integrate_ui_agent]
+    duration: "4d"
+    notes: |
+      Сценарии:
+      - create item → add ref → open ref → touch → state → note → pin
+      - refs conflict resolution
+      - denylist: block / redact_to_domain
+      - recovery: перезапуск агента/приложения, сохранность данных
+
+  packaging_windows:
+    title: "Packaging: Windows build + installer + data paths"
+    kind: task
+    status: not_started
+    parent: phase_integration
+    after: [integrate_ui_agent, packaging_strategy]
+    duration: "2d"
+
+  packaging_macos:
+    title: "Packaging: macOS build + bundle + (опц.) notarization baseline"
+    kind: task
+    status: not_started
+    parent: phase_integration
+    after: [integrate_ui_agent, packaging_strategy]
+    duration: "2d"
+
+  docs_release_notes:
+    title: "Docs: quickstart + troubleshooting + release notes"
+    kind: task
+    status: not_started
+    parent: phase_integration
+    after: [integrate_ui_agent]
+    duration: "2d"
+
+  bugfix_buffer:
+    title: "Stabilization: bugfix buffer + UX polish"
+    kind: task
+    status: not_started
+    parent: phase_integration
+    after: [e2e_tests, packaging_windows, packaging_macos]
+    duration: "5d"
+
+  milestone_mvp_ready:
+    title: "Milestone: MVP v0.1 ready"
+    kind: task
+    status: not_started
+    parent: phase_integration
+    milestone: true
+    after: [bugfix_buffer, docs_release_notes]
+    notes: |
+      Итоговый deliverable:
+      - desktop app (palette + tray)
+      - агент с SQLite + Local API
+      - тесты (contract + smoke + e2e golden path) зелёные
+      - базовая документация
+      - готово к dogfooding

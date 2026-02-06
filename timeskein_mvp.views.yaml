@@ -1,0 +1,138 @@
+# timeskein_mvp.views.yaml
+version: 1
+project: "timeskein_mvp"
+
+gantt_views:
+  overview:
+    title: "Timeskein MVP — Overview"
+    date_format: "YYYY-MM-DD"
+    axis_format: "%d %b"
+    tick_interval: "1week"
+    excludes:
+      - weekends
+    lanes:
+      foundation:
+        title: "Foundation (contract-first)"
+        nodes:
+          - phase_foundation
+          - kickoff
+          - mvp_scope_freeze
+          - tech_stack_lock
+          - packaging_strategy
+          - repo_scaffold
+          - local_api_contract
+          - e2e_golden_path_spec
+          - ci_tooling
+          - ci_cross_platform
+          - mock_server
+          - milestone_foundation_complete
+      agent:
+        title: "Agent (local core)"
+        nodes:
+          - phase_agent
+          - agent_db_schema
+          - agent_domain_logic
+          - agent_local_api_scaffold
+          - agent_api_work_items
+          - agent_api_refs_settings
+          - agent_lifecycle_single_instance
+          - agent_subscriptions
+          - agent_settings_denylist
+          - agent_ref_conflict_open
+          - agent_tests_contract
+          - milestone_agent_ready
+      ui:
+        title: "Desktop UI (palette + tray)"
+        nodes:
+          - phase_ui
+          - ui_shell_overlay
+          - ui_hotkey_focus
+          - ui_palette_list_search
+          - ui_e2e_harness_mock
+          - ui_actions_workitem
+          - ui_actions_state_note_pin
+          - ui_error_handling_optimistic
+          - ui_refs_add
+          - ui_refs_conflict
+          - ui_refs_open_filepicker
+          - ui_tray_menu
+          - ui_settings_ui
+          - ui_onboarding
+          - ui_smoke_tests
+          - milestone_ui_ready
+      integration:
+        title: "Integration & Release"
+        nodes:
+          - phase_integration
+          - integrate_ui_agent
+          - e2e_tests
+          - packaging_windows
+          - packaging_macos
+          - docs_release_notes
+          - bugfix_buffer
+          - milestone_mvp_ready
+
+  streams:
+    title: "Timeskein MVP — Streams (parallel tracks)"
+    date_format: "YYYY-MM-DD"
+    axis_format: "%d %b"
+    tick_interval: "1week"
+    excludes:
+      - weekends
+    lanes:
+      contract:
+        title: "Contract / Tooling"
+        nodes:
+          - kickoff
+          - mvp_scope_freeze
+          - tech_stack_lock
+          - packaging_strategy
+          - repo_scaffold
+          - local_api_contract
+          - e2e_golden_path_spec
+          - ci_tooling
+          - ci_cross_platform
+          - mock_server
+          - milestone_foundation_complete
+      backend:
+        title: "Backend — Agent"
+        nodes:
+          - agent_db_schema
+          - agent_domain_logic
+          - agent_local_api_scaffold
+          - agent_api_work_items
+          - agent_api_refs_settings
+          - agent_lifecycle_single_instance
+          - agent_subscriptions
+          - agent_settings_denylist
+          - agent_ref_conflict_open
+          - agent_tests_contract
+          - milestone_agent_ready
+      frontend:
+        title: "Frontend — UI"
+        nodes:
+          - ui_shell_overlay
+          - ui_hotkey_focus
+          - ui_palette_list_search
+          - ui_e2e_harness_mock
+          - ui_actions_workitem
+          - ui_actions_state_note_pin
+          - ui_error_handling_optimistic
+          - ui_refs_add
+          - ui_refs_conflict
+          - ui_refs_open_filepicker
+          - ui_tray_menu
+          - ui_settings_ui
+          - ui_onboarding
+          - ui_smoke_tests
+          - milestone_ui_ready
+      release:
+        title: "Release / QA"
+        nodes:
+          - integrate_ui_agent
+          - e2e_tests
+          - packaging_windows
+          - packaging_macos
+          - docs_release_notes
+          - bugfix_buffer
+          - milestone_mvp_ready

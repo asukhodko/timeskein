@@ -1,0 +1,21 @@
+{
+  "name": "timeskein",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Manual-first, local-first work inventory system",
+  "scripts": {
+    "dev": "pnpm --filter @timeskein/desktop dev",
+    "build": "pnpm --filter @timeskein/desktop build",
+    "mock-server": "pnpm --filter @timeskein/mock-server start",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "pnpm -r lint",
+    "test": "pnpm -r test"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  }
+}

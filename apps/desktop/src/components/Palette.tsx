@@ -1,11 +1,21 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useInventory, useSetWorkItemState, useSetWorkItemNote, useAddRef, useRemoveRef } from '../hooks/useInventory'
+import { 
+  useInventory, 
+  useSetWorkItemState, 
+  useSetWorkItemNote, 
+  useAddRef, 
+  useRemoveRef,
+  useTouchWorkItem,
+  useToggleWorkItemPin,
+  useDeleteWorkItem,
+} from '../hooks/useInventory'
 import SearchInput from './SearchInput'
 import InventoryList from './InventoryList'
 import CreateDialog from './CreateDialog'
 import StateMenu from './StateMenu'
 import NoteEditor from './NoteEditor'
 import RefsPanel from './RefsPanel'
+import ConfirmDialog from './ConfirmDialog'
 import type { WorkItemState } from '@timeskein/contracts'
 
 export default function Palette() {
@@ -15,6 +25,7 @@ export default function Palette() {
   const [showStateMenu, setShowStateMenu] = useState(false)
   const [showNoteEditor, setShowNoteEditor] = useState(false)
   const [showRefsPanel, setShowRefsPanel] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   const { data, isLoading, error } = useInventory(search || undefined)
   const items = data?.items ?? []
@@ -24,6 +35,46 @@ export default function Palette() {
   const noteMutation = useSetWorkItemNote()
   const addRefMutation = useAddRef()
   const removeRefMutation = useRemoveRef()
+  const touchMutation = useTouchWorkItem()
+  const pinMutation = useToggleWorkItemPin()
+  const deleteMutation = useDeleteWorkItem()
+
+  // Action handlers for clickable shortcuts
+  const handleTouch = () => {
+    if (selectedItem) touchMutation.mutate(selectedItem.id)
+  }
+
+  const handlePin = () => {
+    if (selectedItem) pinMutation.mutate(selectedItem.id)
+  }
+
+  const handleDelete = () => {
+    if (selectedItem) setShowDeleteConfirm(true)
+  }
+
+  const confirmDelete = () => {
+    if (selectedItem) {
+      deleteMutation.mutate({ id: selectedItem.id })
+      setShowDeleteConfirm(false)
+    }
+  }
+
+  const handleOpenPrimaryRef = () => {
+    if (selectedItem?.refs?.length) {
+      const primaryRef = selectedItem.refs.find(r => r.is_primary) || selectedItem.refs[0]
+      if (primaryRef.kind === 'url') {
+        window.open(primaryRef.value, '_blank')
+      }
+    }
+  }
+
+  const handleMoveUp = () => {
+    setSelectedIndex((prev) => Math.max(prev - 1, 0))
+  }
+
+  const handleMoveDown = () => {
+    setSelectedIndex((prev) => Math.min(prev + 1, items.length - 1))
+  }
 
   // Reset selection when items change
   useEffect(() => {
@@ -34,7 +85,7 @@ export default function Palette() {
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       // Ignore if any modal is open
-      if (showCreate || showStateMenu || showNoteEditor || showRefsPanel) return
+      if (showCreate || showStateMenu || showNoteEditor || showRefsPanel || showDeleteConfirm) return
 
       // Ignore if in an input (except for Ctrl+N)
       const isInput = (e.target as HTMLElement).tagName === 'INPUT' || 
@@ -89,7 +140,7 @@ export default function Palette() {
           break
       }
     },
-    [items, selectedIndex, selectedItem, showCreate, showStateMenu, showNoteEditor, showRefsPanel]
+    [items, selectedIndex, selectedItem, showCreate, showStateMenu, showNoteEditor, showRefsPanel, showDeleteConfirm]
   )
 
   useEffect(() => {
@@ -183,20 +234,65 @@ export default function Palette() {
             items={items}
             selectedIndex={selectedIndex}
             onSelect={setSelectedIndex}
+            onRequestDelete={handleDelete}
           />
         )}
       </div>
 
-      {/* Footer with shortcuts */}
+      {/* Footer with clickable shortcuts */}
       <div className="px-4 py-2 border-t border-gray-700 bg-gray-800/50">
-        <div className="flex flex-wrap gap-3 text-xs text-gray-500">
-          <span><kbd className="px-1 bg-gray-700 rounded">C</kbd> create</span>
-          <span><kbd className="px-1 bg-gray-700 rounded">Enter</kbd> open</span>
-          <span><kbd className="px-1 bg-gray-700 rounded">T</kbd> touch</span>
-          <span><kbd className="px-1 bg-gray-700 rounded">S</kbd> state</span>
-          <span><kbd className="px-1 bg-gray-700 rounded">N</kbd> note</span>
-          <span><kbd className="px-1 bg-gray-700 rounded">P</kbd> pin</span>
-          <span><kbd className="px-1 bg-gray-700 rounded">R</kbd> refs</span>
+        <div className="flex flex-wrap gap-2 text-xs text-gray-500">
+          <button onClick={handleMoveUp} className="flex items-center gap-1 hover:text-gray-300 transition-colors" title="Move up">
+            <kbd className="px-1 bg-gray-700 rounded">↑</kbd>
+          </button>
+          <button onClick={handleMoveDown} className="flex items-center gap-1 hover:text-gray-300 transition-colors" title="Move down">
+            <kbd className="px-1 bg-gray-700 rounded">↓</kbd>
+          </button>
+          <span className="text-gray-600">|</span>
+          <button onClick={() => setShowCreate(true)} className="flex items-center gap-1 hover:text-gray-300 transition-colors" title="Create new item">
+            <kbd className="px-1 bg-gray-700 rounded">C</kbd><span>create</span>
+          </button>
+          <button onClick={handleOpenPrimaryRef} className="flex items-center gap-1 hover:text-gray-300 transition-colors" title="Open primary ref">
+            <kbd className="px-1 bg-gray-700 rounded">Enter</kbd><span>open</span>
+          </button>
+          <button onClick={handleTouch} className="flex items-center gap-1 hover:text-gray-300 transition-colors" title="Touch (update last seen)">
+            <kbd className="px-1 bg-gray-700 rounded">T</kbd><span>touch</span>
+          </button>
+          <button onClick={() => selectedItem && setShowStateMenu(true)} className="flex items-center gap-1 hover:text-gray-300 transition-colors" title="Change state">
+            <kbd className="px-1 bg-gray-700 rounded">S</kbd><span>state</span>
+          </button>
+          <button onClick={() => selectedItem && setShowNoteEditor(true)} className="flex items-center gap-1 hover:text-gray-300 transition-colors" title="Edit note">
+            <kbd className="px-1 bg-gray-700 rounded">N</kbd><span>note</span>
+          </button>
+          <button onClick={handlePin} className="flex items-center gap-1 hover:text-gray-300 transition-colors" title="Toggle pin">
+            <kbd className="px-1 bg-gray-700 rounded">P</kbd><span>pin</span>
+          </button>
+          <button onClick={() => selectedItem && setShowRefsPanel(true)} className="flex items-center gap-1 hover:text-gray-300 transition-colors" title="Manage refs">
+            <kbd className="px-1 bg-gray-700 rounded">R</kbd><span>refs</span>
+          </button>
+          <span className="text-gray-600">|</span>
+          <button onClick={() => selectedItem && handleStateSelect('active')} className="flex items-center gap-1 hover:text-green-400 transition-colors" title="Set active">
+            <kbd className="px-1 bg-gray-700 rounded">1</kbd>
+          </button>
+          <button onClick={() => selectedItem && handleStateSelect('blocked')} className="flex items-center gap-1 hover:text-red-400 transition-colors" title="Set blocked">
+            <kbd className="px-1 bg-gray-700 rounded">2</kbd>
+          </button>
+          <button onClick={() => selectedItem && handleStateSelect('waiting')} className="flex items-center gap-1 hover:text-amber-400 transition-colors" title="Set waiting">
+            <kbd className="px-1 bg-gray-700 rounded">3</kbd>
+          </button>
+          <button onClick={() => selectedItem && handleStateSelect('someday')} className="flex items-center gap-1 hover:text-purple-400 transition-colors" title="Set someday">
+            <kbd className="px-1 bg-gray-700 rounded">4</kbd>
+          </button>
+          <button onClick={() => selectedItem && handleStateSelect('unknown')} className="flex items-center gap-1 hover:text-gray-400 transition-colors" title="Set unknown">
+            <kbd className="px-1 bg-gray-700 rounded">5</kbd>
+          </button>
+          <button onClick={() => selectedItem && handleStateSelect('done')} className="flex items-center gap-1 hover:text-blue-400 transition-colors" title="Set done">
+            <kbd className="px-1 bg-gray-700 rounded">6</kbd>
+          </button>
+          <span className="text-gray-600">|</span>
+          <button onClick={handleDelete} className="flex items-center gap-1 hover:text-red-400 transition-colors" title="Delete item">
+            <kbd className="px-1 bg-gray-700 rounded">Shift+Del</kbd><span>delete</span>
+          </button>
         </div>
       </div>
 
@@ -236,6 +332,19 @@ export default function Palette() {
           onRemoveRef={handleRemoveRef}
           onOpenRef={handleOpenRef}
           onClose={() => setShowRefsPanel(false)}
+        />
+      )}
+
+      {/* Delete Confirmation */}
+      {showDeleteConfirm && selectedItem && (
+        <ConfirmDialog
+          title="Delete work item"
+          message={`Are you sure you want to delete "${selectedItem.title}"?`}
+          confirmLabel="Delete"
+          cancelLabel="Cancel"
+          danger={true}
+          onConfirm={confirmDelete}
+          onCancel={() => setShowDeleteConfirm(false)}
         />
       )}
     </div>

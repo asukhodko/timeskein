@@ -5,20 +5,19 @@ import {
   useTouchWorkItem,
   useSetWorkItemState,
   useToggleWorkItemPin,
-  useDeleteWorkItem,
 } from '../hooks/useInventory'
 
 interface InventoryListProps {
   items: WorkItemView[]
   selectedIndex: number
   onSelect: (index: number) => void
+  onRequestDelete: () => void
 }
 
-export default function InventoryList({ items, selectedIndex, onSelect }: InventoryListProps) {
+export default function InventoryList({ items, selectedIndex, onSelect, onRequestDelete }: InventoryListProps) {
   const touchMutation = useTouchWorkItem()
   const stateMutation = useSetWorkItemState()
   const pinMutation = useToggleWorkItemPin()
-  const deleteMutation = useDeleteWorkItem()
 
   const selectedItem = items[selectedIndex]
 
@@ -71,14 +70,12 @@ export default function InventoryList({ items, selectedIndex, onSelect }: Invent
         case 'Backspace':
           if (e.shiftKey) {
             e.preventDefault()
-            if (confirm('Delete this work item?')) {
-              deleteMutation.mutate({ id: selectedItem.id })
-            }
+            onRequestDelete()
           }
           break
       }
     },
-    [selectedItem, touchMutation, stateMutation, pinMutation, deleteMutation]
+    [selectedItem, touchMutation, stateMutation, pinMutation, onRequestDelete]
   )
 
   useEffect(() => {

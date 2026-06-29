@@ -40,7 +40,7 @@ pub async fn handle_ref_add(
     let state_guard = state.write().await;
 
     // Check work item exists
-    let item = state_guard.db.get_work_item(work_item_id)
+    let _item = state_guard.db.get_work_item(work_item_id)
         .await
         .map_err(|e| RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string()))?
         .ok_or_else(|| RpcResponse::error(request_id.to_string(), "not_found", "Work item not found"))?;

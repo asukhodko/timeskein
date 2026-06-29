@@ -1,0 +1,24 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Windows build scripts must have CRLF endings
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+# Shell scripts must have LF endings
+*.sh text eol=lf
+
+# Rust
+*.rs text eol=lf
+*.toml text eol=lf
+
+# Web
+*.ts text eol=lf
+*.tsx text eol=lf
+*.js text eol=lf
+*.json text eol=lf
+*.html text eol=lf
+*.css text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.md text eol=lf

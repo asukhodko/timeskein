@@ -5,7 +5,7 @@ use sqlx::Row;
 use uuid::Uuid;
 
 use crate::db::Database;
-use crate::domain::{DenylistRule, DenylistPolicy, DenylistRuleView};
+use crate::domain::{DenylistRule, DenylistPolicy};
 
 impl Database {
     /// Get a setting value

@@ -11,9 +11,9 @@ A desktop application for quickly tracking work items with refs (URLs, files, is
 | Frontend (React + Tailwind) | Working | Runs in browser via Vite |
 | Mock Server | Working | Full API implementation for development |
 | Rust Agent | Buildable | `cargo check -p timeskein-agent` passes |
-| Tauri Desktop | Buildable | `pnpm --filter @timeskein/desktop build` produces macOS `.app` |
+| Tauri Desktop | Working on macOS | Embeds Rust agent and builds macOS `.app` |
 
-**What works now:** Frontend UI with mock server - full manual inventory workflow in browser.
+**What works now:** Frontend UI with mock server in browser, and macOS `.app` with an embedded Rust agent.
 
 **Current focus:** Browser development mode and macOS Tauri shell. Windows packaging is deferred.
 
@@ -60,10 +60,7 @@ pnpm --filter @timeskein/desktop dev:frontend
 ### Running on macOS (Tauri Development Mode)
 
 ```bash
-# Terminal 1: Start mock server
-pnpm mock-server
-
-# Terminal 2: Tauri starts the frontend dev server via beforeDevCommand
+# Tauri starts the frontend dev server and embedded Rust agent
 pnpm --filter @timeskein/desktop dev
 ```
 
@@ -97,7 +94,7 @@ All shortcuts work regardless of keyboard layout (Russian, etc.):
 ## Architecture
 
 - **Agent** (`apps/agent`): Rust service with SQLite database, exposes Local API on a dynamic localhost port and writes a port file for discovery
-- **Desktop** (`apps/desktop`): Tauri app with React frontend, global hotkey palette
+- **Desktop** (`apps/desktop`): Tauri app with React frontend, global hotkey palette, and embedded agent startup on macOS
 - **Mock Server** (`packages/mock-server`): Express server implementing full Local API for development
 - **Contracts** (`packages/contracts`): Shared TypeScript types/DTOs between frontend and backend
 
@@ -114,7 +111,6 @@ All shortcuts work regardless of keyboard layout (Russian, etc.):
 ## Known Limitations (Current State)
 
 - **Browser mode uses mock data** - SQLite persistence requires Rust agent integration
-- **Tauri UI still uses the mock/local API URL** - Rust agent discovery is not wired into the desktop shell yet
 - **macOS packaging produces `.app` only** - DMG packaging is deferred
 - **Windows packaging deferred** - current recovery baseline targets browser and macOS first
 

@@ -19,10 +19,39 @@ function generateUuid(): string {
   })
 }
 
-// Get API base URL (mock server or real agent)
-const getApiUrl = (): string => {
-  // Always use mock server port for now
-  return 'http://127.0.0.1:3456/api'
+const MOCK_API_URL = 'http://127.0.0.1:3456/api'
+
+type TauriWindow = Window &
+  typeof globalThis & {
+    __TAURI__?: unknown
+    __TAURI_INTERNALS__?: unknown
+  }
+
+const isTauriRuntime = (): boolean => {
+  if (typeof window === 'undefined') return false
+
+  const tauriWindow = window as TauriWindow
+  return Boolean(
+    tauriWindow.__TAURI__ ||
+      tauriWindow.__TAURI_INTERNALS__ ||
+      window.location.protocol === 'tauri:' ||
+      window.location.hostname === 'tauri.localhost'
+  )
+}
+
+let apiUrlPromise: Promise<string> | null = null
+
+// Get API base URL: mock server in browser, embedded Rust agent in Tauri.
+const getApiUrl = async (): Promise<string> => {
+  if (!isTauriRuntime()) {
+    return MOCK_API_URL
+  }
+
+  apiUrlPromise ??= import('@tauri-apps/api/core').then(({ invoke }) =>
+    invoke<string>('get_api_url')
+  )
+
+  return apiUrlPromise
 }
 
 // Make an RPC call
@@ -34,7 +63,7 @@ async function rpc<T>(method: string, params?: Record<string, unknown>): Promise
     params,
   }
 
-  const response = await fetch(getApiUrl(), {
+  const response = await fetch(await getApiUrl(), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

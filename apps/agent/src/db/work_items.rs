@@ -187,19 +187,35 @@ impl Database {
     /// Align legacy work item state with the focus-session invariant.
     pub async fn normalize_active_work_items_for_focus(&self) -> Result<()> {
         let active_work_item_id: Option<String> = sqlx::query_scalar(
-            "SELECT work_item_id
-             FROM focus_sessions
-             WHERE state = 'active'
-             ORDER BY started_at DESC
+            "SELECT wi.id
+             FROM focus_sessions fs
+             JOIN work_items wi ON wi.id = fs.work_item_id
+             WHERE fs.state = 'active'
+               AND wi.deleted_at IS NULL
+             ORDER BY fs.started_at DESC
              LIMIT 1",
         )
         .fetch_optional(self.pool())
-        .await?
-        .flatten();
+        .await?;
 
         let keep_id = active_work_item_id
             .as_deref()
             .and_then(|id| Uuid::parse_str(id).ok());
+
+        if keep_id.is_none() {
+            let now = chrono::Utc::now().to_rfc3339();
+            sqlx::query(
+                "UPDATE focus_sessions
+                 SET state = 'stopped',
+                     stopped_at = COALESCE(stopped_at, ?1),
+                     updated_at = ?1,
+                     note = COALESCE(note, 'stopped on startup: linked work item is unavailable')
+                 WHERE state = 'active'",
+            )
+            .bind(&now)
+            .execute(self.pool())
+            .await?;
+        }
 
         self.clear_active_work_items_except(keep_id, WorkItemState::Unknown)
             .await?;

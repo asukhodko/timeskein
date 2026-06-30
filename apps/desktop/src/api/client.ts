@@ -4,6 +4,8 @@ import {
   type ApiResponse,
   type InventoryListResponse,
   type WorkItemView,
+  type WorkItemCreateResponse,
+  type WorkItemDeleteResponse,
   type AgentStatus,
   type Settings,
   type DenylistRule,
@@ -107,7 +109,7 @@ export const inventoryApi = {
 // Work Item API
 export const workItemApi = {
   create: (params: { title: string; type?: string; state?: string; note?: string }) =>
-    rpc<{ id: string }>('work_item.create', params),
+    rpc<WorkItemCreateResponse>('work_item.create', params),
   touch: (id: string) => rpc<{ success: boolean }>('work_item.touch', { id }),
   setState: (id: string, state: string) =>
     rpc<{ success: boolean }>('work_item.set_state', { id, state }),
@@ -116,7 +118,7 @@ export const workItemApi = {
   togglePin: (id: string) =>
     rpc<{ success: boolean; pinned: boolean }>('work_item.toggle_pin', { id }),
   delete: (id: string, mode?: 'soft' | 'hard') =>
-    rpc<{ success: boolean }>('work_item.delete', { id, mode }),
+    rpc<WorkItemDeleteResponse>('work_item.delete', { id, mode }),
 }
 
 // Focus Session API
@@ -127,6 +129,16 @@ export const focusApi = {
     rpc<FocusSessionView>('focus.start', params),
   stop: (params?: { id?: string; note?: string }) =>
     rpc<FocusSessionView>('focus.stop', params),
+}
+
+// Desktop shell API
+export const shellApi = {
+  setTrayStatusTitle: async (title?: string) => {
+    if (!isTauriRuntime()) return
+
+    const { invoke } = await import('@tauri-apps/api/core')
+    await invoke('set_tray_status_title', { title })
+  },
 }
 
 // Ref API

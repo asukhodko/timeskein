@@ -1,33 +1,61 @@
 import { useEffect } from 'react'
 import Palette from './components/Palette'
 
-// Check if running inside Tauri
-const isTauri = () => '__TAURI__' in window
+type TauriWindow = Window &
+  typeof globalThis & {
+    __TAURI__?: unknown
+    __TAURI_INTERNALS__?: unknown
+  }
+
+function isTauriRuntime() {
+  const tauriWindow = window as TauriWindow
+
+  return Boolean(
+    tauriWindow.__TAURI__ ||
+      tauriWindow.__TAURI_INTERNALS__ ||
+      window.location.protocol === 'tauri:' ||
+      window.location.hostname === 'tauri.localhost'
+  )
+}
 
 function App() {
   useEffect(() => {
-    // Tauri-specific window handling
-    if (isTauri()) {
-      import('@tauri-apps/api/window').then(({ getCurrentWindow }) => {
-        const tauriWindow = getCurrentWindow()
-        
-        const unlisten = tauriWindow.onFocusChanged(() => {
-          // Focus tracking for future use
-        })
+    if (!isTauriRuntime()) return
 
-        const handleKeyDown = (e: KeyboardEvent) => {
-          if (e.key === 'Escape') {
-            tauriWindow.hide()
-          }
-        }
+    let cancelled = false
+    let cleanup: (() => void) | undefined
 
-        document.addEventListener('keydown', handleKeyDown)
+    import('@tauri-apps/api/window').then(({ getCurrentWindow }) => {
+      if (cancelled) return
 
-        return () => {
-          unlisten.then(fn => fn())
-          document.removeEventListener('keydown', handleKeyDown)
-        }
+      const tauriWindow = getCurrentWindow()
+      const unlisten = tauriWindow.onFocusChanged(() => {
+        // Focus tracking for future use.
       })
+
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key !== 'Escape') return
+        if (document.querySelector('[data-timeskein-modal="true"]')) return
+
+        e.preventDefault()
+        void tauriWindow.hide()
+      }
+
+      document.addEventListener('keydown', handleKeyDown)
+
+      cleanup = () => {
+        document.removeEventListener('keydown', handleKeyDown)
+        void unlisten.then((fn) => fn())
+      }
+    }).catch((error) => {
+      if (!cancelled) {
+        console.warn('Unable to initialize Timeskein window shortcuts', error)
+      }
+    })
+
+    return () => {
+      cancelled = true
+      cleanup?.()
     }
   }, [])
 

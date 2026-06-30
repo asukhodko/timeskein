@@ -24,3 +24,33 @@ CREATE INDEX IF NOT EXISTS idx_focus_sessions_started_at
 
 CREATE INDEX IF NOT EXISTS idx_focus_sessions_work_item
     ON focus_sessions(work_item_id);
+
+-- The dogfood model treats Work Item `active` as the UI marker for the single
+-- currently timed item. Normalize old rows before adding the SQLite guard.
+UPDATE work_items
+SET
+    state = 'unknown',
+    updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now'),
+    last_seen_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+WHERE deleted_at IS NULL
+  AND state = 'active'
+  AND id NOT IN (
+      SELECT id
+      FROM (
+          SELECT wi.id
+          FROM work_items wi
+          LEFT JOIN focus_sessions fs
+            ON fs.work_item_id = wi.id
+           AND fs.state = 'active'
+          WHERE wi.deleted_at IS NULL
+            AND wi.state = 'active'
+          ORDER BY
+              CASE WHEN fs.id IS NOT NULL THEN 0 ELSE 1 END,
+              wi.updated_at DESC
+          LIMIT 1
+      )
+  );
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_work_items_single_active
+    ON work_items(state)
+    WHERE deleted_at IS NULL AND state = 'active';

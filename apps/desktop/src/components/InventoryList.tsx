@@ -6,6 +6,7 @@ import {
   useSetWorkItemState,
   useToggleWorkItemPin,
 } from '../hooks/useInventory'
+import { useStartFocusSession } from '../hooks/useFocusSessions'
 
 interface InventoryListProps {
   items: WorkItemView[]
@@ -18,6 +19,7 @@ export default function InventoryList({ items, selectedIndex, onSelect, onReques
   const touchMutation = useTouchWorkItem()
   const stateMutation = useSetWorkItemState()
   const pinMutation = useToggleWorkItemPin()
+  const startFocusMutation = useStartFocusSession()
 
   const selectedItem = items[selectedIndex]
 
@@ -91,6 +93,14 @@ export default function InventoryList({ items, selectedIndex, onSelect, onReques
           item={item}
           isSelected={index === selectedIndex}
           onClick={() => onSelect(index)}
+          onDoubleClick={() => {
+            if (startFocusMutation.isPending) return
+            startFocusMutation.mutate({
+              title: item.title,
+              work_item_id: item.id,
+              target_seconds: 25 * 60,
+            })
+          }}
         />
       ))}
     </div>

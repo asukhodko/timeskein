@@ -34,9 +34,9 @@ flowchart LR
     style app_entry_ux stroke:#111827,stroke-width:3px
     focus_session_core["Focus<br/>Session core<br/>85%<br/>веха 2026-07-10"]
     class focus_session_core exec_mgmt_yellow
-    day_review_export["Day review<br/>and export<br/>~35%<br/>веха 2026-07-16"]
+    day_review_export["Day review<br/>and export<br/>80%<br/>веха 2026-07-16"]
     class day_review_export exec_mgmt_neutral
-    dogfood_hardening["Dogfood<br/>hardening<br/>~15%<br/>веха 2026-07-21"]
+    dogfood_hardening["Dogfood<br/>hardening<br/>~80%<br/>веха 2026-07-21"]
     class dogfood_hardening exec_mgmt_neutral
     future_directions["Future<br/>directions<br/>n/a"]
     class future_directions exec_mgmt_neutral
@@ -82,14 +82,14 @@ gantt
     ✅ Capture a note at the end of a focus session  :done, ts_focus_core_session_notes,    2026-07-10, 1d
     🔄 First real Focus Session dogfood  :milestone, active, ts_focus_core_dogfood_gate,    2026-07-10, 0d
     section Day review
-    Show focus blocks on a daily timeline  :ts_day_review_timeline,    2026-07-13, 2d
-    Compute totals, gaps, and entry count  :ts_day_review_totals_gaps,    2026-07-15, 1d
-    Export day data as JSON, CSV, and Markdown  :ts_day_review_export,    2026-07-16, 1d
+    🔄 Show focus blocks on a daily timeline  :active, ts_day_review_timeline,    2026-07-13, 2d
+    🔄 Compute totals, gaps, and entry count  :active, ts_day_review_totals_gaps,    2026-07-15, 1d
+    🔄 Export dogfood day data as Markdown  :active, ts_day_review_export,    2026-07-16, 1d
     End-of-day analysis can use Timeskein data  :milestone, ts_day_review_analysis_gate,    2026-07-16, 0d
     section Dogfood hardening
     🔄 Add smoke checks for focus-session flows  :active, ts_hardening_smoke,    2026-07-17, 1d
-    Add local data backup and reset path  :ts_hardening_backup_reset,    2026-07-17, 1d
-    Rebuild macOS app for regular personal use  :ts_hardening_package_app,    2026-07-20, 1d
+    ✅ Add local data backup and reset path  :done, ts_hardening_backup_reset,    2026-07-17, 1d
+    ✅ Rebuild macOS app for regular personal use  :done, ts_hardening_package_app,    2026-07-20, 1d
     Write dogfood release notes and known limitations  :ts_hardening_release_notes,    2026-07-21, 1d
     Session replacement dogfood baseline  :milestone, ts_hardening_dogfood_release,    2026-07-21, 0d
 ```
@@ -109,23 +109,23 @@ gantt
 - Restore running focus session after app restart [done] (2 focus-blocks) {100%}
 - Bind focus sessions to Work Items or free intentions [done] (2 focus-blocks) {100%}
 - Capture a note at the end of a focus session [done] (1 focus-blocks) {100%}
-- App entry UX [in_progress] (6 focus-blocks) {70% cov:83%}
-- Wire tray menu actions [in_progress] (1 focus-blocks) {50%}
+- Add local data backup and reset path [done] (2 focus-blocks)
+- Rebuild macOS app for regular personal use [done] (1 focus-blocks) {100%}
+- App entry UX [in_progress] (6 focus-blocks) {75% cov:83%}
+- Wire tray menu actions [in_progress] (1 focus-blocks) {75%}
 - Reduce the path from intent to tracked work [in_progress] (2 focus-blocks) {50%}
 - Focus Session core [in_progress] (17 focus-blocks) {85%}
 - Add FocusSession and SessionEvent persistence [in_progress] (3 focus-blocks) {70%}
 - Implement start, pause, resume, stop, cancel [in_progress] (3 focus-blocks) {45%}
-- First real Focus Session dogfood [in_progress] {50%}
-- Dogfood hardening [in_progress] (6 focus-blocks) {50% cov:33%}
-- Add smoke checks for focus-session flows [in_progress] (2 focus-blocks) {50%}
+- First real Focus Session dogfood [in_progress] {85%}
+- Day review and export [in_progress] (7 focus-blocks) {79%}
+- Show focus blocks on a daily timeline [in_progress] (3 focus-blocks) {65%}
+- Compute totals, gaps, and entry count [in_progress] (2 focus-blocks) {90%}
+- Export dogfood day data as Markdown [in_progress] (2 focus-blocks) {90%}
+- Dogfood hardening [in_progress] (6 focus-blocks) {97% cov:50%}
+- Add smoke checks for focus-session flows [in_progress] (2 focus-blocks) {95%}
 - Document macOS multi-monitor status item limits [planned] (1 focus-blocks)
-- Day review and export [planned] (7 focus-blocks) {48% cov:71%}
-- Show focus blocks on a daily timeline [planned] (3 focus-blocks) {40%}
-- Compute totals, gaps, and entry count [planned] (2 focus-blocks) {60%}
-- Export day data as JSON, CSV, and Markdown [planned] (2 focus-blocks)
 - End-of-day analysis can use Timeskein data [planned]
-- Add local data backup and reset path [planned] (2 focus-blocks)
-- Rebuild macOS app for regular personal use [planned] (1 focus-blocks)
 - Write dogfood release notes and known limitations [planned] (1 focus-blocks)
 - Session replacement dogfood baseline [planned]
 <!-- GENERATED:END -->

@@ -6,6 +6,7 @@ interface WorkItemCardProps {
   item: WorkItemView
   isSelected: boolean
   onClick: () => void
+  onDoubleClick?: () => void
 }
 
 const stateColorClasses: Record<WorkItemState, string> = {
@@ -21,6 +22,7 @@ export default function WorkItemCard({
   item,
   isSelected,
   onClick,
+  onDoubleClick,
 }: WorkItemCardProps) {
   return (
     <div
@@ -29,6 +31,7 @@ export default function WorkItemCard({
         isSelected ? 'bg-blue-500/20' : 'hover:bg-gray-800/50'
       )}
       onClick={onClick}
+      onDoubleClick={onDoubleClick}
     >
       <div className="flex items-start gap-3">
         {/* Pin indicator */}

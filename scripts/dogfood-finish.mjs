@@ -1,0 +1,219 @@
+#!/usr/bin/env node
+
+import { execFile } from "node:child_process";
+import { existsSync } from "node:fs";
+import { writeFile } from "node:fs/promises";
+import { homedir } from "node:os";
+import { join, resolve } from "node:path";
+import { promisify } from "node:util";
+
+const execFileAsync = promisify(execFile);
+const repoRoot = resolve(import.meta.dirname, "..");
+const options = parseArgs(process.argv.slice(2));
+const date = options.date ? parseLocalDate(options.date) : new Date();
+const dateArg = options.date ?? formatLocalDate(date);
+const dbPath = options.db
+  ? resolve(options.db)
+  : join(homedir(), "Library/Application Support/Timeskein/timeskein.db");
+
+const blockers = [];
+
+if (!existsSync(dbPath)) {
+  blockers.push(`Timeskein database not found: ${dbPath}`);
+} else {
+  const summary = await loadSummary(dbPath, date);
+  if (summary.activeSessions.length > 0) {
+    for (const session of summary.activeSessions) {
+      blockers.push(
+        `Active focus session is still running: ${session.work_item_title ?? session.title} since ${formatClockTime(session.started_at)}`
+      );
+    }
+  }
+
+  if (summary.activeWorkItems.length > 0) {
+    for (const item of summary.activeWorkItems) {
+      blockers.push(`Active Work Item is still marked active: ${item.title}`);
+    }
+  }
+
+  if (summary.daySessionCount === 0) {
+    blockers.push(`No focus blocks found for ${dateArg}. There is no dogfood day to finish.`);
+  }
+}
+
+if (blockers.length > 0) {
+  process.stdout.write(buildNotReadyReport(dateArg, dbPath, blockers));
+  process.exit(1);
+}
+
+const reportArgs = [resolve(repoRoot, "scripts/dogfood-report.mjs"), "--date", dateArg, "--db", dbPath];
+const { stdout } = await execFileAsync(process.execPath, reportArgs, {
+  cwd: repoRoot,
+  maxBuffer: 10 * 1024 * 1024,
+});
+
+const outputPath = outputReportPath(options, dateArg);
+if (outputPath) {
+  await writeFile(outputPath, stdout);
+  process.stdout.write(`Saved Timeskein dogfood report: ${outputPath}\n`);
+} else {
+  process.stdout.write(stdout);
+}
+
+function parseArgs(args) {
+  const result = {};
+
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index];
+    if (arg === "--") {
+      continue;
+    } else if (arg === "--db") {
+      result.db = args[++index];
+    } else if (arg === "--date") {
+      result.date = args[++index];
+    } else if (arg === "--out") {
+      result.out = args[++index];
+    } else if (arg === "--save") {
+      result.save = true;
+    } else if (arg === "--help" || arg === "-h") {
+      printHelp();
+      process.exit(0);
+    } else {
+      throw new Error(`Unknown argument: ${arg}`);
+    }
+  }
+
+  return result;
+}
+
+function printHelp() {
+  console.log(`Usage: pnpm dogfood:finish [--date YYYY-MM-DD] [--db path/to/timeskein.db] [--save | --out path.md]
+
+Finishes a dogfood day by checking that there is no active focus session or active Work Item and that the day has at least one focus block.
+On success, prints the Markdown dogfood report, or saves it to a file when --save or --out is passed.
+On failure, prints a Markdown diagnostic and exits with code 1.`);
+}
+
+function outputReportPath(options, date) {
+  if (options.out) {
+    return resolve(options.out);
+  }
+
+  if (options.save) {
+    return resolve(`timeskein-dogfood-report-${date}.md`);
+  }
+
+  return undefined;
+}
+
+function parseLocalDate(value) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    throw new Error(`Invalid --date value, expected YYYY-MM-DD: ${value}`);
+  }
+
+  const [year, month, day] = value.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
+async function loadSummary(path, day) {
+  const from = startOfLocalDay(day);
+  const to = new Date(from);
+  to.setDate(to.getDate() + 1);
+  const now = new Date();
+
+  const [activeSessions, activeWorkItems, dayCounts] = await Promise.all([
+    queryJson(path, `
+      SELECT
+        fs.id,
+        fs.title,
+        wi.title AS work_item_title,
+        fs.started_at
+      FROM focus_sessions fs
+      LEFT JOIN work_items wi ON wi.id = fs.work_item_id
+      WHERE fs.state = 'active'
+      ORDER BY datetime(fs.started_at) DESC
+    `),
+    queryJson(path, `
+      SELECT id, title, updated_at
+      FROM work_items
+      WHERE deleted_at IS NULL AND state = 'active'
+      ORDER BY datetime(updated_at) DESC
+    `),
+    queryJson(path, `
+      SELECT COUNT(*) AS count
+      FROM focus_sessions
+      WHERE datetime(COALESCE(stopped_at, ${sqlString(now.toISOString())})) > datetime(${sqlString(from.toISOString())})
+        AND datetime(started_at) < datetime(${sqlString(to.toISOString())})
+    `),
+  ]);
+
+  return {
+    activeSessions,
+    activeWorkItems,
+    daySessionCount: dayCounts[0]?.count ?? 0,
+  };
+}
+
+async function queryJson(path, sql) {
+  const { stdout } = await execFileAsync("sqlite3", sqliteReadArgs(path, sql), {
+    maxBuffer: 10 * 1024 * 1024,
+  });
+
+  return stdout.trim() ? JSON.parse(stdout) : [];
+}
+
+function sqliteReadArgs(path, sql) {
+  return ["-readonly", "-cmd", ".timeout 5000", "-json", path, sql];
+}
+
+function buildNotReadyReport(date, path, items) {
+  const lines = [
+    `# Timeskein dogfood finish blocked - ${date}`,
+    "",
+    `DB: ${path}`,
+    "",
+    "## Blockers",
+    "",
+  ];
+
+  for (const item of items) {
+    lines.push(`- ${item}`);
+  }
+
+  lines.push(
+    "",
+    "## Next",
+    "",
+    "- Stop the active focus block in Timeskein if one is running.",
+    "- If only an active Work Item is stuck, run `pnpm dogfood:stop-active` first and apply it if the plan looks right.",
+    "- If this is not the dogfood day, rerun with `--date YYYY-MM-DD`.",
+    "- If the database is wrong, rerun with `--db path/to/timeskein.db`."
+  );
+
+  return `${lines.join("\n")}\n`;
+}
+
+function startOfLocalDay(date) {
+  const result = new Date(date);
+  result.setHours(0, 0, 0, 0);
+  return result;
+}
+
+function sqlString(value) {
+  return `'${value.replaceAll("'", "''")}'`;
+}
+
+function formatClockTime(value) {
+  return new Date(value).toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function formatLocalDate(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}

@@ -1,0 +1,489 @@
+#!/usr/bin/env node
+
+import { execFile, spawn } from "node:child_process";
+import { existsSync } from "node:fs";
+import { mkdir, mkdtemp, readFile, rm, unlink, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
+import { promisify } from "node:util";
+
+const repoRoot = resolve(import.meta.dirname, "..");
+const execFileAsync = promisify(execFile);
+const appBinary = join(
+  repoRoot,
+  "target/release/bundle/macos/Timeskein.app/Contents/MacOS/timeskein-desktop"
+);
+
+if (!existsSync(appBinary)) {
+  throw new Error(`Packaged app binary not found: ${appBinary}`);
+}
+
+const homeDir = await mkdtemp(join(tmpdir(), "timeskein-app-smoke-"));
+const dataDir = join(homeDir, "Library/Application Support/Timeskein");
+const portFile = join(dataDir, "agent.port");
+let child;
+let stderrOutput = "";
+
+try {
+  await seedLegacyDbWithMultipleActiveWorkItems();
+  await seedStaleAgentRuntimeFiles();
+  child = spawnApp(homeDir);
+  const port = await waitForResponsiveAgent(portFile, 15_000);
+  const status = await rpc(port, "agent.status");
+  const inventory = await rpc(port, "inventory.list");
+  const title = `Packaged app smoke ${new Date().toISOString()}`;
+  const started = await rpc(port, "focus.start", {
+    title,
+    target_seconds: 60,
+  });
+  await new Promise((resolve) => setTimeout(resolve, 1100));
+  const stopped = await rpc(port, "focus.stop", {
+    note: "packaged app smoke done",
+  });
+  const day = await rpc(port, "focus.list", todayWindow());
+
+  assert(status.db_ok === true, "agent.status did not report db_ok=true");
+  assert(typeof status.storage_path === "string", "agent.status did not return storage_path");
+  assert(Array.isArray(inventory.items), "inventory.list did not return items");
+  assert(
+    stderrOutput.includes("Ignoring stale Timeskein agent lock/port"),
+    "app did not ignore stale agent lock/port before starting embedded agent"
+  );
+  const seededActiveItems = inventory.items.filter((item) => item.state === "active");
+  assert(
+    seededActiveItems.length === 1,
+    "startup migration did not normalize legacy multiple active work items"
+  );
+  assert(
+    seededActiveItems[0].title === "Legacy Active Newer",
+    "startup migration did not keep the newest legacy active work item"
+  );
+  assert(started.work_item_id, "focus.start did not create or reuse a work item");
+  assert(stopped.id === started.id, "focus.stop returned a different session");
+  assert(stopped.active_seconds >= 1, "focus.stop returned zero duration");
+  assert(
+    day.sessions.some((session) => session.id === started.id),
+    "focus.list did not include the packaged app smoke session"
+  );
+  assertSessionsOldestFirst(day.sessions);
+
+  const inventoryAfterFirstStart = await rpc(port, "inventory.list");
+  const matchingItems = inventoryAfterFirstStart.items.filter((item) => item.title === title);
+  assert(matchingItems.length === 1, "focus.start created duplicate work items");
+
+  const continued = await rpc(port, "focus.start", {
+    title,
+    target_seconds: 60,
+  });
+  assert(
+    continued.work_item_id === started.work_item_id,
+    "focus.start with the same title did not continue the existing work item"
+  );
+  await new Promise((resolve) => setTimeout(resolve, 1100));
+
+  const switchTitle = `Packaged smoke switch ${new Date().toISOString()}`;
+  const switched = await rpc(port, "focus.start", {
+    title: switchTitle,
+    target_seconds: 60,
+  });
+  assert(switched.id !== continued.id, "switching by title reused the previous focus session");
+  assert(
+    switched.work_item_id !== continued.work_item_id,
+    "switching by title reused the previous work item"
+  );
+
+  const currentAfterSwitch = await rpc(port, "focus.current");
+  assert(currentAfterSwitch.session?.id === switched.id, "switching by title did not become current");
+
+  const inventoryAfterSwitchByTitle = await rpc(port, "inventory.list");
+  const activeAfterSwitchByTitle = inventoryAfterSwitchByTitle.items.filter(
+    (item) => item.state === "active"
+  );
+  assert(activeAfterSwitchByTitle.length === 1, "switching by title left multiple active work items");
+  assert(
+    activeAfterSwitchByTitle[0].id === switched.work_item_id,
+    "switching by title activated the wrong work item"
+  );
+
+  await rpc(port, "focus.stop");
+
+  const inventoryAfterContinue = await rpc(port, "inventory.list");
+  const matchingContinuedItems = inventoryAfterContinue.items.filter((item) => item.title === title);
+  assert(matchingContinuedItems.length === 1, "continuing by title created a duplicate work item");
+
+  const createTitle = `Packaged smoke create ${new Date().toISOString()}`;
+  const createdOnce = await rpc(port, "work_item.create", {
+    title: createTitle,
+    type: "task",
+  });
+  const createdTwice = await rpc(port, "work_item.create", {
+    title: createTitle,
+    type: "task",
+  });
+  assert(createdOnce.id === createdTwice.id, "work_item.create did not reuse the existing title");
+  assert(createdTwice.reused === true, "work_item.create did not report reused=true");
+
+  const inventoryAfterDuplicateCreate = await rpc(port, "inventory.list");
+  const matchingCreatedItems = inventoryAfterDuplicateCreate.items.filter(
+    (item) => item.title === createTitle
+  );
+  assert(matchingCreatedItems.length === 1, "work_item.create created duplicate titles");
+
+  const itemA = await rpc(port, "work_item.create", {
+    title: `Packaged smoke linked A ${new Date().toISOString()}`,
+    type: "task",
+  });
+  const itemB = await rpc(port, "work_item.create", {
+    title: `Packaged smoke linked B ${new Date().toISOString()}`,
+    type: "task",
+  });
+
+  const activatedA = await rpc(port, "work_item.set_state", {
+    id: itemA.id,
+    state: "active",
+  });
+  assert(activatedA.focus_session_id, "activating a work item did not start focus");
+
+  const currentA = await rpc(port, "focus.current");
+  assert(currentA.session?.work_item_id === itemA.id, "active work item A is not current focus");
+
+  const activatedB = await rpc(port, "work_item.set_state", {
+    id: itemB.id,
+    state: "active",
+  });
+  assert(activatedB.focus_session_id, "switching active work item did not start focus");
+  assert(
+    activatedB.focus_session_id !== activatedA.focus_session_id,
+    "switching active work item reused the previous focus session"
+  );
+
+  const currentB = await rpc(port, "focus.current");
+  assert(currentB.session?.work_item_id === itemB.id, "active work item B is not current focus");
+
+  const inventoryAfterSwitch = await rpc(port, "inventory.list");
+  const activeItems = inventoryAfterSwitch.items.filter((item) => item.state === "active");
+  assert(activeItems.length === 1, "inventory contains more than one active work item");
+  assert(activeItems[0].id === itemB.id, "the active work item is not item B");
+
+  await rpc(port, "work_item.set_state", {
+    id: itemB.id,
+    state: "waiting",
+  });
+
+  const currentAfterWaiting = await rpc(port, "focus.current");
+  assert(!currentAfterWaiting.session, "moving active work item to waiting did not stop focus");
+
+  const itemC = await rpc(port, "work_item.create", {
+    title: `Packaged smoke delete active ${new Date().toISOString()}`,
+    type: "task",
+  });
+  const activatedC = await rpc(port, "work_item.set_state", {
+    id: itemC.id,
+    state: "active",
+  });
+  assert(activatedC.focus_session_id, "activating delete-test item did not start focus");
+
+  const deletedActive = await rpc(port, "work_item.delete", {
+    id: itemC.id,
+  });
+  assert(
+    deletedActive.stopped_focus_session_id === activatedC.focus_session_id,
+    "deleting active work item did not report the stopped focus session"
+  );
+
+  const currentAfterActiveDelete = await rpc(port, "focus.current");
+  assert(!currentAfterActiveDelete.session, "deleting active work item did not stop focus");
+
+  const inventoryAfterActiveDelete = await rpc(port, "inventory.list");
+  assert(
+    inventoryAfterActiveDelete.items.every((item) => item.state !== "active"),
+    "inventory still contains an active work item after deleting active item"
+  );
+
+  const restartTitle = `Packaged smoke restart ${new Date().toISOString()}`;
+  const restartStarted = await rpc(port, "focus.start", {
+    title: restartTitle,
+    target_seconds: 60,
+  });
+  await new Promise((resolve) => setTimeout(resolve, 1100));
+
+  await stopChild(child);
+  child = undefined;
+  await unlink(portFile).catch(() => {});
+
+  child = spawnApp(homeDir);
+  const restartedPort = await waitForResponsiveAgent(portFile, 15_000);
+  const restored = await rpc(restartedPort, "focus.current");
+
+  assert(
+    restored.session?.id === restartStarted.id,
+    "active focus session was not restored after app restart"
+  );
+  assert(
+    restored.session.active_seconds >= 1,
+    "restored active focus session did not keep advancing time"
+  );
+
+  const restartStopped = await rpc(restartedPort, "focus.stop", {
+    note: "restart restore smoke done",
+  });
+  assert(restartStopped.id === restartStarted.id, "restored focus stop returned a different session");
+
+  await stopChild(child);
+  child = undefined;
+  await unlink(portFile).catch(() => {});
+  await seedOrphanActiveFocusSession(restartStopped.id);
+
+  child = spawnApp(homeDir);
+  const normalizedPort = await waitForResponsiveAgent(portFile, 15_000);
+  const currentAfterOrphanStartup = await rpc(normalizedPort, "focus.current");
+  assert(
+    !currentAfterOrphanStartup.session,
+    "startup normalization did not stop orphan active focus session"
+  );
+
+  const inventoryAfterOrphanStartup = await rpc(normalizedPort, "inventory.list");
+  assert(
+    inventoryAfterOrphanStartup.items.every((item) => item.state !== "active"),
+    "startup normalization did not clear active work item after orphan focus"
+  );
+
+  const dayAfterOrphanStartup = await rpc(normalizedPort, "focus.list", todayWindow());
+  const orphanNormalized = dayAfterOrphanStartup.sessions.find((session) => session.id === restartStopped.id);
+  assert(orphanNormalized?.state === "stopped", "orphan focus session was not persisted as stopped");
+  assert(
+    orphanNormalized.note?.includes("linked work item is unavailable"),
+    "orphan focus session did not get a startup normalization note"
+  );
+
+  console.log(
+    JSON.stringify(
+      {
+        ok: true,
+        app_binary: appBinary,
+        api_url: `http://127.0.0.1:${port}/api`,
+        db_ok: status.db_ok,
+        work_items: inventory.items.length,
+        session_id: stopped.id,
+        continued_session_id: continued.id,
+        linked_switch_session_id: activatedB.focus_session_id,
+        restart_restore_session_id: restartStopped.id,
+        active_seconds: stopped.active_seconds,
+      },
+      null,
+      2
+    )
+  );
+} catch (error) {
+  const message = error instanceof Error ? error.message : String(error);
+  throw new Error(`${message}${stderrOutput ? `\nApp stderr:\n${stderrOutput.trim()}` : ""}`);
+} finally {
+  await stopChild(child);
+  await rm(homeDir, { recursive: true, force: true });
+}
+
+function spawnApp(homeDir) {
+  const appProcess = spawn(appBinary, [], {
+    cwd: repoRoot,
+    env: {
+      ...process.env,
+      HOME: homeDir,
+    },
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+
+  appProcess.stderr.on("data", (chunk) => {
+    stderrOutput += chunk.toString();
+  });
+
+  return appProcess;
+}
+
+async function rpc(port, method, params = {}) {
+  const response = await fetch(`http://127.0.0.1:${port}/api`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      version: "1.0",
+      request_id: crypto.randomUUID(),
+      method,
+      params,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`${method}: HTTP ${response.status}`);
+  }
+
+  const data = await response.json();
+  if (data.error) {
+    throw new Error(`${method}: ${data.error.code}: ${data.error.message}`);
+  }
+
+  return data.result;
+}
+
+async function waitForPortFile(path, timeoutMs) {
+  const deadline = Date.now() + timeoutMs;
+
+  while (Date.now() < deadline) {
+    if (existsSync(path)) {
+      const content = await readFile(path, "utf8");
+      const port = Number.parseInt(content.trim(), 10);
+      if (Number.isInteger(port) && port > 0) {
+        return port;
+      }
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+
+  throw new Error(`Timed out waiting for port file: ${path}`);
+}
+
+async function waitForResponsiveAgent(path, timeoutMs) {
+  const deadline = Date.now() + timeoutMs;
+  let lastError;
+
+  while (Date.now() < deadline) {
+    try {
+      const port = await waitForPortFile(path, Math.min(500, Math.max(deadline - Date.now(), 1)));
+      await rpc(port, "agent.ping");
+      return port;
+    } catch (error) {
+      lastError = error;
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+  }
+
+  const message = lastError instanceof Error ? lastError.message : String(lastError);
+  throw new Error(`Timed out waiting for responsive agent: ${message}`);
+}
+
+function assert(condition, message) {
+  if (!condition) {
+    throw new Error(message);
+  }
+}
+
+function assertSessionsOldestFirst(sessions) {
+  assert(
+    sessions.every((session, index) => {
+      if (index === 0) return true;
+      return new Date(sessions[index - 1].started_at).getTime() <= new Date(session.started_at).getTime();
+    }),
+    "focus.list did not return sessions oldest first"
+  );
+}
+
+function todayWindow() {
+  const from = new Date();
+  from.setHours(0, 0, 0, 0);
+
+  const to = new Date(from);
+  to.setDate(to.getDate() + 1);
+
+  return {
+    from: from.toISOString(),
+    to: to.toISOString(),
+  };
+}
+
+async function waitForExit(process, timeoutMs) {
+  if (process.exitCode !== null || process.signalCode !== null) return;
+
+  await Promise.race([
+    new Promise((resolve) => process.once("exit", resolve)),
+    new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), timeoutMs)),
+  ]);
+}
+
+async function stopChild(process) {
+  if (!process || process.killed) return;
+
+  process.kill("SIGTERM");
+  await waitForExit(process, 3_000).catch(() => process.kill("SIGKILL"));
+}
+
+async function seedLegacyDbWithMultipleActiveWorkItems() {
+  const dbPath = join(dataDir, "timeskein.db");
+  await mkdir(dataDir, { recursive: true });
+  await runSqlFile(dbPath, join(repoRoot, "apps/agent/migrations/001_initial.sql"));
+  await runSql(
+    dbPath,
+    `
+      CREATE TABLE focus_sessions (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        work_item_id TEXT,
+        state TEXT NOT NULL DEFAULT 'active'
+            CHECK(state IN ('active', 'stopped')),
+        target_seconds INTEGER NOT NULL DEFAULT 1500,
+        note TEXT,
+        started_at TEXT NOT NULL,
+        stopped_at TEXT,
+        updated_at TEXT NOT NULL,
+        FOREIGN KEY (work_item_id) REFERENCES work_items(id) ON DELETE SET NULL
+      );
+
+      CREATE UNIQUE INDEX idx_focus_sessions_single_active
+          ON focus_sessions(state)
+          WHERE state = 'active';
+
+      CREATE INDEX idx_focus_sessions_started_at
+          ON focus_sessions(started_at DESC);
+
+      CREATE INDEX idx_focus_sessions_work_item
+          ON focus_sessions(work_item_id);
+
+      INSERT INTO work_items (id, title, type, state, pinned, created_at, updated_at, last_seen_at)
+      VALUES
+        ('00000000-0000-4000-8000-000000000101', 'Legacy Active Older', 'task', 'active', 0, '2026-06-30T06:00:00Z', '2026-06-30T06:00:00Z', '2026-06-30T06:00:00Z'),
+        ('00000000-0000-4000-8000-000000000102', 'Legacy Active Newer', 'task', 'active', 0, '2026-06-30T07:00:00Z', '2026-06-30T07:00:00Z', '2026-06-30T07:00:00Z');
+
+      INSERT INTO focus_sessions (id, title, work_item_id, state, target_seconds, note, started_at, stopped_at, updated_at)
+      VALUES ('00000000-0000-4000-8000-000000000201', 'Legacy Active Newer', '00000000-0000-4000-8000-000000000102', 'active', 1500, NULL, '2026-06-30T07:00:00Z', NULL, '2026-06-30T07:00:00Z');
+    `
+  );
+}
+
+async function seedStaleAgentRuntimeFiles() {
+  await mkdir(dataDir, { recursive: true });
+  await writeFile(join(dataDir, "agent.lock"), String(process.pid));
+  await writeFile(portFile, "9");
+}
+
+async function seedOrphanActiveFocusSession(sessionId) {
+  const dbPath = join(dataDir, "timeskein.db");
+  await runSql(
+    dbPath,
+    `
+      UPDATE focus_sessions
+      SET state = 'active',
+          work_item_id = NULL,
+          stopped_at = NULL,
+          note = NULL,
+          updated_at = '2026-06-30T10:00:00Z'
+      WHERE id = '${sessionId}';
+
+      UPDATE work_items
+      SET state = CASE id WHEN '00000000-0000-4000-8000-000000000101' THEN 'active' ELSE 'unknown' END,
+          updated_at = '2026-06-30T10:00:00Z',
+          last_seen_at = '2026-06-30T10:00:00Z';
+    `
+  );
+}
+
+async function runSqlFile(path, sqlFile) {
+  await execFileAsync("sqlite3", [path, `.read ${sqlFile}`], {
+    maxBuffer: 10 * 1024 * 1024,
+  });
+}
+
+async function runSql(path, sql) {
+  await execFileAsync("sqlite3", [path, sql], {
+    maxBuffer: 10 * 1024 * 1024,
+  });
+}

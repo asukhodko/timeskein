@@ -1,0 +1,288 @@
+# Dogfood Day Protocol
+
+Use this protocol when Timeskein replaces Session for one real workday.
+
+## Quick Runbook
+
+Before starting work:
+
+```bash
+pnpm dogfood:start
+```
+
+If the previous test database should be moved aside first:
+
+```bash
+pnpm dogfood:start:clean:preview
+pnpm dogfood:start:clean
+```
+
+During the day:
+
+- start a block by typing a Work Item title and pressing `Enter`;
+- switch by typing the next title into `Switch to...` and pressing `Enter`;
+- stop with optional note by pressing `Enter` in the stop-note field;
+- watch the short `12m Focus` counter in the macOS menu bar while a block is running;
+- hide/show the app from the menu bar item, global shortcut, or `Esc` when no dialog is open.
+
+End of day:
+
+- click `Copy Report` in Today and paste the dogfood report into the day note;
+- if the button says `Copy Draft`, stop the active focus block or clear the active Work Item before treating the report as final;
+- use `Copy MD` when only the raw day picture is needed;
+- if clipboard access is unavailable, copy the selected Markdown from the fallback text box;
+- if you want a saved Markdown file, run `pnpm dogfood:finish:save`;
+- if UI copy fails, run `pnpm dogfood:finish > timeskein-dogfood-report.md`;
+- if only the raw day picture is needed, run `pnpm export:focus-day > timeskein-day.md`.
+
+## Goal
+
+Timeskein is ready for regular use when it can capture a workday without side tracking:
+
+- what focus blocks happened;
+- which Work Item each block belonged to;
+- how long each block lasted;
+- where the meaningful gaps were;
+- how much active focus time the day contained.
+
+## Before the Day
+
+Run the start gate:
+
+```bash
+pnpm dogfood:start
+```
+
+It checks the real local database first, then checks that no old `timeskein-desktop` process is running. After that it runs preflight, opens the macOS app if all gates pass, and waits for the embedded agent to respond.
+If Timeskein is already running, the start gate refuses to continue. Quit the existing app first so the dogfood day uses the freshly built app.
+If old `agent.lock` / `agent.port` files are left behind, the app probes the recorded port and starts a fresh embedded agent when the old one is not responsive.
+If you intentionally want a clean trial database, run `pnpm dogfood:start:clean`. It moves the current SQLite files to timestamped backup names, then runs the same start gate.
+To preview that clean start without moving files, opening the app, or running preflight:
+
+```bash
+pnpm dogfood:start:clean:preview
+```
+
+Expanded form:
+
+```bash
+pnpm dogfood:ready
+pnpm open:macos-app -- --check-running-only
+pnpm dogfood:preflight
+pnpm open:macos-app
+pnpm dogfood:status
+```
+
+If readiness reports active focus, active Work Items, duplicate titles, or existing blocks for today, fix that before treating Timeskein as the source of truth for the day. The readiness report includes exact next commands and shows whether the embedded agent or app process is already alive.
+
+The default readiness mode is a clean start gate. After the day already has real focus blocks, use continue mode for a health check:
+
+```bash
+pnpm dogfood:ready -- --mode continue
+```
+
+Continue mode allows existing focus blocks and one coherent active focus block linked to exactly one active Work Item. It still rejects duplicate titles and active-state split brain.
+
+If the readiness report shows existing blocks for today and you want a clean trial, prefer resetting the trial database. If it shows only an old active focus block and no existing day blocks, close only that active block:
+
+```bash
+pnpm dogfood:stop-active
+pnpm dogfood:stop-active -- --apply
+pnpm dogfood:ready
+```
+
+The first command is a dry run. It does not remove today's existing blocks; it only plans to stop active focus sessions and clear active Work Items. For a clean one-day trial, reset the database instead.
+When Timeskein is running and the agent responds, the applied stop uses the local agent API. When the agent is not responsive and no app process is running, it falls back to direct SQLite update. If the app process is still alive but the agent is not responsive, the script refuses without `--force`. Applied stops add a note to the stopped block: `closed by dogfood:stop-active` by default, or a custom value passed with `--note`.
+
+For a clean trial database, quit Timeskein and move the current SQLite files aside:
+
+```bash
+pnpm dogfood:reset-db
+pnpm dogfood:reset-db -- --apply
+pnpm dogfood:ready
+```
+
+The first command is a dry run. The second command moves `timeskein.db` and its SQLite sidecar files to timestamped backup names; it refuses to run while the embedded agent or app process appears to be alive unless `--force` is passed.
+The one-command equivalent for the real dogfood start is:
+
+```bash
+pnpm dogfood:start:clean
+```
+
+Preview it first with:
+
+```bash
+pnpm dogfood:start:clean:preview
+```
+
+Build or reuse the current macOS app:
+
+```bash
+pnpm dogfood:macos
+```
+
+If the shell says `permission denied` for `Timeskein.app`, the app bundle was executed as a file. Use `open .../Timeskein.app` or run the binary directly:
+
+```bash
+target/release/bundle/macos/Timeskein.app/Contents/MacOS/timeskein-desktop
+```
+
+Check the basics before starting work:
+
+- Timeskein opens from the menu bar item.
+- The menu bar item shows the active focus duration while a block is running.
+- `pnpm dogfood:status` reports `Status: READY`.
+- The window can be moved by dragging the header.
+- The window can be hidden with `Esc` when no dialog is open and shown again.
+- Today is visible.
+- There is no unexpected active focus block from a previous experiment.
+
+## Readiness Audit
+
+Current status: ready for a one-day trial, not yet proven for daily use.
+
+| Requirement | Evidence before dogfood | Dogfood check |
+| --- | --- | --- |
+| Fast start by title | `pnpm smoke:focus-api` and `pnpm smoke:macos-app` verify `focus.start` creates or reuses a Work Item | Starting a block feels cheap enough during real work |
+| No duplicate Work Items by title | Smoke checks `focus.start` and `work_item.create` title reuse | No duplicate Work Items appear from normal typing |
+| One active timer and one active Work Item | Smoke checks switching by title, by Work Item state, deleting the active Work Item, SQLite single-active guards, and startup normalization | No visible split brain while switching tasks |
+| Stop and later continue same Work Item | Smoke checks repeat `focus.start` with the same title | Continuing yesterday/today items is discoverable |
+| Show, hide, move window | Implemented in macOS shell and header drag | Window behavior does not irritate during the day |
+| Today block list and totals | `focus.list` and UI show block duration, time range, stop note, total focus, entrances | The list matches remembered work blocks |
+| Significant gaps | UI and Markdown show gap ranges of 20+ minutes | Long breaks and lost intervals are visible enough |
+| Markdown export | `Copy Report` exports timeline, `By Work Item`, gaps, and review prompts; `Copy MD` exports the raw day picture; failed clipboard writes show selected Markdown; `pnpm smoke:export-focus-day` and `pnpm smoke:dogfood-report` verify SQLite fallbacks | Copied note is enough for evening analysis |
+| macOS app with embedded agent and SQLite | `pnpm smoke:macos-app` verifies app launch, SQLite health, focus flow, stale lock/port recovery, and active focus restore after app restart | The real app survives normal workday use |
+
+The dogfood goal is complete only after a real day produces a copied Markdown day note that is useful for analysis.
+
+## During the Day
+
+Start a focus block from the input:
+
+1. Open Timeskein.
+2. Type the name of the thing you are starting.
+3. Press `Enter` or click `Start`.
+
+Expected behavior:
+
+- If a Work Item with the same title already exists, Timeskein reuses it.
+- If no Work Item exists, Timeskein creates one.
+- Starting a new focus block stops the previous active block.
+- There is only one active Work Item and one active timer.
+- Today and the Markdown export include blocks that overlap the selected local day, even when a block started before the day boundary. These show up as `Day-Boundary Blocks`; the duration is counted as that day's clipped contribution.
+
+Switch directly to another item:
+
+1. Type the next thing into `Switch to...`.
+2. Press `Enter` or click `Switch`.
+
+This stops the current block without a note and starts a new linked block. Use `Stop` first if the previous block needs a note.
+
+Continue an existing item:
+
+1. Select the Work Item.
+2. Leave the focus input empty and press `Space`, or click `Start Item` / `Switch Item`.
+
+Faster path: double-click a Work Item to start or switch focus to it.
+
+Changing a Work Item state to `Active` is another way to start or switch focus:
+
+- pressing `1` on a selected Work Item starts or switches to that Work Item;
+- choosing `Active` in the state menu does the same;
+- moving the currently active Work Item to any other state stops the current focus block.
+
+Deleting the currently active Work Item also stops its current focus block first.
+
+Stop a focus block when the contact with the work stops:
+
+1. Add a short stop note if it will help evening review.
+2. Press `Enter` in the stop-note field or click `Stop`.
+
+Use stop notes for facts, not narration:
+
+- `blocked by access`;
+- `waiting for answer`;
+- `lost context after meeting`;
+- `done enough for today`.
+
+Do not use Work Item state as a separate timer. In the current model, `active` means "this item is being timed now".
+Creating a Work Item from the `+` dialog does not start a timer unless `Active` is explicitly selected.
+
+## Evening Review
+
+At the end of the day:
+
+1. Open Timeskein.
+2. Check Today total focus time and entrance count.
+3. Click `Copy Report`.
+4. Paste the Markdown dogfood report into the day note or analysis thread.
+
+Use `Copy MD` only when the raw day picture is enough.
+If Today or the report shows `Open Gap`, there was a significant interval after the last stopped block with no active focus block. Treat it as either a real break or a lost-tracking interval during review.
+If a focus block is still active, or a Work Item is still marked active, the UI labels the report as `Copy Draft` and the Markdown includes a warning. The CLI report uses the same draft warning. Stop the active block or clear the active Work Item before using the report as the final day artifact.
+If clipboard access is denied, Timeskein shows a selected text box with the Markdown. Copy it manually from there.
+
+If the UI copy path is unavailable, export the same raw day picture from SQLite:
+
+```bash
+pnpm export:focus-day > timeskein-day.md
+```
+
+For the preferred evening review artifact, generate the dogfood report:
+
+```bash
+pnpm dogfood:finish:save
+```
+
+This writes `timeskein-dogfood-report-YYYY-MM-DD.md` in the current directory. To print the report to stdout instead:
+
+```bash
+pnpm dogfood:finish > timeskein-dogfood-report.md
+```
+
+`dogfood:finish` refuses to produce a final report while a focus block or Work Item is still active, or when there are no focus blocks for the selected date.
+
+For a previous date:
+
+```bash
+pnpm export:focus-day --date 2026-06-30 > timeskein-day.md
+pnpm dogfood:finish -- --date 2026-06-30 > timeskein-dogfood-report.md
+```
+
+The dogfood report includes the focus-day export and prompts for:
+
+- Is every real focus block represented?
+- Does `By Work Item` match where the day actually went?
+- Are the Work Item titles understandable the next day?
+- Are there duplicate Work Items that should have been reused?
+- Are long gaps visible and plausible?
+- Did stopping and continuing the same Work Item feel cheap enough?
+- Did the app itself create friction that pushed tracking away?
+- Where did entry cost appear before starting the next block?
+
+## Success Criteria
+
+The dogfood day succeeds if the copied Markdown is enough to discuss:
+
+- where active work time went;
+- which Work Items moved;
+- when the day fragmented;
+- where entry cost or switching cost appeared;
+- what must be improved before using Timeskein daily.
+
+The dogfood day fails if any of these happens often enough to break trust:
+
+- focus blocks are missing;
+- duplicate Work Items appear from normal use;
+- more than one active timer or active Work Item appears;
+- continuing an earlier item is hard to discover;
+- Today cannot explain the day without memory reconstruction;
+- the app window is annoying to show, hide, or move.
+
+## Known Limits for This Trial
+
+- There is no pause/resume/cancel model yet. Stop and start again instead.
+- There is no automatic active-window detection.
+- There is no synchronization between devices.
+- Browser development mode uses mock data; the real dogfood trial should use the macOS app.
+- The export is Markdown copy only, not a full reporting screen.

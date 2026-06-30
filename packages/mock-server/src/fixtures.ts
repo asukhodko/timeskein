@@ -44,7 +44,7 @@ export const mockWorkItems: WorkItemView[] = [
     id: "item-1",
     title: "Implement global hotkey palette",
     type: "task",
-    state: "active",
+    state: "unknown",
     pinned: true,
     note: "Next: finish keyboard navigation, then test on Windows",
     refs_count: 2,
@@ -338,8 +338,17 @@ export class MockDataStore {
     return true;
   }
 
-  deleteWorkItem(id: string): boolean {
-    return this.workItems.delete(id);
+  deleteWorkItem(id: string): { deleted: boolean; stoppedFocusSessionId?: string } {
+    const item = this.workItems.get(id);
+    if (!item) return { deleted: false };
+
+    const current = this.getActiveFocusSession();
+    const stopped = current?.work_item_id === id ? this.stopFocusSession(current.id, "work item deleted") : undefined;
+
+    return {
+      deleted: this.workItems.delete(id),
+      stoppedFocusSessionId: stopped?.id,
+    };
   }
 
   // Ref methods
@@ -544,14 +553,16 @@ export class MockDataStore {
   listFocusSessions(from?: string, to?: string): FocusSessionView[] {
     const fromTime = from ? new Date(from).getTime() : Number.NEGATIVE_INFINITY;
     const toTime = to ? new Date(to).getTime() : Number.POSITIVE_INFINITY;
+    const now = Date.now();
 
     return Array.from(this.focusSessions.values())
       .filter((session) => {
         const startedAt = new Date(session.started_at).getTime();
-        return startedAt >= fromTime && startedAt < toTime;
+        const stoppedAt = session.stopped_at ? new Date(session.stopped_at).getTime() : now;
+        return stoppedAt > fromTime && startedAt < toTime;
       })
       .sort((a, b) => new Date(a.started_at).getTime() - new Date(b.started_at).getTime())
-      .map((session) => this.withLiveTiming(session));
+      .map((session) => this.withWindowTiming(session, fromTime, toTime, now));
   }
 
   private withLiveTiming(session: FocusSessionView): FocusSessionView {
@@ -560,6 +571,25 @@ export class MockDataStore {
       Math.floor((end.getTime() - new Date(session.started_at).getTime()) / 1000),
       0
     );
+
+    return {
+      ...session,
+      active_seconds: activeSeconds,
+      over_target_seconds: Math.max(activeSeconds - session.target_seconds, 0),
+    };
+  }
+
+  private withWindowTiming(
+    session: FocusSessionView,
+    fromTime: number,
+    toTime: number,
+    now: number
+  ): FocusSessionView {
+    const startedAt = new Date(session.started_at).getTime();
+    const stoppedAt = session.stopped_at ? new Date(session.stopped_at).getTime() : now;
+    const clippedStart = Math.max(startedAt, fromTime);
+    const clippedStop = Math.min(stoppedAt, toTime);
+    const activeSeconds = Math.max(Math.floor((clippedStop - clippedStart) / 1000), 0);
 
     return {
       ...session,

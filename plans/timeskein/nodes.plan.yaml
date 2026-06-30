@@ -92,7 +92,7 @@ nodes:
     effort: 1
     deps:
       - id: ts.ux_entry.hide_toggle
-    notes: Open Inventory and left-click now toggle the window. Settings still needs a visible destination.
+    notes: Left-click and Show/Hide toggle the window. The menu bar item also shows a short active focus counter. Settings still needs a visible destination.
     x:
       ops:
         attention_class: current
@@ -221,7 +221,7 @@ nodes:
       - id: ts.focus_core.restart_restore
       - id: ts.focus_core.work_item_binding
       - id: ts.focus_core.session_notes
-    notes: Start-stop smoke works in browser mock and real agent. Needs at least one real personal work block.
+    notes: docs/dogfood-day.md defines the trial protocol and readiness audit. dogfood:start checks the real local database and running-process guard before running the heavier preflight, then opens the app and waits for embedded-agent readiness; dogfood:start:clean first moves contaminated local DB files aside through the same guarded reset path; dogfood:ready reports agent responsiveness, running app PIDs, and exact stop/reset next commands when the day is contaminated; dogfood:reset-db can move contaminated local DB files aside after an explicit --apply but refuses while the agent or app process appears alive; dogfood:stop-active can use the running agent API or SQLite fallback, and blocks unsafe direct SQLite updates when the app process is still alive; open:macos-app refuses to reuse an already running process by default and supports --check-only / --check-running-only for early validation. Preflight is green, but this gate is not done until Timeskein survives one real workday as the Session replacement.
     x:
       ops:
         attention_class: current
@@ -230,7 +230,7 @@ nodes:
     title: Day review and export
     kind: phase
     parent: ts
-    status: planned
+    status: in_progress
     notes: Turn raw sessions into the working-day picture needed for productivity analysis.
     x:
       ops:
@@ -239,7 +239,7 @@ nodes:
     title: Show focus blocks on a daily timeline
     kind: task
     parent: ts.day_review
-    status: planned
+    status: in_progress
     effort: 3
     deps:
       - id: ts.focus_core.dogfood_gate
@@ -250,22 +250,23 @@ nodes:
     title: Compute totals, gaps, and entry count
     kind: task
     parent: ts.day_review
-    status: planned
+    status: in_progress
     effort: 2
     deps:
       - id: ts.day_review.timeline
-    notes: Track total active time, number of focus entrances, gaps longer than 20 minutes, and target-reaching ratio.
+    notes: Track total active time, number of focus entrances, gaps longer than 20 minutes, open gaps after the last stopped block, and target-reaching ratio.
     x:
       ops:
         attention_class: current
   ts.day_review.export:
-    title: Export day data as JSON, CSV, and Markdown
+    title: Export dogfood day data as Markdown
     kind: task
     parent: ts.day_review
-    status: planned
+    status: in_progress
     effort: 2
     deps:
       - id: ts.day_review.totals_gaps
+    notes: Today can copy the raw day picture or a dogfood report with review prompts, and shows selected Markdown if clipboard access fails. UI and CLI reports are marked as draft when a focus session or Work Item is still active. SQLite fallback export, CLI dogfood report, and dogfood:finish end-of-day gate are implemented; finish refuses active focus sessions, stuck active Work Items, and empty days. JSON/CSV export remains future work.
     x:
       ops:
         attention_class: current
@@ -298,7 +299,7 @@ nodes:
     effort: 2
     deps:
       - id: ts.day_review.analysis_gate
-    notes: API smoke exists for mock and real agent. Browser UI smoke is still manual.
+    notes: dogfood:preflight covers script syntax, contracts build, desktop typecheck, Markdown export smoke, dogfood start/status/ready/reset/stop-active/open-app smoke, packaged macOS build, embedded agent smoke, focus switching, stale lock/port recovery, and restart/restore. Browser UI smoke is still manual; last checked dogfood start/switch/stop/report flow on 2026-06-30.
     x:
       ops:
         attention_class: current
@@ -306,10 +307,11 @@ nodes:
     title: Add local data backup and reset path
     kind: task
     parent: ts.hardening
-    status: planned
+    status: done
     effort: 2
     deps:
       - id: ts.day_review.analysis_gate
+    notes: dogfood:reset-db dry-runs by default, moves timeskein.db plus SQLite sidecar files to timestamped backup names only after explicit --apply, and refuses while the embedded agent or app process is alive unless --force is passed. dogfood:ready prints a manual backup command for the main DB file and shows running app PIDs.
     x:
       ops:
         attention_class: current
@@ -317,7 +319,7 @@ nodes:
     title: Rebuild macOS app for regular personal use
     kind: task
     parent: ts.hardening
-    status: planned
+    status: done
     effort: 1
     deps:
       - id: ts.hardening.smoke

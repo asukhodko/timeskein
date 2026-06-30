@@ -59,15 +59,17 @@ impl Database {
         &self,
         from: Option<DateTime<Utc>>,
         to: Option<DateTime<Utc>>,
+        now: DateTime<Utc>,
     ) -> Result<Vec<(FocusSession, Option<String>)>> {
         let sql = focus_session_select_sql(
-            "WHERE (?1 IS NULL OR julianday(fs.started_at) >= julianday(?1))
+            "WHERE (?1 IS NULL OR julianday(COALESCE(fs.stopped_at, ?3)) > julianday(?1))
              AND (?2 IS NULL OR julianday(fs.started_at) < julianday(?2))
              ORDER BY fs.started_at ASC",
         );
         let rows = sqlx::query(&sql)
             .bind(from.map(|dt| dt.to_rfc3339()))
             .bind(to.map(|dt| dt.to_rfc3339()))
+            .bind(now.to_rfc3339())
             .fetch_all(self.pool())
             .await?;
 

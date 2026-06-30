@@ -21,7 +21,11 @@ use timeskein_agent::{
 };
 use tokio::sync::RwLock;
 
-use std::{net::SocketAddr, sync::Arc};
+use std::{fs, net::SocketAddr, path::Path, sync::Arc, time::Duration};
+use tokio::{
+    io::{AsyncReadExt, AsyncWriteExt},
+    time,
+};
 
 struct AgentRuntime {
     api_url: String,
@@ -31,6 +35,28 @@ struct AgentRuntime {
 #[tauri::command]
 fn get_api_url(agent: tauri::State<'_, AgentRuntime>) -> String {
     agent.api_url.clone()
+}
+
+#[tauri::command]
+fn set_tray_status_title(app: AppHandle, title: Option<String>) -> Result<(), String> {
+    let Some(tray) = app.tray_by_id("main") else {
+        return Ok(());
+    };
+
+    let title = title
+        .map(|value| value.trim().to_string())
+        .filter(|value| !value.is_empty());
+    let tooltip = title
+        .as_ref()
+        .map(|value| format!("Timeskein: {value}"))
+        .unwrap_or_else(|| "Timeskein: idle".to_string());
+
+    tray.set_title(title.as_deref())
+        .map_err(|error| error.to_string())?;
+    tray.set_tooltip(Some(tooltip))
+        .map_err(|error| error.to_string())?;
+
+    Ok(())
 }
 
 fn toggle_main_window<R: Runtime>(app: &AppHandle<R>) {
@@ -50,14 +76,22 @@ async fn start_embedded_agent() -> anyhow::Result<AgentRuntime> {
         Ok(lock) => Some(lock),
         Err(error) => {
             if let Some(port) = read_port_file(&data_dir)? {
-                eprintln!("Using existing Timeskein agent from port file: {port}");
-                return Ok(AgentRuntime {
-                    api_url: format!("http://127.0.0.1:{port}/api"),
-                    _lock: None,
-                });
-            }
+                if existing_agent_is_responsive(port).await {
+                    eprintln!("Using existing Timeskein agent from port file: {port}");
+                    return Ok(AgentRuntime {
+                        api_url: format!("http://127.0.0.1:{port}/api"),
+                        _lock: None,
+                    });
+                }
 
-            return Err(error);
+                eprintln!(
+                    "Ignoring stale Timeskein agent lock/port after failed lock acquire: {error}"
+                );
+                cleanup_agent_runtime_files(&data_dir);
+                Some(SingleInstanceLock::acquire(&data_dir)?)
+            } else {
+                return Err(error);
+            }
         }
     };
 
@@ -86,40 +120,93 @@ async fn start_embedded_agent() -> anyhow::Result<AgentRuntime> {
     })
 }
 
+async fn existing_agent_is_responsive(port: u16) -> bool {
+    for _ in 0..10 {
+        if probe_agent_status(port).await {
+            return true;
+        }
+
+        time::sleep(Duration::from_millis(150)).await;
+    }
+
+    false
+}
+
+async fn probe_agent_status(port: u16) -> bool {
+    let Ok(Ok(mut stream)) = time::timeout(
+        Duration::from_millis(500),
+        tokio::net::TcpStream::connect(("127.0.0.1", port)),
+    )
+    .await
+    else {
+        return false;
+    };
+
+    let body =
+        r#"{"version":"1.0","request_id":"startup-probe","method":"agent.status","params":{}}"#;
+    let request = format!(
+        "POST /api HTTP/1.1\r\nHost: 127.0.0.1:{port}\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
+        body.len()
+    );
+
+    if time::timeout(Duration::from_millis(500), stream.write_all(request.as_bytes()))
+        .await
+        .is_err()
+    {
+        return false;
+    }
+
+    let mut response = String::new();
+    if time::timeout(
+        Duration::from_millis(750),
+        stream.read_to_string(&mut response),
+    )
+    .await
+    .is_err()
+    {
+        return false;
+    }
+
+    response.starts_with("HTTP/1.1 200") && response.contains(r#""db_ok":true"#)
+}
+
+fn cleanup_agent_runtime_files(data_dir: &Path) {
+    for name in ["agent.lock", "agent.port"] {
+        let _ = fs::remove_file(data_dir.join(name));
+    }
+}
+
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
-        .invoke_handler(tauri::generate_handler![get_api_url])
+        .invoke_handler(tauri::generate_handler![
+            get_api_url,
+            set_tray_status_title
+        ])
         .setup(|app| {
             let agent = tauri::async_runtime::block_on(start_embedded_agent())?;
             app.manage(agent);
 
             // Create tray menu
             let quit = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
-            let open = MenuItem::with_id(app, "open", "Open Inventory", true, None::<&str>)?;
-            let settings = MenuItem::with_id(app, "settings", "Settings", true, None::<&str>)?;
+            let toggle =
+                MenuItem::with_id(app, "toggle", "Show/Hide Timeskein", true, None::<&str>)?;
 
-            let menu = Menu::with_items(app, &[&open, &settings, &quit])?;
+            let menu = Menu::with_items(app, &[&toggle, &quit])?;
 
             // Create tray icon
-            let _tray = TrayIconBuilder::new()
+            let _tray = TrayIconBuilder::with_id("main")
                 .icon(app.default_window_icon().unwrap().clone())
+                .tooltip("Timeskein: idle")
                 .menu(&menu)
                 .show_menu_on_left_click(false)
                 .on_menu_event(|app, event| match event.id.as_ref() {
                     "quit" => {
                         app.exit(0);
                     }
-                    "open" => {
+                    "toggle" => {
                         toggle_main_window(app);
-                    }
-                    "settings" => {
-                        // TODO: Open settings window
-                        if let Some(window) = app.get_webview_window("main") {
-                            let _ = window.show();
-                            let _ = window.set_focus();
-                        }
                     }
                     _ => {}
                 })

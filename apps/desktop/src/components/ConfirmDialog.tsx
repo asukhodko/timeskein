@@ -20,18 +20,18 @@ export default function ConfirmDialog({
   onCancel,
 }: ConfirmDialogProps) {
   const confirmButtonRef = useRef<HTMLButtonElement>(null)
+  const cancelButtonRef = useRef<HTMLButtonElement>(null)
   const modalRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    // Focus cancel button by default for safety
-    confirmButtonRef.current?.focus()
+    cancelButtonRef.current?.focus()
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.preventDefault()
         onCancel()
       }
-      if (e.key === 'Enter') {
+      if (!danger && e.key === 'Enter') {
         e.preventDefault()
         onConfirm()
       }
@@ -49,10 +49,13 @@ export default function ConfirmDialog({
       document.removeEventListener('keydown', handleKeyDown)
       document.removeEventListener('mousedown', handleClickOutside)
     }
-  }, [onConfirm, onCancel])
+  }, [danger, onConfirm, onCancel])
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div
+      data-timeskein-modal="true"
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+    >
       <div
         ref={modalRef}
         className="bg-gray-800 border border-gray-600 rounded-lg p-4 shadow-xl w-[350px] max-w-[90vw]"
@@ -62,6 +65,7 @@ export default function ConfirmDialog({
         
         <div className="flex justify-end gap-2">
           <button
+            ref={cancelButtonRef}
             onClick={onCancel}
             className="px-3 py-1.5 text-sm text-gray-400 hover:text-gray-200 transition-colors"
           >
@@ -80,7 +84,7 @@ export default function ConfirmDialog({
         </div>
         
         <div className="text-xs text-gray-500 mt-3 text-center">
-          Enter to confirm, Esc to cancel
+          {danger ? 'Click Delete to confirm, Esc to cancel' : 'Enter to confirm, Esc to cancel'}
         </div>
       </div>
     </div>

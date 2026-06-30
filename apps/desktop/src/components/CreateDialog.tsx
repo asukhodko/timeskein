@@ -10,7 +10,7 @@ interface CreateDialogProps {
 export default function CreateDialog({ onClose, initialTitle = '' }: CreateDialogProps) {
   const [title, setTitle] = useState(initialTitle)
   const [note, setNote] = useState('')
-  const [state, setState] = useState<WorkItemState>('active')
+  const [state, setState] = useState<WorkItemState>('unknown')
   const [type, setType] = useState<WorkItemType>('task')
   
   const titleRef = useRef<HTMLInputElement>(null)
@@ -47,6 +47,7 @@ export default function CreateDialog({ onClose, initialTitle = '' }: CreateDialo
 
   return (
     <div
+      data-timeskein-modal="true"
       className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
       onClick={onClose}
       onKeyDown={handleKeyDown}
@@ -97,11 +98,11 @@ export default function CreateDialog({ onClose, initialTitle = '' }: CreateDialo
                 className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded
                            text-gray-200 focus:border-blue-500"
               >
+                <option value="unknown">Unknown</option>
                 <option value="active">Active</option>
                 <option value="waiting">Waiting</option>
                 <option value="blocked">Blocked</option>
                 <option value="someday">Someday</option>
-                <option value="unknown">Unknown</option>
                 <option value="done">Done</option>
               </select>
             </div>

@@ -74,7 +74,10 @@ export default function RefsPanel({ itemTitle, refs, onAddRef, onRemoveRef, onOp
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div
+      data-timeskein-modal="true"
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+    >
       <div
         ref={modalRef}
         className="bg-gray-800 border border-gray-600 rounded-lg p-4 shadow-xl w-[450px] max-w-[90vw]"

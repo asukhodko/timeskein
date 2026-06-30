@@ -20,6 +20,7 @@ import NoteEditor from './NoteEditor'
 import RefsPanel from './RefsPanel'
 import ConfirmDialog from './ConfirmDialog'
 import type { WorkItemState } from '@timeskein/contracts'
+import { useStartFocusSession } from '../hooks/useFocusSessions'
 
 export default function Palette() {
   const [search, setSearch] = useState('')
@@ -41,6 +42,7 @@ export default function Palette() {
   const touchMutation = useTouchWorkItem()
   const pinMutation = useToggleWorkItemPin()
   const deleteMutation = useDeleteWorkItem()
+  const startFocusMutation = useStartFocusSession()
 
   const handleHideWindow = async () => {
     try {
@@ -75,6 +77,16 @@ export default function Palette() {
   const handleDelete = () => {
     if (selectedItem) setShowDeleteConfirm(true)
   }
+
+  const handleFocusSelected = useCallback(() => {
+    if (!selectedItem || startFocusMutation.isPending) return
+
+    startFocusMutation.mutate({
+      title: selectedItem.title,
+      work_item_id: selectedItem.id,
+      target_seconds: 25 * 60,
+    })
+  }, [selectedItem, startFocusMutation])
 
   const confirmDelete = () => {
     if (selectedItem) {
@@ -111,7 +123,7 @@ export default function Palette() {
       // Ignore if any modal is open
       if (showCreate || showStateMenu || showNoteEditor || showRefsPanel || showDeleteConfirm) return
 
-      // Ignore if in an input (except for Ctrl+N)
+      // Ignore item shortcuts while typing in a field.
       const isInput = (e.target as HTMLElement).tagName === 'INPUT' || 
                       (e.target as HTMLElement).tagName === 'TEXTAREA'
 
@@ -144,6 +156,10 @@ export default function Palette() {
             }
           }
           break
+        case 'Space':
+          e.preventDefault()
+          handleFocusSelected()
+          break
         case 'KeyS':
           e.preventDefault()
           if (selectedItem) setShowStateMenu(true)
@@ -164,11 +180,10 @@ export default function Palette() {
           break
       }
     },
-    [items, selectedIndex, selectedItem, showCreate, showStateMenu, showNoteEditor, showRefsPanel, showDeleteConfirm]
+    [items, selectedIndex, selectedItem, showCreate, showStateMenu, showNoteEditor, showRefsPanel, showDeleteConfirm, handleFocusSelected]
   )
 
   useEffect(() => {
-    // Use capture phase to intercept Ctrl+N before browser
     document.addEventListener('keydown', handleKeyDown, true)
     return () => document.removeEventListener('keydown', handleKeyDown, true)
   }, [handleKeyDown])
@@ -267,7 +282,7 @@ export default function Palette() {
         ) : items.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-32 text-gray-500">
             <div>{search ? 'No matching items' : 'No work items yet'}</div>
-            <div className="text-xs mt-1">Press Ctrl+N to create one</div>
+            <div className="text-xs mt-1">Press C or Alt+N to create one</div>
           </div>
         ) : (
           <InventoryList
@@ -294,6 +309,9 @@ export default function Palette() {
           </button>
           <button onClick={handleOpenPrimaryRef} className="flex items-center gap-1 hover:text-gray-300 transition-colors" title="Open primary ref">
             <kbd className="px-1 bg-gray-700 rounded">Enter</kbd><span>open</span>
+          </button>
+          <button onClick={handleFocusSelected} className="flex items-center gap-1 hover:text-emerald-300 transition-colors" title="Start or switch focus to selected item">
+            <kbd className="px-1 bg-gray-700 rounded">Space</kbd><span>focus</span>
           </button>
           <button onClick={handleTouch} className="flex items-center gap-1 hover:text-gray-300 transition-colors" title="Touch (update last seen)">
             <kbd className="px-1 bg-gray-700 rounded">T</kbd><span>touch</span>

@@ -214,12 +214,17 @@ pub async fn handle_focus_list(
     let now = Utc::now();
     let sessions = state
         .db
-        .list_focus_sessions(from, to)
+        .list_focus_sessions(from, to, now)
         .await
         .map_err(|e| RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string()))?
         .into_iter()
         .map(|(session, work_item_title)| {
-            FocusSessionView::from_session(&session, work_item_title, now)
+            let mut view = FocusSessionView::from_session(&session, work_item_title, now);
+            if from.is_some() || to.is_some() {
+                view.active_seconds = clipped_active_seconds(&session, now, from, to);
+                view.over_target_seconds = (view.active_seconds - view.target_seconds).max(0);
+            }
+            view
         })
         .collect::<Vec<_>>();
 
@@ -249,6 +254,23 @@ fn parse_optional_uuid(
             })
         })
         .transpose()
+}
+
+fn clipped_active_seconds(
+    session: &FocusSession,
+    now: DateTime<Utc>,
+    from: Option<DateTime<Utc>>,
+    to: Option<DateTime<Utc>>,
+) -> i64 {
+    let started_at = from
+        .filter(|from| *from > session.started_at)
+        .unwrap_or(session.started_at);
+    let raw_stopped_at = session.stopped_at.unwrap_or(now);
+    let stopped_at = to
+        .filter(|to| *to < raw_stopped_at)
+        .unwrap_or(raw_stopped_at);
+
+    (stopped_at - started_at).num_seconds().max(0)
 }
 
 fn parse_optional_datetime(

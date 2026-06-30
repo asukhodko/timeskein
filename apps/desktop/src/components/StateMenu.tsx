@@ -50,7 +50,10 @@ export default function StateMenu({ currentState, onSelect, onClose }: StateMenu
   }, [onSelect, onClose])
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div
+      data-timeskein-modal="true"
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+    >
       <div
         ref={menuRef}
         className="bg-gray-800 border border-gray-600 rounded-lg p-4 shadow-xl min-w-[200px]"

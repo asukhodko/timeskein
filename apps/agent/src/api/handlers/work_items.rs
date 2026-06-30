@@ -305,6 +305,19 @@ pub async fn handle_work_item_delete(
 
     let state = state.write().await;
 
+    let mut stopped_focus_session_id = None;
+    if let Some((mut session, _)) = state.db.get_active_focus_session().await.map_err(|e| {
+        RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
+    })? {
+        if session.work_item_id == Some(id) {
+            session.stop(Some("work item deleted".to_string()));
+            stopped_focus_session_id = Some(session.id);
+            state.db.update_focus_session(&session).await.map_err(|e| {
+                RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
+            })?;
+        }
+    }
+
     if mode == "hard" {
         // Hard delete
         let deleted = state.db.delete_work_item(id).await.map_err(|e| {
@@ -344,7 +357,10 @@ pub async fn handle_work_item_delete(
             .ok();
     }
 
-    Ok(serde_json::json!({ "success": true }))
+    Ok(serde_json::json!({
+        "success": true,
+        "stopped_focus_session_id": stopped_focus_session_id,
+    }))
 }
 
 async fn activate_work_item_for_focus(

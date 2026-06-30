@@ -84,6 +84,13 @@ const day = await rpc("focus.list", todayWindow());
 const found = day.sessions.find((session) => session.id === started.id);
 assert(found, "focus.list did not include the stopped session");
 assert(day.active_seconds_total >= stopped.active_seconds, "focus.list total is too small");
+assert(
+  day.sessions.every((session, index, sessions) => {
+    if (index === 0) return true;
+    return new Date(sessions[index - 1].started_at).getTime() <= new Date(session.started_at).getTime();
+  }),
+  "focus.list did not return sessions oldest first"
+);
 
 const inventoryAfterFreeStart = await rpc("inventory.list");
 const matchingFreeItems = inventoryAfterFreeStart.items.filter((item) => item.title === title);
@@ -97,11 +104,48 @@ assert(
   continued.work_item_id === started.work_item_id,
   "focus.start with the same title did not continue the existing work item"
 );
+await new Promise((resolve) => setTimeout(resolve, 1100));
+
+const switchTitle = `Smoke switch ${new Date().toISOString()}`;
+const switched = await rpc("focus.start", {
+  title: switchTitle,
+  target_seconds: 60,
+});
+assert(switched.id !== continued.id, "switching by title reused the previous focus session");
+assert(
+  switched.work_item_id !== continued.work_item_id,
+  "switching by title reused the previous work item"
+);
+
+const currentAfterSwitch = await rpc("focus.current");
+assert(currentAfterSwitch.session?.id === switched.id, "switching by title did not become current");
+
+const inventoryAfterSwitchByTitle = await rpc("inventory.list");
+const activeAfterSwitchByTitle = inventoryAfterSwitchByTitle.items.filter((item) => item.state === "active");
+assert(activeAfterSwitchByTitle.length === 1, "switching by title left multiple active work items");
+assert(activeAfterSwitchByTitle[0].id === switched.work_item_id, "switching by title activated the wrong work item");
+
 await rpc("focus.stop");
 
 const inventoryAfterContinue = await rpc("inventory.list");
 const matchingContinuedItems = inventoryAfterContinue.items.filter((item) => item.title === title);
 assert(matchingContinuedItems.length === 1, "continuing by title created a duplicate work item");
+
+const createTitle = `Smoke create ${new Date().toISOString()}`;
+const createdOnce = await rpc("work_item.create", {
+  title: createTitle,
+  type: "task",
+});
+const createdTwice = await rpc("work_item.create", {
+  title: createTitle,
+  type: "task",
+});
+assert(createdOnce.id === createdTwice.id, "work_item.create did not reuse the existing title");
+assert(createdTwice.reused === true, "work_item.create did not report reused=true");
+
+const inventoryAfterDuplicateCreate = await rpc("inventory.list");
+const matchingCreatedItems = inventoryAfterDuplicateCreate.items.filter((item) => item.title === createTitle);
+assert(matchingCreatedItems.length === 1, "work_item.create created duplicate titles");
 
 const itemA = await rpc("work_item.create", {
   title: `Smoke linked A ${new Date().toISOString()}`,
@@ -151,6 +195,33 @@ const inventoryAfterStop = await rpc("inventory.list");
 assert(
   inventoryAfterStop.items.every((item) => item.state !== "active"),
   "inventory still contains an active work item after stopping linked focus"
+);
+
+const itemC = await rpc("work_item.create", {
+  title: `Smoke delete active ${new Date().toISOString()}`,
+  type: "task",
+});
+const activatedC = await rpc("work_item.set_state", {
+  id: itemC.id,
+  state: "active",
+});
+assert(activatedC.focus_session_id, "activating delete-test item did not start focus");
+
+const deletedActive = await rpc("work_item.delete", {
+  id: itemC.id,
+});
+assert(
+  deletedActive.stopped_focus_session_id === activatedC.focus_session_id,
+  "deleting active work item did not report the stopped focus session"
+);
+
+const currentAfterActiveDelete = await rpc("focus.current");
+assert(!currentAfterActiveDelete.session, "deleting active work item did not stop focus");
+
+const inventoryAfterActiveDelete = await rpc("inventory.list");
+assert(
+  inventoryAfterActiveDelete.items.every((item) => item.state !== "active"),
+  "inventory still contains an active work item after deleting active item"
 );
 
 console.log(

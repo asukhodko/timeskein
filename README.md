@@ -19,6 +19,7 @@ A desktop application for quickly tracking focus sessions and work items with re
 **Current focus:** Browser development mode and macOS Tauri app. Windows packaging is deferred.
 
 See [Current Implementation](docs/current-implementation.md) for the exact state of what runs today.
+Use [Dogfood Day Protocol](docs/dogfood-day.md) when testing Timeskein as a Session replacement for a real workday.
 
 The current execution roadmap is maintained as an opskarta v3 plan set:
 [Timeskein opskarta roadmap](docs/roadmap/opskarta.md).
@@ -79,6 +80,71 @@ pnpm --filter @timeskein/desktop build
 # → target/release/bundle/macos/Timeskein.app
 ```
 
+### Starting a Dogfood Day on macOS
+
+```bash
+pnpm dogfood:start
+```
+
+The start gate first checks the real local SQLite database for active sessions, active Work Items, duplicate titles, and existing blocks for today. If the real day is clean, it checks that no old `timeskein-desktop` process is running, runs the dogfood preflight, opens `Timeskein.app`, and waits for the embedded agent to respond.
+It refuses to open the app if `timeskein-desktop` is already running, so the dogfood day does not accidentally reuse an older process after a rebuild.
+
+For a clean trial that moves the current SQLite database aside first:
+
+```bash
+pnpm dogfood:start:clean
+```
+
+Preview the clean start without moving files or opening the app:
+
+```bash
+pnpm dogfood:start:clean:preview
+```
+
+Expanded form:
+
+```bash
+pnpm dogfood:ready
+pnpm open:macos-app -- --check-running-only
+pnpm dogfood:preflight
+pnpm open:macos-app
+pnpm dogfood:status
+```
+
+If `dogfood:ready` reports old test data and you want a clean trial database, follow its exact next commands. Usually that means first quitting Timeskein, then dry-running and applying the reset:
+
+```bash
+pnpm dogfood:reset-db
+pnpm dogfood:reset-db -- --apply
+pnpm dogfood:ready
+```
+
+The one-command version is `pnpm dogfood:start:clean`.
+Use `pnpm dogfood:start:clean:preview` to preview the reset plan first.
+
+If the readiness report shows existing blocks for today and you want a clean trial, prefer the reset path. If only an active focus block is stuck, close that block without moving the database aside:
+
+```bash
+pnpm dogfood:stop-active
+pnpm dogfood:stop-active -- --apply
+pnpm dogfood:ready
+```
+
+The command writes a stop note (`closed by dogfood:stop-active` by default). Override it with `--note`.
+When Timeskein is already running and the agent responds, the applied stop uses the local agent API. If the app process is still alive but the agent is not responsive, it refuses direct SQLite changes unless `--force` is passed.
+
+At the end of the day, export the analysis note:
+
+```bash
+pnpm dogfood:finish:save
+```
+
+This writes `timeskein-dogfood-report-YYYY-MM-DD.md` in the current directory. To print the report to stdout instead:
+
+```bash
+pnpm dogfood:finish > timeskein-dogfood-report.md
+```
+
 ### macOS Data Path
 
 ```text
@@ -86,6 +152,7 @@ pnpm --filter @timeskein/desktop build
 ```
 
 The app stores SQLite data in `timeskein.db` and writes the current embedded-agent port to `agent.port`.
+On startup the macOS app checks an existing `agent.port` with `agent.status`; if the recorded agent is gone, stale `agent.lock` / `agent.port` files are removed and a fresh embedded agent is started.
 
 ### Roadmap Tools
 
@@ -133,15 +200,18 @@ All shortcuts work regardless of keyboard layout (Russian, etc.):
 | `Enter` | Open primary ref in browser |
 | `Shift+Delete` | Delete item (with confirmation) |
 | `C` or `Alt+N` | Create new item |
-| `Esc` | Close dialogs / Clear search |
+| `Esc` | Close dialogs; hide the macOS window when no dialog is open |
 
-Focus Session controls are mouse-first for now:
+Focus Session controls:
 
 | Control | Action |
 |---------|--------|
 | Focus input + `Start` | Find or create a Work Item by title, then start focus on it |
-| `Start Item` | Start or continue focus on the selected Work Item |
-| `Stop` | Stop the active focus session and optionally save a note |
+| Focus input + `Switch` | Stop the current block and start a new block by title |
+| Empty focus input + `Space` | Start or switch focus to the selected Work Item |
+| `Start Item` / `Switch Item` | Start or continue focus on the selected Work Item |
+| Double-click Work Item | Start or switch focus to that Work Item |
+| Stop note + `Enter` or `Stop` | Stop the active focus session and optionally save a note |
 
 **State shortcuts (in State menu):**
 1. Active, 2. Blocked, 3. Waiting, 4. Someday, 5. Unknown, 6. Done
@@ -161,11 +231,17 @@ Focus Session controls are mouse-first for now:
 - Focus sessions are linked to Work Items; typed titles reuse existing Work Items instead of creating duplicates
 - Setting a Work Item to `active` starts or switches the linked focus session; stopping it clears `active`
 - Day panel with focus blocks, total active time, entrance count, and gaps
+- Open gap warning when no focus block is running and the time since the last stopped block is significant
+- Day totals count the part of each focus block that overlaps the selected local day
+- Markdown dogfood report from the Today panel or CLI, with focus data, Work Item totals, significant gaps, review prompts, and draft warning while a focus block or Work Item is active
+- macOS menu bar item shows the active focus duration as a short `12m Focus` status while a block is running
 - Work item states: active, waiting, blocked, done, someday, unknown
 - Refs: URLs, file paths, issue keys with conflict detection
 - Pin items to keep them at top of list
 - Search by title/note
 - Keyboard-first navigation with mouse support
+- macOS app opener refuses to reuse an already running `timeskein-desktop` process during dogfood start
+- macOS app recovers from stale embedded-agent lock/port files on startup
 - Denylist for privacy protection (in Rust agent)
 
 ## Known Limitations (Current State)
@@ -180,6 +256,7 @@ Focus Session controls are mouse-first for now:
 
 - [Project Overview](docs/00_project_overview.md) - architecture and principles
 - [Current Implementation](docs/current-implementation.md) - what runs today
+- [Dogfood Day Protocol](docs/dogfood-day.md) - one-day Session replacement trial
 - [opskarta Roadmap](docs/roadmap/opskarta.md) - current machine-checkable roadmap
 - [MVP Technical Spec](mvp-technical%20specifications.md) - detailed requirements
 - [Glossary](docs/glossary.md) - term definitions

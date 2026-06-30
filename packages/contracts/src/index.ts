@@ -228,6 +228,17 @@ export interface WorkItemCreateParams {
   note?: string;
 }
 
+export interface WorkItemCreateResponse {
+  id: string;
+  focus_session_id?: string;
+  reused: boolean;
+}
+
+export interface WorkItemDeleteResponse {
+  success: boolean;
+  stopped_focus_session_id?: string;
+}
+
 // focus.start parameters
 export interface FocusStartParams {
   title: string;

@@ -139,13 +139,18 @@ function handleMethod(
       if (!title || title.trim() === "") {
         return errorResponse(requestId, "validation_error", "Title is required");
       }
+      const existing = store.findWorkItemByTitle(title);
       const item = store.createWorkItem(
         title,
         params.type as "task" | "project" | "question" | undefined,
         params.state as WorkItemState | undefined,
         params.note as string | undefined
       );
-      return successResponse(requestId, { id: item.id });
+      return successResponse(requestId, {
+        id: item.id,
+        focus_session_id: params.state === "active" ? store.getActiveFocusSession()?.id : undefined,
+        reused: Boolean(existing),
+      });
     }
 
     case "work_item.touch": {
@@ -205,10 +210,14 @@ function handleMethod(
       if (!id) {
         return errorResponse(requestId, "validation_error", "Work item ID is required");
       }
-      if (!store.deleteWorkItem(id)) {
+      const result = store.deleteWorkItem(id);
+      if (!result.deleted) {
         return errorResponse(requestId, "not_found", "Work item not found");
       }
-      return successResponse(requestId, { success: true });
+      return successResponse(requestId, {
+        success: true,
+        stopped_focus_session_id: result.stoppedFocusSessionId,
+      });
     }
 
     // Focus session methods

@@ -1,0 +1,136 @@
+#!/usr/bin/env node
+
+import { execFile } from "node:child_process";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
+import { promisify } from "node:util";
+
+const execFileAsync = promisify(execFile);
+const repoRoot = resolve(import.meta.dirname, "..");
+const tempDir = await mkdtemp(join(tmpdir(), "timeskein-export-smoke-"));
+const dbPath = join(tempDir, "timeskein.db");
+const smokeDate = new Date(2026, 5, 30);
+const smokeDayStart = startOfLocalDay(smokeDate);
+const overlappingStart = shiftedIso(smokeDayStart, -10 * 60);
+const overlappingStop = shiftedIso(smokeDayStart, 10 * 60);
+
+try {
+  await runSqlFile(join(repoRoot, "apps/agent/migrations/001_initial.sql"));
+  await runSqlFile(join(repoRoot, "apps/agent/migrations/002_focus_sessions.sql"));
+  await runSql(`
+    INSERT INTO work_items (id, title, type, state, pinned, created_at, updated_at, last_seen_at)
+    VALUES
+      ('w1', 'Deep Work', 'task', 'unknown', 0, '2026-06-30T06:00:00Z', '2026-06-30T06:00:00Z', '2026-06-30T06:00:00Z'),
+      ('w2', 'Meetings', 'task', 'unknown', 0, '2026-06-30T06:00:00Z', '2026-06-30T06:00:00Z', '2026-06-30T06:00:00Z');
+
+    INSERT INTO focus_sessions (id, title, work_item_id, state, target_seconds, note, started_at, stopped_at, updated_at)
+    VALUES
+      ('s0', 'Deep Work', 'w1', 'stopped', 1500, 'started before day', '${overlappingStart}', '${overlappingStop}', '${overlappingStop}'),
+      ('s1', 'Deep Work', 'w1', 'stopped', 1500, 'first block', '2026-06-30T06:00:00Z', '2026-06-30T06:25:00Z', '2026-06-30T06:25:00Z'),
+      ('s2', 'Meetings', 'w2', 'stopped', 1500, NULL, '2026-06-30T07:00:00Z', '2026-06-30T07:30:00Z', '2026-06-30T07:30:00Z'),
+      ('s3', 'Deep Work', 'w1', 'stopped', 1500, NULL, '2026-06-30T07:35:00Z', '2026-06-30T07:45:00Z', '2026-06-30T07:45:00Z');
+  `);
+
+  const { stdout } = await execFileAsync(
+    "node",
+    [
+      join(repoRoot, "scripts/export-focus-day.mjs"),
+      "--db",
+      dbPath,
+      "--date",
+      "2026-06-30",
+      "--now",
+      "2026-06-30T08:15:00Z",
+    ],
+    { cwd: repoRoot }
+  );
+
+  assert(stdout.includes("Total focus: 1:15:00"), "export did not include expected total focus");
+  assert(stdout.includes("Entrances: 4"), "export did not include expected entrance count");
+  assert(stdout.includes("started before day"), "export did not include overlapping session");
+  assert(stdout.includes("## Day-Boundary Blocks"), "export did not flag day-boundary blocks");
+  assert(
+    stdout.includes("counted as 10:00 inside this day"),
+    "export did not explain clipped day-boundary duration"
+  );
+  assert(stdout.includes("## By Work Item"), "export did not include By Work Item section");
+  assert(stdout.includes("| 45:00 | 3 | Deep Work |"), "export did not aggregate Deep Work");
+  assert(stdout.includes("| 30:00 | 1 | Meetings |"), "export did not aggregate Meetings");
+  assert(stdout.includes("## Gaps >= 20:00"), "export did not include significant gaps section");
+  assert(stdout.includes(": 35:00"), "export did not include expected significant gap duration");
+  assert(stdout.includes("## Open Gap"), "export did not include open gap section");
+  assert(
+    stdout.includes(": 30:00 since last stopped block"),
+    "export did not include expected open gap duration"
+  );
+
+  await runSql(`
+    INSERT INTO work_items (id, title, type, state, pinned, created_at, updated_at, last_seen_at)
+    VALUES ('w3', 'Active Draft Work', 'task', 'active', 0, '2026-06-30T08:00:00Z', '2026-06-30T08:00:00Z', '2026-06-30T08:00:00Z');
+
+    INSERT INTO focus_sessions (id, title, work_item_id, state, target_seconds, note, started_at, stopped_at, updated_at)
+    VALUES ('s4', 'Active Draft Work', 'w3', 'active', 1500, NULL, '2026-06-30T08:00:00Z', NULL, '2026-06-30T08:00:00Z');
+  `);
+
+  const { stdout: activeStdout } = await execFileAsync(
+    "node",
+    [
+      join(repoRoot, "scripts/export-focus-day.mjs"),
+      "--db",
+      dbPath,
+      "--date",
+      "2026-06-30",
+      "--now",
+      "2026-06-30T08:15:00Z",
+    ],
+    { cwd: repoRoot }
+  );
+
+  assert(activeStdout.includes("Total focus: 1:30:00"), "active export did not include running total");
+  assert(activeStdout.includes("Entrances: 5"), "active export did not include running entrance count");
+  assert(activeStdout.includes("Active Draft Work"), "active export did not include active work item");
+  assert(activeStdout.includes("-now | 15:00 | Active Draft Work"), "active export did not show active block ending at now");
+  assert(!activeStdout.includes("## Open Gap"), "active export showed open gap while latest block is active");
+
+  console.log(
+    JSON.stringify(
+      {
+        ok: true,
+        db_path: dbPath,
+      },
+      null,
+      2
+    )
+  );
+} finally {
+  await rm(tempDir, { recursive: true, force: true });
+}
+
+async function runSqlFile(path) {
+  await execFileAsync("sqlite3", [dbPath, `.read ${path}`], {
+    maxBuffer: 10 * 1024 * 1024,
+  });
+}
+
+async function runSql(sql) {
+  await execFileAsync("sqlite3", [dbPath, sql], {
+    maxBuffer: 10 * 1024 * 1024,
+  });
+}
+
+function assert(condition, message) {
+  if (!condition) {
+    throw new Error(message);
+  }
+}
+
+function startOfLocalDay(date) {
+  const result = new Date(date);
+  result.setHours(0, 0, 0, 0);
+  return result;
+}
+
+function shiftedIso(date, offsetSeconds) {
+  return new Date(date.getTime() + offsetSeconds * 1000).toISOString();
+}

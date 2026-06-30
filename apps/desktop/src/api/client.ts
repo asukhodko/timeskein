@@ -7,6 +7,9 @@ import {
   type AgentStatus,
   type Settings,
   type DenylistRule,
+  type FocusCurrentResponse,
+  type FocusListResponse,
+  type FocusSessionView,
   isApiError,
 } from '@timeskein/contracts'
 
@@ -114,6 +117,16 @@ export const workItemApi = {
     rpc<{ success: boolean; pinned: boolean }>('work_item.toggle_pin', { id }),
   delete: (id: string, mode?: 'soft' | 'hard') =>
     rpc<{ success: boolean }>('work_item.delete', { id, mode }),
+}
+
+// Focus Session API
+export const focusApi = {
+  current: () => rpc<FocusCurrentResponse>('focus.current'),
+  list: (params?: { from?: string; to?: string }) => rpc<FocusListResponse>('focus.list', params),
+  start: (params: { title: string; work_item_id?: string; target_seconds?: number }) =>
+    rpc<FocusSessionView>('focus.start', params),
+  stop: (params?: { id?: string; note?: string }) =>
+    rpc<FocusSessionView>('focus.stop', params),
 }
 
 // Ref API

@@ -8,6 +8,7 @@
     "dev": "pnpm --filter @timeskein/desktop dev",
     "build": "pnpm --filter @timeskein/desktop build",
     "mock-server": "pnpm --filter @timeskein/mock-server start",
+    "smoke:focus-api": "node scripts/smoke-focus-api.mjs",
     "typecheck": "pnpm -r typecheck",
     "lint": "pnpm -r lint",
     "test": "pnpm -r test"

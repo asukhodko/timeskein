@@ -1,19 +1,20 @@
 # Timeskein
 
-**Manual-first, local-first work inventory system.**
+**Manual-first, local-first focus and work inventory system.**
 
-A desktop application for quickly tracking work items with refs (URLs, files, issue keys) using a global hotkey palette, without any background monitoring.
+A desktop application for quickly tracking focus sessions and work items with refs (URLs, files, issue keys), without background monitoring.
 
 ## Current Status (MVP)
 
 | Component | Status | Notes |
 |-----------|--------|-------|
 | Frontend (React + Tailwind) | Working | Runs in browser via Vite |
+| Focus Session | Working baseline | Start, live timer, manual stop, day list, total active time |
 | Mock Server | Working | Full API implementation for development |
 | Rust Agent | Working | SQLite-backed Local API, embedded in macOS app |
 | Tauri Desktop | Working on macOS | Embeds Rust agent and builds macOS `.app` |
 
-**What works now:** Frontend UI with mock server in browser, and macOS `.app` with an embedded Rust agent.
+**What works now:** Focus Session tracking and Work Item inventory in browser mock mode and in the macOS `.app` with an embedded Rust agent.
 
 **Current focus:** Browser development mode and macOS Tauri app. Windows packaging is deferred.
 
@@ -100,6 +101,23 @@ python3 -m specs.v3.tools.cli validate ../../plans/timeskein/*.plan.yaml
 python3 -m specs.v3.tools.cli render gantt ../../plans/timeskein/*.plan.yaml --view current-gantt
 ```
 
+### Focus Session API Smoke
+
+With the mock server running:
+
+```bash
+pnpm mock-server
+pnpm smoke:focus-api
+```
+
+Against a running Rust agent or desktop app:
+
+```bash
+TIMESKEIN_API_URL=http://127.0.0.1:<port>/api pnpm smoke:focus-api
+```
+
+The smoke refuses to run if there is already an active focus session.
+
 ## Keyboard Shortcuts
 
 All shortcuts work regardless of keyboard layout (Russian, etc.):
@@ -117,6 +135,14 @@ All shortcuts work regardless of keyboard layout (Russian, etc.):
 | `C` or `Alt+N` | Create new item |
 | `Esc` | Close dialogs / Clear search |
 
+Focus Session controls are mouse-first for now:
+
+| Control | Action |
+|---------|--------|
+| Focus input + `Start` | Find or create a Work Item by title, then start focus on it |
+| `Start Item` | Start or continue focus on the selected Work Item |
+| `Stop` | Stop the active focus session and optionally save a note |
+
 **State shortcuts (in State menu):**
 1. Active, 2. Blocked, 3. Waiting, 4. Someday, 5. Unknown, 6. Done
 
@@ -130,6 +156,11 @@ All shortcuts work regardless of keyboard layout (Russian, etc.):
 ## Key Features (MVP)
 
 - Manual work item management (create/touch/edit/delete)
+- Manual focus sessions with 25-minute target and overflow tracking
+- Running focus session restored from SQLite after frontend/app restart
+- Focus sessions are linked to Work Items; typed titles reuse existing Work Items instead of creating duplicates
+- Setting a Work Item to `active` starts or switches the linked focus session; stopping it clears `active`
+- Day panel with focus blocks, total active time, entrance count, and gaps
 - Work item states: active, waiting, blocked, done, someday, unknown
 - Refs: URLs, file paths, issue keys with conflict detection
 - Pin items to keep them at top of list
@@ -140,6 +171,7 @@ All shortcuts work regardless of keyboard layout (Russian, etc.):
 ## Known Limitations (Current State)
 
 - **Browser mode uses mock data** - SQLite persistence is available in the macOS app, not in browser dev mode
+- **Focus Session has no pause/resume/cancel yet** - the current baseline is start/stop only
 - **macOS packaging produces `.app` only** - DMG packaging is deferred
 - **Windows packaging deferred** - current recovery baseline targets browser and macOS first
 - **Automated e2e tests are not implemented yet** - current validation is manual smoke plus build/type checks

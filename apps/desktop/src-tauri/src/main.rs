@@ -112,10 +112,7 @@ fn main() {
                         app.exit(0);
                     }
                     "open" => {
-                        if let Some(window) = app.get_webview_window("main") {
-                            let _ = window.show();
-                            let _ = window.set_focus();
-                        }
+                        toggle_main_window(app);
                     }
                     "settings" => {
                         // TODO: Open settings window
@@ -134,10 +131,7 @@ fn main() {
                     } = event
                     {
                         let app = tray.app_handle();
-                        if let Some(window) = app.get_webview_window("main") {
-                            let _ = window.show();
-                            let _ = window.set_focus();
-                        }
+                        toggle_main_window(app);
                     }
                 })
                 .build(app)?;

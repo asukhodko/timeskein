@@ -58,7 +58,7 @@ impl DenylistRule {
         // - Exact match
         // - Wildcard prefix (*.example.com)
         // - Contains match (example.com)
-        
+
         if pattern_lower.starts_with("*.") {
             // Wildcard pattern: *.example.com matches sub.example.com
             let suffix = &pattern_lower[1..]; // .example.com
@@ -109,7 +109,11 @@ pub enum DenylistCheckResult {
     /// URL is blocked
     Blocked { rule_id: Uuid, pattern: String },
     /// URL should be redacted to domain only
-    Redact { rule_id: Uuid, pattern: String, redacted_value: String },
+    Redact {
+        rule_id: Uuid,
+        pattern: String,
+        redacted_value: String,
+    },
 }
 
 /// Check a URL against a list of denylist rules
@@ -157,26 +161,29 @@ mod tests {
 
     #[test]
     fn test_redact_to_domain() {
-        let redacted = DenylistRule::redact_to_domain("https://secret.example.com/path?query=value");
+        let redacted =
+            DenylistRule::redact_to_domain("https://secret.example.com/path?query=value");
         assert_eq!(redacted, "domain:secret.example.com");
     }
 
     #[test]
     fn test_check_denylist_blocked() {
-        let rules = vec![
-            DenylistRule::new("mail.google.com".to_string(), DenylistPolicy::Block),
-        ];
-        
+        let rules = vec![DenylistRule::new(
+            "mail.google.com".to_string(),
+            DenylistPolicy::Block,
+        )];
+
         let result = check_denylist("https://mail.google.com/inbox", &rules);
         assert!(matches!(result, DenylistCheckResult::Blocked { .. }));
     }
 
     #[test]
     fn test_check_denylist_allowed() {
-        let rules = vec![
-            DenylistRule::new("mail.google.com".to_string(), DenylistPolicy::Block),
-        ];
-        
+        let rules = vec![DenylistRule::new(
+            "mail.google.com".to_string(),
+            DenylistPolicy::Block,
+        )];
+
         let result = check_denylist("https://github.com", &rules);
         assert!(matches!(result, DenylistCheckResult::Allowed));
     }

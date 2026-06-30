@@ -91,6 +91,7 @@ pnpm --filter @timeskein/desktop build:frontend
 pnpm typecheck
 cargo check -p timeskein-agent
 cargo check -p timeskein-desktop
+pnpm smoke:focus-api
 pnpm --filter @timeskein/desktop build
 ```
 
@@ -100,9 +101,26 @@ Runtime smoke on macOS:
 - embedded agent creates `agent.port`
 - `agent.status` returns `db_ok: true`
 - `inventory.list` returns an empty list against the real SQLite-backed agent
+- `focus.start`, `focus.stop`, `focus.list`, and Work Item focus switching work against the real SQLite-backed agent
+
+Runtime smoke in browser/mock mode:
+
+- mock server starts on localhost
+- `focus.start`, `focus.stop`, `focus.list`, and Work Item focus switching work against the mock API
+- `pnpm smoke:focus-api` verifies the same flow and refuses to run over an existing active focus session
 
 ## Implemented Features
 
+- Focus Session panel
+- Start focus from text by finding or creating a Work Item with that title
+- Start focus session from the selected Work Item
+- Set a Work Item to `active` to switch focus to it
+- Reuse an existing Work Item when the typed title matches an existing title
+- At most one active Work Item is kept in sync with the active focus session
+- 25-minute target with elapsed contact time and overflow display
+- Manual stop with optional note
+- Active focus session restored from SQLite after frontend/app restart
+- Today's focus blocks with total active time, entrance count, and gaps
 - Manual Work Item inventory UI
 - Search
 - Create Work Item
@@ -114,8 +132,22 @@ Runtime smoke on macOS:
 - Delete with confirmation
 - Global shortcut registration with fallback candidates
 - Tray/menu bar entry point on macOS
+- Borderless window can be moved by dragging the header
 - SQLite storage through the embedded Rust agent
 - Mock server for browser development
+
+## Focus Session Data
+
+The first Focus Session baseline is intentionally small. It stores manual contact-time blocks:
+
+- title copied from the linked Work Item
+- Work Item link
+- state: `active` or `stopped`
+- target seconds, currently 25 minutes by default in the UI
+- start time, stop time, updated time
+- optional stop note
+
+The Rust agent stores focus sessions in SQLite. A partial unique index enforces at most one active focus session. Work Item `active` is treated as the UI marker for the currently timed item: switching it stops the old focus block and starts a new linked block, while stopping a linked focus block clears `active` from Work Items. Starting focus from typed text first searches for an existing Work Item with the same normalized title; if none exists, it creates one. The mock server exposes the same `focus.current`, `focus.start`, `focus.stop`, and `focus.list` RPC methods for browser development.
 
 ## Global Shortcut and Tray
 
@@ -135,6 +167,8 @@ On multi-monitor macOS setups, the tray/status item is controlled by the system 
 - Android is not implemented.
 - macOS build currently produces `.app` only; DMG packaging is deferred.
 - Browser mode uses mock data only.
+- Focus Session does not implement pause, resume, or cancel yet.
+- Focus Session has only a compact day list, not a full reporting/export view yet.
 - Automated e2e tests are not implemented yet.
 - Cross-platform CI is not implemented yet.
 - Settings UI is incomplete.
@@ -143,8 +177,8 @@ On multi-monitor macOS setups, the tray/status item is controlled by the system 
 
 ## Next Engineering Steps
 
-1. Add smoke/e2e tests for browser mock mode and macOS embedded-agent mode.
-2. Improve agent lifecycle diagnostics and user-visible error states.
-3. Add a simple reset/open-data-folder troubleshooting flow.
-4. Decide whether macOS should behave as a tray-only utility or a normal Dock app.
-5. Start Focus Session / Session replacement as a separate feature on top of the stable local baseline.
+1. Dogfood one real working day through Focus Session.
+2. Add smoke/e2e tests for browser mock mode and macOS embedded-agent mode.
+3. Decide whether pause/resume/cancel are needed before regular use.
+4. Add export/reporting for end-of-day analysis.
+5. Improve agent lifecycle diagnostics and user-visible error states.

@@ -17,7 +17,7 @@ views:
     title: Timeskein Focus Session dogfood slice
     where:
       has_schedule: true
-    window_start: "2026-07-01"
+    window_start: "2026-06-30"
     window_finish: "2026-08-14"
     date_format: YYYY-MM-DD
     axis_format: "%d.%m"

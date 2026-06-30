@@ -4,10 +4,7 @@ mod handlers;
 
 use std::sync::Arc;
 
-use axum::{
-    routing::post,
-    Router,
-};
+use axum::{routing::post, Router};
 use tokio::sync::RwLock;
 use tower_http::cors::{Any, CorsLayer};
 use tower_http::trace::TraceLayer;

@@ -10,10 +10,10 @@ use tokio::sync::RwLock;
 use tracing::{info, Level};
 use tracing_subscriber::FmtSubscriber;
 
-use timeskein_agent::AppState;
+use timeskein_agent::api::create_router;
 use timeskein_agent::db::Database;
 use timeskein_agent::runtime::{ensure_data_dir, write_port_file, SingleInstanceLock};
-use timeskein_agent::api::create_router;
+use timeskein_agent::AppState;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -53,10 +53,10 @@ async fn main() -> Result<()> {
     let addr = SocketAddr::from(([127, 0, 0, 1], 0));
     let listener = tokio::net::TcpListener::bind(addr).await?;
     let actual_addr = listener.local_addr()?;
-    
+
     // Write port file for UI discovery
     write_port_file(&data_dir, actual_addr.port())?;
-    
+
     info!("Timeskein Agent listening on http://{}", actual_addr);
     info!("API endpoint: POST http://{}/api", actual_addr);
 

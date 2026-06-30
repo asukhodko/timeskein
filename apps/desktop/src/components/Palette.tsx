@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
+import type { MouseEvent } from 'react'
+import { getCurrentWindow } from '@tauri-apps/api/window'
 import { 
   useInventory, 
   useSetWorkItemState, 
@@ -12,6 +14,7 @@ import {
 import SearchInput from './SearchInput'
 import InventoryList from './InventoryList'
 import CreateDialog from './CreateDialog'
+import FocusPanel from './FocusPanel'
 import StateMenu from './StateMenu'
 import NoteEditor from './NoteEditor'
 import RefsPanel from './RefsPanel'
@@ -38,6 +41,27 @@ export default function Palette() {
   const touchMutation = useTouchWorkItem()
   const pinMutation = useToggleWorkItemPin()
   const deleteMutation = useDeleteWorkItem()
+
+  const handleHideWindow = async () => {
+    try {
+      await getCurrentWindow().hide()
+    } catch {
+      // Browser mode has no window to hide.
+    }
+  }
+
+  const handleStartWindowDrag = async (event: MouseEvent<HTMLElement>) => {
+    if (event.button !== 0) return
+
+    const target = event.target as HTMLElement
+    if (target.closest('button,input,textarea,select,a,[data-no-drag]')) return
+
+    try {
+      await getCurrentWindow().startDragging()
+    } catch {
+      // Browser mode has no native window to drag.
+    }
+  }
 
   // Action handlers for clickable shortcuts
   const handleTouch = () => {
@@ -185,8 +209,12 @@ export default function Palette() {
   return (
     <div className="flex flex-col h-screen">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-700">
-        <div className="flex items-center gap-2">
+      <div
+        data-tauri-drag-region
+        onMouseDown={handleStartWindowDrag}
+        className="flex cursor-move select-none items-center justify-between border-b border-gray-700 px-4 py-3"
+      >
+        <div data-tauri-drag-region className="flex items-center gap-2">
           <span className="text-xl">⟡</span>
           <span className="font-semibold text-gray-200">Timeskein</span>
         </div>
@@ -195,6 +223,15 @@ export default function Palette() {
             {items.length} items
           </span>
           <button
+            data-no-drag
+            onClick={handleHideWindow}
+            className="w-6 h-6 flex items-center justify-center rounded bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm font-bold transition-colors"
+            title="Hide window (Esc)"
+          >
+            −
+          </button>
+          <button
+            data-no-drag
             onClick={() => setShowCreate(true)}
             className="w-6 h-6 flex items-center justify-center rounded bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold transition-colors"
             title="Create new (Alt+N or C)"
@@ -204,12 +241,15 @@ export default function Palette() {
         </div>
       </div>
 
+      <FocusPanel selectedItem={selectedItem} />
+
       {/* Search */}
       <div className="px-4 py-2 border-b border-gray-700">
         <SearchInput
           value={search}
           onChange={setSearch}
           onCreateNew={() => setShowCreate(true)}
+          autoFocus={false}
         />
       </div>
 

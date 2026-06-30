@@ -55,7 +55,7 @@ nodes:
     title: App entry UX
     kind: phase
     parent: ts
-    status: planned
+    status: in_progress
     notes: Make opening, moving, hiding, and using the app feel like a fast time-tracking tool rather than a static palette.
     x:
       ops:
@@ -64,11 +64,11 @@ nodes:
     title: Make the app window movable
     kind: task
     parent: ts.ux_entry
-    status: planned
+    status: done
     effort: 1
     deps:
       - id: ts.baseline.macos_app
-    notes: The window must not be locked to the center of the primary screen.
+    notes: Header drag uses Tauri startDragging, with buttons excluded from the drag region.
     x:
       ops:
         attention_class: current
@@ -76,7 +76,7 @@ nodes:
     title: Add clear hide and show behavior
     kind: task
     parent: ts.ux_entry
-    status: planned
+    status: done
     effort: 1
     deps:
       - id: ts.ux_entry.window_drag
@@ -88,11 +88,11 @@ nodes:
     title: Wire tray menu actions
     kind: task
     parent: ts.ux_entry
-    status: planned
+    status: in_progress
     effort: 1
     deps:
       - id: ts.ux_entry.hide_toggle
-    notes: Open Inventory and Settings must do visible, predictable things.
+    notes: Open Inventory and left-click now toggle the window. Settings still needs a visible destination.
     x:
       ops:
         attention_class: current
@@ -112,11 +112,11 @@ nodes:
     title: Reduce the path from intent to tracked work
     kind: task
     parent: ts.ux_entry
-    status: planned
+    status: in_progress
     effort: 2
     deps:
       - id: ts.ux_entry.tray_actions
-    notes: Starting tracking should take a small number of obvious actions.
+    notes: Focus tracking can start from a free text intention or selected Work Item. The flow needs real dogfood feedback.
     x:
       ops:
         attention_class: current
@@ -125,7 +125,7 @@ nodes:
     title: Focus Session core
     kind: phase
     parent: ts
-    status: planned
+    status: in_progress
     notes: "Replace the useful part of Session: a 25-minute focus target that continues counting real contact time until manual stop."
     x:
       ops:
@@ -134,11 +134,11 @@ nodes:
     title: Add FocusSession and SessionEvent persistence
     kind: task
     parent: ts.focus_core
-    status: planned
+    status: in_progress
     effort: 3
     deps:
       - id: ts.ux_entry.fast_track_flow
-    notes: Store intention, optional Work Item link, start/end, target, actual time, pause time, state, and notes.
+    notes: Initial FocusSession table is implemented. SessionEvent and pause accounting are not implemented yet.
     x:
       ops:
         attention_class: current
@@ -146,7 +146,7 @@ nodes:
     title: Add contracts and Local API for focus sessions
     kind: task
     parent: ts.focus_core
-    status: planned
+    status: done
     effort: 3
     deps:
       - id: ts.focus_core.model_migrations
@@ -158,11 +158,11 @@ nodes:
     title: Build focus timer UI with overflow
     kind: task
     parent: ts.focus_core
-    status: planned
+    status: done
     effort: 3
     deps:
       - id: ts.focus_core.contracts_api
-    notes: Show target countdown before 25:00 and positive overflow after the target is reached.
+    notes: Shows elapsed contact time, 25-minute target, progress, and positive overflow after the target is reached.
     x:
       ops:
         attention_class: current
@@ -170,7 +170,7 @@ nodes:
     title: Implement start, pause, resume, stop, cancel
     kind: task
     parent: ts.focus_core
-    status: planned
+    status: in_progress
     effort: 3
     deps:
       - id: ts.focus_core.timer_ui
@@ -181,7 +181,7 @@ nodes:
     title: Restore running focus session after app restart
     kind: task
     parent: ts.focus_core
-    status: planned
+    status: done
     effort: 2
     deps:
       - id: ts.focus_core.session_lifecycle
@@ -193,7 +193,7 @@ nodes:
     title: Bind focus sessions to Work Items or free intentions
     kind: task
     parent: ts.focus_core
-    status: planned
+    status: done
     effort: 2
     deps:
       - id: ts.focus_core.contracts_api
@@ -204,7 +204,7 @@ nodes:
     title: Capture a note at the end of a focus session
     kind: task
     parent: ts.focus_core
-    status: planned
+    status: done
     effort: 1
     deps:
       - id: ts.focus_core.session_lifecycle
@@ -215,13 +215,13 @@ nodes:
     title: First real Focus Session dogfood
     kind: milestone
     parent: ts.focus_core
-    status: planned
+    status: in_progress
     milestone: true
     deps:
       - id: ts.focus_core.restart_restore
       - id: ts.focus_core.work_item_binding
       - id: ts.focus_core.session_notes
-    notes: A real personal work block can be tracked from start to manual stop.
+    notes: Start-stop smoke works in browser mock and real agent. Needs at least one real personal work block.
     x:
       ops:
         attention_class: current
@@ -285,7 +285,7 @@ nodes:
     title: Dogfood hardening
     kind: phase
     parent: ts
-    status: planned
+    status: in_progress
     notes: Stabilize the first useful product slice without broadening scope to Evidence Mode or sync.
     x:
       ops:
@@ -294,10 +294,11 @@ nodes:
     title: Add smoke checks for focus-session flows
     kind: task
     parent: ts.hardening
-    status: planned
+    status: in_progress
     effort: 2
     deps:
       - id: ts.day_review.analysis_gate
+    notes: API smoke exists for mock and real agent. Browser UI smoke is still manual.
     x:
       ops:
         attention_class: current

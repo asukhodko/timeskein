@@ -25,6 +25,7 @@ export function useCreateWorkItem() {
       workItemApi.create(params),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.inventory })
+      queryClient.invalidateQueries({ queryKey: ['focus'] })
     },
   })
 }
@@ -48,6 +49,7 @@ export function useSetWorkItemState() {
       workItemApi.setState(id, state),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.inventory })
+      queryClient.invalidateQueries({ queryKey: ['focus'] })
     },
   })
 }

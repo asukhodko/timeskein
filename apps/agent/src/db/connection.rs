@@ -33,6 +33,7 @@ impl Database {
 
         let db = Self { pool };
         db.run_migrations().await?;
+        db.normalize_active_work_items_for_focus().await?;
 
         Ok(db)
     }
@@ -61,6 +62,11 @@ impl Database {
         } else {
             info!("Database schema already exists");
         }
+
+        let focus_sessions_sql = include_str!("../../migrations/002_focus_sessions.sql");
+        sqlx::raw_sql(focus_sessions_sql)
+            .execute(&self.pool)
+            .await?;
 
         Ok(())
     }

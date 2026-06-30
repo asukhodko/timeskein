@@ -171,7 +171,10 @@ function handleMethod(
       if (!store.setWorkItemState(id, state)) {
         return errorResponse(requestId, "not_found", "Work item not found");
       }
-      return successResponse(requestId, { success: true });
+      return successResponse(requestId, {
+        success: true,
+        focus_session_id: state === "active" ? store.getActiveFocusSession()?.id : undefined,
+      });
     }
 
     case "work_item.set_note": {
@@ -206,6 +209,49 @@ function handleMethod(
         return errorResponse(requestId, "not_found", "Work item not found");
       }
       return successResponse(requestId, { success: true });
+    }
+
+    // Focus session methods
+    case "focus.current": {
+      return successResponse(requestId, {
+        session: store.getActiveFocusSession(),
+      });
+    }
+
+    case "focus.start": {
+      const title = params.title as string;
+      const workItemId = params.work_item_id as string | undefined;
+
+      if ((!title || title.trim() === "") && !workItemId) {
+        return errorResponse(requestId, "validation_error", "Title is required");
+      }
+
+      const result = store.startFocusSession({
+        title: title?.trim(),
+        work_item_id: workItemId,
+        target_seconds: params.target_seconds as number | undefined,
+      });
+
+      return successResponse(requestId, result);
+    }
+
+    case "focus.stop": {
+      const session = store.stopFocusSession(params.id as string | undefined, params.note as string | undefined);
+      if (!session) {
+        return errorResponse(requestId, "not_found", "No active focus session");
+      }
+
+      return successResponse(requestId, session);
+    }
+
+    case "focus.list": {
+      const sessions = store.listFocusSessions(params.from as string | undefined, params.to as string | undefined);
+      return successResponse(requestId, {
+        sessions,
+        total: sessions.length,
+        active_seconds_total: sessions.reduce((sum, session) => sum + session.active_seconds, 0),
+        updated_at: new Date().toISOString(),
+      });
     }
 
     // Ref methods
@@ -365,6 +411,7 @@ app.listen(PORT, () => {
   console.log("  agent.ping, agent.status, agent.version");
   console.log("  inventory.list, inventory.get");
   console.log("  work_item.create, work_item.touch, work_item.set_state, work_item.set_note, work_item.toggle_pin, work_item.delete");
+  console.log("  focus.current, focus.start, focus.stop, focus.list");
   console.log("  ref.add, ref.remove, ref.open, ref.check_conflict");
   console.log("  settings.get, settings.set, settings.get_denylist, settings.add_to_denylist, settings.remove_from_denylist");
 });

@@ -23,3 +23,100 @@ execution:
       updated_at: "2026-06-30T08:00:00+03:00"
       confidence: 1.0
       note: README and current implementation docs describe the recovered baseline.
+    ts.ux_entry.hide_toggle:
+      progress: 1.0
+      actual_start: "2026-06-30"
+      actual_finish: "2026-06-30"
+      updated_at: "2026-06-30T11:00:00+03:00"
+      confidence: 0.9
+      note: Header hide button and tray/menu toggling are implemented; packaged-app dogfood still needed.
+    ts.ux_entry.window_drag:
+      progress: 1.0
+      actual_start: "2026-06-30"
+      actual_finish: "2026-06-30"
+      updated_at: "2026-06-30T12:43:00+03:00"
+      confidence: 0.9
+      note: Header drag now calls Tauri startDragging directly; packaged app rebuild passed.
+    ts.ux_entry.tray_actions:
+      progress: 0.5
+      actual_start: "2026-06-30"
+      updated_at: "2026-06-30T11:00:00+03:00"
+      confidence: 0.7
+      note: Open Inventory and left-click toggle the window; Settings still opens the main window as a placeholder.
+    ts.ux_entry.fast_track_flow:
+      progress: 0.5
+      actual_start: "2026-06-30"
+      updated_at: "2026-06-30T11:00:00+03:00"
+      confidence: 0.8
+      note: A focus session can start from text or selected Work Item. Needs real-use feedback.
+    ts.focus_core.model_migrations:
+      progress: 0.7
+      actual_start: "2026-06-30"
+      updated_at: "2026-06-30T11:00:00+03:00"
+      confidence: 0.8
+      note: FocusSession persistence exists. SessionEvent and pause accounting are still absent.
+    ts.focus_core.contracts_api:
+      progress: 1.0
+      actual_start: "2026-06-30"
+      actual_finish: "2026-06-30"
+      updated_at: "2026-06-30T11:00:00+03:00"
+      confidence: 1.0
+      note: Contracts, mock server, and Rust agent expose focus.current/start/stop/list.
+    ts.focus_core.timer_ui:
+      progress: 1.0
+      actual_start: "2026-06-30"
+      actual_finish: "2026-06-30"
+      updated_at: "2026-06-30T11:00:00+03:00"
+      confidence: 0.9
+      note: UI shows active session, elapsed contact time, target progress, overflow, and stop.
+    ts.focus_core.session_lifecycle:
+      progress: 0.45
+      actual_start: "2026-06-30"
+      updated_at: "2026-06-30T11:00:00+03:00"
+      confidence: 0.8
+      note: Start and stop are implemented. Pause, resume, and cancel are not implemented.
+    ts.focus_core.restart_restore:
+      progress: 1.0
+      actual_start: "2026-06-30"
+      actual_finish: "2026-06-30"
+      updated_at: "2026-06-30T11:00:00+03:00"
+      confidence: 0.9
+      note: Active session state is read from SQLite through focus.current.
+    ts.focus_core.work_item_binding:
+      progress: 1.0
+      actual_start: "2026-06-30"
+      actual_finish: "2026-06-30"
+      updated_at: "2026-06-30T11:00:00+03:00"
+      confidence: 0.9
+      note: Sessions can be started from free text or linked to the selected Work Item.
+    ts.focus_core.session_notes:
+      progress: 1.0
+      actual_start: "2026-06-30"
+      actual_finish: "2026-06-30"
+      updated_at: "2026-06-30T11:00:00+03:00"
+      confidence: 0.9
+      note: Stop accepts and persists an optional note.
+    ts.focus_core.dogfood_gate:
+      progress: 0.5
+      actual_start: "2026-06-30"
+      updated_at: "2026-06-30T11:00:00+03:00"
+      confidence: 0.7
+      note: Browser mock and real-agent smoke pass. A real personal work block has not yet been dogfooded.
+    ts.day_review.timeline:
+      progress: 0.4
+      actual_start: "2026-06-30"
+      updated_at: "2026-06-30T11:00:00+03:00"
+      confidence: 0.7
+      note: Compact day list exists in the focus panel; a full timeline view is not implemented.
+    ts.day_review.totals_gaps:
+      progress: 0.6
+      actual_start: "2026-06-30"
+      updated_at: "2026-06-30T11:00:00+03:00"
+      confidence: 0.8
+      note: UI shows total active time, entrance count, and gaps between focus blocks.
+    ts.hardening.smoke:
+      progress: 0.5
+      actual_start: "2026-06-30"
+      updated_at: "2026-06-30T11:10:00+03:00"
+      confidence: 0.8
+      note: Added pnpm smoke:focus-api and verified it against the mock API and a real Rust agent with a temporary database.

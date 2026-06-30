@@ -5,11 +5,15 @@ use sqlx::Row;
 use uuid::Uuid;
 
 use crate::db::Database;
-use crate::domain::{WorkItem, WorkItemState, WorkItemType, WorkItemEvent, WorkItemEventKind};
+use crate::domain::{WorkItem, WorkItemEvent, WorkItemEventKind, WorkItemState, WorkItemType};
 
 impl Database {
     /// List all work items (not deleted), sorted by pinned, state priority, last_seen
-    pub async fn list_work_items(&self, search: Option<&str>, state_filter: Option<&[WorkItemState]>) -> Result<Vec<WorkItem>> {
+    pub async fn list_work_items(
+        &self,
+        search: Option<&str>,
+        state_filter: Option<&[WorkItemState]>,
+    ) -> Result<Vec<WorkItem>> {
         let mut sql = String::from(
             "SELECT id, title, type, state, pinned, note, created_at, updated_at, last_seen_at, deleted_at 
              FROM work_items 
@@ -24,7 +28,8 @@ impl Database {
         // Add state filter
         if let Some(states) = state_filter {
             if !states.is_empty() {
-                let state_list: Vec<String> = states.iter().map(|s| format!("'{}'", s.as_str())).collect();
+                let state_list: Vec<String> =
+                    states.iter().map(|s| format!("'{}'", s.as_str())).collect();
                 sql.push_str(&format!(" AND state IN ({})", state_list.join(",")));
             }
         }
@@ -40,7 +45,7 @@ impl Database {
                     WHEN 'someday' THEN 5 
                     WHEN 'done' THEN 6 
                 END,
-                COALESCE(last_seen_at, '1970-01-01') DESC"
+                COALESCE(last_seen_at, '1970-01-01') DESC",
         );
 
         let rows = if let Some(search_term) = search {
@@ -49,9 +54,7 @@ impl Database {
                 .fetch_all(self.pool())
                 .await?
         } else {
-            sqlx::query(&sql)
-                .fetch_all(self.pool())
-                .await?
+            sqlx::query(&sql).fetch_all(self.pool()).await?
         };
 
         let mut items = Vec::new();
@@ -70,6 +73,31 @@ impl Database {
              WHERE id = ?1 AND deleted_at IS NULL"
         )
         .bind(id.to_string())
+        .fetch_optional(self.pool())
+        .await?;
+
+        match row {
+            Some(row) => Ok(Some(work_item_from_row(&row)?)),
+            None => Ok(None),
+        }
+    }
+
+    /// Find a non-deleted work item by normalized title.
+    pub async fn find_work_item_by_title(&self, title: &str) -> Result<Option<WorkItem>> {
+        let title = title.trim();
+        if title.is_empty() {
+            return Ok(None);
+        }
+
+        let row = sqlx::query(
+            "SELECT id, title, type, state, pinned, note, created_at, updated_at, last_seen_at, deleted_at
+             FROM work_items
+             WHERE deleted_at IS NULL
+               AND lower(trim(title)) = lower(trim(?1))
+             ORDER BY updated_at DESC
+             LIMIT 1",
+        )
+        .bind(title)
         .fetch_optional(self.pool())
         .await?;
 
@@ -99,7 +127,12 @@ impl Database {
         .await?;
 
         // Log event
-        self.log_event(&WorkItemEvent::new(item.id, WorkItemEventKind::Created, None)).await?;
+        self.log_event(&WorkItemEvent::new(
+            item.id,
+            WorkItemEventKind::Created,
+            None,
+        ))
+        .await?;
 
         Ok(())
     }
@@ -110,7 +143,7 @@ impl Database {
             "UPDATE work_items 
              SET title = ?2, type = ?3, state = ?4, pinned = ?5, note = ?6, 
                  updated_at = ?7, last_seen_at = ?8, deleted_at = ?9
-             WHERE id = ?1"
+             WHERE id = ?1",
         )
         .bind(item.id.to_string())
         .bind(&item.title)
@@ -127,6 +160,66 @@ impl Database {
         Ok(())
     }
 
+    /// Demote active work items, optionally keeping one item active.
+    pub async fn clear_active_work_items_except(
+        &self,
+        keep_id: Option<Uuid>,
+        replacement_state: WorkItemState,
+    ) -> Result<()> {
+        let now = chrono::Utc::now().to_rfc3339();
+
+        sqlx::query(
+            "UPDATE work_items
+             SET state = ?1, updated_at = ?2, last_seen_at = ?2
+             WHERE state = 'active'
+               AND deleted_at IS NULL
+               AND (?3 IS NULL OR id != ?3)",
+        )
+        .bind(replacement_state.as_str())
+        .bind(now)
+        .bind(keep_id.map(|id| id.to_string()))
+        .execute(self.pool())
+        .await?;
+
+        Ok(())
+    }
+
+    /// Align legacy work item state with the focus-session invariant.
+    pub async fn normalize_active_work_items_for_focus(&self) -> Result<()> {
+        let active_work_item_id: Option<String> = sqlx::query_scalar(
+            "SELECT work_item_id
+             FROM focus_sessions
+             WHERE state = 'active'
+             ORDER BY started_at DESC
+             LIMIT 1",
+        )
+        .fetch_optional(self.pool())
+        .await?
+        .flatten();
+
+        let keep_id = active_work_item_id
+            .as_deref()
+            .and_then(|id| Uuid::parse_str(id).ok());
+
+        self.clear_active_work_items_except(keep_id, WorkItemState::Unknown)
+            .await?;
+
+        if let Some(id) = active_work_item_id {
+            let now = chrono::Utc::now().to_rfc3339();
+            sqlx::query(
+                "UPDATE work_items
+                 SET state = 'active', updated_at = ?2, last_seen_at = ?2
+                 WHERE id = ?1 AND deleted_at IS NULL",
+            )
+            .bind(id)
+            .bind(now)
+            .execute(self.pool())
+            .await?;
+        }
+
+        Ok(())
+    }
+
     /// Delete a work item (hard delete)
     pub async fn delete_work_item(&self, id: Uuid) -> Result<bool> {
         let result = sqlx::query("DELETE FROM work_items WHERE id = ?1")
@@ -139,11 +232,10 @@ impl Database {
 
     /// Count work items
     pub async fn count_work_items(&self) -> Result<i64> {
-        let count: i64 = sqlx::query_scalar(
-            "SELECT COUNT(*) FROM work_items WHERE deleted_at IS NULL"
-        )
-        .fetch_one(self.pool())
-        .await?;
+        let count: i64 =
+            sqlx::query_scalar("SELECT COUNT(*) FROM work_items WHERE deleted_at IS NULL")
+                .fetch_one(self.pool())
+                .await?;
 
         Ok(count)
     }
@@ -152,7 +244,7 @@ impl Database {
     pub async fn log_event(&self, event: &WorkItemEvent) -> Result<()> {
         sqlx::query(
             "INSERT INTO work_item_events (id, ts, work_item_id, kind, payload)
-             VALUES (?1, ?2, ?3, ?4, ?5)"
+             VALUES (?1, ?2, ?3, ?4, ?5)",
         )
         .bind(event.id.to_string())
         .bind(event.ts.to_rfc3339())
@@ -185,11 +277,13 @@ fn work_item_from_row(row: &sqlx::sqlite::SqliteRow) -> Result<WorkItem> {
     let updated_at_str: String = row.get("updated_at");
     let updated_at = DateTime::parse_from_rfc3339(&updated_at_str)?.with_timezone(&chrono::Utc);
 
-    let last_seen_at: Option<chrono::DateTime<chrono::Utc>> = row.get::<Option<String>, _>("last_seen_at")
+    let last_seen_at: Option<chrono::DateTime<chrono::Utc>> = row
+        .get::<Option<String>, _>("last_seen_at")
         .and_then(|s| DateTime::parse_from_rfc3339(&s).ok())
         .map(|dt| dt.with_timezone(&chrono::Utc));
 
-    let deleted_at: Option<chrono::DateTime<chrono::Utc>> = row.get::<Option<String>, _>("deleted_at")
+    let deleted_at: Option<chrono::DateTime<chrono::Utc>> = row
+        .get::<Option<String>, _>("deleted_at")
         .and_then(|s| DateTime::parse_from_rfc3339(&s).ok())
         .map(|dt| dt.with_timezone(&chrono::Utc));
 

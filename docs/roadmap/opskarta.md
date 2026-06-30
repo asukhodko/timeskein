@@ -29,14 +29,14 @@ flowchart LR
 
     recovered_baseline["Recovered<br/>baseline<br/>100%<br/>веха 2026-06-30"]
     class recovered_baseline exec_done
-    app_entry_ux["App<br/>entry UX<br/>~0%<br/>веха 2026-07-06"]
+    app_entry_ux["App<br/>entry UX<br/>~60%<br/>веха 2026-07-03"]
     class app_entry_ux exec_mgmt_yellow
     style app_entry_ux stroke:#111827,stroke-width:3px
-    focus_session_core["Focus<br/>Session core<br/>~0%<br/>веха 2026-07-17"]
+    focus_session_core["Focus<br/>Session core<br/>85%<br/>веха 2026-07-10"]
     class focus_session_core exec_mgmt_yellow
-    day_review_export["Day review<br/>and export<br/>~0%<br/>веха 2026-07-23"]
+    day_review_export["Day review<br/>and export<br/>~35%<br/>веха 2026-07-16"]
     class day_review_export exec_mgmt_neutral
-    dogfood_hardening["Dogfood<br/>hardening<br/>~0%<br/>веха 2026-07-28"]
+    dogfood_hardening["Dogfood<br/>hardening<br/>~15%<br/>веха 2026-07-21"]
     class dogfood_hardening exec_mgmt_neutral
     future_directions["Future<br/>directions<br/>n/a"]
     class future_directions exec_mgmt_neutral
@@ -67,31 +67,31 @@ gantt
     excludes weekends
 
     section App entry UX
-    Make the app window movable  :ts_ux_entry_window_drag,    2026-07-01, 1d
-    Add clear hide and show behavior  :ts_ux_entry_hide_toggle,    2026-07-02, 1d
-    Wire tray menu actions  :ts_ux_entry_tray_actions,    2026-07-03, 1d
-    Document macOS multi-monitor status item limits  :ts_ux_entry_monitor_policy,    2026-07-06, 1d
-    Reduce the path from intent to tracked work  :ts_ux_entry_fast_track_flow,    2026-07-06, 1d
+    ✅ Make the app window movable  :done, ts_ux_entry_window_drag,    2026-06-30, 1d
+    ✅ Add clear hide and show behavior  :done, ts_ux_entry_hide_toggle,    2026-07-01, 1d
+    🔄 Wire tray menu actions  :active, ts_ux_entry_tray_actions,    2026-07-02, 1d
+    Document macOS multi-monitor status item limits  :ts_ux_entry_monitor_policy,    2026-07-03, 1d
+    🔄 Reduce the path from intent to tracked work  :active, ts_ux_entry_fast_track_flow,    2026-07-03, 1d
     section Focus Session core
-    Add FocusSession and SessionEvent persistence  :ts_focus_core_model_migrations,    2026-07-07, 2d
-    Add contracts and Local API for focus sessions  :ts_focus_core_contracts_api,    2026-07-09, 2d
-    Build focus timer UI with overflow  :ts_focus_core_timer_ui,    2026-07-13, 2d
-    Implement start, pause, resume, stop, cancel  :ts_focus_core_session_lifecycle,    2026-07-15, 2d
-    Restore running focus session after app restart  :ts_focus_core_restart_restore,    2026-07-17, 1d
-    Bind focus sessions to Work Items or free intentions  :ts_focus_core_work_item_binding,    2026-07-13, 1d
-    Capture a note at the end of a focus session  :ts_focus_core_session_notes,    2026-07-17, 1d
-    First real Focus Session dogfood  :milestone, ts_focus_core_dogfood_gate,    2026-07-17, 0d
+    🔄 Add FocusSession and SessionEvent persistence  :active, ts_focus_core_model_migrations,    2026-06-30, 2d
+    ✅ Add contracts and Local API for focus sessions  :done, ts_focus_core_contracts_api,    2026-07-02, 2d
+    ✅ Build focus timer UI with overflow  :done, ts_focus_core_timer_ui,    2026-07-06, 2d
+    🔄 Implement start, pause, resume, stop, cancel  :active, ts_focus_core_session_lifecycle,    2026-07-08, 2d
+    ✅ Restore running focus session after app restart  :done, ts_focus_core_restart_restore,    2026-07-10, 1d
+    ✅ Bind focus sessions to Work Items or free intentions  :done, ts_focus_core_work_item_binding,    2026-07-06, 1d
+    ✅ Capture a note at the end of a focus session  :done, ts_focus_core_session_notes,    2026-07-10, 1d
+    🔄 First real Focus Session dogfood  :milestone, active, ts_focus_core_dogfood_gate,    2026-07-10, 0d
     section Day review
-    Show focus blocks on a daily timeline  :ts_day_review_timeline,    2026-07-20, 2d
-    Compute totals, gaps, and entry count  :ts_day_review_totals_gaps,    2026-07-22, 1d
-    Export day data as JSON, CSV, and Markdown  :ts_day_review_export,    2026-07-23, 1d
-    End-of-day analysis can use Timeskein data  :milestone, ts_day_review_analysis_gate,    2026-07-23, 0d
+    Show focus blocks on a daily timeline  :ts_day_review_timeline,    2026-07-13, 2d
+    Compute totals, gaps, and entry count  :ts_day_review_totals_gaps,    2026-07-15, 1d
+    Export day data as JSON, CSV, and Markdown  :ts_day_review_export,    2026-07-16, 1d
+    End-of-day analysis can use Timeskein data  :milestone, ts_day_review_analysis_gate,    2026-07-16, 0d
     section Dogfood hardening
-    Add smoke checks for focus-session flows  :ts_hardening_smoke,    2026-07-24, 1d
-    Add local data backup and reset path  :ts_hardening_backup_reset,    2026-07-24, 1d
-    Rebuild macOS app for regular personal use  :ts_hardening_package_app,    2026-07-27, 1d
-    Write dogfood release notes and known limitations  :ts_hardening_release_notes,    2026-07-28, 1d
-    Session replacement dogfood baseline  :milestone, ts_hardening_dogfood_release,    2026-07-28, 0d
+    🔄 Add smoke checks for focus-session flows  :active, ts_hardening_smoke,    2026-07-17, 1d
+    Add local data backup and reset path  :ts_hardening_backup_reset,    2026-07-17, 1d
+    Rebuild macOS app for regular personal use  :ts_hardening_package_app,    2026-07-20, 1d
+    Write dogfood release notes and known limitations  :ts_hardening_release_notes,    2026-07-21, 1d
+    Session replacement dogfood baseline  :milestone, ts_hardening_dogfood_release,    2026-07-21, 0d
 ```
 
 ## Current work list
@@ -102,28 +102,28 @@ gantt
 /usr/bin/env PYTHONPATH=../../tools/opskarta python3 -m specs.v3.tools.cli render list ../../plans/timeskein/main.plan.yaml ../../plans/timeskein/nodes.plan.yaml ../../plans/timeskein/schedule.plan.yaml ../../plans/timeskein/execution.plan.yaml ../../plans/timeskein/views.plan.yaml --view current
 -->
 <!-- GENERATED:START -->
-- App entry UX [planned] (6 focus-blocks)
-- Make the app window movable [planned] (1 focus-blocks)
-- Add clear hide and show behavior [planned] (1 focus-blocks)
-- Wire tray menu actions [planned] (1 focus-blocks)
+- Make the app window movable [done] (1 focus-blocks) {100%}
+- Add clear hide and show behavior [done] (1 focus-blocks) {100%}
+- Add contracts and Local API for focus sessions [done] (3 focus-blocks) {100%}
+- Build focus timer UI with overflow [done] (3 focus-blocks) {100%}
+- Restore running focus session after app restart [done] (2 focus-blocks) {100%}
+- Bind focus sessions to Work Items or free intentions [done] (2 focus-blocks) {100%}
+- Capture a note at the end of a focus session [done] (1 focus-blocks) {100%}
+- App entry UX [in_progress] (6 focus-blocks) {70% cov:83%}
+- Wire tray menu actions [in_progress] (1 focus-blocks) {50%}
+- Reduce the path from intent to tracked work [in_progress] (2 focus-blocks) {50%}
+- Focus Session core [in_progress] (17 focus-blocks) {85%}
+- Add FocusSession and SessionEvent persistence [in_progress] (3 focus-blocks) {70%}
+- Implement start, pause, resume, stop, cancel [in_progress] (3 focus-blocks) {45%}
+- First real Focus Session dogfood [in_progress] {50%}
+- Dogfood hardening [in_progress] (6 focus-blocks) {50% cov:33%}
+- Add smoke checks for focus-session flows [in_progress] (2 focus-blocks) {50%}
 - Document macOS multi-monitor status item limits [planned] (1 focus-blocks)
-- Reduce the path from intent to tracked work [planned] (2 focus-blocks)
-- Focus Session core [planned] (17 focus-blocks)
-- Add FocusSession and SessionEvent persistence [planned] (3 focus-blocks)
-- Add contracts and Local API for focus sessions [planned] (3 focus-blocks)
-- Build focus timer UI with overflow [planned] (3 focus-blocks)
-- Implement start, pause, resume, stop, cancel [planned] (3 focus-blocks)
-- Restore running focus session after app restart [planned] (2 focus-blocks)
-- Bind focus sessions to Work Items or free intentions [planned] (2 focus-blocks)
-- Capture a note at the end of a focus session [planned] (1 focus-blocks)
-- First real Focus Session dogfood [planned]
-- Day review and export [planned] (7 focus-blocks)
-- Show focus blocks on a daily timeline [planned] (3 focus-blocks)
-- Compute totals, gaps, and entry count [planned] (2 focus-blocks)
+- Day review and export [planned] (7 focus-blocks) {48% cov:71%}
+- Show focus blocks on a daily timeline [planned] (3 focus-blocks) {40%}
+- Compute totals, gaps, and entry count [planned] (2 focus-blocks) {60%}
 - Export day data as JSON, CSV, and Markdown [planned] (2 focus-blocks)
 - End-of-day analysis can use Timeskein data [planned]
-- Dogfood hardening [planned] (6 focus-blocks)
-- Add smoke checks for focus-session flows [planned] (2 focus-blocks)
 - Add local data backup and reset path [planned] (2 focus-blocks)
 - Rebuild macOS app for regular personal use [planned] (1 focus-blocks)
 - Write dogfood release notes and known limitations [planned] (1 focus-blocks)

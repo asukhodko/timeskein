@@ -8,6 +8,7 @@ The system answers questions like:
 - "What was I doing at time X?"
 - "When and how did I solve problem Z?"
 - "What's on my plate today?"
+- "How much active focus time did I actually have today?"
 
 ### Core Principles
 

@@ -4,15 +4,18 @@ interface SearchInputProps {
   value: string
   onChange: (value: string) => void
   onCreateNew: () => void
+  autoFocus?: boolean
 }
 
-export default function SearchInput({ value, onChange, onCreateNew }: SearchInputProps) {
+export default function SearchInput({ value, onChange, onCreateNew, autoFocus = true }: SearchInputProps) {
   const inputRef = useRef<HTMLInputElement>(null)
 
   // Auto-focus on mount
   useEffect(() => {
-    inputRef.current?.focus()
-  }, [])
+    if (autoFocus) {
+      inputRef.current?.focus()
+    }
+  }, [autoFocus])
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && e.shiftKey && value.trim()) {

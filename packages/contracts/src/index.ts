@@ -44,6 +44,35 @@ export interface WorkItemView {
   last_seen_at?: string;  // ISO 8601
 }
 
+// -----------------------------------------------------------------------------
+// Focus Session Types
+// -----------------------------------------------------------------------------
+
+/**
+ * Focus session state.
+ *
+ * Active sessions keep accumulating contact time until the user stops them.
+ */
+export type FocusSessionState = "active" | "stopped";
+
+/**
+ * Focus session view returned by the API.
+ */
+export interface FocusSessionView {
+  id: string;
+  title: string;
+  work_item_id?: string;
+  work_item_title?: string;
+  state: FocusSessionState;
+  target_seconds: number;
+  active_seconds: number;
+  over_target_seconds: number;
+  note?: string;
+  started_at: string;  // ISO 8601
+  stopped_at?: string;  // ISO 8601
+  updated_at: string;  // ISO 8601
+}
+
 /**
  * Reference view returned by the API
  */
@@ -199,6 +228,25 @@ export interface WorkItemCreateParams {
   note?: string;
 }
 
+// focus.start parameters
+export interface FocusStartParams {
+  title: string;
+  work_item_id?: string;
+  target_seconds?: number;
+}
+
+// focus.stop parameters
+export interface FocusStopParams {
+  id?: string;
+  note?: string;
+}
+
+// focus.list parameters
+export interface FocusListParams {
+  from?: string;  // ISO 8601
+  to?: string;  // ISO 8601
+}
+
 // work_item.set_state parameters
 export interface WorkItemSetStateParams {
   id: string;
@@ -251,6 +299,19 @@ export interface DenylistAddParams {
 export interface InventoryListResponse {
   items: WorkItemView[];
   total: number;
+  updated_at: string;  // Watermark for polling
+}
+
+// focus.current response
+export interface FocusCurrentResponse {
+  session?: FocusSessionView;
+}
+
+// focus.list response
+export interface FocusListResponse {
+  sessions: FocusSessionView[];
+  total: number;
+  active_seconds_total: number;
   updated_at: string;  // Watermark for polling
 }
 

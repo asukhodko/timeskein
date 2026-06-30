@@ -1,8 +1,9 @@
 //! Database module - SQLite persistence layer
 
 mod connection;
-mod work_items;
+mod focus_sessions;
 mod refs;
 mod settings;
+mod work_items;
 
 pub use connection::Database;

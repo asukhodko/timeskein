@@ -5,7 +5,7 @@ use sqlx::Row;
 use uuid::Uuid;
 
 use crate::db::Database;
-use crate::domain::{DenylistRule, DenylistPolicy};
+use crate::domain::{DenylistPolicy, DenylistRule};
 
 impl Database {
     /// Get a setting value
@@ -22,7 +22,7 @@ impl Database {
     pub async fn set_setting(&self, key: &str, value: &str) -> Result<()> {
         sqlx::query(
             "INSERT INTO settings (key, value) VALUES (?1, ?2)
-             ON CONFLICT(key) DO UPDATE SET value = ?2"
+             ON CONFLICT(key) DO UPDATE SET value = ?2",
         )
         .bind(key)
         .bind(value)
@@ -43,7 +43,8 @@ impl Database {
             let key: String = row.get("key");
             let value: String = row.get("value");
             // Try to parse as JSON, otherwise use as string
-            let json_value = serde_json::from_str(&value).unwrap_or_else(|_| serde_json::Value::String(value));
+            let json_value =
+                serde_json::from_str(&value).unwrap_or_else(|_| serde_json::Value::String(value));
             settings.insert(key, json_value);
         }
 
@@ -52,9 +53,11 @@ impl Database {
 
     /// Get all denylist rules
     pub async fn get_denylist(&self) -> Result<Vec<DenylistRule>> {
-        let rows = sqlx::query("SELECT id, pattern, policy, created_at FROM denylist_rules ORDER BY created_at DESC")
-            .fetch_all(self.pool())
-            .await?;
+        let rows = sqlx::query(
+            "SELECT id, pattern, policy, created_at FROM denylist_rules ORDER BY created_at DESC",
+        )
+        .fetch_all(self.pool())
+        .await?;
 
         let mut rules = Vec::new();
         for row in rows {
@@ -63,8 +66,8 @@ impl Database {
             let policy_str: String = row.get("policy");
             let policy = DenylistPolicy::from_str(&policy_str).unwrap_or(DenylistPolicy::Block);
             let created_at_str: String = row.get("created_at");
-            let created_at = chrono::DateTime::parse_from_rfc3339(&created_at_str)?
-                .with_timezone(&chrono::Utc);
+            let created_at =
+                chrono::DateTime::parse_from_rfc3339(&created_at_str)?.with_timezone(&chrono::Utc);
 
             rules.push(DenylistRule {
                 id,
@@ -81,7 +84,7 @@ impl Database {
     pub async fn add_denylist_rule(&self, rule: &DenylistRule) -> Result<()> {
         sqlx::query(
             "INSERT INTO denylist_rules (id, pattern, policy, created_at)
-             VALUES (?1, ?2, ?3, ?4)"
+             VALUES (?1, ?2, ?3, ?4)",
         )
         .bind(rule.id.to_string())
         .bind(&rule.pattern)

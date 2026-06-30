@@ -75,7 +75,7 @@ pub enum RefNormalizationError {
 /// Normalize a ref value based on its kind
 pub fn normalize_ref_value(kind: RefKind, value: &str) -> Result<String, RefNormalizationError> {
     let trimmed = value.trim();
-    
+
     if trimmed.is_empty() {
         return Err(RefNormalizationError::EmptyValue);
     }
@@ -94,7 +94,7 @@ fn normalize_url(value: &str) -> Result<String, RefNormalizationError> {
         Ok(mut url) => {
             // Remove fragment
             url.set_fragment(None);
-            
+
             // Remove common tracking parameters (optional, conservative approach)
             // For now, just return the URL without fragment
             Ok(url.to_string().to_lowercase())
@@ -107,14 +107,14 @@ fn normalize_url(value: &str) -> Result<String, RefNormalizationError> {
 fn normalize_file_path(value: &str) -> Result<String, RefNormalizationError> {
     // Replace backslashes with forward slashes for consistency
     let normalized = value.replace('\\', "/");
-    
+
     // Remove trailing slashes
     let normalized = normalized.trim_end_matches('/');
-    
+
     if normalized.is_empty() {
         return Err(RefNormalizationError::InvalidFilePath);
     }
-    
+
     Ok(normalized.to_string())
 }
 

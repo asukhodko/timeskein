@@ -32,3 +32,25 @@ export function truncate(text: string, maxLength: number): string {
   if (text.length <= maxLength) return text
   return text.slice(0, maxLength - 1) + '…'
 }
+
+export function formatDuration(totalSeconds: number): string {
+  const seconds = Math.max(Math.floor(totalSeconds), 0)
+  const hours = Math.floor(seconds / 3600)
+  const minutes = Math.floor((seconds % 3600) / 60)
+  const rest = seconds % 60
+
+  if (hours > 0) {
+    return `${hours}:${String(minutes).padStart(2, '0')}:${String(rest).padStart(2, '0')}`
+  }
+
+  return `${minutes}:${String(rest).padStart(2, '0')}`
+}
+
+export function formatClockTime(isoDate: string | undefined): string {
+  if (!isoDate) return 'now'
+
+  return new Date(isoDate).toLocaleTimeString([], {
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}

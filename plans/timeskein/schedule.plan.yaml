@@ -12,7 +12,7 @@ schedule:
       duration: 1d
 
     ts.ux_entry.window_drag:
-      start: "2026-07-01"
+      start: "2026-06-30"
       duration: 1d
     ts.ux_entry.hide_toggle:
       duration: 1d
@@ -24,6 +24,7 @@ schedule:
       duration: 1d
 
     ts.focus_core.model_migrations:
+      start: "2026-06-30"
       duration: 2d
     ts.focus_core.contracts_api:
       duration: 2d

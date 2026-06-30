@@ -109,7 +109,12 @@ pub struct WorkItem {
 
 impl WorkItem {
     /// Create a new work item
-    pub fn new(title: String, item_type: Option<WorkItemType>, state: Option<WorkItemState>, note: Option<String>) -> Self {
+    pub fn new(
+        title: String,
+        item_type: Option<WorkItemType>,
+        state: Option<WorkItemState>,
+        note: Option<String>,
+    ) -> Self {
         let now = Utc::now();
         Self {
             id: Uuid::new_v4(),
@@ -249,7 +254,11 @@ pub struct WorkItemEvent {
 }
 
 impl WorkItemEvent {
-    pub fn new(work_item_id: Uuid, kind: WorkItemEventKind, payload: Option<serde_json::Value>) -> Self {
+    pub fn new(
+        work_item_id: Uuid,
+        kind: WorkItemEventKind,
+        payload: Option<serde_json::Value>,
+    ) -> Self {
         Self {
             id: Uuid::new_v4(),
             ts: Utc::now(),

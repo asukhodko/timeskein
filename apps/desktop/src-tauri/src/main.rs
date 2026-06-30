@@ -10,9 +10,20 @@
 use tauri::{
     menu::{Menu, MenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
-    Manager, WindowEvent,
+    AppHandle, Manager, Runtime, WindowEvent,
 };
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut};
+
+fn toggle_main_window<R: Runtime>(app: &AppHandle<R>) {
+    if let Some(window) = app.get_webview_window("main") {
+        if window.is_visible().unwrap_or(false) {
+            let _ = window.hide();
+        } else {
+            let _ = window.show();
+            let _ = window.set_focus();
+        }
+    }
+}
 
 fn main() {
     tauri::Builder::default()
@@ -23,7 +34,7 @@ fn main() {
             let quit = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
             let open = MenuItem::with_id(app, "open", "Open Inventory", true, None::<&str>)?;
             let settings = MenuItem::with_id(app, "settings", "Settings", true, None::<&str>)?;
-            
+
             let menu = Menu::with_items(app, &[&open, &settings, &quit])?;
 
             // Create tray icon
@@ -66,22 +77,34 @@ fn main() {
                 })
                 .build(app)?;
 
-            // Register global shortcut
-            let shortcut = Shortcut::new(Some(Modifiers::CONTROL | Modifiers::SHIFT), Code::Space);
-            
-            app.global_shortcut().on_shortcut(shortcut, |app, _shortcut, _event| {
-                if let Some(window) = app.get_webview_window("main") {
-                    if window.is_visible().unwrap_or(false) {
-                        let _ = window.hide();
-                    } else {
-                        let _ = window.show();
-                        let _ = window.set_focus();
+            let shortcut_candidates = [
+                (Modifiers::CONTROL | Modifiers::SHIFT, "Ctrl+Shift+Space"),
+                (Modifiers::CONTROL | Modifiers::ALT, "Ctrl+Option+Space"),
+                (Modifiers::META | Modifiers::ALT, "Cmd+Option+Space"),
+            ];
+
+            let mut registered_shortcut = None;
+            for (modifiers, label) in shortcut_candidates {
+                let shortcut = Shortcut::new(Some(modifiers), Code::Space);
+                match app
+                    .global_shortcut()
+                    .on_shortcut(shortcut, |app, _shortcut, _event| {
+                        toggle_main_window(app);
+                    }) {
+                    Ok(()) => {
+                        eprintln!("Registered global shortcut: {label}");
+                        registered_shortcut = Some(label);
+                        break;
+                    }
+                    Err(error) => {
+                        eprintln!("Unable to register global shortcut {label}: {error}");
                     }
                 }
-            })?;
+            }
 
-            // Register the shortcut
-            app.global_shortcut().register(shortcut)?;
+            if registered_shortcut.is_none() {
+                eprintln!("Timeskein started without a global shortcut; use the tray icon/menu.");
+            }
 
             Ok(())
         })

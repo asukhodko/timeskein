@@ -10,6 +10,7 @@ An RFC is a detailed technical specification for a feature or system component. 
 
 | RFC | Status | Maturity | Title |
 |-----|--------|----------|-------|
+| [Current Implementation](../current-implementation.md) | Current | Current | What the repository actually runs today |
 | [RFC-0001](0001-mvp-inventory-design.md) | Draft | Level 0 | MVP inventory design |
 | [RFC-0002](0002-system-topology-and-component-map.md) | Draft | Level 0+ | System topology and component map |
 | [RFC-0003](0003-client-app-suite-architecture.md) | Draft | Level 0+ | Client application suite architecture |

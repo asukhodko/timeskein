@@ -9,6 +9,8 @@ For MVP (Level 0), implement in this order:
 1. **[02_user_story_manual_inventory.md](02_user_story_manual_inventory.md)** - Core MVP feature
 2. **[02_manual_inventory_ui_ux.md](02_manual_inventory_ui_ux.md)** - UI/UX for manual inventory
 
+Current implementation status is tracked in [../current-implementation.md](../current-implementation.md).
+
 ## User Story Index
 
 | Document | Level | Priority | Description |

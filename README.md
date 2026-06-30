@@ -10,21 +10,23 @@ A desktop application for quickly tracking work items with refs (URLs, files, is
 |-----------|--------|-------|
 | Frontend (React + Tailwind) | Working | Runs in browser via Vite |
 | Mock Server | Working | Full API implementation for development |
-| Rust Agent | Buildable | `cargo check -p timeskein-agent` passes |
+| Rust Agent | Working | SQLite-backed Local API, embedded in macOS app |
 | Tauri Desktop | Working on macOS | Embeds Rust agent and builds macOS `.app` |
 
 **What works now:** Frontend UI with mock server in browser, and macOS `.app` with an embedded Rust agent.
 
-**Current focus:** Browser development mode and macOS Tauri shell. Windows packaging is deferred.
+**Current focus:** Browser development mode and macOS Tauri app. Windows packaging is deferred.
+
+See [Current Implementation](docs/current-implementation.md) for the exact state of what runs today.
 
 ## Project Structure
 
 ```
 timeskein/
 ├── apps/
-│   ├── agent/         # Rust backend with SQLite, Local API (code ready)
+│   ├── agent/         # Rust backend with SQLite and Local API
 │   └── desktop/       # Tauri desktop app (React + Tailwind)
-│       └── src-tauri/ # Tauri/Rust shell
+│       └── src-tauri/ # Tauri/Rust shell with embedded agent startup
 ├── packages/
 │   ├── contracts/     # Shared TypeScript types/DTOs
 │   └── mock-server/   # Mock API for development (Express)
@@ -71,6 +73,14 @@ pnpm --filter @timeskein/desktop build
 # → target/release/bundle/macos/Timeskein.app
 ```
 
+### macOS Data Path
+
+```text
+~/Library/Application Support/Timeskein/
+```
+
+The app stores SQLite data in `timeskein.db` and writes the current embedded-agent port to `agent.port`.
+
 ## Keyboard Shortcuts
 
 All shortcuts work regardless of keyboard layout (Russian, etc.):
@@ -110,13 +120,15 @@ All shortcuts work regardless of keyboard layout (Russian, etc.):
 
 ## Known Limitations (Current State)
 
-- **Browser mode uses mock data** - SQLite persistence requires Rust agent integration
+- **Browser mode uses mock data** - SQLite persistence is available in the macOS app, not in browser dev mode
 - **macOS packaging produces `.app` only** - DMG packaging is deferred
 - **Windows packaging deferred** - current recovery baseline targets browser and macOS first
+- **Automated e2e tests are not implemented yet** - current validation is manual smoke plus build/type checks
 
 ## Documentation
 
 - [Project Overview](docs/00_project_overview.md) - architecture and principles
+- [Current Implementation](docs/current-implementation.md) - what runs today
 - [MVP Technical Spec](mvp-technical%20specifications.md) - detailed requirements
 - [Glossary](docs/glossary.md) - term definitions
 - [ADRs](docs/adr/) - architecture decision records

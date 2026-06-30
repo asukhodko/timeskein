@@ -164,6 +164,18 @@ Surfaces (UI)  ─────── Local API ───────>  Device Ag
 * UI общается с agent через внутренний API (пусть даже in-process),
 * потом это можно "вынести" в отдельный процесс минимальными изменениями.
 
+#### Текущая реализация 2026-06-30
+
+macOS recovery-baseline использует это MVP-допущение:
+
+* `timeskein-desktop` запускает Rust agent как embedded runtime внутри Tauri-процесса;
+* UI всё равно не ходит в SQLite напрямую;
+* связь UI → agent идёт через Local API на `127.0.0.1:<dynamic-port>/api`;
+* URL агента отдаётся frontend через Tauri-команду `get_api_url`;
+* browser development mode использует mock server на `127.0.0.1:3456`.
+
+Это не отменяет целевую двухпроцессную модель для production/always-on сценариев.
+
 ### 7.2. Android: приложение как контейнер для Surface + embedded Agent
 
 На Android из-за модели жизненного цикла разумнее считать, что:

@@ -6,6 +6,8 @@
 
 **Draft** (предложение к реализации).
 
+Текущая реализация 2026-06-30 частично закрывает Part A для browser dev mode и macOS `.app`: UI, mock server, Rust agent, SQLite и Local API работают в recovery-baseline. Полная приёмка MVP, e2e, CI и Windows packaging ещё не закрыты. См. [Current Implementation](../current-implementation.md).
+
 ## Уровень зрелости
 
 - **Part A:** Level 0 (Manual-first) — нормативная часть MVP

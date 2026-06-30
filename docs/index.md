@@ -29,11 +29,12 @@ The system answers questions like:
 **Recommended reading order:**
 
 1. **[Project Overview](00_project_overview.md)** - Core concepts, maturity levels, architecture
-2. **[Glossary](glossary.md)** - Definitions of all terms used
-3. **[Architecture Decision Records](adr/README.md)** - Key architectural choices
-4. **[Technical Specifications (RFC)](rfc/README.md)** - Detailed technical designs
-5. **[MVP User Stories](mvp/README.md)** - Features and acceptance criteria
-6. **[Roadmap](roadmap/README.md)** - Execution plan and phases
+2. **[Current Implementation](current-implementation.md)** - What runs today
+3. **[Glossary](glossary.md)** - Definitions of all terms used
+4. **[Architecture Decision Records](adr/README.md)** - Key architectural choices
+5. **[Technical Specifications (RFC)](rfc/README.md)** - Detailed technical designs
+6. **[MVP User Stories](mvp/README.md)** - Features and acceptance criteria
+7. **[Roadmap](roadmap/README.md)** - Execution plan and phases
 
 ---
 
@@ -46,6 +47,7 @@ All documentation below is the **source of truth** for the project.
 | Document | Description |
 |----------|-------------|
 | [00_project_overview.md](00_project_overview.md) | Main project document: concepts, principles, model |
+| [current-implementation.md](current-implementation.md) | Current repository/runtime state |
 | [glossary.md](glossary.md) | Definitions of all terms and entities |
 
 ### Architecture Decision Records (ADR)

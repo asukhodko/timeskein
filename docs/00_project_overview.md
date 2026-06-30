@@ -13,8 +13,22 @@
 - [ADR-0002: MVP = Manual-first](adr/0002-mvp-manual-first.md)
 - [ADR-0003: Evidence-Mode Opt-in](adr/0003-evidence-mode-opt-in.md) (Level 3)
 - [User Story: Ручной инвентарь](mvp/02_user_story_manual_inventory.md)
+- [Current Implementation](current-implementation.md)
 
 ---
+
+## Текущее состояние реализации
+
+По состоянию на 2026-06-30 в репозитории есть рабочий baseline для:
+
+- browser development mode: React UI + mock server;
+- macOS desktop mode: Tauri `.app` со встроенным Rust agent;
+- SQLite-хранилища в `~/Library/Application Support/Timeskein/`;
+- Local API на динамическом `127.0.0.1:<port>/api`, который фронтенд получает через Tauri-команду `get_api_url`.
+
+Windows packaging, Android, sync, SourceNodes, Context Capture и Evidence-Mode пока не реализованы.
+
+Актуальная техническая сводка живёт в [Current Implementation](current-implementation.md).
 
 ## Рабочее название и метафора
 
@@ -199,6 +213,8 @@ MVP ориентирован на одну функцию:
   - "Добавить заметку: следующий шаг/затык"
   - "Добавить/открыть привязку (ref)"
   - "Touch" — отметить возврат к задаче
+
+В текущей macOS-реализации TS-AGENT встроен в Tauri-процесс, но сохраняет отдельный crate, SQLite-хранилище и Local API boundary. Это MVP-допущение; целевая архитектура допускает вынос агента в отдельный процесс.
 
 ## Дальнейшее расширение (после MVP)
 

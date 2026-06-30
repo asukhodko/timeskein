@@ -75,7 +75,18 @@ Local API — единственный способ для Surface:
 
 **Рекомендация:** localhost HTTP (127.0.0.1) как базовый вариант, in-process для Android embedded.
 
-### 3.3. Формат данных
+### 3.3. Текущая реализация 2026-06-30
+
+В macOS `.app` agent запускается embedded внутри Tauri-процесса, но Local API остаётся HTTP boundary:
+
+1. agent bind-ится на `127.0.0.1:0`;
+2. ОС выбирает свободный порт;
+3. agent пишет порт в `~/Library/Application Support/Timeskein/agent.port`;
+4. Tauri хранит API URL в managed state;
+5. frontend получает URL через команду `get_api_url`;
+6. browser development mode вместо этого использует mock server `http://127.0.0.1:3456/api`.
+
+### 3.4. Формат данных
 
 - JSON как основной формат
 - DTO определены в TS-SCHEMA
@@ -338,6 +349,8 @@ interface AgentStatus {
 
 Для разработки UI без агента предоставляется mock server с фиксированными ответами.
 
+Текущая реализация mock server слушает `http://127.0.0.1:3456/api` и используется только в browser development mode. macOS `.app` использует embedded Rust agent.
+
 ---
 
 ## 12. Связь с SourceNode API
@@ -501,4 +514,3 @@ type SensitivityLevel = "normal" | "sensitive" | "private" | "high";
 ```
 
 **Подробности:** см. [RFC-0006: Retention, TTL и Distillation](0006-retention-ttl-distillation.md) и [RFC-0007: Screen Evidence Source Node](0007-evidence-mode-screen-evidence-source-node.md).
-

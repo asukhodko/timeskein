@@ -20,6 +20,18 @@
 * Собираются релизные артефакты для Windows и macOS (минимум: build + installer/bundle).
 * Проект соответствует принципу **manual‑first** (нет фонового мониторинга/collectors/evidence/sync).
 
+### 0.1) Текущее состояние реализации
+
+По состоянию на 2026-06-30 это ТЗ остаётся целевым Definition of Done для MVP, но фактический baseline уже частично восстановлен:
+
+* browser development mode работает через mock server (`127.0.0.1:3456`);
+* macOS `.app` собирается и запускает embedded Rust agent;
+* frontend в Tauri получает URL агента через команду `get_api_url`;
+* agent хранит данные в SQLite в `~/Library/Application Support/Timeskein/`;
+* Windows installer, DMG, cross-platform CI и автоматизированные e2e ещё не сделаны.
+
+Актуальная техническая сводка: [docs/current-implementation.md](docs/current-implementation.md).
+
 ---
 
 ## 1) Объём работ (Scope)
@@ -450,11 +462,15 @@
 * корректные права и отсутствие “лишних” разрешений,
 * hotkey/overlay работает стабильно.
 
+Текущий статус: отложено. Windows packaging не входит в recovery-baseline 2026-06-30.
+
 ### 10.3 macOS
 
 * app bundle,
 * (опционально) минимальный baseline под notarization,
 * корректные права и отсутствие фоновых разрешений.
+
+Текущий статус: `.app` собирается и запускает embedded agent. DMG/notarization пока отложены.
 
 ---
 

@@ -156,10 +156,16 @@
 
 ### Рекомендуемый хоткей по умолчанию
 
+Целевой default:
+
 * Windows/Linux: Ctrl+Shift+Space
-* macOS: Cmd+Shift+Space
+* macOS: Ctrl+Shift+Space, с fallback-кандидатами Ctrl+Option+Space и Cmd+Option+Space
 
 Хоткей задаётся на первом запуске (можно изменить в настройках).
+
+Текущая macOS-реализация пытается зарегистрировать кандидаты по очереди. Если macOS отклоняет все варианты, приложение не падает и остаётся доступным через menu bar/tray item.
+
+На нескольких мониторах Timeskein создаёт один status item. Отображение этого item на конкретном menu bar контролирует macOS.
 
 ### Ментальная модель палитры
 

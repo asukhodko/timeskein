@@ -23,6 +23,19 @@
 
 Примечание: multi-device sync (Hub+Sync) — отдельный контур. Включаем в MVP только если это явно требуется; иначе выносим в следующий майлстоун.
 
+## Текущее состояние на 2026-06-30
+
+Recovery-baseline доведён до рабочей точки для браузера и macOS:
+
+- монорепа, contracts, mock server, Rust agent и Tauri desktop собираются;
+- browser dev mode работает через mock server;
+- macOS `.app` запускает embedded Rust agent и ходит в него через Local API;
+- SQLite находится в `~/Library/Application Support/Timeskein/`;
+- Windows, Android, Hub/Sync и installer-путь отложены;
+- автоматизированные e2e и cross-platform CI ещё не закрыты.
+
+Подробности: [Current Implementation](../current-implementation.md).
+
 ---
 
 ## 0. Миграция документации (предварительный этап)
@@ -67,8 +80,8 @@
 
 Гейт:
 
-* всё собирается,
-* тесты запускаются,
+* всё собирается — частично закрыто для agent/desktop/contracts/mock,
+* тесты запускаются — базовые проверки и typecheck есть, полноценного test suite ещё нет,
 * версии схемы видны всем компонентам.
 
 ---
@@ -90,8 +103,8 @@
 
 Гейт:
 
-* один и тот же web UI реально живёт на Win, macOS, Android,
-* он ходит в агента через единый контракт.
+* один и тот же web UI реально живёт на Win, macOS, Android — пока закрыто только для browser/macOS,
+* он ходит в агента через единый контракт — закрыто для macOS embedded-agent и browser mock.
 
 ---
 
@@ -152,8 +165,8 @@
 
 Гейт:
 
-* полный цикл user-story-02 работает на Windows,
-* затем доводится до идентичной работоспособности на macOS.
+* полный цикл user-story-02 работает на Windows — отложено,
+* затем доводится до идентичной работоспособности на macOS — сейчас приоритет фактически смещён на macOS-first baseline.
 
 ---
 

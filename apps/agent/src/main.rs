@@ -2,33 +2,23 @@
 //!
 //! Local-first work inventory backend with SQLite storage and Local API.
 
-mod api;
-mod db;
-mod domain;
-mod runtime;
-
 use std::net::SocketAddr;
 use std::sync::Arc;
 
 use anyhow::Result;
-use axum::Router;
 use tokio::sync::RwLock;
 use tracing::{info, Level};
 use tracing_subscriber::FmtSubscriber;
 
-use crate::db::Database;
-use crate::runtime::{ensure_data_dir, write_port_file, SingleInstanceLock};
-
-/// Application state shared across handlers
-pub struct AppState {
-    pub db: Database,
-    pub start_time: std::time::Instant,
-}
+use timeskein_agent::AppState;
+use timeskein_agent::db::Database;
+use timeskein_agent::runtime::{ensure_data_dir, write_port_file, SingleInstanceLock};
+use timeskein_agent::api::create_router;
 
 #[tokio::main]
 async fn main() -> Result<()> {
     // Initialize logging
-    let subscriber = FmtSubscriber::builder()
+    let _subscriber = FmtSubscriber::builder()
         .with_max_level(Level::INFO)
         .with_target(false)
         .with_thread_ids(false)
@@ -57,7 +47,7 @@ async fn main() -> Result<()> {
     }));
 
     // Build router
-    let app = api::create_router(state);
+    let app = create_router(state);
 
     // Find available port and start server
     let addr = SocketAddr::from(([127, 0, 0, 1], 0));

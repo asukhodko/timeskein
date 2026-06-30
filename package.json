@@ -1,6 +1,7 @@
 {
   "name": "timeskein",
   "private": true,
+  "packageManager": "pnpm@11.7.0",
   "version": "0.1.0",
   "description": "Manual-first, local-first work inventory system",
   "scripts": {
@@ -15,7 +16,7 @@
     "typescript": "^5.7.3"
   },
   "engines": {
-    "node": ">=20.0.0",
-    "pnpm": ">=9.0.0"
+    "node": ">=24.0.0",
+    "pnpm": ">=11.0.0"
   }
 }

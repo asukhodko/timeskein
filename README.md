@@ -10,12 +10,12 @@ A desktop application for quickly tracking work items with refs (URLs, files, is
 |-----------|--------|-------|
 | Frontend (React + Tailwind) | Working | Runs in browser via Vite |
 | Mock Server | Working | Full API implementation for development |
-| Rust Agent | Code complete | Not compiled (requires MSVC on Windows) |
-| Tauri Desktop | Blocked | Requires Rust agent build |
+| Rust Agent | Buildable | `cargo check -p timeskein-agent` passes |
+| Tauri Desktop | Buildable | `pnpm --filter @timeskein/desktop build` produces macOS `.app` |
 
 **What works now:** Frontend UI with mock server - full manual inventory workflow in browser.
 
-**Blocked:** Native desktop build requires Visual Studio Build Tools and MSVC PATH configuration on Windows.
+**Current focus:** Browser development mode and macOS Tauri shell. Windows packaging is deferred.
 
 ## Project Structure
 
@@ -35,8 +35,8 @@ timeskein/
 
 ### Prerequisites
 
-- Node.js 20+
-- pnpm 9+
+- Node.js 24+
+- pnpm 11+
 - Rust (latest stable) - only needed for native desktop build
 
 ### Running in Browser (Development Mode)
@@ -53,23 +53,25 @@ pnpm mock-server
 # → API available at http://127.0.0.1:3456/api
 
 # Terminal 2: Start frontend dev server
-cd apps/desktop
-pnpm dev
+pnpm --filter @timeskein/desktop dev:frontend
 # → UI available at http://localhost:5173
 ```
 
-### Building Native Desktop (Requires Rust + MSVC)
-
-On Windows, run from "Developer Command Prompt for VS 2022/2026":
+### Running on macOS (Tauri Development Mode)
 
 ```bash
-# Build agent
-cd apps/agent
-cargo build --release
+# Terminal 1: Start mock server
+pnpm mock-server
 
-# Build desktop app
-cd apps/desktop
-pnpm tauri build
+# Terminal 2: Tauri starts the frontend dev server via beforeDevCommand
+pnpm --filter @timeskein/desktop dev
+```
+
+### Building macOS App
+
+```bash
+pnpm --filter @timeskein/desktop build
+# → target/release/bundle/macos/Timeskein.app
 ```
 
 ## Keyboard Shortcuts
@@ -94,7 +96,7 @@ All shortcuts work regardless of keyboard layout (Russian, etc.):
 
 ## Architecture
 
-- **Agent** (`apps/agent`): Rust service with SQLite database, exposes Local API on localhost:3456
+- **Agent** (`apps/agent`): Rust service with SQLite database, exposes Local API on a dynamic localhost port and writes a port file for discovery
 - **Desktop** (`apps/desktop`): Tauri app with React frontend, global hotkey palette
 - **Mock Server** (`packages/mock-server`): Express server implementing full Local API for development
 - **Contracts** (`packages/contracts`): Shared TypeScript types/DTOs between frontend and backend
@@ -111,10 +113,10 @@ All shortcuts work regardless of keyboard layout (Russian, etc.):
 
 ## Known Limitations (Current State)
 
-- **No global hotkey** - requires native Tauri build
-- **No system tray** - requires native Tauri build
-- **Browser-only** - runs as web app until Tauri build works
-- **Mock data only** - SQLite persistence requires Rust agent
+- **Browser mode uses mock data** - SQLite persistence requires Rust agent integration
+- **Tauri UI still uses the mock/local API URL** - Rust agent discovery is not wired into the desktop shell yet
+- **macOS packaging produces `.app` only** - DMG packaging is deferred
+- **Windows packaging deferred** - current recovery baseline targets browser and macOS first
 
 ## Documentation
 

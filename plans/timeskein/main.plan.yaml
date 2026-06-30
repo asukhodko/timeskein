@@ -1,0 +1,34 @@
+version: 3
+
+meta:
+  id: timeskein
+  title: Timeskein roadmap
+  effort_unit: focus-blocks
+
+statuses:
+  not_started:
+    label: Not started
+    color: "#9ca3af"
+  planned:
+    label: Planned
+    color: "#aad2e6"
+  in_progress:
+    label: In progress
+    color: "#0ea5e9"
+  done:
+    label: Done
+    color: "#22c55e"
+  blocked:
+    label: Blocked
+    color: "#fecaca"
+  deferred:
+    label: Deferred
+    color: "#d1d5db"
+
+profiles:
+  - id: opskarta.exec
+    version: 1
+    namespace: exec
+  - id: timeskein.ops
+    version: 1
+    namespace: ops

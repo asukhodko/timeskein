@@ -1,0 +1,8 @@
+# Implementation tools for opskarta v3
+# - models.py: Data models (Node, Schedule, View, etc.)
+# - loader.py: Fragment loading and merging
+# - validator.py: Plan validation
+# - effort.py: Effort metrics computation
+# - scheduler.py: Schedule computation
+# - cli.py: Command-line interface
+# - render/: Renderers (gantt, tree, list, deps)

@@ -1,0 +1,157 @@
+version: 3
+
+views:
+  current:
+    title: Current Timeskein work
+    where:
+      x_ops_attention_class:
+        - current
+    order_by: status
+  backlog:
+    title: Deferred Timeskein work
+    where:
+      x_ops_attention_class:
+        - future
+    order_by: title
+  current-gantt:
+    title: Timeskein Focus Session dogfood slice
+    where:
+      has_schedule: true
+    window_start: "2026-07-01"
+    window_finish: "2026-08-14"
+    date_format: YYYY-MM-DD
+    axis_format: "%d.%m"
+    lanes:
+      app-entry:
+        title: App entry UX
+        nodes:
+          - ts.ux_entry
+        expand_descendants: leaves
+      focus-core:
+        title: Focus Session core
+        nodes:
+          - ts.focus_core
+        expand_descendants: leaves
+      day-review:
+        title: Day review
+        nodes:
+          - ts.day_review
+        expand_descendants: leaves
+      hardening:
+        title: Dogfood hardening
+        nodes:
+          - ts.hardening
+        expand_descendants: leaves
+
+x:
+  exec:
+    program:
+      committed_date: "2026-06-30"
+      note: Focus Session dogfood is the next useful product slice after the macOS recovery baseline.
+    defaults:
+      weight_strategy: effort_effective
+      status_progress:
+        done: 1.0
+        in_progress: 0.5
+        planned: 0.0
+        deferred: 0.0
+        blocked: 0.0
+    blocks:
+      recovered-baseline:
+        title: Recovered baseline
+        scope_nodes:
+          - ts.baseline
+        target_gate: ts.baseline.docs
+        mgmt:
+          health: green
+          owner: a.sukhodko
+          sync_note: Browser and macOS are usable enough for the next slice.
+      app-entry-ux:
+        title: App entry UX
+        scope_nodes:
+          - ts.ux_entry
+        target_gate: ts.ux_entry.fast_track_flow
+        mgmt:
+          health: yellow
+          owner: a.sukhodko
+          next_sync_goal: Make the app easy to show, hide, move, and invoke.
+      focus-session-core:
+        title: Focus Session core
+        scope_nodes:
+          - ts.focus_core
+        target_gate: ts.focus_core.dogfood_gate
+        mgmt:
+          health: yellow
+          owner: a.sukhodko
+          next_sync_goal: Track one real focus session with overflow and manual stop.
+      day-review-export:
+        title: Day review and export
+        scope_nodes:
+          - ts.day_review
+        target_gate: ts.day_review.analysis_gate
+        mgmt:
+          health: neutral
+          owner: a.sukhodko
+          next_sync_goal: Make focus data usable for end-of-day analysis.
+      dogfood-hardening:
+        title: Dogfood hardening
+        scope_nodes:
+          - ts.hardening
+        target_gate: ts.hardening.dogfood_release
+        mgmt:
+          health: neutral
+          owner: a.sukhodko
+          next_sync_goal: Stabilize the personal Session replacement baseline.
+      future-directions:
+        title: Future directions
+        scope_nodes:
+          - ts.future
+        mgmt:
+          health: neutral
+          owner: a.sukhodko
+          sync_note: Keep broad ideas visible without pretending they are ready to schedule.
+    edges:
+      - from: recovered-baseline
+        to: app-entry-ux
+        type: required
+      - from: app-entry-ux
+        to: focus-session-core
+        type: required
+      - from: focus-session-core
+        to: day-review-export
+        type: required
+      - from: day-review-export
+        to: dogfood-hardening
+        type: required
+      - from: focus-session-core
+        to: future-directions
+        type: context
+        label: later
+    views:
+      exec-top:
+        blocks:
+          - recovered-baseline
+          - app-entry-ux
+          - focus-session-core
+          - day-review-export
+          - dogfood-hardening
+          - future-directions
+        direction: LR
+        color_mode: mgmt_hybrid
+        highlight_current: true
+        show_progress: true
+        show_gate_date: true
+        show_owner: false
+        wrap_title_lines: 2
+        reduce_transitive_required_edges: true
+        caption: "Near-term plan is intentionally narrow: make Timeskein replace Session before reopening sync, Evidence Mode, or platform expansion."
+      exec-active-tracks:
+        blocks:
+          - app-entry-ux
+          - focus-session-core
+          - day-review-export
+        direction: TD
+        color_mode: mgmt_hybrid
+        highlight_current: true
+        show_progress: true
+        show_gate_date: true

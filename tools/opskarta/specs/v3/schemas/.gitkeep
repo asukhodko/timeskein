@@ -1,0 +1,3 @@
+# JSON Schema files for opskarta v3
+# - fragment.schema.json: Schema for individual YAML files (fragments)
+# - merged-plan.schema.json: Schema for merged plan

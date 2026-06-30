@@ -34,7 +34,8 @@ The system answers questions like:
 4. **[Architecture Decision Records](adr/README.md)** - Key architectural choices
 5. **[Technical Specifications (RFC)](rfc/README.md)** - Detailed technical designs
 6. **[MVP User Stories](mvp/README.md)** - Features and acceptance criteria
-7. **[Roadmap](roadmap/README.md)** - Execution plan and phases
+7. **[opskarta Roadmap](roadmap/opskarta.md)** - Current machine-checkable execution plan
+8. **[Roadmap Archive](roadmap/README.md)** - Older roadmap documents and related links
 
 ---
 
@@ -84,6 +85,7 @@ All documentation below is the **source of truth** for the project.
 
 | Document | Description |
 |----------|-------------|
+| [opskarta.md](roadmap/opskarta.md) | Current opskarta v3 roadmap and generated views |
 | [0001-mvp-execution-roadmap.md](roadmap/0001-mvp-execution-roadmap.md) | MVP execution plan and phases |
 | [0002-level3-evidence-mode-roadmap.md](roadmap/0002-level3-evidence-mode-roadmap.md) | Level 3 Evidence-Mode roadmap (post-MVP) |
 

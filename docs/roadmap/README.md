@@ -2,12 +2,16 @@
 
 This directory contains development roadmap documents for the Timeskein project.
 
+The current executable roadmap is [opskarta.md](opskarta.md), generated from
+`plans/timeskein/*.plan.yaml` with the vendored opskarta v3 tools.
+
 ## Roadmap Documents
 
 | Document | Level | Description |
 |----------|-------|-------------|
 | [../current-implementation.md](../current-implementation.md) | Current | What runs today |
-| [0001-mvp-execution-roadmap.md](0001-mvp-execution-roadmap.md) | Level 0 | MVP execution plan, phases, and milestones |
+| [opskarta.md](opskarta.md) | Current | opskarta v3 plan focused on the Focus Session dogfood slice |
+| [0001-mvp-execution-roadmap.md](0001-mvp-execution-roadmap.md) | Level 0 | Historical MVP execution plan, phases, and milestones |
 | [0002-level3-evidence-mode-roadmap.md](0002-level3-evidence-mode-roadmap.md) | Level 3 | Evidence-Mode (opt-in screen evidence) roadmap |
 
 ## Related Documents

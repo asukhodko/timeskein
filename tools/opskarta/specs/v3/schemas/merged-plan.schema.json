@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://opskarta.dev/schemas/v3/merged-plan.schema.json",
+  "title": "opskarta v3 merged plan",
+  "description": "Schema for merged plan (result of merging multiple fragments) in opskarta v3.",
+  "type": "object",
+  "required": ["version"],
+  "properties": {
+    "version": {
+      "type": "integer",
+      "const": 3,
+      "description": "Plan format version, must be 3 for v3. Required in merged plan."
+    },
+    "meta": {
+      "$ref": "fragment.schema.json#/$defs/meta"
+    },
+    "statuses": {
+      "type": "object",
+      "description": "Dictionary of status_id -> status definition (merged from all fragments)",
+      "additionalProperties": {
+        "$ref": "fragment.schema.json#/$defs/status"
+      }
+    },
+    "nodes": {
+      "type": "object",
+      "description": "Dictionary of node_id -> node definition (merged from all fragments)",
+      "additionalProperties": {
+        "$ref": "fragment.schema.json#/$defs/node"
+      }
+    },
+    "schedule": {
+      "$ref": "fragment.schema.json#/$defs/schedule"
+    },
+    "execution": {
+      "$ref": "fragment.schema.json#/$defs/execution"
+    },
+    "views": {
+      "type": "object",
+      "description": "Dictionary of view_id -> view definition (merged from all fragments)",
+      "additionalProperties": {
+        "$ref": "fragment.schema.json#/$defs/view"
+      }
+    },
+    "profiles": {
+      "type": "array",
+      "description": "List of extension profile declarations (merged from all fragments)",
+      "items": {
+        "$ref": "fragment.schema.json#/$defs/profile"
+      }
+    },
+    "x": {
+      "type": "object",
+      "description": "Extension data (arbitrary key-value pairs, merged from all fragments)"
+    },
+    "sources": {
+      "type": "object",
+      "description": "Metadata tracking which file contributed each element. Format: 'type:id' -> 'file_path'. Example: 'node:task1' -> 'nodes.plan.yaml'",
+      "additionalProperties": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": false
+}

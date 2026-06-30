@@ -1,0 +1,13 @@
+# Dependencies for opskarta v3 reference tools
+# Installation: pip install -r requirements.txt
+
+# Required dependencies
+PyYAML>=6.0              # YAML file parsing
+
+# Optional dependencies
+# Uncomment for extended validation via JSON Schema:
+# jsonschema>=4.0        # JSON Schema validation
+
+# Development dependencies (for testing)
+# pytest>=8.0            # Test framework
+# hypothesis>=6.0        # Property-based testing

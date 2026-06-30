@@ -1,0 +1,58 @@
+version: 3
+
+schedule:
+  calendars:
+    default:
+      excludes:
+        - weekends
+  default_calendar: default
+  nodes:
+    ts.baseline.docs:
+      start: "2026-06-30"
+      duration: 1d
+
+    ts.ux_entry.window_drag:
+      start: "2026-07-01"
+      duration: 1d
+    ts.ux_entry.hide_toggle:
+      duration: 1d
+    ts.ux_entry.tray_actions:
+      duration: 1d
+    ts.ux_entry.monitor_policy:
+      duration: 1d
+    ts.ux_entry.fast_track_flow:
+      duration: 1d
+
+    ts.focus_core.model_migrations:
+      duration: 2d
+    ts.focus_core.contracts_api:
+      duration: 2d
+    ts.focus_core.timer_ui:
+      duration: 2d
+    ts.focus_core.session_lifecycle:
+      duration: 2d
+    ts.focus_core.restart_restore:
+      duration: 1d
+    ts.focus_core.work_item_binding:
+      duration: 1d
+    ts.focus_core.session_notes:
+      duration: 1d
+    ts.focus_core.dogfood_gate: {}
+
+    ts.day_review.timeline:
+      duration: 2d
+    ts.day_review.totals_gaps:
+      duration: 1d
+    ts.day_review.export:
+      duration: 1d
+    ts.day_review.analysis_gate: {}
+
+    ts.hardening.smoke:
+      duration: 1d
+    ts.hardening.backup_reset:
+      duration: 1d
+    ts.hardening.package_app:
+      duration: 1d
+    ts.hardening.release_notes:
+      duration: 1d
+    ts.hardening.dogfood_release: {}

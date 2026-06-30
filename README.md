@@ -19,6 +19,9 @@ A desktop application for quickly tracking work items with refs (URLs, files, is
 
 See [Current Implementation](docs/current-implementation.md) for the exact state of what runs today.
 
+The current execution roadmap is maintained as an opskarta v3 plan set:
+[Timeskein opskarta roadmap](docs/roadmap/opskarta.md).
+
 ## Project Structure
 
 ```
@@ -30,6 +33,8 @@ timeskein/
 ├── packages/
 │   ├── contracts/     # Shared TypeScript types/DTOs
 │   └── mock-server/   # Mock API for development (Express)
+├── plans/             # opskarta roadmap source files
+├── tools/opskarta/    # vendored opskarta v3 validation/render tools
 └── docs/              # Project documentation
 ```
 
@@ -81,6 +86,20 @@ pnpm --filter @timeskein/desktop build
 
 The app stores SQLite data in `timeskein.db` and writes the current embedded-agent port to `agent.port`.
 
+### Roadmap Tools
+
+```bash
+# Install opskarta Python dependencies
+python3 -m pip install -r tools/opskarta/specs/v3/tools/requirements.txt
+
+# Validate the roadmap plan set
+cd tools/opskarta
+python3 -m specs.v3.tools.cli validate ../../plans/timeskein/*.plan.yaml
+
+# Render the current Gantt view
+python3 -m specs.v3.tools.cli render gantt ../../plans/timeskein/*.plan.yaml --view current-gantt
+```
+
 ## Keyboard Shortcuts
 
 All shortcuts work regardless of keyboard layout (Russian, etc.):
@@ -129,6 +148,7 @@ All shortcuts work regardless of keyboard layout (Russian, etc.):
 
 - [Project Overview](docs/00_project_overview.md) - architecture and principles
 - [Current Implementation](docs/current-implementation.md) - what runs today
+- [opskarta Roadmap](docs/roadmap/opskarta.md) - current machine-checkable roadmap
 - [MVP Technical Spec](mvp-technical%20specifications.md) - detailed requirements
 - [Glossary](docs/glossary.md) - term definitions
 - [ADRs](docs/adr/) - architecture decision records

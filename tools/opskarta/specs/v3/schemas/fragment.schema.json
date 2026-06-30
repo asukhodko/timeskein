@@ -1,0 +1,433 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://opskarta.dev/schemas/v3/fragment.schema.json",
+  "title": "opskarta v3 fragment file",
+  "description": "Schema for individual YAML file (fragment) in opskarta v3 Plan Set",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": "integer",
+      "const": 3,
+      "description": "Plan format version, must be 3 for v3"
+    },
+    "meta": {
+      "$ref": "#/$defs/meta"
+    },
+    "statuses": {
+      "type": "object",
+      "description": "Dictionary of status_id -> status definition",
+      "additionalProperties": {
+        "$ref": "#/$defs/status"
+      }
+    },
+    "nodes": {
+      "type": "object",
+      "description": "Dictionary of node_id -> node definition",
+      "additionalProperties": {
+        "$ref": "#/$defs/node"
+      }
+    },
+    "schedule": {
+      "$ref": "#/$defs/schedule"
+    },
+    "execution": {
+      "$ref": "#/$defs/execution"
+    },
+    "views": {
+      "type": "object",
+      "description": "Dictionary of view_id -> view definition",
+      "additionalProperties": {
+        "$ref": "#/$defs/view"
+      }
+    },
+    "profiles": {
+      "type": "array",
+      "description": "List of extension profile declarations",
+      "items": {
+        "$ref": "#/$defs/profile"
+      }
+    },
+    "x": {
+      "type": "object",
+      "description": "Extension data (arbitrary key-value pairs)"
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "meta": {
+      "type": "object",
+      "description": "Plan metadata",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Unique identifier for the plan"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Human-readable title of the plan"
+        },
+        "effort_unit": {
+          "type": "string",
+          "description": "Display unit for effort values (e.g., 'sp', 'points', 'дни'). Only affects UI display, not calculations"
+        }
+      },
+      "additionalProperties": false
+    },
+    "status": {
+      "type": "object",
+      "description": "Status definition for nodes",
+      "required": ["label"],
+      "properties": {
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Human-readable label for the status"
+        },
+        "color": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$",
+          "description": "Hex color code for display (format: #RRGGBB)"
+        }
+      },
+      "additionalProperties": false
+    },
+    "node": {
+      "type": "object",
+      "description": "Work item in the plan structure (v3). NO start, finish, duration, excludes - these are in schedule",
+      "required": ["title"],
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Human-readable title of the node"
+        },
+        "kind": {
+          "type": "string",
+          "description": "Type/category (e.g., 'summary', 'phase', 'epic', 'task')"
+        },
+        "status": {
+          "type": "string",
+          "description": "Reference to a status_id defined in statuses"
+        },
+        "parent": {
+          "type": "string",
+          "description": "Reference to parent node_id for hierarchy"
+        },
+        "deps": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "type": "string",
+                "description": "Shorthand: node_id (defaults to fs, 0d, hard)"
+              },
+              {
+                "$ref": "#/$defs/dep_edge"
+              }
+            ]
+          },
+          "description": "List of dependency edges to other nodes"
+        },
+        "milestone": {
+          "type": "boolean",
+          "description": "Whether this node is a milestone"
+        },
+        "issue": {
+          "type": "string",
+          "description": "Issue tracker reference"
+        },
+        "notes": {
+          "type": "string",
+          "description": "Notes/description"
+        },
+        "effort": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Effort estimate in abstract units (number >= 0)"
+        },
+        "x": {
+          "type": "object",
+          "description": "Extension data (arbitrary key-value pairs)"
+        }
+      },
+      "additionalProperties": false
+    },
+    "calendar": {
+      "type": "object",
+      "description": "Calendar definition for scheduling",
+      "properties": {
+        "excludes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of exclusions: 'weekends' or 'YYYY-MM-DD' dates"
+        }
+      },
+      "additionalProperties": false
+    },
+    "schedule_node": {
+      "type": "object",
+      "description": "Scheduling information for a node. Note: dependencies (deps) are defined in Node, not here",
+      "properties": {
+        "start": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+          "description": "Start date in YYYY-MM-DD format"
+        },
+        "finish": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+          "description": "Finish date in YYYY-MM-DD format"
+        },
+        "duration": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]*[dw]$",
+          "description": "Duration in days (d) or weeks (w), e.g. 5d, 2w"
+        },
+        "calendar": {
+          "type": "string",
+          "description": "Reference to calendar_id in schedule.calendars"
+        }
+      },
+      "additionalProperties": false
+    },
+    "schedule": {
+      "type": "object",
+      "description": "Calendar scheduling layer (optional)",
+      "properties": {
+        "calendars": {
+          "type": "object",
+          "description": "Dictionary of calendar_id -> calendar definition",
+          "additionalProperties": {
+            "$ref": "#/$defs/calendar"
+          }
+        },
+        "default_calendar": {
+          "type": "string",
+          "description": "Reference to default calendar_id"
+        },
+        "nodes": {
+          "type": "object",
+          "description": "Dictionary of node_id -> schedule node definition",
+          "additionalProperties": {
+            "$ref": "#/$defs/schedule_node"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "dep_edge": {
+      "type": "object",
+      "description": "Typed dependency edge between nodes",
+      "required": ["id"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Target node_id (required)"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["fs", "ss"],
+          "default": "fs",
+          "description": "Dependency type: finish-to-start or start-to-start"
+        },
+        "lag": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)[dw]$",
+          "default": "0d",
+          "description": "Non-negative lag duration"
+        },
+        "hard": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether this dep affects scheduling (true) or is visual-only (false)"
+        },
+        "note": {
+          "type": "string",
+          "description": "Optional human-readable annotation"
+        }
+      },
+      "additionalProperties": false
+    },
+    "execution_node": {
+      "type": "object",
+      "description": "Per-node execution tracking data",
+      "properties": {
+        "progress": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Completion progress from 0.0 to 1.0"
+        },
+        "actual_start": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+          "description": "Actual start date (YYYY-MM-DD)"
+        },
+        "actual_finish": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+          "description": "Actual finish date (YYYY-MM-DD)"
+        },
+        "updated_at": {
+          "type": "string",
+          "description": "Timestamp of last update (ISO 8601)"
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Confidence level from 0.0 to 1.0"
+        },
+        "note": {
+          "type": "string",
+          "description": "Optional annotation"
+        }
+      },
+      "additionalProperties": false
+    },
+    "execution": {
+      "type": "object",
+      "description": "Execution overlay block for progress tracking",
+      "properties": {
+        "nodes": {
+          "type": "object",
+          "description": "Dictionary of node_id -> execution tracking data",
+          "additionalProperties": {
+            "$ref": "#/$defs/execution_node"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "profile": {
+      "type": "object",
+      "description": "Extension profile declaration",
+      "required": ["id", "version", "namespace"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Profile identifier (e.g., 'opskarta.ai-dev')"
+        },
+        "version": {
+          "type": "integer",
+          "description": "Profile schema version"
+        },
+        "namespace": {
+          "type": "string",
+          "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$",
+          "description": "Key under x where profile data lives"
+        }
+      },
+      "additionalProperties": false
+    },
+    "view_filter": {
+      "type": "object",
+      "description": "Structural filter for node selection in views",
+      "properties": {
+        "kind": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Filter by node.kind (node must have kind in this list)"
+        },
+        "status": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Filter by node.status (node must have status in this list)"
+        },
+        "has_schedule": {
+          "type": "boolean",
+          "description": "Filter by scheduling status: true = only scheduled nodes, false = only unscheduled"
+        },
+        "parent": {
+          "type": "string",
+          "description": "Filter to descendants of specified node_id"
+        },
+        "x_ops_attention_class": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Filter by node.x.ops.attention_class"
+        }
+      },
+      "additionalProperties": false
+    },
+    "view": {
+      "type": "object",
+      "description": "View configuration for visualization. NO excludes field (moved to schedule.calendars)",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Display title for the view"
+        },
+        "where": {
+          "$ref": "#/$defs/view_filter"
+        },
+        "order_by": {
+          "type": "string",
+          "description": "Field name for sorting nodes"
+        },
+        "group_by": {
+          "type": "string",
+          "description": "Field name for grouping nodes"
+        },
+        "lanes": {
+          "type": "object",
+          "description": "Lane configuration for Gantt views",
+          "additionalProperties": {
+            "type": "object",
+            "required": ["nodes"],
+            "properties": {
+              "title": {
+                "type": "string"
+              },
+              "nodes": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "expand_descendants": {
+                "type": "string",
+                "enum": ["leaves"],
+                "description": "Expand listed lane nodes to scheduled leaf descendants"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "date_format": {
+          "type": "string",
+          "description": "Date format string for display"
+        },
+        "axis_format": {
+          "type": "string",
+          "description": "Axis format string for Gantt"
+        },
+        "tick_interval": {
+          "type": "string",
+          "description": "Tick interval for Gantt axis"
+        },
+        "window_start": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+          "description": "Optional left boundary for Gantt clipping"
+        },
+        "window_finish": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+          "description": "Optional right boundary for Gantt clipping"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

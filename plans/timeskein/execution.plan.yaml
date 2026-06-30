@@ -1,0 +1,25 @@
+version: 3
+
+execution:
+  nodes:
+    ts.baseline.browser_dev:
+      progress: 1.0
+      actual_start: "2026-06-29"
+      actual_finish: "2026-06-29"
+      updated_at: "2026-06-30T08:00:00+03:00"
+      confidence: 1.0
+      note: Browser development mode works through the mock server.
+    ts.baseline.macos_app:
+      progress: 1.0
+      actual_start: "2026-06-29"
+      actual_finish: "2026-06-30"
+      updated_at: "2026-06-30T08:00:00+03:00"
+      confidence: 1.0
+      note: The macOS app starts the embedded Rust agent and uses SQLite.
+    ts.baseline.docs:
+      progress: 1.0
+      actual_start: "2026-06-30"
+      actual_finish: "2026-06-30"
+      updated_at: "2026-06-30T08:00:00+03:00"
+      confidence: 1.0
+      note: README and current implementation docs describe the recovered baseline.

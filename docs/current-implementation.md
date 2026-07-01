@@ -319,9 +319,10 @@ On multi-monitor macOS setups, the tray/status item is controlled by the system 
 
 ## Next Engineering Steps
 
-1. Dogfood Capture Inbox during the next real workday and check whether it reduces interruption cost.
-2. Add timestamped Work Item notes or events for in-flight observations and post-block details.
-3. Add activity zones before tracking breaks as first-class blocks.
-4. Reduce raw UI/agent duplication in the telemetry report.
-5. Decide whether pause/resume/cancel are needed before regular use.
-6. Improve agent lifecycle diagnostics and user-visible error states.
+1. Run the Dogfood Release Candidate gate during the next real workday, with Capture Inbox enabled and Session not used in parallel.
+2. Fix only blockers proven by that day before expanding scope.
+3. Add timestamped Work Item notes or events if captured interruptions and stop notes are not enough for review.
+4. Add activity zones if break/idle tracking corrupts total focus data.
+5. Reduce raw UI/agent duplication in the telemetry report if it slows review.
+6. Decide whether pause/resume/cancel are needed before regular use.
+7. Improve agent lifecycle diagnostics and user-visible error states.

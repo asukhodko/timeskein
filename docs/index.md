@@ -34,12 +34,13 @@ The system answers questions like:
 1. **[Project Overview](00_project_overview.md)** - Core concepts, maturity levels, architecture
 2. **[Current Implementation](current-implementation.md)** - What runs today
 3. **[Dogfood Day Protocol](dogfood-day.md)** - How to run one real Session replacement day
-4. **[Glossary](glossary.md)** - Definitions of all terms used
-5. **[Architecture Decision Records](adr/README.md)** - Key architectural choices
-6. **[Technical Specifications (RFC)](rfc/README.md)** - Detailed technical designs
-7. **[MVP User Stories](mvp/README.md)** - Features and acceptance criteria
-8. **[opskarta Roadmap](roadmap/opskarta.md)** - Current machine-checkable execution plan
-9. **[Roadmap Archive](roadmap/README.md)** - Older roadmap documents and related links
+4. **[Dogfood Release Candidate](dogfood-release-candidate.md)** - Gate for deciding whether Timeskein can replace Session in daily use
+5. **[Glossary](glossary.md)** - Definitions of all terms used
+6. **[Architecture Decision Records](adr/README.md)** - Key architectural choices
+7. **[Technical Specifications (RFC)](rfc/README.md)** - Detailed technical designs
+8. **[MVP User Stories](mvp/README.md)** - Features and acceptance criteria
+9. **[opskarta Roadmap](roadmap/opskarta.md)** - Current machine-checkable execution plan
+10. **[Roadmap Archive](roadmap/README.md)** - Older roadmap documents and related links
 
 ---
 
@@ -54,6 +55,7 @@ All documentation below is the **source of truth** for the project.
 | [00_project_overview.md](00_project_overview.md) | Main project document: concepts, principles, model |
 | [current-implementation.md](current-implementation.md) | Current repository/runtime state |
 | [dogfood-day.md](dogfood-day.md) | Protocol for replacing Session during one real workday, including Capture Inbox and local app telemetry checks |
+| [dogfood-release-candidate.md](dogfood-release-candidate.md) | Release-candidate gate for daily Session replacement |
 | [glossary.md](glossary.md) | Definitions of all terms and entities |
 
 ### Architecture Decision Records (ADR)

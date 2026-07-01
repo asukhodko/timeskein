@@ -169,6 +169,8 @@ The first real dogfood day met this gate:
 
 Product friction found during the day is tracked in the roadmap. The most important next dogfood check is whether Capture Inbox makes incoming events cheap to remember without interrupting the current focus block.
 
+For the stricter daily-use gate, use [Dogfood Release Candidate](dogfood-release-candidate.md). The day protocol explains how to run the test; the release-candidate gate decides whether the current baseline is good enough to replace Session.
+
 ## During the Day
 
 Start a focus block from the input:

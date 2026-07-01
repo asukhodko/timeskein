@@ -1,0 +1,521 @@
+#!/usr/bin/env node
+
+import { execFile } from "node:child_process";
+import { existsSync } from "node:fs";
+import { homedir } from "node:os";
+import { join, resolve } from "node:path";
+import { promisify } from "node:util";
+
+const execFileAsync = promisify(execFile);
+const SIGNIFICANT_GAP_SECONDS = 20 * 60;
+const DEFAULT_MIN_FOCUS_MINUTES = 180;
+
+const options = parseArgs(process.argv.slice(2));
+const date = options.date ? parseLocalDate(options.date) : new Date();
+const now = options.now ? parseIsoDate(options.now) : new Date();
+const minFocusSeconds = (options.minFocusMinutes ?? DEFAULT_MIN_FOCUS_MINUTES) * 60;
+const dateArg = options.date ?? formatLocalDate(date);
+const dbPath = options.db
+  ? resolve(options.db)
+  : join(homedir(), "Library/Application Support/Timeskein/timeskein.db");
+
+if (!existsSync(dbPath)) {
+  process.stdout.write(buildMissingDbReport(dateArg, dbPath));
+  process.exit(1);
+}
+
+const from = startOfLocalDay(date);
+const to = nextLocalDay(from);
+const evidence = await loadEvidence(dbPath, from, to, now);
+const assessment = assessEvidence(evidence, minFocusSeconds);
+
+process.stdout.write(buildRcReport(dateArg, dbPath, evidence, assessment, minFocusSeconds));
+process.exit(assessment.hardBlockers.length > 0 ? 1 : 0);
+
+function parseArgs(args) {
+  const result = {};
+
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index];
+    if (arg === "--") {
+      continue;
+    } else if (arg === "--db") {
+      result.db = args[++index];
+    } else if (arg === "--date") {
+      result.date = args[++index];
+    } else if (arg === "--now") {
+      result.now = args[++index];
+    } else if (arg === "--min-focus-minutes") {
+      result.minFocusMinutes = Number(args[++index]);
+      if (!Number.isFinite(result.minFocusMinutes) || result.minFocusMinutes < 0) {
+        throw new Error("--min-focus-minutes must be a non-negative number");
+      }
+    } else if (arg === "--help" || arg === "-h") {
+      printHelp();
+      process.exit(0);
+    } else {
+      throw new Error(`Unknown argument: ${arg}`);
+    }
+  }
+
+  return result;
+}
+
+function printHelp() {
+  console.log(`Usage: pnpm dogfood:rc-check [--date YYYY-MM-DD] [--db path/to/timeskein.db] [--min-focus-minutes N]
+
+Checks whether the saved Timeskein data is enough for the Dogfood Release Candidate verdict.
+It exits with code 1 for hard blockers such as active state, duplicate Work Item titles, or an empty day.
+Review items are printed but keep exit code 0 because the final RC verdict still needs human judgment.`);
+}
+
+async function loadEvidence(path, from, to, now) {
+  const [
+    sessions,
+    activeSessions,
+    activeWorkItems,
+    duplicateTitles,
+    openCaptures,
+    capturesCreatedToday,
+    events,
+  ] = await Promise.all([
+    loadSessions(path, from, to, now),
+    loadActiveSessions(path),
+    loadActiveWorkItems(path),
+    loadDuplicateTitles(path),
+    loadOpenCaptures(path),
+    loadCapturesCreatedToday(path, from, to),
+    loadEvents(path, from, to),
+  ]);
+
+  const totalFocusSeconds = sessions.reduce((sum, session) => sum + session.active_seconds, 0);
+  const workItemTotals = aggregateWorkItemTotals(sessions);
+  const gaps = gapsBetweenSessions(sessions).filter((gap) => gap.seconds >= SIGNIFICANT_GAP_SECONDS);
+  const telemetry = summarizeEvents(events);
+
+  return {
+    sessions,
+    activeSessions,
+    activeWorkItems,
+    duplicateTitles,
+    openCaptures,
+    capturesCreatedToday,
+    events,
+    totalFocusSeconds,
+    workItemTotals,
+    gaps,
+    telemetry,
+  };
+}
+
+async function loadSessions(path, from, to, now) {
+  const rows = await queryJson(path, `
+    SELECT
+      fs.id,
+      fs.title,
+      fs.work_item_id,
+      wi.title AS work_item_title,
+      fs.state,
+      fs.note,
+      fs.started_at,
+      fs.stopped_at
+    FROM focus_sessions fs
+    LEFT JOIN work_items wi ON wi.id = fs.work_item_id
+    WHERE datetime(COALESCE(fs.stopped_at, ${sqlString(now.toISOString())})) > datetime(${sqlString(from.toISOString())})
+      AND datetime(fs.started_at) < datetime(${sqlString(to.toISOString())})
+    ORDER BY datetime(fs.started_at) ASC
+  `);
+
+  return rows.map((row) => ({
+    ...row,
+    work_item_id: row.work_item_id ?? undefined,
+    work_item_title: row.work_item_title ?? undefined,
+    note: row.note ?? undefined,
+    stopped_at: row.stopped_at ?? undefined,
+    active_seconds: clippedActiveSeconds(row.started_at, row.stopped_at, from, to, now),
+  }));
+}
+
+async function loadActiveSessions(path) {
+  return queryJson(path, `
+    SELECT fs.id, fs.title, wi.title AS work_item_title, fs.started_at
+    FROM focus_sessions fs
+    LEFT JOIN work_items wi ON wi.id = fs.work_item_id
+    WHERE fs.state = 'active'
+    ORDER BY datetime(fs.started_at) DESC
+  `);
+}
+
+async function loadActiveWorkItems(path) {
+  return queryJson(path, `
+    SELECT id, title, updated_at
+    FROM work_items
+    WHERE deleted_at IS NULL AND state = 'active'
+    ORDER BY datetime(updated_at) DESC
+  `);
+}
+
+async function loadDuplicateTitles(path) {
+  return queryJson(path, `
+    SELECT
+      lower(trim(title)) AS normalized_title,
+      COUNT(*) AS count,
+      GROUP_CONCAT(title, ' | ') AS titles
+    FROM work_items
+    WHERE deleted_at IS NULL
+    GROUP BY lower(trim(title))
+    HAVING COUNT(*) > 1
+    ORDER BY count DESC, normalized_title ASC
+  `);
+}
+
+async function loadOpenCaptures(path) {
+  if (!(await tableExists(path, "captures"))) return [];
+
+  return queryJson(path, `
+    SELECT id, text, created_at
+    FROM captures
+    WHERE state = 'open'
+    ORDER BY datetime(created_at) ASC
+  `);
+}
+
+async function loadCapturesCreatedToday(path, from, to) {
+  if (!(await tableExists(path, "captures"))) return [];
+
+  return queryJson(path, `
+    SELECT id, text, state, created_at, resolved_at, converted_at
+    FROM captures
+    WHERE datetime(created_at) >= datetime(${sqlString(from.toISOString())})
+      AND datetime(created_at) < datetime(${sqlString(to.toISOString())})
+    ORDER BY datetime(created_at) ASC
+  `);
+}
+
+async function loadEvents(path, from, to) {
+  if (!(await tableExists(path, "app_events"))) return [];
+
+  return queryJson(path, `
+    SELECT id, ts, source, kind, work_item_id, focus_session_id, payload
+    FROM app_events
+    WHERE datetime(ts) >= datetime(${sqlString(from.toISOString())})
+      AND datetime(ts) < datetime(${sqlString(to.toISOString())})
+    ORDER BY datetime(ts) ASC
+  `).then((rows) =>
+    rows.map((row) => ({
+      ...row,
+      payload: parsePayload(row.payload),
+    }))
+  );
+}
+
+async function tableExists(path, tableName) {
+  const rows = await queryJson(
+    path,
+    `SELECT COUNT(*) AS count FROM sqlite_master WHERE type = 'table' AND name = ${sqlString(tableName)}`
+  );
+
+  return (rows[0]?.count ?? 0) > 0;
+}
+
+async function queryJson(path, sql) {
+  const { stdout } = await execFileAsync("sqlite3", sqliteReadArgs(path, sql), {
+    maxBuffer: 10 * 1024 * 1024,
+  });
+
+  return stdout.trim() ? JSON.parse(stdout) : [];
+}
+
+function sqliteReadArgs(path, sql) {
+  return ["-readonly", "-cmd", ".timeout 5000", "-json", path, sql];
+}
+
+function assessEvidence(evidence, minFocusSeconds) {
+  const hardBlockers = [];
+  const reviewItems = [];
+
+  for (const session of evidence.activeSessions) {
+    hardBlockers.push(
+      `Active focus session is still running: ${session.work_item_title ?? session.title} since ${formatClockTime(session.started_at)}`
+    );
+  }
+
+  for (const item of evidence.activeWorkItems) {
+    hardBlockers.push(`Active Work Item is still marked active: ${item.title}`);
+  }
+
+  if (evidence.sessions.length === 0) {
+    hardBlockers.push("No focus blocks found for this date.");
+  }
+
+  for (const duplicate of evidence.duplicateTitles) {
+    hardBlockers.push(`Duplicate Work Item title: ${duplicate.titles}`);
+  }
+
+  if (evidence.totalFocusSeconds < minFocusSeconds && evidence.sessions.length > 0) {
+    reviewItems.push(
+      `Total focus is ${formatDuration(evidence.totalFocusSeconds)}, below the RC review threshold ${formatDuration(minFocusSeconds)}. Confirm whether this was still a full workday.`
+    );
+  }
+
+  if (evidence.openCaptures.length > 0) {
+    reviewItems.push(`${evidence.openCaptures.length} open capture(s) remain. Resolve, convert, or explicitly accept them as follow-up.`);
+  }
+
+  if (evidence.capturesCreatedToday.length === 0) {
+    reviewItems.push("No captures were created today. If there were interruptions, Capture Inbox was not tested in battle.");
+  }
+
+  if (evidence.telemetry.total === 0) {
+    reviewItems.push("No App Telemetry events found for this date.");
+  }
+
+  if (evidence.telemetry.apiErrors > 0) {
+    reviewItems.push(`${evidence.telemetry.apiErrors} API error event(s) found. Check whether any tracking data was lost.`);
+  }
+
+  if (evidence.telemetry.copyFailures > 0 || evidence.telemetry.manualCopyFallbacks > 0) {
+    reviewItems.push("Report copy friction occurred. Check whether evening export was still cheap enough.");
+  }
+
+  if (evidence.telemetry.startFailures > 0 || evidence.telemetry.stopFailures > 0) {
+    reviewItems.push("Focus start/stop failures occurred. Check whether they broke trust in the timer.");
+  }
+
+  if (evidence.gaps.length > 0) {
+    reviewItems.push(`${evidence.gaps.length} significant gap(s) found. Classify them as real breaks or lost tracking.`);
+  }
+
+  return {
+    hardBlockers,
+    reviewItems,
+  };
+}
+
+function buildMissingDbReport(date, path) {
+  return [
+    `# Timeskein dogfood RC check - ${date}`,
+    "",
+    "Verdict: blocked",
+    "",
+    `DB not found: ${path}`,
+    "",
+  ].join("\n");
+}
+
+function buildRcReport(date, path, evidence, assessment, minFocusSeconds) {
+  const verdict = assessment.hardBlockers.length > 0
+    ? "blocked"
+    : assessment.reviewItems.length > 0
+      ? "ready for human RC verdict, with review items"
+      : "ready for human RC verdict";
+
+  const lines = [
+    `# Timeskein dogfood RC check - ${date}`,
+    "",
+    `Verdict: ${verdict}`,
+    `DB: ${path}`,
+    "",
+    "## Evidence Summary",
+    "",
+    `- Focus total: ${formatDuration(evidence.totalFocusSeconds)} (review threshold: ${formatDuration(minFocusSeconds)})`,
+    `- Entrances: ${evidence.sessions.length}`,
+    `- Work Items in report: ${evidence.workItemTotals.length}`,
+    `- Significant gaps: ${evidence.gaps.length}`,
+    `- Captures created today: ${evidence.capturesCreatedToday.length}`,
+    `- Open captures: ${evidence.openCaptures.length}`,
+    `- App telemetry events: ${evidence.telemetry.total}`,
+    `- API errors: ${evidence.telemetry.apiErrors}`,
+    `- Copy failures/manual fallbacks: ${evidence.telemetry.copyFailures}/${evidence.telemetry.manualCopyFallbacks}`,
+    `- Start/stop failures: ${evidence.telemetry.startFailures}/${evidence.telemetry.stopFailures}`,
+    `- Duplicate Work Item title groups: ${evidence.duplicateTitles.length}`,
+    "",
+  ];
+
+  if (evidence.workItemTotals.length > 0) {
+    lines.push("## By Work Item", "", "| Duration | Entrances | Work Item |", "| ---: | ---: | --- |");
+    for (const item of evidence.workItemTotals) {
+      lines.push(`| ${formatDuration(item.activeSeconds)} | ${item.entrances} | ${escapeMarkdownTable(item.title)} |`);
+    }
+    lines.push("");
+  }
+
+  if (assessment.hardBlockers.length > 0) {
+    lines.push("## Hard Blockers", "");
+    for (const item of assessment.hardBlockers) {
+      lines.push(`- ${item}`);
+    }
+    lines.push("");
+  }
+
+  if (assessment.reviewItems.length > 0) {
+    lines.push("## Review Items", "");
+    for (const item of assessment.reviewItems) {
+      lines.push(`- ${item}`);
+    }
+    lines.push("");
+  }
+
+  lines.push(
+    "## Manual RC Verdict",
+    "",
+    "- Timeskein was the primary tracker for the full day: yes/no",
+    "- Capture Inbox preserved focus instead of becoming another pile: yes/no",
+    "- Report is enough without memory reconstruction: yes/no",
+    "- Remaining limitations are acceptable for daily use: yes/no",
+    "- Final RC decision: pass/fail",
+    "",
+    "## Next",
+    "",
+    "- If blocked, fix only the listed blockers and run another dogfood day.",
+    "- If review items remain, fill the manual verdict before marking the roadmap milestone done.",
+    "- If the verdict passes, update docs/opskarta and commit the dogfood release baseline.",
+    ""
+  );
+
+  return lines.join("\n");
+}
+
+function clippedActiveSeconds(startedAtValue, stoppedAtValue, from, to, now) {
+  const startedAt = new Date(startedAtValue);
+  const stoppedAt = stoppedAtValue ? new Date(stoppedAtValue) : now;
+  const clippedStart = new Date(Math.max(startedAt.getTime(), from.getTime()));
+  const clippedStop = new Date(Math.min(stoppedAt.getTime(), to.getTime()));
+
+  return Math.max(Math.floor((clippedStop.getTime() - clippedStart.getTime()) / 1000), 0);
+}
+
+function aggregateWorkItemTotals(sessions) {
+  const totals = new Map();
+
+  for (const session of sessions) {
+    const key = session.work_item_id ?? `title:${session.title}`;
+    const title = session.work_item_title ?? session.title;
+    const current = totals.get(key) ?? { title, activeSeconds: 0, entrances: 0 };
+
+    current.title = title;
+    current.activeSeconds += session.active_seconds;
+    current.entrances += 1;
+    totals.set(key, current);
+  }
+
+  return Array.from(totals.values()).sort((left, right) => {
+    if (right.activeSeconds !== left.activeSeconds) {
+      return right.activeSeconds - left.activeSeconds;
+    }
+
+    return left.title.localeCompare(right.title);
+  });
+}
+
+function gapsBetweenSessions(sessionsOldestFirst) {
+  return sessionsOldestFirst.slice(1).map((session, index) => {
+    const previous = sessionsOldestFirst[index];
+    const previousEnd = previous.stopped_at ?? previous.started_at;
+    const seconds = Math.max(
+      Math.floor((new Date(session.started_at).getTime() - new Date(previousEnd).getTime()) / 1000),
+      0
+    );
+
+    return {
+      from: previousEnd,
+      to: session.started_at,
+      seconds,
+    };
+  });
+}
+
+function summarizeEvents(events) {
+  const byKind = {};
+
+  for (const event of events) {
+    byKind[event.kind] = (byKind[event.kind] ?? 0) + 1;
+  }
+
+  const count = (kind) => byKind[kind] ?? 0;
+
+  return {
+    total: events.length,
+    byKind,
+    apiErrors: count("api_error"),
+    copyFailures: count("report_copy_failed"),
+    manualCopyFallbacks: count("manual_copy_fallback_shown"),
+    startFailures: count("focus_start_failed"),
+    stopFailures: count("focus_stop_failed"),
+  };
+}
+
+function parsePayload(value) {
+  if (!value) return undefined;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return undefined;
+  }
+}
+
+function parseLocalDate(value) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    throw new Error(`Invalid --date value, expected YYYY-MM-DD: ${value}`);
+  }
+
+  const [year, month, day] = value.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
+function parseIsoDate(value) {
+  const date = new Date(value);
+  if (!value || Number.isNaN(date.getTime())) {
+    throw new Error(`Invalid --now value, expected ISO date: ${value}`);
+  }
+
+  return date;
+}
+
+function startOfLocalDay(date) {
+  const result = new Date(date);
+  result.setHours(0, 0, 0, 0);
+  return result;
+}
+
+function nextLocalDay(date) {
+  const result = new Date(date);
+  result.setDate(result.getDate() + 1);
+  return result;
+}
+
+function sqlString(value) {
+  return `'${String(value).replaceAll("'", "''")}'`;
+}
+
+function formatDuration(totalSeconds) {
+  const seconds = Math.max(Math.floor(totalSeconds), 0);
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const rest = seconds % 60;
+
+  if (hours > 0) {
+    return `${hours}:${String(minutes).padStart(2, "0")}:${String(rest).padStart(2, "0")}`;
+  }
+
+  return `${minutes}:${String(rest).padStart(2, "0")}`;
+}
+
+function formatClockTime(value) {
+  return new Date(value).toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function formatLocalDate(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+function escapeMarkdownTable(value) {
+  return String(value).replaceAll("|", "\\|").replace(/\s+/g, " ").trim();
+}

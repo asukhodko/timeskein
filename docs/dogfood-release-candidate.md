@@ -66,6 +66,16 @@ pnpm dogfood:metrics
 pnpm export:app-events
 ```
 
+Run the release-candidate evidence check:
+
+```bash
+pnpm dogfood:rc-check
+```
+
+`dogfood:rc-check` does not replace the human verdict. It catches hard blockers
+and prints review items that must be resolved or consciously accepted before the
+milestone can be marked done.
+
 The final evidence must include:
 
 - focus blocks for the real workday;
@@ -74,6 +84,7 @@ The final evidence must include:
 - significant gaps and open gap, if any;
 - open captures, if any;
 - App Telemetry;
+- `dogfood:rc-check` output;
 - a short written review of missing blocks, wrong Work Items, unresolved
   captures, and product friction.
 
@@ -112,4 +123,3 @@ When the RC fails, fix only the blockers shown by the day evidence and run
 another dogfood day. Do not expand the scope to future platforms, sync,
 automation, or health-data integrations before the Session replacement baseline
 is trustworthy.
-

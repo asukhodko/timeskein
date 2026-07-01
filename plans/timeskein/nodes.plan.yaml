@@ -357,7 +357,7 @@ nodes:
     effort: 2
     deps:
       - id: ts.day_review.analysis_gate
-    notes: dogfood:preflight covers script syntax, contracts build, desktop typecheck, Markdown export smoke, dogfood start/status/ready/reset/stop-active/open-app smoke, packaged macOS build, embedded agent smoke, focus switching, capture API, stale lock/port recovery, and restart/restore. Browser UI smoke is still manual.
+    notes: dogfood:preflight covers script syntax, contracts build, desktop typecheck, Markdown export smoke, dogfood start/status/ready/rc-check/reset/stop-active/open-app smoke, packaged macOS build, embedded agent smoke, focus switching, capture API, stale lock/port recovery, and restart/restore. Browser UI smoke is still manual.
     x:
       ops:
         attention_class: current
@@ -405,6 +405,7 @@ nodes:
     deps:
       - id: ts.hardening.package_app
       - id: ts.hardening.backup_reset
+    notes: Dogfood Release Candidate doc defines the pass/fail gate. dogfood:rc-check turns the saved SQLite day into hard blockers, review items, and manual verdict prompts.
     x:
       ops:
         attention_class: current

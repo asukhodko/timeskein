@@ -156,6 +156,14 @@ pnpm dogfood:metrics
 pnpm export:app-events
 ```
 
+For the Dogfood Release Candidate gate, run the evidence check after saving the report:
+
+```bash
+pnpm dogfood:rc-check
+```
+
+The RC check exits with code 1 for hard blockers such as active state, duplicate Work Item titles, or an empty day. Review items still require human judgment against the release-candidate criteria.
+
 ### macOS Data Path
 
 ```text

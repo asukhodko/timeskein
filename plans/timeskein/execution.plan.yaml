@@ -156,11 +156,17 @@ execution:
       confidence: 0.75
       note: Open captures can be resolved or converted to Work Items, and open captures appear in UI/CLI dogfood reports. Edit/delete and append-as-timestamped-note remain future work.
     ts.hardening.smoke:
-      progress: 0.95
+      progress: 0.97
       actual_start: "2026-06-30"
-      updated_at: "2026-07-01T20:10:00+03:00"
+      updated_at: "2026-07-01T22:25:00+03:00"
       confidence: 0.9
-      note: Added smoke:capture-api and packaged-app capture checks. Browser UI smoke is still manual.
+      note: Added smoke:capture-api, packaged-app capture checks, and dogfood:rc-check smoke coverage for release-candidate evidence. Browser UI smoke is still manual.
+    ts.hardening.release_notes:
+      progress: 0.65
+      actual_start: "2026-07-01"
+      updated_at: "2026-07-01T22:25:00+03:00"
+      confidence: 0.85
+      note: Added Dogfood Release Candidate gate doc and dogfood:rc-check evidence checker. The milestone still needs a real next dogfood day and final known-limits update based on that result.
     ts.hardening.post_dogfood_friction:
       progress: 0.9
       actual_start: "2026-07-01"

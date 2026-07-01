@@ -104,6 +104,7 @@ pnpm smoke:dogfood-report
 pnpm smoke:dogfood-finish
 pnpm smoke:dogfood-status
 pnpm smoke:dogfood-ready
+pnpm smoke:dogfood-rc-check
 pnpm smoke:dogfood-reset-db
 pnpm smoke:dogfood-start
 pnpm smoke:dogfood-stop-active
@@ -127,6 +128,7 @@ Runtime smoke on macOS:
 - `pnpm smoke:dogfood-finish` verifies the end-of-day gate: no active focus session, no active Work Item, and at least one focus block
 - `pnpm smoke:dogfood-status` verifies the embedded-agent status checker against healthy and unhealthy temporary HTTP agents
 - `pnpm smoke:dogfood-ready` verifies the real-database readiness checker against clean and contaminated temporary SQLite databases, including running-process visibility and the actionable next commands
+- `pnpm smoke:dogfood-rc-check` verifies the release-candidate evidence checker against good, open-capture, empty-day, duplicate-title, and active-session temporary databases
 - `pnpm smoke:dogfood-reset-db` verifies dry-run, backup-reset behavior, and running-process refusal on temporary database files
 - `pnpm smoke:dogfood-start` verifies the start gate against clean and contaminated temporary SQLite databases, including clean-start reset, without opening the app
 - `pnpm smoke:dogfood-stop-active` verifies dry-run, direct SQLite fallback, running-process refusal, and running-agent API behavior for closing a stuck active focus block
@@ -141,6 +143,7 @@ Dogfood launch helper:
 - `pnpm dogfood:finish:save` runs the same end-of-day gate and saves the Markdown report to `timeskein-dogfood-report-YYYY-MM-DD.md`
 - `pnpm dogfood:preflight` runs the local checks needed before trusting a real dogfood day, including isolated mock API, export, and dogfood-report smoke checks
 - `pnpm dogfood:ready` inspects the real local SQLite database for active sessions, active Work Items, duplicate titles, existing focus blocks for today, agent responsiveness, and running app processes; when the day is not ready it prints exact stop/reset commands
+- `pnpm dogfood:rc-check` prints the release-candidate evidence summary, hard blockers, review items, and manual verdict prompts for the saved dogfood day
 - `pnpm dogfood:reset-db` moves the real local SQLite database and sidecar files aside only when `--apply` is passed; it refuses while the agent or app process appears alive unless `--force` is passed
 - `pnpm dogfood:stop-active` stops active focus sessions, writes a stop note, and clears active Work Items only when `--apply` is passed; it uses the running agent API when available and direct SQLite only when neither agent nor app process is alive, unless `--force` is passed
 - `pnpm dogfood:macos` rebuilds and opens the packaged app for a real Session replacement day

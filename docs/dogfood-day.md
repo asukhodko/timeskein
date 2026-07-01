@@ -291,11 +291,20 @@ pnpm export:app-events
 
 Telemetry stays local in SQLite. Event payloads are technical only; raw Work Item titles, notes, URLs, and typed text should not appear there.
 
+For a Dogfood Release Candidate day, run the RC evidence check after saving the report:
+
+```bash
+pnpm dogfood:rc-check
+```
+
+The command prints hard blockers and review items for the Session replacement gate.
+
 For a previous date:
 
 ```bash
 pnpm export:focus-day --date 2026-06-30 > timeskein-day.md
 pnpm dogfood:finish -- --date 2026-06-30 > timeskein-dogfood-report.md
+pnpm dogfood:rc-check -- --date 2026-06-30
 ```
 
 The dogfood report includes the focus-day export and prompts for:

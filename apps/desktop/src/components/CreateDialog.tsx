@@ -12,6 +12,7 @@ export default function CreateDialog({ onClose, initialTitle = '' }: CreateDialo
   const [note, setNote] = useState('')
   const [state, setState] = useState<WorkItemState>('unknown')
   const [type, setType] = useState<WorkItemType>('task')
+  const [error, setError] = useState<string | null>(null)
   
   const titleRef = useRef<HTMLInputElement>(null)
   const createMutation = useCreateWorkItem()
@@ -27,6 +28,7 @@ export default function CreateDialog({ onClose, initialTitle = '' }: CreateDialo
     if (!title.trim()) return
 
     try {
+      setError(null)
       await createMutation.mutateAsync({
         title: title.trim(),
         type,
@@ -36,6 +38,7 @@ export default function CreateDialog({ onClose, initialTitle = '' }: CreateDialo
       onClose()
     } catch (error) {
       console.error('Failed to create work item:', error)
+      setError(error instanceof Error ? error.message : 'Failed to create work item')
     }
   }
 
@@ -124,6 +127,11 @@ export default function CreateDialog({ onClose, initialTitle = '' }: CreateDialo
 
           {/* Actions */}
           <div className="flex justify-end gap-2 pt-2">
+            {error && (
+              <div className="mr-auto max-w-48 text-xs text-red-300">
+                {error}
+              </div>
+            )}
             <button
               type="button"
               onClick={onClose}

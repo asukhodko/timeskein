@@ -9,6 +9,8 @@ The system answers questions like:
 - "When and how did I solve problem Z?"
 - "What's on my plate today?"
 - "How much active focus time did I actually have today?"
+- "What tried to interrupt me, and did I handle it later?"
+- "Where did the tracking tool itself create friction today?"
 
 ### Core Principles
 
@@ -51,7 +53,7 @@ All documentation below is the **source of truth** for the project.
 |----------|-------------|
 | [00_project_overview.md](00_project_overview.md) | Main project document: concepts, principles, model |
 | [current-implementation.md](current-implementation.md) | Current repository/runtime state |
-| [dogfood-day.md](dogfood-day.md) | Protocol for replacing Session during one real workday |
+| [dogfood-day.md](dogfood-day.md) | Protocol for replacing Session during one real workday, including Capture Inbox and local app telemetry checks |
 | [glossary.md](glossary.md) | Definitions of all terms and entities |
 
 ### Architecture Decision Records (ADR)

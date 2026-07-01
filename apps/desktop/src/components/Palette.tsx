@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import type { MouseEvent } from 'react'
 import { getCurrentWindow } from '@tauri-apps/api/window'
+import { logAppEvent } from '../api/client'
 import { 
   useInventory, 
   useSetWorkItemState, 
@@ -46,6 +47,13 @@ export default function Palette() {
 
   const handleHideWindow = async () => {
     try {
+      void logAppEvent({
+        source: 'ui',
+        kind: 'window_hidden',
+        payload: {
+          control: 'hide_button',
+        },
+      })
       await getCurrentWindow().hide()
     } catch {
       // Browser mode has no window to hide.
@@ -59,6 +67,10 @@ export default function Palette() {
     if (target.closest('button,input,textarea,select,a,[data-no-drag]')) return
 
     try {
+      void logAppEvent({
+        source: 'ui',
+        kind: 'window_drag_started',
+      })
       await getCurrentWindow().startDragging()
     } catch {
       // Browser mode has no native window to drag.
@@ -81,10 +93,47 @@ export default function Palette() {
   const handleFocusSelected = useCallback(() => {
     if (!selectedItem || startFocusMutation.isPending) return
 
+    const actionId = createTelemetryActionId()
+    void logAppEvent({
+      source: 'ui',
+      kind: 'focus_start_requested',
+      work_item_id: selectedItem.id,
+      payload: {
+        action_id: actionId,
+        control: 'selected_shortcut',
+      },
+    })
+
     startFocusMutation.mutate({
       title: selectedItem.title,
       work_item_id: selectedItem.id,
       target_seconds: 25 * 60,
+      telemetry_action_id: actionId,
+    }, {
+      onSuccess: (session) => {
+        void logAppEvent({
+          source: 'ui',
+          kind: 'focus_started',
+          work_item_id: session.work_item_id,
+          focus_session_id: session.id,
+          payload: {
+            action_id: actionId,
+            control: 'selected_shortcut',
+          },
+        })
+      },
+      onError: (error) => {
+        void logAppEvent({
+          source: 'ui',
+          kind: 'focus_start_failed',
+          work_item_id: selectedItem.id,
+          payload: {
+            action_id: actionId,
+            control: 'selected_shortcut',
+            error_code: error instanceof Error && 'code' in error ? String(error.code) : 'unknown',
+          },
+        })
+      },
     })
   }, [selectedItem, startFocusMutation])
 
@@ -124,8 +173,11 @@ export default function Palette() {
       if (showCreate || showStateMenu || showNoteEditor || showRefsPanel || showDeleteConfirm) return
 
       // Ignore item shortcuts while typing in a field.
-      const isInput = (e.target as HTMLElement).tagName === 'INPUT' || 
-                      (e.target as HTMLElement).tagName === 'TEXTAREA'
+      const isInput = isEditableElement(e.target)
+
+      if (isInput) {
+        return
+      }
 
       // Alt+N or C (when not in input) - create new
       if ((e.code === 'KeyN' && e.altKey) || (e.code === 'KeyC' && !e.ctrlKey && !e.altKey && !e.metaKey)) {
@@ -134,8 +186,6 @@ export default function Palette() {
         setShowCreate(true)
         return
       }
-
-      if (isInput) return
 
       // Use e.code for layout-independent shortcuts (works with Russian keyboard)
       switch (e.code) {
@@ -407,4 +457,12 @@ export default function Palette() {
       )}
     </div>
   )
+}
+
+function isEditableElement(target: EventTarget | null) {
+  return target instanceof HTMLElement && target.matches('input,textarea,select,[contenteditable="true"]')
+}
+
+function createTelemetryActionId() {
+  return globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`
 }

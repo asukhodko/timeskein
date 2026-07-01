@@ -8,7 +8,8 @@ use uuid::Uuid;
 
 use crate::api::handlers::RpcResponse;
 use crate::domain::{
-    FocusSession, FocusSessionState, FocusSessionView, WorkItem, WorkItemState, WorkItemType,
+    AppEvent, AppEventKind, AppEventSource, FocusSession, FocusSessionState, FocusSessionView,
+    WorkItem, WorkItemState, WorkItemType,
 };
 use crate::AppState;
 
@@ -43,6 +44,12 @@ pub async fn handle_focus_start(
         .get("target_seconds")
         .and_then(|value| value.as_i64())
         .filter(|seconds| *seconds >= 60);
+    let telemetry_action_id = params
+        .get("telemetry_action_id")
+        .and_then(|value| value.as_str())
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .map(str::to_string);
 
     let requested_title = params
         .get("title")
@@ -53,6 +60,7 @@ pub async fn handle_focus_start(
 
     let state = state.write().await;
 
+    let mut reused_work_item = false;
     let linked_work_item = if let Some(work_item_id) = requested_work_item_id {
         state
             .db
@@ -76,6 +84,7 @@ pub async fn handle_focus_start(
         if let Some(item) = state.db.find_work_item_by_title(title).await.map_err(|e| {
             RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
         })? {
+            reused_work_item = true;
             item
         } else {
             let item = WorkItem::new(
@@ -102,6 +111,19 @@ pub async fn handle_focus_start(
         if active_session.work_item_id == work_item_id {
             let view =
                 FocusSessionView::from_session(&active_session, active_work_item_title, Utc::now());
+            let _ = state
+                .db
+                .log_app_event(&agent_event(
+                    AppEventKind::FocusStarted,
+                    work_item_id,
+                    Some(active_session.id),
+                    Some(serde_json::json!({
+                    "action_id": telemetry_action_id,
+                    "already_active": true,
+                    "reused": true,
+                    })),
+                ))
+                .await;
             return Ok(serde_json::to_value(view).unwrap());
         }
 
@@ -113,6 +135,18 @@ pub async fn handle_focus_start(
             .map_err(|e| {
                 RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
             })?;
+        let stopped_id = active_session.id;
+        let _ = state
+            .db
+            .log_app_event(&agent_event(
+                AppEventKind::FocusStopped,
+                None,
+                Some(stopped_id),
+                Some(serde_json::json!({
+                "reason": "switch",
+                })),
+            ))
+            .await;
     }
 
     state
@@ -133,6 +167,25 @@ pub async fn handle_focus_start(
     let _ = state.db.update_work_item(&item).await;
 
     let view = FocusSessionView::from_session(&session, work_item_title, Utc::now());
+    let focus_session_id = session.id;
+    let event_kind = if reused_work_item || requested_work_item_id.is_some() {
+        AppEventKind::FocusSwitched
+    } else {
+        AppEventKind::FocusStarted
+    };
+    let _ = state
+        .db
+        .log_app_event(&agent_event(
+            event_kind,
+            work_item_id,
+            Some(focus_session_id),
+            Some(serde_json::json!({
+            "action_id": telemetry_action_id,
+            "already_active": false,
+            "reused": reused_work_item,
+            })),
+        ))
+        .await;
     Ok(serde_json::to_value(view).unwrap())
 }
 
@@ -143,6 +196,12 @@ pub async fn handle_focus_stop(
     request_id: &str,
 ) -> Result<serde_json::Value, RpcResponse> {
     let requested_id = parse_optional_uuid(params.get("id"), request_id)?;
+    let telemetry_action_id = params
+        .get("telemetry_action_id")
+        .and_then(|value| value.as_str())
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .map(str::to_string);
     let note = params
         .get("note")
         .and_then(|value| value.as_str())
@@ -198,7 +257,33 @@ pub async fn handle_focus_stop(
     }
 
     let view = FocusSessionView::from_session(&session, work_item_title, Utc::now());
+    let work_item_id = session.work_item_id;
+    let focus_session_id = session.id;
+    let _ = state
+        .db
+        .log_app_event(&agent_event(
+            AppEventKind::FocusStopped,
+            work_item_id,
+            Some(focus_session_id),
+            Some(serde_json::json!({
+            "action_id": telemetry_action_id,
+            })),
+        ))
+        .await;
     Ok(serde_json::to_value(view).unwrap())
+}
+
+fn agent_event(
+    kind: AppEventKind,
+    work_item_id: Option<Uuid>,
+    focus_session_id: Option<Uuid>,
+    payload: Option<serde_json::Value>,
+) -> AppEvent {
+    let mut event = AppEvent::new(AppEventSource::Agent, kind);
+    event.work_item_id = work_item_id;
+    event.focus_session_id = focus_session_id;
+    event.payload = payload;
+    event
 }
 
 /// Handle focus.list.

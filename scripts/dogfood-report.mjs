@@ -14,21 +14,34 @@ const dbPath = options.db
   ? resolve(options.db)
   : join(homedir(), "Library/Application Support/Timeskein/timeskein.db");
 const exportArgs = [resolve(repoRoot, "scripts/export-focus-day.mjs"), "--db", dbPath];
+const metricsArgs = [resolve(repoRoot, "scripts/dogfood-metrics.mjs"), "--db", dbPath];
 
 if (options.date) {
   exportArgs.push("--date", options.date);
+  metricsArgs.push("--date", options.date);
 }
 
 const activeSummary = existsSync(dbPath)
   ? await loadActiveSummary(dbPath)
-  : { activeFocus: undefined, activeWorkItems: [] };
+  : { activeFocus: undefined, activeWorkItems: [], openCaptures: [] };
 const { stdout: dayMarkdown } = await execFileAsync(process.execPath, exportArgs, {
+  cwd: repoRoot,
+  maxBuffer: 10 * 1024 * 1024,
+});
+const { stdout: telemetryMarkdown } = await execFileAsync(process.execPath, metricsArgs, {
   cwd: repoRoot,
   maxBuffer: 10 * 1024 * 1024,
 });
 
 process.stdout.write(
-  buildDogfoodReport(reportDate, dayMarkdown, activeSummary.activeFocus, activeSummary.activeWorkItems)
+  buildDogfoodReport(
+    reportDate,
+    dayMarkdown,
+    telemetryMarkdown,
+    activeSummary.activeFocus,
+    activeSummary.activeWorkItems,
+    activeSummary.openCaptures
+  )
 );
 
 function parseArgs(args) {
@@ -66,7 +79,7 @@ If a focus block or Work Item is still active, the report is marked as a draft.`
 }
 
 async function loadActiveSummary(path) {
-  const [activeFocusRows, activeWorkItems] = await Promise.all([
+  const [activeFocusRows, activeWorkItems, openCaptures] = await Promise.all([
     queryJson(path, `
       SELECT
         fs.title,
@@ -84,11 +97,12 @@ async function loadActiveSummary(path) {
       WHERE deleted_at IS NULL AND state = 'active'
       ORDER BY datetime(updated_at) DESC
     `),
+    loadOpenCaptures(path),
   ]);
 
   const row = activeFocusRows[0];
   if (!row) {
-    return { activeFocus: undefined, activeWorkItems };
+    return { activeFocus: undefined, activeWorkItems, openCaptures };
   }
 
   const activeSeconds = Math.max(
@@ -103,7 +117,30 @@ async function loadActiveSummary(path) {
       active_seconds: activeSeconds,
     },
     activeWorkItems,
+    openCaptures,
   };
+}
+
+async function loadOpenCaptures(path) {
+  if (!(await tableExists(path, "captures"))) {
+    return [];
+  }
+
+  return queryJson(path, `
+    SELECT id, text, created_at
+    FROM captures
+    WHERE state = 'open'
+    ORDER BY datetime(created_at) ASC
+  `);
+}
+
+async function tableExists(path, tableName) {
+  const rows = await queryJson(
+    path,
+    `SELECT COUNT(*) AS count FROM sqlite_master WHERE type = 'table' AND name = ${sqlString(tableName)}`
+  );
+
+  return (rows[0]?.count ?? 0) > 0;
 }
 
 async function queryJson(path, sql) {
@@ -118,7 +155,7 @@ function sqliteReadArgs(path, sql) {
   return ["-readonly", "-cmd", ".timeout 5000", "-json", path, sql];
 }
 
-function buildDogfoodReport(date, dayMarkdown, activeFocus, activeWorkItems) {
+function buildDogfoodReport(date, dayMarkdown, telemetryMarkdown, activeFocus, activeWorkItems, openCaptures = []) {
   const hasActiveWorkItems = activeWorkItems.length > 0;
   const reportState = activeFocus
     ? "draft - focus block still active"
@@ -155,10 +192,22 @@ function buildDogfoodReport(date, dayMarkdown, activeFocus, activeWorkItems) {
     );
   }
 
+  if (openCaptures.length > 0) {
+    lines.push(
+      "## Open Captures",
+      "",
+      ...openCaptures.map((capture) => `- ${formatClockTime(capture.created_at)} ${formatMarkdownListText(capture.text)}`),
+      "- Resolve or convert these captures during review.",
+      ""
+    );
+  }
+
   lines.push(
     "## Focus Data",
     "",
     dayMarkdown.trim(),
+    "",
+    telemetryMarkdown.trim(),
     "",
     "## Review",
     "",
@@ -214,6 +263,14 @@ function formatDuration(totalSeconds) {
   }
 
   return `${minutes}:${String(rest).padStart(2, "0")}`;
+}
+
+function formatMarkdownListText(value) {
+  return String(value ?? "").replace(/\s+/g, " ").trim();
+}
+
+function sqlString(value) {
+  return `'${value.replaceAll("'", "''")}'`;
 }
 
 function formatLocalDate(date) {

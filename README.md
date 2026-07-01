@@ -10,13 +10,15 @@ A desktop application for quickly tracking focus sessions and work items with re
 |-----------|--------|-------|
 | Frontend (React + Tailwind) | Working | Runs in browser via Vite |
 | Focus Session | Working baseline | Start, live timer, manual stop, day list, total active time |
+| Capture Inbox | Working baseline | Quick incoming-event capture without interrupting the active focus block |
+| Dogfood Telemetry | Working baseline | Local app-event journal and CLI metrics for tracking UX friction |
 | Mock Server | Working | Full API implementation for development |
 | Rust Agent | Working | SQLite-backed Local API, embedded in macOS app |
 | Tauri Desktop | Working on macOS | Embeds Rust agent and builds macOS `.app` |
 
-**What works now:** Focus Session tracking and Work Item inventory in browser mock mode and in the macOS `.app` with an embedded Rust agent.
+**What works now:** Focus Session tracking, Capture Inbox, and Work Item inventory in browser mock mode and in the macOS `.app` with an embedded Rust agent.
 
-**Current focus:** Browser development mode and macOS Tauri app. Windows packaging is deferred.
+**Current focus:** Continued macOS dogfooding after the first real tracked day on 2026-07-01. The next test is whether the new Capture Inbox makes incoming distractions cheap to remember without switching focus. Windows packaging is deferred.
 
 See [Current Implementation](docs/current-implementation.md) for the exact state of what runs today.
 Use [Dogfood Day Protocol](docs/dogfood-day.md) when testing Timeskein as a Session replacement for a real workday.
@@ -139,10 +141,18 @@ At the end of the day, export the analysis note:
 pnpm dogfood:finish:save
 ```
 
-This writes `timeskein-dogfood-report-YYYY-MM-DD.md` in the current directory. To print the report to stdout instead:
+This writes `timeskein-dogfood-report-YYYY-MM-DD.md` in the current directory. The report includes focus blocks, open Capture Inbox entries, and local app telemetry: starts, switches, stops, API errors, show/hide events, copy failures, and likely friction points.
+To print the report to stdout instead:
 
 ```bash
 pnpm dogfood:finish > timeskein-dogfood-report.md
+```
+
+Inspect the telemetry separately when debugging the test day:
+
+```bash
+pnpm dogfood:metrics
+pnpm export:app-events
 ```
 
 ### macOS Data Path
@@ -153,6 +163,8 @@ pnpm dogfood:finish > timeskein-dogfood-report.md
 
 The app stores SQLite data in `timeskein.db` and writes the current embedded-agent port to `agent.port`.
 On startup the macOS app checks an existing `agent.port` with `agent.status`; if the recorded agent is gone, stale `agent.lock` / `agent.port` files are removed and a fresh embedded agent is started.
+
+The local SQLite database also stores `captures`, the small inbox for incoming events, and `app_events`, an append-only technical event journal used for dogfood analysis. Telemetry payloads are intentionally limited to safe technical metadata; raw Work Item titles, notes, URLs, search text, and free-form user text are not written to telemetry payloads.
 
 ### Roadmap Tools
 
@@ -175,12 +187,14 @@ With the mock server running:
 ```bash
 pnpm mock-server
 pnpm smoke:focus-api
+pnpm smoke:capture-api
 ```
 
 Against a running Rust agent or desktop app:
 
 ```bash
 TIMESKEIN_API_URL=http://127.0.0.1:<port>/api pnpm smoke:focus-api
+TIMESKEIN_API_URL=http://127.0.0.1:<port>/api pnpm smoke:capture-api
 ```
 
 The smoke refuses to run if there is already an active focus session.
@@ -208,6 +222,7 @@ Focus Session controls:
 |---------|--------|
 | Focus input + `Start` | Find or create a Work Item by title, then start focus on it |
 | Focus input + `Switch` | Stop the current block and start a new block by title |
+| Capture input + `Capture` | Save an incoming event without stopping or switching focus |
 | Empty focus input + `Space` | Start or switch focus to the selected Work Item |
 | `Start Item` / `Switch Item` | Start or continue focus on the selected Work Item |
 | Double-click Work Item | Start or switch focus to that Work Item |
@@ -227,13 +242,14 @@ Focus Session controls:
 
 - Manual work item management (create/touch/edit/delete)
 - Manual focus sessions with 25-minute target and overflow tracking
+- Capture Inbox for incoming events that should be handled later without interrupting the current focus block
 - Running focus session restored from SQLite after frontend/app restart
 - Focus sessions are linked to Work Items; typed titles reuse existing Work Items instead of creating duplicates
 - Setting a Work Item to `active` starts or switches the linked focus session; stopping it clears `active`
 - Day panel with focus blocks, total active time, entrance count, and gaps
 - Open gap warning when no focus block is running and the time since the last stopped block is significant
 - Day totals count the part of each focus block that overlaps the selected local day
-- Markdown dogfood report from the Today panel or CLI, with focus data, Work Item totals, significant gaps, review prompts, and draft warning while a focus block or Work Item is active
+- Markdown dogfood report from the Today panel or CLI, with focus data, Work Item totals, significant gaps, open captures, review prompts, and draft warning while a focus block or Work Item is active
 - macOS menu bar item shows the active focus duration as a short `12m Focus` status while a block is running
 - Work item states: active, waiting, blocked, done, someday, unknown
 - Refs: URLs, file paths, issue keys with conflict detection

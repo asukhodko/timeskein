@@ -1,5 +1,7 @@
 //! Database module - SQLite persistence layer
 
+mod app_events;
+mod captures;
 mod connection;
 mod focus_sessions;
 mod refs;

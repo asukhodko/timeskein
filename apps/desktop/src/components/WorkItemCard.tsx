@@ -24,6 +24,9 @@ export default function WorkItemCard({
   onClick,
   onDoubleClick,
 }: WorkItemCardProps) {
+  const lastSeen = formatRelativeTime(item.last_seen_at)
+  const lastSeenLabel = lastSeen === '—' || lastSeen === 'now' ? lastSeen : `${lastSeen} ago`
+
   return (
     <div
       className={clsx(
@@ -76,8 +79,8 @@ export default function WorkItemCard({
           )}
 
           {/* Last seen */}
-          <span className="w-8 text-right" title={item.last_seen_at || 'Never seen'}>
-            {formatRelativeTime(item.last_seen_at)}
+          <span className="w-14 text-right" title={item.last_seen_at || 'Never seen'}>
+            {lastSeenLabel}
           </span>
         </div>
       </div>

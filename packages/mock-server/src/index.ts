@@ -8,6 +8,9 @@ import {
   type ApiError,
   type WorkItemState,
   type RefKind,
+  type CaptureState,
+  type AppEventKind,
+  type AppEventSource,
 } from "@timeskein/contracts";
 import { MockDataStore } from "./fixtures";
 
@@ -46,6 +49,39 @@ function errorResponse(
     request_id: requestId,
     error: { code, message, details },
   };
+}
+
+const APP_EVENT_KINDS = new Set<string>([
+  "app_started",
+  "agent_started",
+  "agent_reused",
+  "agent_stale_runtime_recovered",
+  "window_shown",
+  "window_hidden",
+  "window_drag_started",
+  "focus_start_requested",
+  "focus_started",
+  "focus_start_failed",
+  "focus_switch_requested",
+  "focus_switched",
+  "focus_stop_requested",
+  "focus_stopped",
+  "focus_stop_failed",
+  "report_copy_requested",
+  "report_copied",
+  "report_copy_failed",
+  "manual_copy_fallback_shown",
+  "api_error",
+]);
+
+const APP_EVENT_SOURCES = new Set<string>(["ui", "agent", "script", "system"]);
+
+function isAppEventKind(value: unknown): value is AppEventKind {
+  return typeof value === "string" && APP_EVENT_KINDS.has(value);
+}
+
+function isAppEventSource(value: unknown): value is AppEventSource {
+  return typeof value === "string" && APP_EVENT_SOURCES.has(value);
 }
 
 // -----------------------------------------------------------------------------
@@ -103,6 +139,94 @@ function handleMethod(
         api_version: API_VERSION,
         build_date: new Date().toISOString().split("T")[0],
       });
+
+    case "app_event.log": {
+      if (!isAppEventKind(params.kind)) {
+        return errorResponse(requestId, "validation_error", "Valid app event kind is required");
+      }
+
+      const source = params.source;
+      if (source !== undefined && !isAppEventSource(source)) {
+        return errorResponse(requestId, "validation_error", "Valid app event source is required");
+      }
+
+      return successResponse(requestId, store.logAppEvent({
+        source,
+        kind: params.kind,
+        work_item_id: params.work_item_id as string | undefined,
+        focus_session_id: params.focus_session_id as string | undefined,
+        payload: params.payload as Record<string, unknown> | undefined,
+      }));
+    }
+
+    case "app_event.list": {
+      const events = store.listAppEvents(params.from as string | undefined, params.to as string | undefined);
+      return successResponse(requestId, {
+        events,
+        total: events.length,
+        updated_at: new Date().toISOString(),
+      });
+    }
+
+    case "app_event.summary":
+      return successResponse(requestId, store.summarizeAppEvents(
+        params.from as string | undefined,
+        params.to as string | undefined
+      ));
+
+    case "capture.create": {
+      const text = params.text as string;
+      if (!text || text.trim() === "") {
+        return errorResponse(requestId, "validation_error", "Capture text is required");
+      }
+
+      return successResponse(requestId, store.createCapture({
+        text,
+        focus_session_id: params.focus_session_id as string | undefined,
+      }));
+    }
+
+    case "capture.list": {
+      const stateFilter = params.state as CaptureState[] | undefined;
+      const captures = store.listCaptures(stateFilter);
+      return successResponse(requestId, {
+        captures,
+        total: captures.length,
+        updated_at: new Date().toISOString(),
+      });
+    }
+
+    case "capture.resolve": {
+      const id = params.id as string;
+      if (!id) {
+        return errorResponse(requestId, "validation_error", "Capture ID is required");
+      }
+
+      const capture = store.resolveCapture(id);
+      if (!capture) {
+        return errorResponse(requestId, "not_found", "Capture not found");
+      }
+
+      return successResponse(requestId, capture);
+    }
+
+    case "capture.convert_to_work_item": {
+      const id = params.id as string;
+      if (!id) {
+        return errorResponse(requestId, "validation_error", "Capture ID is required");
+      }
+
+      const result = store.convertCaptureToWorkItem(id, params.title as string | undefined);
+      if (!result.capture || !result.workItemId) {
+        return errorResponse(requestId, "not_found", "Capture not found");
+      }
+
+      return successResponse(requestId, {
+        capture: result.capture,
+        work_item_id: result.workItemId,
+        reused: result.reused,
+      });
+    }
 
     // Inventory methods
     case "inventory.list": {
@@ -419,6 +543,7 @@ app.listen(PORT, () => {
   console.log("Available methods:");
   console.log("  agent.ping, agent.status, agent.version");
   console.log("  inventory.list, inventory.get");
+  console.log("  capture.create, capture.list, capture.resolve, capture.convert_to_work_item");
   console.log("  work_item.create, work_item.touch, work_item.set_state, work_item.set_note, work_item.toggle_pin, work_item.delete");
   console.log("  focus.current, focus.start, focus.stop, focus.list");
   console.log("  ref.add, ref.remove, ref.open, ref.check_conflict");

@@ -12,6 +12,7 @@ use tracing_subscriber::FmtSubscriber;
 
 use timeskein_agent::api::create_router;
 use timeskein_agent::db::Database;
+use timeskein_agent::domain::{AppEvent, AppEventKind, AppEventSource};
 use timeskein_agent::runtime::{ensure_data_dir, write_port_file, SingleInstanceLock};
 use timeskein_agent::AppState;
 
@@ -38,6 +39,12 @@ async fn main() -> Result<()> {
     // Initialize database
     let db_path = data_dir.join("timeskein.db");
     let db = Database::new(&db_path).await?;
+    let _ = db
+        .log_app_event(&AppEvent::new(
+            AppEventSource::Agent,
+            AppEventKind::AgentStarted,
+        ))
+        .await;
     info!("Database initialized: {}", db_path.display());
 
     // Create application state

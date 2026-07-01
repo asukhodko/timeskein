@@ -12,6 +12,15 @@ import {
   type FocusCurrentResponse,
   type FocusListResponse,
   type FocusSessionView,
+  type CaptureConvertResponse,
+  type CaptureListResponse,
+  type CaptureState,
+  type CaptureView,
+  type AppEventKind,
+  type AppEventListResponse,
+  type AppEventSource,
+  type AppEventSummary,
+  type AppEventView,
   isApiError,
 } from '@timeskein/contracts'
 
@@ -125,10 +134,46 @@ export const workItemApi = {
 export const focusApi = {
   current: () => rpc<FocusCurrentResponse>('focus.current'),
   list: (params?: { from?: string; to?: string }) => rpc<FocusListResponse>('focus.list', params),
-  start: (params: { title: string; work_item_id?: string; target_seconds?: number }) =>
+  start: (params: { title: string; work_item_id?: string; target_seconds?: number; telemetry_action_id?: string }) =>
     rpc<FocusSessionView>('focus.start', params),
-  stop: (params?: { id?: string; note?: string }) =>
+  stop: (params?: { id?: string; note?: string; telemetry_action_id?: string }) =>
     rpc<FocusSessionView>('focus.stop', params),
+}
+
+export const appEventApi = {
+  log: (params: {
+    source?: AppEventSource
+    kind: AppEventKind
+    work_item_id?: string
+    focus_session_id?: string
+    payload?: Record<string, unknown>
+  }) => rpc<AppEventView>('app_event.log', params),
+  list: (params?: { from?: string; to?: string }) => rpc<AppEventListResponse>('app_event.list', params),
+  summary: (params?: { from?: string; to?: string }) => rpc<AppEventSummary>('app_event.summary', params),
+}
+
+export const captureApi = {
+  create: (params: { text: string; focus_session_id?: string }) =>
+    rpc<CaptureView>('capture.create', params),
+  list: (params?: { state?: CaptureState[] }) =>
+    rpc<CaptureListResponse>('capture.list', params),
+  resolve: (id: string) => rpc<CaptureView>('capture.resolve', { id }),
+  convertToWorkItem: (params: { id: string; title?: string }) =>
+    rpc<CaptureConvertResponse>('capture.convert_to_work_item', params),
+}
+
+export async function logAppEvent(params: {
+  source?: AppEventSource
+  kind: AppEventKind
+  work_item_id?: string
+  focus_session_id?: string
+  payload?: Record<string, unknown>
+}) {
+  try {
+    await appEventApi.log(params)
+  } catch (error) {
+    console.warn('Unable to log Timeskein app event', error)
+  }
 }
 
 // Desktop shell API

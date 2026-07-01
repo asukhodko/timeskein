@@ -68,6 +68,12 @@ impl Database {
             .execute(&self.pool)
             .await?;
 
+        let app_events_sql = include_str!("../../migrations/003_app_events.sql");
+        sqlx::raw_sql(app_events_sql).execute(&self.pool).await?;
+
+        let captures_sql = include_str!("../../migrations/004_captures.sql");
+        sqlx::raw_sql(captures_sql).execute(&self.pool).await?;
+
         Ok(())
     }
 

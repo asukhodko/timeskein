@@ -1,6 +1,8 @@
 //! API handlers
 
 mod agent;
+mod app_events;
+mod captures;
 mod focus_sessions;
 mod inventory;
 mod refs;
@@ -17,6 +19,8 @@ use uuid::Uuid;
 use crate::AppState;
 
 pub use agent::*;
+pub use app_events::*;
+pub use captures::*;
 pub use focus_sessions::*;
 pub use inventory::*;
 pub use refs::*;
@@ -107,10 +111,30 @@ pub async fn handle_rpc(
         .request_id
         .unwrap_or_else(|| Uuid::new_v4().to_string());
 
-    let response = match dispatch_method(&state, &request.method, request.params, &request_id).await
-    {
+    let method = request.method;
+    let response = match dispatch_method(&state, &method, request.params, &request_id).await {
         Ok(result) => RpcResponse::success(request_id, result),
-        Err(e) => e,
+        Err(e) => {
+            if method != "app_event.log" {
+                let code = e
+                    .error
+                    .as_ref()
+                    .map(|error| error.code.clone())
+                    .unwrap_or_else(|| "unknown".to_string());
+                log_agent_event(
+                    &state,
+                    crate::domain::AppEventKind::ApiError,
+                    None,
+                    None,
+                    Some(serde_json::json!({
+                        "request_method": method,
+                        "error_code": code,
+                    })),
+                )
+                .await;
+            }
+            e
+        }
     };
 
     (StatusCode::OK, Json(response))
@@ -128,6 +152,19 @@ async fn dispatch_method(
         "agent.ping" => handle_agent_ping(),
         "agent.status" => handle_agent_status(state).await,
         "agent.version" => handle_agent_version(),
+
+        // App event telemetry methods
+        "app_event.log" => handle_app_event_log(state, params, request_id).await,
+        "app_event.list" => handle_app_event_list(state, params, request_id).await,
+        "app_event.summary" => handle_app_event_summary(state, params, request_id).await,
+
+        // Capture inbox methods
+        "capture.create" => handle_capture_create(state, params, request_id).await,
+        "capture.list" => handle_capture_list(state, params, request_id).await,
+        "capture.resolve" => handle_capture_resolve(state, params, request_id).await,
+        "capture.convert_to_work_item" => {
+            handle_capture_convert_to_work_item(state, params, request_id).await
+        }
 
         // Inventory methods
         "inventory.list" => handle_inventory_list(state, params, request_id).await,

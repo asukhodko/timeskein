@@ -183,8 +183,30 @@ const activeItems = inventoryAfterSwitch.items.filter((item) => item.state === "
 assert(activeItems.length === 1, "inventory contains more than one active work item");
 assert(activeItems[0].id === itemB.id, "the active work item is not item B");
 
+const createdActive = await rpc("work_item.create", {
+  title: `Smoke create active ${new Date().toISOString()}`,
+  type: "task",
+  state: "active",
+});
+assert(createdActive.focus_session_id, "creating an active work item did not start focus");
+assert(
+  createdActive.focus_session_id !== activatedB.focus_session_id,
+  "creating an active work item reused the previous focus session"
+);
+
+const currentAfterCreateActive = await rpc("focus.current");
+assert(
+  currentAfterCreateActive.session?.work_item_id === createdActive.id,
+  "created active work item is not current focus"
+);
+
+const inventoryAfterCreateActive = await rpc("inventory.list");
+const activeAfterCreateActive = inventoryAfterCreateActive.items.filter((item) => item.state === "active");
+assert(activeAfterCreateActive.length === 1, "creating active work item left multiple active items");
+assert(activeAfterCreateActive[0].id === createdActive.id, "created active work item is not the only active item");
+
 await rpc("work_item.set_state", {
-  id: itemB.id,
+  id: createdActive.id,
   state: "waiting",
 });
 

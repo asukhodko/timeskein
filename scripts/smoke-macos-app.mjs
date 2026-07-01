@@ -36,11 +36,27 @@ try {
     title,
     target_seconds: 60,
   });
+  const capture = await rpc(port, "capture.create", {
+    text: `Packaged smoke capture ${new Date().toISOString()}`,
+  });
+  assert(capture.state === "open", "capture.create did not create an open capture");
+  assert(capture.focus_session_id === started.id, "capture.create did not link to active focus");
+  const currentAfterCapture = await rpc(port, "focus.current");
+  assert(
+    currentAfterCapture.session?.id === started.id,
+    "capture.create interrupted the active focus session"
+  );
+  const resolvedCapture = await rpc(port, "capture.resolve", {
+    id: capture.id,
+  });
+  assert(resolvedCapture.state === "resolved", "capture.resolve did not resolve capture");
   await new Promise((resolve) => setTimeout(resolve, 1100));
   const stopped = await rpc(port, "focus.stop", {
     note: "packaged app smoke done",
   });
   const day = await rpc(port, "focus.list", todayWindow());
+  const appEvents = await waitForAppEvents(port, ["agent_started", "app_started", "focus_started", "focus_stopped"], 5_000);
+  const appEventSummary = await rpc(port, "app_event.summary", todayWindow());
 
   assert(status.db_ok === true, "agent.status did not report db_ok=true");
   assert(typeof status.storage_path === "string", "agent.status did not return storage_path");
@@ -65,6 +81,14 @@ try {
     day.sessions.some((session) => session.id === started.id),
     "focus.list did not include the packaged app smoke session"
   );
+  assert(
+    appEvents.events.some((event) => event.kind === "agent_stale_runtime_recovered"),
+    "app_events did not include stale runtime recovery"
+  );
+  assert(appEventSummary.total >= 4, "app_event.summary did not count packaged app events");
+  assert(appEventSummary.by_kind.agent_started >= 1, "app_event.summary did not count agent_started");
+  assert(appEventSummary.by_kind.focus_started >= 1, "app_event.summary did not count focus_started");
+  assert(appEventSummary.by_kind.focus_stopped >= 1, "app_event.summary did not count focus_stopped");
   assertSessionsOldestFirst(day.sessions);
 
   const inventoryAfterFirstStart = await rpc(port, "inventory.list");
@@ -123,11 +147,30 @@ try {
   assert(createdOnce.id === createdTwice.id, "work_item.create did not reuse the existing title");
   assert(createdTwice.reused === true, "work_item.create did not report reused=true");
 
+  const convertCapture = await rpc(port, "capture.create", {
+    text: `Packaged smoke convert ${new Date().toISOString()}`,
+  });
+  const convertedCapture = await rpc(port, "capture.convert_to_work_item", {
+    id: convertCapture.id,
+  });
+  assert(
+    convertedCapture.capture.state === "converted",
+    "capture.convert_to_work_item did not convert capture"
+  );
+  assert(
+    convertedCapture.capture.work_item_id === convertedCapture.work_item_id,
+    "converted capture is not linked to returned work item"
+  );
+
   const inventoryAfterDuplicateCreate = await rpc(port, "inventory.list");
   const matchingCreatedItems = inventoryAfterDuplicateCreate.items.filter(
     (item) => item.title === createTitle
   );
   assert(matchingCreatedItems.length === 1, "work_item.create created duplicate titles");
+  assert(
+    inventoryAfterDuplicateCreate.items.some((item) => item.id === convertedCapture.work_item_id),
+    "converted capture work item is absent from inventory"
+  );
 
   const itemA = await rpc(port, "work_item.create", {
     title: `Packaged smoke linked A ${new Date().toISOString()}`,
@@ -165,8 +208,30 @@ try {
   assert(activeItems.length === 1, "inventory contains more than one active work item");
   assert(activeItems[0].id === itemB.id, "the active work item is not item B");
 
+  const createdActive = await rpc(port, "work_item.create", {
+    title: `Packaged smoke create active ${new Date().toISOString()}`,
+    type: "task",
+    state: "active",
+  });
+  assert(createdActive.focus_session_id, "creating an active work item did not start focus");
+  assert(
+    createdActive.focus_session_id !== activatedB.focus_session_id,
+    "creating an active work item reused the previous focus session"
+  );
+
+  const currentAfterCreateActive = await rpc(port, "focus.current");
+  assert(
+    currentAfterCreateActive.session?.work_item_id === createdActive.id,
+    "created active work item is not current focus"
+  );
+
+  const inventoryAfterCreateActive = await rpc(port, "inventory.list");
+  const activeAfterCreateActive = inventoryAfterCreateActive.items.filter((item) => item.state === "active");
+  assert(activeAfterCreateActive.length === 1, "creating active work item left multiple active items");
+  assert(activeAfterCreateActive[0].id === createdActive.id, "created active work item is not the only active item");
+
   await rpc(port, "work_item.set_state", {
-    id: itemB.id,
+    id: createdActive.id,
     state: "waiting",
   });
 
@@ -360,6 +425,22 @@ async function waitForResponsiveAgent(path, timeoutMs) {
 
   const message = lastError instanceof Error ? lastError.message : String(lastError);
   throw new Error(`Timed out waiting for responsive agent: ${message}`);
+}
+
+async function waitForAppEvents(port, kinds, timeoutMs) {
+  const deadline = Date.now() + timeoutMs;
+  let latest;
+
+  while (Date.now() < deadline) {
+    latest = await rpc(port, "app_event.list", todayWindow());
+    if (kinds.every((kind) => latest.events.some((event) => event.kind === kind))) {
+      return latest;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+
+  const observed = latest?.events?.map((event) => event.kind).join(", ") ?? "";
+  throw new Error(`Timed out waiting for app events. Observed: ${observed}`);
 }
 
 function assert(condition, message) {

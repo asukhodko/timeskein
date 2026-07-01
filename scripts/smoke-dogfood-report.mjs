@@ -14,6 +14,7 @@ const dbPath = join(tempDir, "timeskein.db");
 try {
   await runSqlFile(join(repoRoot, "apps/agent/migrations/001_initial.sql"));
   await runSqlFile(join(repoRoot, "apps/agent/migrations/002_focus_sessions.sql"));
+  await runSqlFile(join(repoRoot, "apps/agent/migrations/004_captures.sql"));
   await runSql(`
     INSERT INTO work_items (id, title, type, state, pinned, created_at, updated_at, last_seen_at)
     VALUES
@@ -25,6 +26,9 @@ try {
       ('s1', 'Deep Work', 'w1', 'stopped', 1500, 'first block', '2026-06-30T06:00:00Z', '2026-06-30T06:25:00Z', '2026-06-30T06:25:00Z'),
       ('s2', 'Meetings', 'w2', 'stopped', 1500, NULL, '2026-06-30T07:00:00Z', '2026-06-30T07:30:00Z', '2026-06-30T07:30:00Z'),
       ('s3', 'Deep Work', 'w1', 'stopped', 1500, NULL, '2026-06-30T07:35:00Z', '2026-06-30T07:45:00Z', '2026-06-30T07:45:00Z');
+
+    INSERT INTO captures (id, text, state, created_at, updated_at)
+    VALUES ('c1', 'Reply to incoming thread after focus', 'open', '2026-06-30T07:10:00Z', '2026-06-30T07:10:00Z');
   `);
 
   const { stdout } = await execFileAsync(
@@ -39,6 +43,9 @@ try {
     "final report state is missing"
   );
   assert(stdout.includes("## Focus Data"), "report did not include focus data section");
+  assert(stdout.includes("## App Telemetry"), "report did not include app telemetry section");
+  assert(stdout.includes("## Open Captures"), "report did not include open captures section");
+  assert(stdout.includes("Reply to incoming thread after focus"), "report did not include open capture text");
   assert(stdout.includes("Total focus: 1:05:00"), "report did not include exported focus total");
   assert(stdout.includes("## By Work Item"), "report did not include work item totals");
   assert(stdout.includes("## Gaps >= 20:00"), "report did not include significant gaps");

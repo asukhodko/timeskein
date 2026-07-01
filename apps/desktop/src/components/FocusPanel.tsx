@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import type { FocusSessionView, WorkItemView } from '@timeskein/contracts'
+import type { AppEventSummary, CaptureView, FocusSessionView, WorkItemView } from '@timeskein/contracts'
 import {
   useCurrentFocusSession,
   useStartFocusSession,
@@ -7,8 +7,10 @@ import {
   useTodayFocusSessions,
 } from '../hooks/useFocusSessions'
 import { useInventory } from '../hooks/useInventory'
-import { shellApi } from '../api/client'
+import { useOpenCaptures } from '../hooks/useCaptures'
+import { appEventApi, logAppEvent, shellApi } from '../api/client'
 import { formatClockTime, formatDuration, truncate } from '../utils/formatTime'
+import CaptureInbox from './CaptureInbox'
 
 interface FocusPanelProps {
   selectedItem?: WorkItemView
@@ -29,6 +31,7 @@ export default function FocusPanel({ selectedItem }: FocusPanelProps) {
   const currentQuery = useCurrentFocusSession()
   const todayQuery = useTodayFocusSessions()
   const inventoryQuery = useInventory()
+  const capturesQuery = useOpenCaptures()
   const startMutation = useStartFocusSession()
   const stopMutation = useStopFocusSession()
 
@@ -40,6 +43,7 @@ export default function FocusPanel({ selectedItem }: FocusPanelProps) {
     [inventoryQuery.data?.items]
   )
   const activeSecondsTotal = todayQuery.data?.active_seconds_total ?? 0
+  const openCaptures = capturesQuery.data?.captures ?? []
   const sessionsWithGaps = useMemo(() => withGaps([...sessions].reverse()), [sessions])
   const openGap = useMemo(
     () => (current ? undefined : openGapAfterLastSession(sessions, now)),
@@ -51,11 +55,6 @@ export default function FocusPanel({ selectedItem }: FocusPanelProps) {
     () => buildTodayMarkdown(sessions, activeSecondsTotal, now),
     [sessions, activeSecondsTotal, now]
   )
-  const dogfoodReportMarkdown = useMemo(
-    () => buildDogfoodReportMarkdown(todayMarkdown, current, activeWorkItems),
-    [todayMarkdown, current, activeWorkItems]
-  )
-
   const focusTitleInput = ({ force = false } = {}) => {
     window.requestAnimationFrame(() => {
       const activeElement = document.activeElement
@@ -130,12 +129,45 @@ export default function FocusPanel({ selectedItem }: FocusPanelProps) {
     const trimmed = title.trim()
     if (!trimmed || startMutation.isPending) return
 
+    const actionId = createTelemetryActionId()
+    const wasSwitch = Boolean(current)
+    void logAppEvent({
+      source: 'ui',
+      kind: wasSwitch ? 'focus_switch_requested' : 'focus_start_requested',
+      payload: {
+        action_id: actionId,
+        control: 'typed',
+      },
+    })
+
     startMutation.mutate(
-      { title: trimmed, target_seconds: 25 * 60 },
+      { title: trimmed, target_seconds: 25 * 60, telemetry_action_id: actionId },
       {
-        onSuccess: () => {
+        onSuccess: (session) => {
           setTitle('')
           setNote('')
+          void logAppEvent({
+            source: 'ui',
+            kind: wasSwitch ? 'focus_switched' : 'focus_started',
+            work_item_id: session.work_item_id,
+            focus_session_id: session.id,
+            payload: {
+              action_id: actionId,
+              control: 'typed',
+              already_active: session.id === current?.id,
+            },
+          })
+        },
+        onError: (error) => {
+          void logAppEvent({
+            source: 'ui',
+            kind: 'focus_start_failed',
+            payload: {
+              action_id: actionId,
+              control: 'typed',
+              error_code: error instanceof Error && 'code' in error ? String(error.code) : 'unknown',
+            },
+          })
         },
       }
     )
@@ -144,16 +176,52 @@ export default function FocusPanel({ selectedItem }: FocusPanelProps) {
   const startSelectedSession = () => {
     if (!selectedItem || startMutation.isPending) return
 
+    const actionId = createTelemetryActionId()
+    const wasSwitch = Boolean(current)
+    void logAppEvent({
+      source: 'ui',
+      kind: wasSwitch ? 'focus_switch_requested' : 'focus_start_requested',
+      work_item_id: selectedItem.id,
+      payload: {
+        action_id: actionId,
+        control: 'selected_item',
+      },
+    })
+
     startMutation.mutate(
       {
         title: selectedItem.title,
         work_item_id: selectedItem.id,
         target_seconds: 25 * 60,
+        telemetry_action_id: actionId,
       },
       {
-        onSuccess: () => {
+        onSuccess: (session) => {
           setTitle('')
           setNote('')
+          void logAppEvent({
+            source: 'ui',
+            kind: wasSwitch ? 'focus_switched' : 'focus_started',
+            work_item_id: session.work_item_id,
+            focus_session_id: session.id,
+            payload: {
+              action_id: actionId,
+              control: 'selected_item',
+              already_active: session.id === current?.id,
+            },
+          })
+        },
+        onError: (error) => {
+          void logAppEvent({
+            source: 'ui',
+            kind: 'focus_start_failed',
+            work_item_id: selectedItem.id,
+            payload: {
+              action_id: actionId,
+              control: 'selected_item',
+              error_code: error instanceof Error && 'code' in error ? String(error.code) : 'unknown',
+            },
+          })
         },
       }
     )
@@ -162,10 +230,47 @@ export default function FocusPanel({ selectedItem }: FocusPanelProps) {
   const stopCurrentSession = () => {
     if (stopMutation.isPending) return
 
+    const actionId = createTelemetryActionId()
+    void logAppEvent({
+      source: 'ui',
+      kind: 'focus_stop_requested',
+      work_item_id: current?.work_item_id,
+      focus_session_id: current?.id,
+      payload: {
+        action_id: actionId,
+        control: 'stop_button_or_enter',
+      },
+    })
+
     stopMutation.mutate(
-      { note },
+      { note, telemetry_action_id: actionId },
       {
-        onSuccess: () => setNote(''),
+        onSuccess: (session) => {
+          setNote('')
+          void logAppEvent({
+            source: 'ui',
+            kind: 'focus_stopped',
+            work_item_id: session.work_item_id,
+            focus_session_id: session.id,
+            payload: {
+              action_id: actionId,
+              control: 'stop_button_or_enter',
+            },
+          })
+        },
+        onError: (error) => {
+          void logAppEvent({
+            source: 'ui',
+            kind: 'focus_stop_failed',
+            work_item_id: current?.work_item_id,
+            focus_session_id: current?.id,
+            payload: {
+              action_id: actionId,
+              control: 'stop_button_or_enter',
+              error_code: error instanceof Error && 'code' in error ? String(error.code) : 'unknown',
+            },
+          })
+        },
       }
     )
   }
@@ -173,13 +278,42 @@ export default function FocusPanel({ selectedItem }: FocusPanelProps) {
   const copyTodayMarkdown = async () => {
     if (sessions.length === 0) return
 
+    void logAppEvent({
+      source: 'ui',
+      kind: 'report_copy_requested',
+      payload: {
+        report_kind: 'day',
+      },
+    })
+
     try {
       await copyText(todayMarkdown)
       setCopyDayState('copied')
       setManualCopy(null)
+      void logAppEvent({
+        source: 'ui',
+        kind: 'report_copied',
+        payload: {
+          report_kind: 'day',
+        },
+      })
     } catch {
       setCopyDayState('failed')
       setManualCopy({ label: 'Day Markdown', text: todayMarkdown })
+      void logAppEvent({
+        source: 'ui',
+        kind: 'report_copy_failed',
+        payload: {
+          report_kind: 'day',
+        },
+      })
+      void logAppEvent({
+        source: 'ui',
+        kind: 'manual_copy_fallback_shown',
+        payload: {
+          report_kind: 'day',
+        },
+      })
     }
 
     window.setTimeout(() => setCopyDayState('idle'), 1600)
@@ -188,13 +322,50 @@ export default function FocusPanel({ selectedItem }: FocusPanelProps) {
   const copyDogfoodReport = async () => {
     if (sessions.length === 0) return
 
+    void logAppEvent({
+      source: 'ui',
+      kind: 'report_copy_requested',
+      payload: {
+        report_kind: 'dogfood',
+      },
+    })
+
+    const reportMarkdown = await buildDogfoodReportMarkdown(
+      todayMarkdown,
+      current,
+      activeWorkItems,
+      openCaptures,
+      now
+    )
+
     try {
-      await copyText(dogfoodReportMarkdown)
+      await copyText(reportMarkdown)
       setCopyReportState('copied')
       setManualCopy(null)
+      void logAppEvent({
+        source: 'ui',
+        kind: 'report_copied',
+        payload: {
+          report_kind: 'dogfood',
+        },
+      })
     } catch {
       setCopyReportState('failed')
-      setManualCopy({ label: 'Dogfood Report', text: dogfoodReportMarkdown })
+      setManualCopy({ label: 'Dogfood Report', text: reportMarkdown })
+      void logAppEvent({
+        source: 'ui',
+        kind: 'report_copy_failed',
+        payload: {
+          report_kind: 'dogfood',
+        },
+      })
+      void logAppEvent({
+        source: 'ui',
+        kind: 'manual_copy_fallback_shown',
+        payload: {
+          report_kind: 'dogfood',
+        },
+      })
     }
 
     window.setTimeout(() => setCopyReportState('idle'), 1600)
@@ -255,6 +426,8 @@ export default function FocusPanel({ selectedItem }: FocusPanelProps) {
             </div>
           )}
         </div>
+
+        <CaptureInbox focusSessionId={current?.id} />
 
         {mutationError && (
           <div className="mt-2 text-xs text-red-300">
@@ -359,6 +532,10 @@ function isEditableElement(element: Element | null): element is HTMLElement {
   return element instanceof HTMLElement && element.matches('input,textarea,select,[contenteditable="true"]')
 }
 
+function createTelemetryActionId() {
+  return globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`
+}
+
 function buildTodayMarkdown(sessionsOldestFirst: FocusSessionView[], activeSecondsTotal: number, now: Date) {
   const dayStart = startOfLocalDay(now)
   const dayEnd = nextLocalDay(dayStart)
@@ -433,10 +610,12 @@ function buildTodayMarkdown(sessionsOldestFirst: FocusSessionView[], activeSecon
   return `${lines.join('\n')}\n`
 }
 
-function buildDogfoodReportMarkdown(
+async function buildDogfoodReportMarkdown(
   todayMarkdown: string,
   activeFocus?: FocusSessionView,
-  activeWorkItems: WorkItemView[] = []
+  activeWorkItems: WorkItemView[] = [],
+  openCaptures: CaptureView[] = [],
+  now = new Date()
 ) {
   const hasActiveWorkItems = activeWorkItems.length > 0
   const reportState = activeFocus
@@ -446,7 +625,7 @@ function buildDogfoodReportMarkdown(
       : 'final - no active focus block or active Work Item'
 
   const lines = [
-    `# Timeskein dogfood report - ${formatLocalDate(new Date())}`,
+    `# Timeskein dogfood report - ${formatLocalDate(now)}`,
     '',
     `Report state: ${reportState}`,
     '',
@@ -474,10 +653,24 @@ function buildDogfoodReportMarkdown(
     )
   }
 
+  if (openCaptures.length > 0) {
+    lines.push(
+      '## Open Captures',
+      '',
+      ...openCaptures.map((capture) => `- ${formatClockTime(capture.created_at)} ${formatMarkdownListText(capture.text)}`),
+      '- Resolve or convert these captures during review.',
+      ''
+    )
+  }
+
+  const appTelemetryMarkdown = await buildAppTelemetryMarkdown(now)
+
   lines.push(
     '## Focus Data',
     '',
     todayMarkdown.trim(),
+    '',
+    appTelemetryMarkdown.trim(),
     '',
     '## Review',
     '',
@@ -511,6 +704,57 @@ function buildDogfoodReportMarkdown(
     '- Good enough to replace Session tomorrow: yes/no',
     '- Next product fix:',
   )
+
+  return `${lines.join('\n')}\n`
+}
+
+async function buildAppTelemetryMarkdown(now: Date) {
+  try {
+    const dayStart = startOfLocalDay(now)
+    const dayEnd = nextLocalDay(dayStart)
+    const summary = await appEventApi.summary({
+      from: dayStart.toISOString(),
+      to: dayEnd.toISOString(),
+    })
+
+    return formatAppTelemetryMarkdown(summary)
+  } catch {
+    return [
+      '## App Telemetry',
+      '',
+      'Telemetry unavailable in UI report. Run `pnpm dogfood:metrics` after the day.',
+    ].join('\n')
+  }
+}
+
+function formatAppTelemetryMarkdown(summary: AppEventSummary) {
+  const lines = [
+    '## App Telemetry',
+    '',
+    `Total events: ${summary.total}`,
+    `Start requests: ${summary.start_requests}`,
+    `Switch requests: ${summary.switch_requests}`,
+    `Stop requests: ${summary.stop_requests}`,
+    `Window shown/hidden: ${summary.window_shown}/${summary.window_hidden}`,
+    `Window drag starts: ${summary.window_drag_started}`,
+    `Copy failures: ${summary.copy_failures}`,
+    `Manual copy fallbacks: ${summary.manual_copy_fallbacks}`,
+    `API errors: ${summary.api_errors}`,
+    `Already-active start attempts: ${summary.already_active_start_attempts}`,
+    `Stale runtime recoveries: ${summary.stale_runtime_recoveries}`,
+    `Average start latency: ${summary.average_focus_start_latency_ms == null ? 'n/a' : `${summary.average_focus_start_latency_ms}ms`}`,
+    `Slow window-to-focus gaps: ${summary.slow_window_to_focus_count}`,
+  ]
+
+  const byKind = Object.entries(summary.by_kind)
+  if (byKind.length > 0) {
+    lines.push('', '### Events By Kind', '', '| Count | Kind |', '| ---: | --- |')
+    for (const [kind, count] of byKind.sort(
+      (left, right) => right[1] - left[1] || left[0].localeCompare(right[0])
+    )) {
+      lines.push(`| ${count} | ${escapeMarkdownTable(kind)} |`)
+    }
+  }
 
   return `${lines.join('\n')}\n`
 }
@@ -592,6 +836,10 @@ function openGapAfterLastSession(
 
 function escapeMarkdownTable(value: string) {
   return value.replaceAll('|', '\\|').replace(/\s+/g, ' ').trim()
+}
+
+function formatMarkdownListText(value: string) {
+  return value.replace(/\s+/g, ' ').trim()
 }
 
 function formatLocalDate(date: Date) {

@@ -1,0 +1,73 @@
+#!/usr/bin/env node
+
+import { execFile } from "node:child_process";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
+import { promisify } from "node:util";
+
+const execFileAsync = promisify(execFile);
+const repoRoot = resolve(import.meta.dirname, "..");
+const tempDir = await mkdtemp(join(tmpdir(), "timeskein-app-events-smoke-"));
+const dbPath = join(tempDir, "timeskein.db");
+
+try {
+  await runSqlFile(join(repoRoot, "apps/agent/migrations/001_initial.sql"));
+  await runSqlFile(join(repoRoot, "apps/agent/migrations/002_focus_sessions.sql"));
+  await runSqlFile(join(repoRoot, "apps/agent/migrations/003_app_events.sql"));
+  await runSql(`
+    INSERT INTO app_events (id, ts, source, kind, work_item_id, focus_session_id, payload)
+    VALUES
+      ('e1', '2026-06-30T06:00:00Z', 'ui', 'window_shown', NULL, NULL, '{"control":"tray"}'),
+      ('e2', '2026-06-30T06:00:10Z', 'ui', 'focus_start_requested', 'w1', NULL, '{"action_id":"a1","control":"typed"}'),
+      ('e3', '2026-06-30T06:00:11Z', 'ui', 'focus_started', 'w1', 's1', '{"action_id":"a1","already_active":false}'),
+      ('e4', '2026-06-30T06:20:00Z', 'ui', 'focus_stop_requested', 'w1', 's1', '{"action_id":"a2"}'),
+      ('e5', '2026-06-30T06:20:01Z', 'ui', 'focus_stopped', 'w1', 's1', '{"action_id":"a2"}'),
+      ('e6', '2026-06-30T06:30:00Z', 'agent', 'agent_stale_runtime_recovered', NULL, NULL, NULL),
+      ('e7', '2026-06-30T06:40:00Z', 'ui', 'report_copy_failed', NULL, NULL, '{"report_kind":"dogfood"}'),
+      ('e8', '2026-06-30T06:40:01Z', 'ui', 'manual_copy_fallback_shown', NULL, NULL, '{"report_kind":"dogfood"}');
+  `);
+
+  const { stdout: metricsStdout } = await execFileAsync(
+    "node",
+    [join(repoRoot, "scripts/dogfood-metrics.mjs"), "--db", dbPath, "--date", "2026-06-30"],
+    { cwd: repoRoot }
+  );
+  assert(metricsStdout.includes("## App Telemetry"), "metrics did not include App Telemetry header");
+  assert(metricsStdout.includes("Total events: 8"), "metrics did not count events");
+  assert(metricsStdout.includes("Start requests: 1"), "metrics did not count start requests");
+  assert(metricsStdout.includes("Manual copy fallbacks: 1"), "metrics did not count manual copy fallbacks");
+  assert(metricsStdout.includes("Stale runtime recoveries: 1"), "metrics did not count stale recoveries");
+  assert(metricsStdout.includes("Average start latency: 1000ms"), "metrics did not calculate start latency");
+
+  const { stdout: exportStdout } = await execFileAsync(
+    "node",
+    [join(repoRoot, "scripts/export-app-events.mjs"), "--db", dbPath, "--date", "2026-06-30"],
+    { cwd: repoRoot }
+  );
+  assert(exportStdout.includes("# Timeskein app events"), "event export did not include title");
+  assert(exportStdout.includes("focus_start_requested"), "event export did not include start request");
+  assert(exportStdout.includes("manual_copy_fallback_shown"), "event export did not include copy fallback");
+
+  console.log(JSON.stringify({ ok: true, db_path: dbPath }, null, 2));
+} finally {
+  await rm(tempDir, { recursive: true, force: true });
+}
+
+async function runSqlFile(path) {
+  await execFileAsync("sqlite3", [dbPath, `.read ${path}`], {
+    maxBuffer: 10 * 1024 * 1024,
+  });
+}
+
+async function runSql(sql) {
+  await execFileAsync("sqlite3", [dbPath, sql], {
+    maxBuffer: 10 * 1024 * 1024,
+  });
+}
+
+function assert(condition, message) {
+  if (!condition) {
+    throw new Error(message);
+  }
+}

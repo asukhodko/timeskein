@@ -38,7 +38,8 @@ schedule:
       duration: 1d
     ts.focus_core.session_notes:
       duration: 1d
-    ts.focus_core.dogfood_gate: {}
+    ts.focus_core.dogfood_gate:
+      start: "2026-07-01"
 
     ts.day_review.timeline:
       duration: 2d
@@ -46,9 +47,23 @@ schedule:
       duration: 1d
     ts.day_review.export:
       duration: 1d
-    ts.day_review.analysis_gate: {}
+    ts.day_review.app_telemetry:
+      duration: 1d
+    ts.day_review.analysis_gate:
+      start: "2026-07-01"
+
+    ts.capture.model_api:
+      start: "2026-07-01"
+      duration: 2d
+    ts.capture.quick_ui:
+      duration: 2d
+    ts.capture.review_flow:
+      duration: 2d
 
     ts.hardening.smoke:
+      duration: 1d
+    ts.hardening.post_dogfood_friction:
+      start: "2026-07-01"
       duration: 1d
     ts.hardening.backup_reset:
       duration: 1d

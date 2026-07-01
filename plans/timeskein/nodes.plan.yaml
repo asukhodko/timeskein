@@ -116,7 +116,7 @@ nodes:
     effort: 2
     deps:
       - id: ts.ux_entry.tray_actions
-    notes: Focus tracking can start from a free text intention or selected Work Item. The flow needs real dogfood feedback.
+    notes: Focus tracking can start from a free text intention or selected Work Item. First dogfood day exposed shortcut friction while typing, fixed by ignoring palette shortcuts inside editable fields.
     x:
       ops:
         attention_class: current
@@ -215,13 +215,13 @@ nodes:
     title: First real Focus Session dogfood
     kind: milestone
     parent: ts.focus_core
-    status: in_progress
+    status: done
     milestone: true
     deps:
       - id: ts.focus_core.restart_restore
       - id: ts.focus_core.work_item_binding
       - id: ts.focus_core.session_notes
-    notes: docs/dogfood-day.md defines the trial protocol and readiness audit. dogfood:start checks the real local database and running-process guard before running the heavier preflight, then opens the app and waits for embedded-agent readiness; dogfood:start:clean first moves contaminated local DB files aside through the same guarded reset path; dogfood:ready reports agent responsiveness, running app PIDs, and exact stop/reset next commands when the day is contaminated; dogfood:reset-db can move contaminated local DB files aside after an explicit --apply but refuses while the agent or app process appears alive; dogfood:stop-active can use the running agent API or SQLite fallback, and blocks unsafe direct SQLite updates when the app process is still alive; open:macos-app refuses to reuse an already running process by default and supports --check-only / --check-running-only for early validation. Preflight is green, but this gate is not done until Timeskein survives one real workday as the Session replacement.
+    notes: "First real dogfood day completed on 2026-07-01: 6:11:08 tracked focus, 20 entrances, useful gaps, Work Item totals, and app telemetry. The trial found real friction, but the core Session replacement loop produced usable day data."
     x:
       ops:
         attention_class: current
@@ -231,7 +231,7 @@ nodes:
     kind: phase
     parent: ts
     status: in_progress
-    notes: Turn raw sessions into the working-day picture needed for productivity analysis.
+    notes: Turn raw sessions and local app telemetry into the working-day picture needed for productivity analysis.
     x:
       ops:
         attention_class: current
@@ -270,14 +270,72 @@ nodes:
     x:
       ops:
         attention_class: current
+  ts.day_review.app_telemetry:
+    title: Add local app-event telemetry for dogfood analysis
+    kind: task
+    parent: ts.day_review
+    status: done
+    effort: 2
+    deps:
+      - id: ts.day_review.export
+    notes: SQLite app_events, Local API, UI/agent/script logging, metrics export, dogfood report section, and smoke coverage are implemented. Payloads must stay technical and must not store raw titles, notes, URLs, or typed text.
+    x:
+      ops:
+        attention_class: current
   ts.day_review.analysis_gate:
     title: End-of-day analysis can use Timeskein data
     kind: milestone
     parent: ts.day_review
-    status: planned
+    status: done
     milestone: true
     deps:
-      - id: ts.day_review.export
+      - id: ts.day_review.app_telemetry
+    x:
+      ops:
+        attention_class: current
+
+  ts.capture:
+    title: Capture Inbox
+    kind: phase
+    parent: ts
+    status: in_progress
+    notes: Let incoming events be captured without interrupting the current focus block, then processed later into resolution, note, or Work Item. Minimal create/list/resolve/convert baseline is implemented and needs real dogfood.
+    x:
+      ops:
+        attention_class: current
+  ts.capture.model_api:
+    title: Add captured-event model and Local API
+    kind: task
+    parent: ts.capture
+    status: done
+    effort: 3
+    deps:
+      - id: ts.day_review.analysis_gate
+    notes: "Implemented SQLite captures table and Local API capture.create/list/resolve/convert_to_work_item. Captures store timestamp, text, optional focus-session link, optional Work Item link, and state: open, resolved, converted."
+    x:
+      ops:
+        attention_class: current
+  ts.capture.quick_ui:
+    title: Add fast capture control
+    kind: task
+    parent: ts.capture
+    status: done
+    effort: 3
+    deps:
+      - id: ts.capture.model_api
+    notes: "Implemented one small Capture input in the focus panel. Creating a capture is safe while a timer is running and does not create timed work."
+    x:
+      ops:
+        attention_class: current
+  ts.capture.review_flow:
+    title: Review and promote captured events
+    kind: task
+    parent: ts.capture
+    status: in_progress
+    effort: 3
+    deps:
+      - id: ts.capture.quick_ui
+    notes: Open captures can be resolved or converted to a Work Item. Append-as-timestamped-note, edit/delete, and a fuller history view remain future work.
     x:
       ops:
         attention_class: current
@@ -299,7 +357,19 @@ nodes:
     effort: 2
     deps:
       - id: ts.day_review.analysis_gate
-    notes: dogfood:preflight covers script syntax, contracts build, desktop typecheck, Markdown export smoke, dogfood start/status/ready/reset/stop-active/open-app smoke, packaged macOS build, embedded agent smoke, focus switching, stale lock/port recovery, and restart/restore. Browser UI smoke is still manual; last checked dogfood start/switch/stop/report flow on 2026-06-30.
+    notes: dogfood:preflight covers script syntax, contracts build, desktop typecheck, Markdown export smoke, dogfood start/status/ready/reset/stop-active/open-app smoke, packaged macOS build, embedded agent smoke, focus switching, capture API, stale lock/port recovery, and restart/restore. Browser UI smoke is still manual.
+    x:
+      ops:
+        attention_class: current
+  ts.hardening.post_dogfood_friction:
+    title: Fix first dogfood friction
+    kind: task
+    parent: ts.hardening
+    status: in_progress
+    effort: 2
+    deps:
+      - id: ts.focus_core.dogfood_gate
+    notes: Fix typing C/С opening Create, creating a new active Work Item, ambiguous last-seen timestamps, and add the first Capture Inbox baseline. Remaining friction goes to activity zones, editable stop notes, and timeline notes.
     x:
       ops:
         attention_class: current

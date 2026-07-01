@@ -73,6 +73,87 @@ export interface FocusSessionView {
   updated_at: string;  // ISO 8601
 }
 
+// -----------------------------------------------------------------------------
+// Capture Inbox Types
+// -----------------------------------------------------------------------------
+
+/**
+ * Lightweight incoming item that should not interrupt the current focus block.
+ */
+export type CaptureState = "open" | "resolved" | "converted";
+
+export interface CaptureView {
+  id: string;
+  text: string;
+  state: CaptureState;
+  work_item_id?: string;
+  focus_session_id?: string;
+  created_at: string;  // ISO 8601
+  updated_at: string;  // ISO 8601
+  resolved_at?: string;  // ISO 8601
+  converted_at?: string;  // ISO 8601
+}
+
+// -----------------------------------------------------------------------------
+// App Event Telemetry Types
+// -----------------------------------------------------------------------------
+
+export type AppEventSource = "ui" | "agent" | "script" | "system";
+
+export type AppEventKind =
+  | "app_started"
+  | "agent_started"
+  | "agent_reused"
+  | "agent_stale_runtime_recovered"
+  | "window_shown"
+  | "window_hidden"
+  | "window_drag_started"
+  | "focus_start_requested"
+  | "focus_started"
+  | "focus_start_failed"
+  | "focus_switch_requested"
+  | "focus_switched"
+  | "focus_stop_requested"
+  | "focus_stopped"
+  | "focus_stop_failed"
+  | "report_copy_requested"
+  | "report_copied"
+  | "report_copy_failed"
+  | "manual_copy_fallback_shown"
+  | "api_error";
+
+export interface AppEventView {
+  id: string;
+  ts: string;  // ISO 8601
+  source: AppEventSource;
+  kind: AppEventKind;
+  work_item_id?: string;
+  focus_session_id?: string;
+  payload?: Record<string, unknown>;
+}
+
+export interface AppEventSummary {
+  total: number;
+  by_kind: Record<string, number>;
+  by_source: Record<string, number>;
+  start_requests: number;
+  switch_requests: number;
+  stop_requests: number;
+  start_failures: number;
+  stop_failures: number;
+  api_errors: number;
+  copy_failures: number;
+  manual_copy_fallbacks: number;
+  window_shown: number;
+  window_hidden: number;
+  window_drag_started: number;
+  stale_runtime_recoveries: number;
+  already_active_start_attempts: number;
+  average_focus_start_latency_ms?: number;
+  slow_window_to_focus_count: number;
+  updated_at: string;
+}
+
 /**
  * Reference view returned by the API
  */
@@ -134,6 +215,18 @@ export interface ApiError {
   code: ErrorCode;
   message: string;
   details?: Record<string, unknown>;
+}
+
+export interface CaptureListResponse {
+  captures: CaptureView[];
+  total: number;
+  updated_at: string;
+}
+
+export interface CaptureConvertResponse {
+  capture: CaptureView;
+  work_item_id: string;
+  reused: boolean;
 }
 
 /**
@@ -244,16 +337,33 @@ export interface FocusStartParams {
   title: string;
   work_item_id?: string;
   target_seconds?: number;
+  telemetry_action_id?: string;
 }
 
 // focus.stop parameters
 export interface FocusStopParams {
   id?: string;
   note?: string;
+  telemetry_action_id?: string;
 }
 
 // focus.list parameters
 export interface FocusListParams {
+  from?: string;  // ISO 8601
+  to?: string;  // ISO 8601
+}
+
+// app_event.log parameters
+export interface AppEventLogParams {
+  source?: AppEventSource;
+  kind: AppEventKind;
+  work_item_id?: string;
+  focus_session_id?: string;
+  payload?: Record<string, unknown>;
+}
+
+// app_event.list / app_event.summary parameters
+export interface AppEventListParams {
   from?: string;  // ISO 8601
   to?: string;  // ISO 8601
 }
@@ -324,6 +434,13 @@ export interface FocusListResponse {
   total: number;
   active_seconds_total: number;
   updated_at: string;  // Watermark for polling
+}
+
+// app_event.list response
+export interface AppEventListResponse {
+  events: AppEventView[];
+  total: number;
+  updated_at: string;
 }
 
 // ref.add conflict error details

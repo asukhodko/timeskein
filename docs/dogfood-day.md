@@ -21,6 +21,7 @@ During the day:
 
 - start a block by typing a Work Item title and pressing `Enter`;
 - switch by typing the next title into `Switch to...` and pressing `Enter`;
+- capture incoming distractions in `Capture interruption...` without stopping the current block;
 - stop with optional note by pressing `Enter` in the stop-note field;
 - watch the short `12m Focus` counter in the macOS menu bar while a block is running;
 - hide/show the app from the menu bar item, global shortcut, or `Esc` when no dialog is open.
@@ -34,6 +35,7 @@ End of day:
 - if you want a saved Markdown file, run `pnpm dogfood:finish:save`;
 - if UI copy fails, run `pnpm dogfood:finish > timeskein-dogfood-report.md`;
 - if only the raw day picture is needed, run `pnpm export:focus-day > timeskein-day.md`.
+- if Timeskein itself felt awkward, run `pnpm dogfood:metrics` and `pnpm export:app-events` to inspect the local app-event telemetry.
 
 ## Goal
 
@@ -139,7 +141,7 @@ Check the basics before starting work:
 
 ## Readiness Audit
 
-Current status: ready for a one-day trial, not yet proven for daily use.
+Current status: first one-day trial passed on 2026-07-01. Timeskein is usable for continued dogfooding, but not yet polished for daily default use.
 
 | Requirement | Evidence before dogfood | Dogfood check |
 | --- | --- | --- |
@@ -150,10 +152,22 @@ Current status: ready for a one-day trial, not yet proven for daily use.
 | Show, hide, move window | Implemented in macOS shell and header drag | Window behavior does not irritate during the day |
 | Today block list and totals | `focus.list` and UI show block duration, time range, stop note, total focus, entrances | The list matches remembered work blocks |
 | Significant gaps | UI and Markdown show gap ranges of 20+ minutes | Long breaks and lost intervals are visible enough |
-| Markdown export | `Copy Report` exports timeline, `By Work Item`, gaps, and review prompts; `Copy MD` exports the raw day picture; failed clipboard writes show selected Markdown; `pnpm smoke:export-focus-day` and `pnpm smoke:dogfood-report` verify SQLite fallbacks | Copied note is enough for evening analysis |
+| Capture Inbox | `pnpm smoke:capture-api`, `pnpm smoke:mock-api`, and `pnpm smoke:macos-app` verify capture create/list/resolve/convert without interrupting focus | Incoming events can be remembered without switching away from the current block |
+| Markdown export | `Copy Report` exports timeline, `By Work Item`, gaps, open captures, app telemetry, and review prompts; `Copy MD` exports the raw day picture; failed clipboard writes show selected Markdown; `pnpm smoke:export-focus-day` and `pnpm smoke:dogfood-report` verify SQLite fallbacks | Copied note is enough for evening analysis |
+| App friction telemetry | `app_events` stores local technical events, `pnpm smoke:app-events` verifies metrics/export, and `pnpm dogfood:report` includes `App Telemetry` | Start/switch/stop/copy/API/window friction is visible without relying only on memory |
 | macOS app with embedded agent and SQLite | `pnpm smoke:macos-app` verifies app launch, SQLite health, focus flow, stale lock/port recovery, and active focus restore after app restart | The real app survives normal workday use |
 
 The dogfood goal is complete only after a real day produces a copied Markdown day note that is useful for analysis.
+
+The first real dogfood day met this gate:
+
+- 6:11:08 active focus
+- 20 entrances
+- seven Work Items
+- four significant gaps
+- usable Work Item totals and App Telemetry
+
+Product friction found during the day is tracked in the roadmap. The most important next dogfood check is whether Capture Inbox makes incoming events cheap to remember without interrupting the current focus block.
 
 ## During the Day
 
@@ -193,6 +207,19 @@ Changing a Work Item state to `Active` is another way to start or switch focus:
 
 Deleting the currently active Work Item also stops its current focus block first.
 
+Capture an incoming event without switching focus:
+
+1. Type the reminder into `Capture interruption...`.
+2. Press `Enter` or click `Capture`.
+3. Continue the current focus block.
+
+Expected behavior:
+
+- the active focus timer keeps running;
+- the capture appears in `Inbox`;
+- `Done` resolves it when no further action is needed;
+- `Make Item` converts it into a Work Item for later handling.
+
 Stop a focus block when the contact with the work stops:
 
 1. Add a short stop note if it will help evening review.
@@ -219,6 +246,7 @@ At the end of the day:
 
 Use `Copy MD` only when the raw day picture is enough.
 If Today or the report shows `Open Gap`, there was a significant interval after the last stopped block with no active focus block. Treat it as either a real break or a lost-tracking interval during review.
+If the report shows `Open Captures`, resolve or convert them before considering the day fully reviewed.
 If a focus block is still active, or a Work Item is still marked active, the UI labels the report as `Copy Draft` and the Markdown includes a warning. The CLI report uses the same draft warning. Stop the active block or clear the active Work Item before using the report as the final day artifact.
 If clipboard access is denied, Timeskein shows a selected text box with the Markdown. Copy it manually from there.
 
@@ -242,6 +270,25 @@ pnpm dogfood:finish > timeskein-dogfood-report.md
 
 `dogfood:finish` refuses to produce a final report while a focus block or Work Item is still active, or when there are no focus blocks for the selected date.
 
+The dogfood report includes an `App Telemetry` section. Use it to check whether Timeskein caused tracking friction:
+
+- start, switch, and stop request counts;
+- start/stop/copy/API errors;
+- window show/hide and drag counts;
+- average delay from start request to started focus;
+- likely show-to-start friction gaps;
+- repeated attempts to start the already active Work Item;
+- stale embedded-agent runtime recovery events.
+
+For deeper inspection:
+
+```bash
+pnpm dogfood:metrics
+pnpm export:app-events
+```
+
+Telemetry stays local in SQLite. Event payloads are technical only; raw Work Item titles, notes, URLs, and typed text should not appear there.
+
 For a previous date:
 
 ```bash
@@ -259,6 +306,8 @@ The dogfood report includes the focus-day export and prompts for:
 - Did stopping and continuing the same Work Item feel cheap enough?
 - Did the app itself create friction that pushed tracking away?
 - Where did entry cost appear before starting the next block?
+- Does `App Telemetry` confirm the remembered friction, or show hidden friction such as repeated show-without-start attempts?
+- Did Capture Inbox prevent interruption, or did captures become another unresolved pile?
 
 ## Success Criteria
 
@@ -268,6 +317,8 @@ The dogfood day succeeds if the copied Markdown is enough to discuss:
 - which Work Items moved;
 - when the day fragmented;
 - where entry cost or switching cost appeared;
+- where Timeskein itself created start, switch, stop, copy, or window-management friction;
+- whether incoming events were captured and reviewed without derailing current work;
 - what must be improved before using Timeskein daily.
 
 The dogfood day fails if any of these happens often enough to break trust:
@@ -282,7 +333,12 @@ The dogfood day fails if any of these happens often enough to break trust:
 ## Known Limits for This Trial
 
 - There is no pause/resume/cancel model yet. Stop and start again instead.
+- Capture Inbox is minimal. It can create, resolve, and convert captures, but cannot edit/delete captures or append them as timestamped Work Item notes yet.
+- There are no activity zones yet. A Work Item named `Break` still contributes to total focus.
+- Stop notes cannot be edited after the block is stopped.
+- Work Item notes are a single mutable field, not timestamped observations.
 - There is no automatic active-window detection.
 - There is no synchronization between devices.
 - Browser development mode uses mock data; the real dogfood trial should use the macOS app.
 - The export is Markdown copy only, not a full reporting screen.
+- App telemetry has CLI/report output only; there is no in-app diagnostics screen yet.

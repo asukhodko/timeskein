@@ -37,6 +37,11 @@ views:
         nodes:
           - ts.day_review
         expand_descendants: leaves
+      capture:
+        title: Capture Inbox
+        nodes:
+          - ts.capture
+        expand_descendants: leaves
       hardening:
         title: Dogfood hardening
         nodes:
@@ -90,9 +95,18 @@ x:
           - ts.day_review
         target_gate: ts.day_review.analysis_gate
         mgmt:
-          health: neutral
+          health: green
           owner: a.sukhodko
-          next_sync_goal: Make focus data usable for end-of-day analysis.
+          sync_note: First dogfood day produced usable focus data, gaps, Work Item totals, and app telemetry.
+      capture-inbox:
+        title: Capture Inbox
+        scope_nodes:
+          - ts.capture
+        target_gate: ts.capture.review_flow
+        mgmt:
+          health: yellow
+          owner: a.sukhodko
+          next_sync_goal: Capture incoming events without interrupting the active focus block.
       dogfood-hardening:
         title: Dogfood hardening
         scope_nodes:
@@ -121,6 +135,9 @@ x:
         to: day-review-export
         type: required
       - from: day-review-export
+        to: capture-inbox
+        type: required
+      - from: capture-inbox
         to: dogfood-hardening
         type: required
       - from: focus-session-core
@@ -134,6 +151,7 @@ x:
           - app-entry-ux
           - focus-session-core
           - day-review-export
+          - capture-inbox
           - dogfood-hardening
           - future-directions
         direction: LR
@@ -150,6 +168,7 @@ x:
           - app-entry-ux
           - focus-session-core
           - day-review-export
+          - capture-inbox
         direction: TD
         color_mode: mgmt_hybrid
         highlight_current: true

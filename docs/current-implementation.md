@@ -2,7 +2,7 @@
 
 ## Status
 
-Last updated: 2026-06-30.
+Last updated: 2026-07-01.
 
 This document describes what the repository actually runs today. Target architecture and future plans remain in RFCs and roadmap documents.
 
@@ -94,10 +94,12 @@ pnpm typecheck
 cargo check -p timeskein-agent
 cargo check -p timeskein-desktop
 pnpm smoke:focus-api
+pnpm smoke:capture-api
 pnpm smoke:mock-api
 pnpm --filter @timeskein/desktop build
 pnpm smoke:macos-app
 pnpm smoke:export-focus-day
+pnpm smoke:app-events
 pnpm smoke:dogfood-report
 pnpm smoke:dogfood-finish
 pnpm smoke:dogfood-status
@@ -117,9 +119,11 @@ Runtime smoke on macOS:
 - `inventory.list` returns an empty list against the real SQLite-backed agent
 - `focus.start`, `focus.stop`, `focus.list`, and Work Item focus switching work against the real SQLite-backed agent
 - `pnpm smoke:macos-app` launches the packaged `.app` binary with a temporary home directory and verifies embedded-agent `agent.status`, `inventory.list`, focus start/stop/list, title reuse, focus switching, active Work Item deletion, and active focus restoration after app restart
+- `pnpm smoke:macos-app` also verifies Capture Inbox create/resolve/convert while ensuring capture actions do not interrupt the active focus session
 - `pnpm smoke:macos-app` also verifies startup normalization of legacy active Work Items, orphan active focus sessions, and stale `agent.lock` / `agent.port` recovery
 - `pnpm smoke:export-focus-day` verifies fallback Markdown export against a temporary SQLite database
-- `pnpm smoke:dogfood-report` verifies the evening dogfood report wrapper and analysis prompts
+- `pnpm smoke:app-events` verifies the local app-event migration, metrics summary, and Markdown export against a temporary SQLite database
+- `pnpm smoke:dogfood-report` verifies the evening dogfood report wrapper, open captures, analysis prompts, and App Telemetry section
 - `pnpm smoke:dogfood-finish` verifies the end-of-day gate: no active focus session, no active Work Item, and at least one focus block
 - `pnpm smoke:dogfood-status` verifies the embedded-agent status checker against healthy and unhealthy temporary HTTP agents
 - `pnpm smoke:dogfood-ready` verifies the real-database readiness checker against clean and contaminated temporary SQLite databases, including running-process visibility and the actionable next commands
@@ -142,15 +146,27 @@ Dogfood launch helper:
 - `pnpm dogfood:macos` rebuilds and opens the packaged app for a real Session replacement day
 - `pnpm open:macos-app` refuses by default when `timeskein-desktop` is already running, so a dogfood start does not silently activate an old process; `--check-only` validates bundle plus guard without opening the app, and `--check-running-only` runs only the process guard before preflight has built the app
 - `pnpm export:focus-day` prints a Markdown day report from the local SQLite database as a fallback to UI copy
-- `pnpm dogfood:report` prints a Markdown dogfood report with focus data and evening review prompts, marked as a draft if a focus block or Work Item is still active
+- `pnpm dogfood:metrics` prints dogfood telemetry aggregates from the local SQLite app-event journal
+- `pnpm export:app-events` prints a Markdown event table for deeper inspection of show/hide/start/switch/stop/copy/API behavior
+- `pnpm dogfood:report` prints a Markdown dogfood report with focus data, open captures, app telemetry, and evening review prompts, marked as a draft if a focus block or Work Item is still active
 
 Runtime smoke in browser/mock mode:
 
 - mock server starts on localhost
 - `focus.start`, `focus.stop`, `focus.list`, and Work Item focus switching work against the mock API
 - `pnpm smoke:focus-api` verifies the same flow and refuses to run over an existing active focus session
-- `pnpm smoke:mock-api` starts an isolated mock server, runs `smoke:focus-api`, and stops it
+- `pnpm smoke:capture-api` verifies Capture Inbox create/list/resolve/convert without interrupting focus
+- `pnpm smoke:mock-api` starts an isolated mock server, runs `smoke:focus-api` and `smoke:capture-api`, and stops it
+- mock API also exposes `app_event.log`, `app_event.list`, and `app_event.summary`
 - manual browser UI smoke was checked on 2026-06-30: start by typed title, switch by typed title, stop with note, Today list, totals, and `Copy Report` Markdown with both Work Items
+
+First real dogfood day:
+
+- 2026-07-01 was tracked through Timeskein as the Session replacement
+- Result: 6:11:08 active focus, 20 entrances, seven Work Items, four significant gaps
+- The exported dogfood report was useful for discussing focus allocation, gaps, entry cost, and product friction
+- App telemetry exposed two API errors from creating a Work Item directly in `Active`; this path is now covered by smoke tests and fixed in the agent
+- The follow-up baseline adds Capture Inbox, so incoming events can be recorded during a focus block without turning them into timed work immediately
 
 ## Implemented Features
 
@@ -178,9 +194,15 @@ Runtime smoke in browser/mock mode:
 - Today's focus picture can also be exported from SQLite with `pnpm export:focus-day`
 - Evening dogfood report can be copied from the focus panel, shown as selected Markdown if clipboard access fails, or generated with `pnpm dogfood:report`
 - The UI and CLI label the report as a draft while a focus block or Work Item is still active and include an active-state warning in the Markdown
+- Capture Inbox for incoming events that should not interrupt the current focus block
+- Captures link to the active focus session when one exists
+- Open captures are visible in the focus panel
+- Captures can be resolved as done or converted into Work Items
+- Open captures appear in the UI and CLI dogfood report for evening review
 - Manual Work Item inventory UI
 - Search
 - Create Work Item
+- Create Work Item directly in `active` starts or switches the focus timer instead of leaving split active state
 - Touch
 - State changes
 - Notes
@@ -192,9 +214,11 @@ Runtime smoke in browser/mock mode:
 - Tray/menu bar title shows a short active focus counter such as `12m Focus`
 - Borderless window can be moved by dragging the header
 - `Esc` hides the macOS window when no dialog is open
+- Palette shortcuts are ignored while typing in inputs, textareas, selects, or editable elements
 - Destructive confirmation dialogs focus `Cancel` by default and do not confirm on `Enter`
 - Focus input is refocused when the window becomes visible and no block is active
 - SQLite storage through the embedded Rust agent
+- Local app-event telemetry for dogfood analysis: app start, agent start/reuse/recovery, show/hide/drag, focus start/switch/stop, report copy, manual copy fallback, and API errors
 - Mock server for browser development
 
 ## Focus Session Data
@@ -209,6 +233,59 @@ The first Focus Session baseline is intentionally small. It stores manual contac
 - optional stop note
 
 The Rust agent stores focus sessions in SQLite. Partial unique indexes enforce at most one active focus session and at most one active Work Item. Work Item `active` is treated as the UI marker for the currently timed item: switching it stops the old focus block and starts a new linked block, while stopping a linked focus block clears `active` from Work Items. On startup, the agent normalizes old active Work Item rows and stops an active focus session if its linked Work Item is missing or deleted. Starting focus from typed text first searches for an existing Work Item with the same normalized title; if none exists, it creates one. The mock server exposes the same `focus.current`, `focus.start`, `focus.stop`, and `focus.list` RPC methods for browser development.
+
+## First Dogfood Findings
+
+The 2026-07-01 dogfood day showed that the core timer loop works, but the next useful product slice is not more reporting. It is protecting the active focus block from incoming events.
+
+High-signal findings:
+
+- Quick text entry must stay safe: `C`/`С` opening Create while typing was a real blocker and is fixed.
+- Creating a new Work Item directly as `Active` must work; the first dogfood day hit this twice and the path is now fixed.
+- `last_seen_at` labels looked like spent duration; the UI now says `ago`.
+- The report needs activity zones before `break` or `idle` blocks can be tracked without polluting total focus.
+- Work Item notes are currently a single mutable description, not a timestamped activity log.
+- Capture Inbox is now the next dogfood surface: it should prove whether incoming events can be remembered without switching away from the current focus.
+
+## Capture Inbox Data
+
+Capture Inbox stores quick incoming-event notes in SQLite table `captures`.
+
+The current baseline stores:
+
+- free-form text entered by the user;
+- state: `open`, `resolved`, or `converted`;
+- optional link to the active focus session at capture time;
+- optional link to a Work Item after conversion;
+- created, updated, resolved, and converted timestamps.
+
+Capture is intentionally separate from focus sessions. Creating, resolving, or converting a capture must not stop or switch the active timer. Converting a capture creates or reuses a Work Item by normalized title, but does not start focus on that Work Item.
+
+## App Event Telemetry
+
+The dogfood baseline stores a local append-only event journal in SQLite table `app_events`.
+It is for evaluating Timeskein itself after a real workday, not for external analytics.
+
+Tracked event groups:
+
+- app and embedded-agent startup, reuse, and stale runtime recovery;
+- window show, hide, and drag start;
+- focus start, switch, stop requests and outcomes;
+- report copy attempts, clipboard failures, and manual copy fallback;
+- Local API errors.
+
+Telemetry payloads are sanitized before storage. They can contain safe technical metadata such as control name, action id, duration, counters, and boolean flags. They must not contain raw Work Item titles, notes, URLs, search text, or other free-form user text. Analysis links events through `work_item_id` and `focus_session_id`, using the existing tables when names are needed.
+
+Useful commands:
+
+```bash
+pnpm dogfood:metrics
+pnpm export:app-events
+pnpm dogfood:report
+pnpm dogfood:finish:save
+```
+
+The report telemetry section includes action counts, start/switch/stop failures, API errors, window show/hide counts, copy fallback counts, average start latency, likely show-to-start friction gaps, attempts to start the already active Work Item, and stale runtime recovery events.
 
 ## Global Shortcut and Tray
 
@@ -230,6 +307,10 @@ On multi-monitor macOS setups, the tray/status item is controlled by the system 
 - Browser mode uses mock data only.
 - Focus Session does not implement pause, resume, or cancel yet.
 - Focus Session has a compact day list and Markdown copy, but not a full reporting/JSON/CSV export view yet.
+- App-event telemetry has CLI/report output, but no in-app inspection screen yet.
+- Capture Inbox is minimal: no edit/delete UI yet, no append-to-Work-Item-note action yet, and no separate capture history screen beyond the open list and dogfood report.
+- Work Item notes are not timestamped and do not appear as a separate timeline.
+- Activity zones are not implemented, so breaks tracked as Work Items still count into total focus.
 - Automated e2e tests are not implemented yet.
 - Cross-platform CI is not implemented yet.
 - Settings UI is not implemented yet.
@@ -238,9 +319,9 @@ On multi-monitor macOS setups, the tray/status item is controlled by the system 
 
 ## Next Engineering Steps
 
-1. Dogfood one real working day through Focus Session using [Dogfood Day Protocol](dogfood-day.md).
-2. Add smoke/e2e tests for browser mock mode and macOS embedded-agent mode.
-3. Decide whether pause/resume/cancel are needed before regular use.
-4. Improve day review beyond the dogfood report if the first real day shows gaps in the analysis flow.
-5. Consider adding an automated browser UI smoke if the manual dogfood path keeps changing.
+1. Dogfood Capture Inbox during the next real workday and check whether it reduces interruption cost.
+2. Add timestamped Work Item notes or events for in-flight observations and post-block details.
+3. Add activity zones before tracking breaks as first-class blocks.
+4. Reduce raw UI/agent duplication in the telemetry report.
+5. Decide whether pause/resume/cancel are needed before regular use.
 6. Improve agent lifecycle diagnostics and user-visible error states.

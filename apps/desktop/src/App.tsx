@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { logAppEvent } from './api/client'
 import Palette from './components/Palette'
 
 type TauriWindow = Window &
@@ -20,6 +21,13 @@ function isTauriRuntime() {
 
 function App() {
   useEffect(() => {
+    void logAppEvent({
+      source: 'ui',
+      kind: 'app_started',
+    })
+  }, [])
+
+  useEffect(() => {
     if (!isTauriRuntime()) return
 
     let cancelled = false
@@ -38,13 +46,32 @@ function App() {
         if (document.querySelector('[data-timeskein-modal="true"]')) return
 
         e.preventDefault()
+        void logAppEvent({
+          source: 'ui',
+          kind: 'window_hidden',
+          payload: {
+            control: 'escape',
+          },
+        })
         void tauriWindow.hide()
       }
 
+      const handleVisibilityChange = () => {
+        void logAppEvent({
+          source: 'ui',
+          kind: document.hidden ? 'window_hidden' : 'window_shown',
+          payload: {
+            control: 'visibilitychange',
+          },
+        })
+      }
+
       document.addEventListener('keydown', handleKeyDown)
+      document.addEventListener('visibilitychange', handleVisibilityChange)
 
       cleanup = () => {
         document.removeEventListener('keydown', handleKeyDown)
+        document.removeEventListener('visibilitychange', handleVisibilityChange)
         void unlisten.then((fn) => fn())
       }
     }).catch((error) => {

@@ -40,7 +40,7 @@ export function useStartFocusSession() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (params: { title: string; work_item_id?: string; target_seconds?: number }) =>
+    mutationFn: (params: { title: string; work_item_id?: string; target_seconds?: number; telemetry_action_id?: string }) =>
       focusApi.start(params),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: focusQueryKeys.current })
@@ -54,7 +54,7 @@ export function useStopFocusSession() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (params?: { id?: string; note?: string }) => focusApi.stop(params),
+    mutationFn: (params?: { id?: string; note?: string; telemetry_action_id?: string }) => focusApi.stop(params),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: focusQueryKeys.current })
       queryClient.invalidateQueries({ queryKey: focusQueryKeys.today })

@@ -7,6 +7,7 @@ import {
   useToggleWorkItemPin,
 } from '../hooks/useInventory'
 import { useStartFocusSession } from '../hooks/useFocusSessions'
+import { logAppEvent } from '../api/client'
 
 interface InventoryListProps {
   items: WorkItemView[]
@@ -95,14 +96,54 @@ export default function InventoryList({ items, selectedIndex, onSelect, onReques
           onClick={() => onSelect(index)}
           onDoubleClick={() => {
             if (startFocusMutation.isPending) return
+            const actionId = createTelemetryActionId()
+            void logAppEvent({
+              source: 'ui',
+              kind: 'focus_start_requested',
+              work_item_id: item.id,
+              payload: {
+                action_id: actionId,
+                control: 'double_click',
+              },
+            })
             startFocusMutation.mutate({
               title: item.title,
               work_item_id: item.id,
               target_seconds: 25 * 60,
+              telemetry_action_id: actionId,
+            }, {
+              onSuccess: (session) => {
+                void logAppEvent({
+                  source: 'ui',
+                  kind: 'focus_started',
+                  work_item_id: session.work_item_id,
+                  focus_session_id: session.id,
+                  payload: {
+                    action_id: actionId,
+                    control: 'double_click',
+                  },
+                })
+              },
+              onError: (error) => {
+                void logAppEvent({
+                  source: 'ui',
+                  kind: 'focus_start_failed',
+                  work_item_id: item.id,
+                  payload: {
+                    action_id: actionId,
+                    control: 'double_click',
+                    error_code: error instanceof Error && 'code' in error ? String(error.code) : 'unknown',
+                  },
+                })
+              },
             })
           }}
         />
       ))}
     </div>
   )
+}
+
+function createTelemetryActionId() {
+  return globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`
 }

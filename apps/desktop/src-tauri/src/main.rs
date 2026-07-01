@@ -16,6 +16,7 @@ use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut}
 use timeskein_agent::{
     api::create_router,
     db::Database,
+    domain::{AppEvent, AppEventKind, AppEventSource},
     runtime::{ensure_data_dir, read_port_file, write_port_file, SingleInstanceLock},
     AppState,
 };
@@ -72,12 +73,14 @@ fn toggle_main_window<R: Runtime>(app: &AppHandle<R>) {
 
 async fn start_embedded_agent() -> anyhow::Result<AgentRuntime> {
     let data_dir = ensure_data_dir()?;
+    let mut stale_runtime_recovered = false;
     let lock = match SingleInstanceLock::acquire(&data_dir) {
         Ok(lock) => Some(lock),
         Err(error) => {
             if let Some(port) = read_port_file(&data_dir)? {
                 if existing_agent_is_responsive(port).await {
                     eprintln!("Using existing Timeskein agent from port file: {port}");
+                    log_existing_agent_event(port, AppEventKind::AgentReused).await;
                     return Ok(AgentRuntime {
                         api_url: format!("http://127.0.0.1:{port}/api"),
                         _lock: None,
@@ -88,6 +91,7 @@ async fn start_embedded_agent() -> anyhow::Result<AgentRuntime> {
                     "Ignoring stale Timeskein agent lock/port after failed lock acquire: {error}"
                 );
                 cleanup_agent_runtime_files(&data_dir);
+                stale_runtime_recovered = true;
                 Some(SingleInstanceLock::acquire(&data_dir)?)
             } else {
                 return Err(error);
@@ -97,6 +101,10 @@ async fn start_embedded_agent() -> anyhow::Result<AgentRuntime> {
 
     let db_path = data_dir.join("timeskein.db");
     let db = Database::new(&db_path).await?;
+    if stale_runtime_recovered {
+        log_db_agent_event(&db, AppEventKind::AgentStaleRuntimeRecovered, None).await;
+    }
+    log_db_agent_event(&db, AppEventKind::AgentStarted, None).await;
     let state = Arc::new(RwLock::new(AppState {
         db,
         start_time: std::time::Instant::now(),
@@ -149,9 +157,12 @@ async fn probe_agent_status(port: u16) -> bool {
         body.len()
     );
 
-    if time::timeout(Duration::from_millis(500), stream.write_all(request.as_bytes()))
-        .await
-        .is_err()
+    if time::timeout(
+        Duration::from_millis(500),
+        stream.write_all(request.as_bytes()),
+    )
+    .await
+    .is_err()
     {
         return false;
     }
@@ -170,6 +181,38 @@ async fn probe_agent_status(port: u16) -> bool {
     response.starts_with("HTTP/1.1 200") && response.contains(r#""db_ok":true"#)
 }
 
+async fn log_existing_agent_event(port: u16, kind: AppEventKind) {
+    let body = format!(
+        r#"{{"version":"1.0","request_id":"startup-event","method":"app_event.log","params":{{"source":"agent","kind":"{}"}}}}"#,
+        kind.as_str()
+    );
+    let request = format!(
+        "POST /api HTTP/1.1\r\nHost: 127.0.0.1:{port}\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
+        body.len()
+    );
+
+    let Ok(Ok(mut stream)) = time::timeout(
+        Duration::from_millis(500),
+        tokio::net::TcpStream::connect(("127.0.0.1", port)),
+    )
+    .await
+    else {
+        return;
+    };
+
+    let _ = time::timeout(
+        Duration::from_millis(500),
+        stream.write_all(request.as_bytes()),
+    )
+    .await;
+}
+
+async fn log_db_agent_event(db: &Database, kind: AppEventKind, payload: Option<serde_json::Value>) {
+    let mut event = AppEvent::new(AppEventSource::Agent, kind);
+    event.payload = payload;
+    let _ = db.log_app_event(&event).await;
+}
+
 fn cleanup_agent_runtime_files(data_dir: &Path) {
     for name in ["agent.lock", "agent.port"] {
         let _ = fs::remove_file(data_dir.join(name));
@@ -180,10 +223,7 @@ fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
-        .invoke_handler(tauri::generate_handler![
-            get_api_url,
-            set_tray_status_title
-        ])
+        .invoke_handler(tauri::generate_handler![get_api_url, set_tray_status_title])
         .setup(|app| {
             let agent = tauri::async_runtime::block_on(start_embedded_agent())?;
             app.manage(agent);

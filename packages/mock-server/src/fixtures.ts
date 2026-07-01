@@ -4,6 +4,12 @@ import type {
   RefView,
   DenylistRule,
   FocusSessionView,
+  CaptureState,
+  CaptureView,
+  AppEventKind,
+  AppEventSource,
+  AppEventSummary,
+  AppEventView,
 } from "@timeskein/contracts";
 import { v4 as uuidv4 } from "uuid";
 
@@ -145,6 +151,8 @@ export class MockDataStore {
   private refs: Map<string, RefView>;
   private denylist: Map<string, DenylistRule>;
   private focusSessions: Map<string, FocusSessionView>;
+  private captures: Map<string, CaptureView>;
+  private appEvents: Map<string, AppEventView>;
   private startTime: number;
 
   constructor() {
@@ -152,6 +160,8 @@ export class MockDataStore {
     this.refs = new Map();
     this.denylist = new Map();
     this.focusSessions = new Map();
+    this.captures = new Map();
+    this.appEvents = new Map();
     this.startTime = Date.now();
 
     // Initialize with mock data
@@ -166,6 +176,70 @@ export class MockDataStore {
     }
   }
 
+  // Capture inbox methods
+  createCapture(params: { text: string; focus_session_id?: string }): CaptureView {
+    const now = new Date().toISOString();
+    const activeFocus = this.getActiveFocusSession();
+    const capture: CaptureView = {
+      id: uuidv4(),
+      text: params.text.trim(),
+      state: "open",
+      focus_session_id: params.focus_session_id || activeFocus?.id,
+      created_at: now,
+      updated_at: now,
+    };
+
+    this.captures.set(capture.id, capture);
+    return capture;
+  }
+
+  listCaptures(stateFilter?: CaptureState[]): CaptureView[] {
+    let captures = Array.from(this.captures.values());
+    if (stateFilter && stateFilter.length > 0) {
+      captures = captures.filter((capture) => stateFilter.includes(capture.state));
+    }
+
+    return captures.sort(
+      (left, right) =>
+        new Date(right.created_at).getTime() - new Date(left.created_at).getTime()
+    );
+  }
+
+  resolveCapture(id: string): CaptureView | undefined {
+    const capture = this.captures.get(id);
+    if (!capture) return undefined;
+
+    const now = new Date().toISOString();
+    capture.state = "resolved";
+    capture.updated_at = now;
+    capture.resolved_at = now;
+    this.captures.set(id, capture);
+
+    return capture;
+  }
+
+  convertCaptureToWorkItem(id: string, title?: string): { capture?: CaptureView; workItemId?: string; reused?: boolean } {
+    const capture = this.captures.get(id);
+    if (!capture) return {};
+
+    const itemTitle = title?.trim() || capture.text;
+    const existing = this.findWorkItemByTitle(itemTitle);
+    const item = this.createWorkItem(itemTitle, "task", "unknown");
+    const now = new Date().toISOString();
+
+    capture.state = "converted";
+    capture.work_item_id = item.id;
+    capture.updated_at = now;
+    capture.converted_at = now;
+    this.captures.set(id, capture);
+
+    return {
+      capture,
+      workItemId: item.id,
+      reused: Boolean(existing),
+    };
+  }
+
   // Agent methods
   getUptime(): number {
     return Math.floor((Date.now() - this.startTime) / 1000);
@@ -173,6 +247,117 @@ export class MockDataStore {
 
   getWorkItemCount(): number {
     return this.workItems.size;
+  }
+
+  // App event telemetry methods
+  logAppEvent(params: {
+    source?: AppEventSource;
+    kind: AppEventKind;
+    work_item_id?: string;
+    focus_session_id?: string;
+    payload?: Record<string, unknown>;
+  }): AppEventView {
+    const event: AppEventView = {
+      id: uuidv4(),
+      ts: new Date().toISOString(),
+      source: params.source ?? "ui",
+      kind: params.kind,
+      work_item_id: params.work_item_id,
+      focus_session_id: params.focus_session_id,
+      payload: sanitizePayload(params.payload),
+    };
+
+    this.appEvents.set(event.id, event);
+    return event;
+  }
+
+  listAppEvents(from?: string, to?: string): AppEventView[] {
+    const fromTime = from ? new Date(from).getTime() : Number.NEGATIVE_INFINITY;
+    const toTime = to ? new Date(to).getTime() : Number.POSITIVE_INFINITY;
+
+    return Array.from(this.appEvents.values())
+      .filter((event) => {
+        const eventTime = new Date(event.ts).getTime();
+        return eventTime >= fromTime && eventTime < toTime;
+      })
+      .sort((left, right) => new Date(left.ts).getTime() - new Date(right.ts).getTime());
+  }
+
+  summarizeAppEvents(from?: string, to?: string): AppEventSummary {
+    const events = this.listAppEvents(from, to);
+    const byKind: Record<string, number> = {};
+    const bySource: Record<string, number> = {};
+    const pendingStarts = new Map<string, number>();
+    const startLatencies: number[] = [];
+    const alreadyActiveActionIds = new Set<string>();
+    let alreadyActiveWithoutAction = 0;
+    let windowShownAt: number | undefined;
+    let slowWindowToFocusCount = 0;
+
+    for (const event of events) {
+      byKind[event.kind] = (byKind[event.kind] ?? 0) + 1;
+      bySource[event.source] = (bySource[event.source] ?? 0) + 1;
+
+      if (event.kind === "focus_start_requested" || event.kind === "focus_switch_requested") {
+        const actionId = typeof event.payload?.action_id === "string" ? event.payload.action_id : undefined;
+        if (actionId) pendingStarts.set(actionId, new Date(event.ts).getTime());
+      }
+
+      if (event.kind === "focus_started" || event.kind === "focus_switched") {
+        const actionId = typeof event.payload?.action_id === "string" ? event.payload.action_id : undefined;
+        if (actionId && pendingStarts.has(actionId)) {
+          startLatencies.push(Math.max(new Date(event.ts).getTime() - pendingStarts.get(actionId)!, 0));
+          pendingStarts.delete(actionId);
+        }
+
+        if (windowShownAt && new Date(event.ts).getTime() - windowShownAt >= 20_000) {
+          slowWindowToFocusCount += 1;
+        }
+        windowShownAt = undefined;
+      }
+
+      if (event.kind === "window_shown") {
+        windowShownAt = new Date(event.ts).getTime();
+      } else if (event.kind === "window_hidden") {
+        windowShownAt = undefined;
+      }
+
+      if (event.payload?.already_active === true) {
+        const actionId = typeof event.payload.action_id === "string" ? event.payload.action_id : undefined;
+        if (actionId) {
+          alreadyActiveActionIds.add(actionId);
+        } else if (event.kind === "focus_start_requested" || event.kind === "focus_switch_requested") {
+          alreadyActiveWithoutAction += 1;
+        }
+      }
+    }
+
+    const count = (kind: string) => byKind[kind] ?? 0;
+    const averageLatency = startLatencies.length
+      ? Math.floor(startLatencies.reduce((sum, value) => sum + value, 0) / startLatencies.length)
+      : undefined;
+
+    return {
+      total: events.length,
+      by_kind: byKind,
+      by_source: bySource,
+      start_requests: count("focus_start_requested"),
+      switch_requests: count("focus_switch_requested"),
+      stop_requests: count("focus_stop_requested"),
+      start_failures: count("focus_start_failed"),
+      stop_failures: count("focus_stop_failed"),
+      api_errors: count("api_error"),
+      copy_failures: count("report_copy_failed"),
+      manual_copy_fallbacks: count("manual_copy_fallback_shown"),
+      window_shown: count("window_shown"),
+      window_hidden: count("window_hidden"),
+      window_drag_started: count("window_drag_started"),
+      stale_runtime_recoveries: count("agent_stale_runtime_recovered"),
+      already_active_start_attempts: alreadyActiveActionIds.size + alreadyActiveWithoutAction,
+      average_focus_start_latency_ms: averageLatency,
+      slow_window_to_focus_count: slowWindowToFocusCount,
+      updated_at: new Date().toISOString(),
+    };
   }
 
   // Inventory methods
@@ -597,4 +782,20 @@ export class MockDataStore {
       over_target_seconds: Math.max(activeSeconds - session.target_seconds, 0),
     };
   }
+}
+
+function sanitizePayload(payload?: Record<string, unknown>) {
+  if (!payload) return undefined;
+
+  const result: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(payload)) {
+    const lowerKey = key.toLocaleLowerCase();
+    if (["title", "note", "url", "value", "text", "query", "search"].some((part) => lowerKey.includes(part))) {
+      continue;
+    }
+    if (value === null || ["string", "number", "boolean"].includes(typeof value)) {
+      result[key] = typeof value === "string" ? value.slice(0, 120) : value;
+    }
+  }
+  return result;
 }

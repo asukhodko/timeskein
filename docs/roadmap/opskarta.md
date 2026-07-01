@@ -4,9 +4,10 @@ This is the current machine-checkable roadmap for Timeskein. The source files li
 `plans/timeskein/*.plan.yaml` and use the vendored opskarta v3 tools in
 `tools/opskarta`.
 
-The near-term focus is deliberately narrow: replace the useful part of Session with
-a local Focus Session flow before widening scope to sync, Evidence Mode, or new
-platforms.
+The first real dogfood day on 2026-07-01 proved that Timeskein can replace the
+useful part of Session for one workday. The near-term focus now stays narrow:
+dogfood the new Capture Inbox, stabilize the post-dogfood baseline, and avoid
+widening scope to sync, Evidence Mode, or new platforms.
 
 ## Executive view
 
@@ -29,14 +30,16 @@ flowchart LR
 
     recovered_baseline["Recovered<br/>baseline<br/>100%<br/>веха 2026-06-30"]
     class recovered_baseline exec_done
-    app_entry_ux["App<br/>entry UX<br/>~60%<br/>веха 2026-07-03"]
+    app_entry_ux["App<br/>entry UX<br/>~70%<br/>веха 2026-07-03"]
     class app_entry_ux exec_mgmt_yellow
     style app_entry_ux stroke:#111827,stroke-width:3px
-    focus_session_core["Focus<br/>Session core<br/>85%<br/>веха 2026-07-10"]
-    class focus_session_core exec_mgmt_yellow
-    day_review_export["Day review<br/>and export<br/>80%<br/>веха 2026-07-16"]
-    class day_review_export exec_mgmt_neutral
-    dogfood_hardening["Dogfood<br/>hardening<br/>~80%<br/>веха 2026-07-21"]
+    focus_session_core["Focus<br/>Session core<br/>85%<br/>веха 2026-07-01"]
+    class focus_session_core exec_done
+    day_review_export["Day review<br/>and export<br/>85%<br/>веха 2026-07-01"]
+    class day_review_export exec_done
+    capture_inbox["Capture<br/>Inbox<br/>85%<br/>окно 2026-07-07..2026-07-08"]
+    class capture_inbox exec_mgmt_yellow
+    dogfood_hardening["Dogfood<br/>hardening<br/>~85%<br/>веха 2026-07-06"]
     class dogfood_hardening exec_mgmt_neutral
     future_directions["Future<br/>directions<br/>n/a"]
     class future_directions exec_mgmt_neutral
@@ -44,7 +47,8 @@ flowchart LR
     recovered_baseline --> app_entry_ux
     app_entry_ux --> focus_session_core
     focus_session_core --> day_review_export
-    day_review_export --> dogfood_hardening
+    day_review_export --> capture_inbox
+    capture_inbox --> dogfood_hardening
     focus_session_core -. later .-> future_directions
 ```
 
@@ -80,18 +84,24 @@ gantt
     ✅ Restore running focus session after app restart  :done, ts_focus_core_restart_restore,    2026-07-10, 1d
     ✅ Bind focus sessions to Work Items or free intentions  :done, ts_focus_core_work_item_binding,    2026-07-06, 1d
     ✅ Capture a note at the end of a focus session  :done, ts_focus_core_session_notes,    2026-07-10, 1d
-    🔄 First real Focus Session dogfood  :milestone, active, ts_focus_core_dogfood_gate,    2026-07-10, 0d
+    ✅ First real Focus Session dogfood  :milestone, done, ts_focus_core_dogfood_gate,    2026-07-01, 0d
     section Day review
-    🔄 Show focus blocks on a daily timeline  :active, ts_day_review_timeline,    2026-07-13, 2d
-    🔄 Compute totals, gaps, and entry count  :active, ts_day_review_totals_gaps,    2026-07-15, 1d
-    🔄 Export dogfood day data as Markdown  :active, ts_day_review_export,    2026-07-16, 1d
-    End-of-day analysis can use Timeskein data  :milestone, ts_day_review_analysis_gate,    2026-07-16, 0d
+    🔄 Show focus blocks on a daily timeline  :active, ts_day_review_timeline,    2026-07-02, 2d
+    🔄 Compute totals, gaps, and entry count  :active, ts_day_review_totals_gaps,    2026-07-06, 1d
+    🔄 Export dogfood day data as Markdown  :active, ts_day_review_export,    2026-07-07, 1d
+    ✅ Add local app-event telemetry for dogfood analysis  :done, ts_day_review_app_telemetry,    2026-07-08, 1d
+    ✅ End-of-day analysis can use Timeskein data  :milestone, done, ts_day_review_analysis_gate,    2026-07-01, 0d
+    section Capture Inbox
+    ✅ Add captured-event model and Local API  :done, ts_capture_model_api,    2026-07-01, 2d
+    ✅ Add fast capture control  :done, ts_capture_quick_ui,    2026-07-03, 2d
+    🔄 Review and promote captured events  :active, ts_capture_review_flow,    2026-07-07, 2d
     section Dogfood hardening
-    🔄 Add smoke checks for focus-session flows  :active, ts_hardening_smoke,    2026-07-17, 1d
-    ✅ Add local data backup and reset path  :done, ts_hardening_backup_reset,    2026-07-17, 1d
-    ✅ Rebuild macOS app for regular personal use  :done, ts_hardening_package_app,    2026-07-20, 1d
-    Write dogfood release notes and known limitations  :ts_hardening_release_notes,    2026-07-21, 1d
-    Session replacement dogfood baseline  :milestone, ts_hardening_dogfood_release,    2026-07-21, 0d
+    🔄 Add smoke checks for focus-session flows  :active, ts_hardening_smoke,    2026-07-02, 1d
+    🔄 Fix first dogfood friction  :active, ts_hardening_post_dogfood_friction,    2026-07-01, 1d
+    ✅ Add local data backup and reset path  :done, ts_hardening_backup_reset,    2026-07-02, 1d
+    ✅ Rebuild macOS app for regular personal use  :done, ts_hardening_package_app,    2026-07-03, 1d
+    Write dogfood release notes and known limitations  :ts_hardening_release_notes,    2026-07-06, 1d
+    Session replacement dogfood baseline  :milestone, ts_hardening_dogfood_release,    2026-07-06, 0d
 ```
 
 ## Current work list
@@ -109,23 +119,29 @@ gantt
 - Restore running focus session after app restart [done] (2 focus-blocks) {100%}
 - Bind focus sessions to Work Items or free intentions [done] (2 focus-blocks) {100%}
 - Capture a note at the end of a focus session [done] (1 focus-blocks) {100%}
+- First real Focus Session dogfood [done] {100%}
+- Add local app-event telemetry for dogfood analysis [done] (2 focus-blocks) {100%}
+- End-of-day analysis can use Timeskein data [done] {100%}
+- Add captured-event model and Local API [done] (3 focus-blocks) {100%}
+- Add fast capture control [done] (3 focus-blocks) {100%}
 - Add local data backup and reset path [done] (2 focus-blocks)
 - Rebuild macOS app for regular personal use [done] (1 focus-blocks) {100%}
-- App entry UX [in_progress] (6 focus-blocks) {75% cov:83%}
+- App entry UX [in_progress] (6 focus-blocks) {85% cov:83%}
 - Wire tray menu actions [in_progress] (1 focus-blocks) {75%}
-- Reduce the path from intent to tracked work [in_progress] (2 focus-blocks) {50%}
+- Reduce the path from intent to tracked work [in_progress] (2 focus-blocks) {75%}
 - Focus Session core [in_progress] (17 focus-blocks) {85%}
 - Add FocusSession and SessionEvent persistence [in_progress] (3 focus-blocks) {70%}
 - Implement start, pause, resume, stop, cancel [in_progress] (3 focus-blocks) {45%}
-- First real Focus Session dogfood [in_progress] {85%}
-- Day review and export [in_progress] (7 focus-blocks) {79%}
+- Day review and export [in_progress] (9 focus-blocks) {84%}
 - Show focus blocks on a daily timeline [in_progress] (3 focus-blocks) {65%}
 - Compute totals, gaps, and entry count [in_progress] (2 focus-blocks) {90%}
 - Export dogfood day data as Markdown [in_progress] (2 focus-blocks) {90%}
-- Dogfood hardening [in_progress] (6 focus-blocks) {97% cov:50%}
+- Capture Inbox [in_progress] (9 focus-blocks) {85%}
+- Review and promote captured events [in_progress] (3 focus-blocks) {55%}
+- Dogfood hardening [in_progress] (8 focus-blocks) {94% cov:62%}
 - Add smoke checks for focus-session flows [in_progress] (2 focus-blocks) {95%}
+- Fix first dogfood friction [in_progress] (2 focus-blocks) {90%}
 - Document macOS multi-monitor status item limits [planned] (1 focus-blocks)
-- End-of-day analysis can use Timeskein data [planned]
 - Write dogfood release notes and known limitations [planned] (1 focus-blocks)
 - Session replacement dogfood baseline [planned]
 <!-- GENERATED:END -->

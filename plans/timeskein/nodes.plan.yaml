@@ -405,7 +405,7 @@ nodes:
     deps:
       - id: ts.hardening.package_app
       - id: ts.hardening.backup_reset
-    notes: Dogfood Release Candidate doc defines the pass/fail gate. dogfood:rc-check turns the saved SQLite day into hard blockers, review items, and manual verdict prompts.
+    notes: Dogfood Release Candidate doc defines the pass/fail gate. dogfood:rc-check turns the saved SQLite day into hard blockers, review items, and manual verdict prompts; dogfood:rc-check:save preserves that evidence as a Markdown artifact.
     x:
       ops:
         attention_class: current

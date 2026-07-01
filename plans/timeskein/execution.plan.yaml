@@ -166,7 +166,7 @@ execution:
       actual_start: "2026-07-01"
       updated_at: "2026-07-01T22:25:00+03:00"
       confidence: 0.85
-      note: Added Dogfood Release Candidate gate doc and dogfood:rc-check evidence checker. The milestone still needs a real next dogfood day and final known-limits update based on that result.
+      note: Added Dogfood Release Candidate gate doc, dogfood:rc-check evidence checker, and dogfood:rc-check:save Markdown artifact. The milestone still needs a real next dogfood day and final known-limits update based on that result.
     ts.hardening.post_dogfood_friction:
       progress: 0.9
       actual_start: "2026-07-01"

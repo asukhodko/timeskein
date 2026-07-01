@@ -69,12 +69,13 @@ pnpm export:app-events
 Run the release-candidate evidence check:
 
 ```bash
-pnpm dogfood:rc-check
+pnpm dogfood:rc-check:save
 ```
 
 `dogfood:rc-check` does not replace the human verdict. It catches hard blockers
 and prints review items that must be resolved or consciously accepted before the
-milestone can be marked done.
+milestone can be marked done. `dogfood:rc-check:save` writes
+`timeskein-dogfood-rc-check-YYYY-MM-DD.md` next to the saved day report.
 
 The final evidence must include:
 

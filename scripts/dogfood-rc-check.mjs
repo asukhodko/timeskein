@@ -2,6 +2,7 @@
 
 import { execFile } from "node:child_process";
 import { existsSync } from "node:fs";
+import { writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join, resolve } from "node:path";
 import { promisify } from "node:util";
@@ -28,8 +29,15 @@ const from = startOfLocalDay(date);
 const to = nextLocalDay(from);
 const evidence = await loadEvidence(dbPath, from, to, now);
 const assessment = assessEvidence(evidence, minFocusSeconds);
+const output = buildRcReport(dateArg, dbPath, evidence, assessment, minFocusSeconds);
+const outputPath = outputReportPath(options, dateArg);
 
-process.stdout.write(buildRcReport(dateArg, dbPath, evidence, assessment, minFocusSeconds));
+if (outputPath) {
+  await writeFile(outputPath, output);
+  process.stdout.write(`Saved Timeskein dogfood RC check: ${outputPath}\n`);
+} else {
+  process.stdout.write(output);
+}
 process.exit(assessment.hardBlockers.length > 0 ? 1 : 0);
 
 function parseArgs(args) {
@@ -50,6 +58,10 @@ function parseArgs(args) {
       if (!Number.isFinite(result.minFocusMinutes) || result.minFocusMinutes < 0) {
         throw new Error("--min-focus-minutes must be a non-negative number");
       }
+    } else if (arg === "--out") {
+      result.out = args[++index];
+    } else if (arg === "--save") {
+      result.save = true;
     } else if (arg === "--help" || arg === "-h") {
       printHelp();
       process.exit(0);
@@ -62,11 +74,23 @@ function parseArgs(args) {
 }
 
 function printHelp() {
-  console.log(`Usage: pnpm dogfood:rc-check [--date YYYY-MM-DD] [--db path/to/timeskein.db] [--min-focus-minutes N]
+  console.log(`Usage: pnpm dogfood:rc-check [--date YYYY-MM-DD] [--db path/to/timeskein.db] [--min-focus-minutes N] [--save | --out path.md]
 
 Checks whether the saved Timeskein data is enough for the Dogfood Release Candidate verdict.
 It exits with code 1 for hard blockers such as active state, duplicate Work Item titles, or an empty day.
 Review items are printed but keep exit code 0 because the final RC verdict still needs human judgment.`);
+}
+
+function outputReportPath(options, date) {
+  if (options.out) {
+    return resolve(options.out);
+  }
+
+  if (options.save) {
+    return resolve(`timeskein-dogfood-rc-check-${date}.md`);
+  }
+
+  return undefined;
 }
 
 async function loadEvidence(path, from, to, now) {

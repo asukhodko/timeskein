@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { execFile } from "node:child_process";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { promisify } from "node:util";
@@ -40,6 +40,14 @@ try {
   assert(good.stdout.includes("Verdict: ready for human RC verdict"), "good day verdict is missing");
   assert(good.stdout.includes("Focus total: 3:30:00"), "good day focus total is missing");
   assert(good.stdout.includes("Captures created today: 1"), "good day capture count is missing");
+
+  const savedPath = join(tempDir, "rc-check.md");
+  const saved = await runRcCheck(goodDb, ["--out", savedPath]);
+  assert(saved.code === 0, "good day should save RC check");
+  assert(saved.stdout.includes(`Saved Timeskein dogfood RC check: ${savedPath}`), "save output path is missing");
+  const savedMarkdown = await readFile(savedPath, "utf8");
+  assert(savedMarkdown.includes("# Timeskein dogfood RC check - 2026-06-30"), "saved RC check title is missing");
+  assert(savedMarkdown.includes("Manual RC Verdict"), "saved RC check manual verdict is missing");
 
   const openCaptureDb = join(tempDir, "open-capture.db");
   await copyDb(goodDb, openCaptureDb);
@@ -102,7 +110,7 @@ async function migrate(path) {
   await runSqlFile(path, join(repoRoot, "apps/agent/migrations/004_captures.sql"));
 }
 
-async function runRcCheck(path) {
+async function runRcCheck(path, extraArgs = []) {
   try {
     const { stdout, stderr } = await execFileAsync(
       "node",
@@ -114,6 +122,7 @@ async function runRcCheck(path) {
         "2026-06-30",
         "--now",
         "2026-06-30T12:00:00Z",
+        ...extraArgs,
       ],
       {
         cwd: repoRoot,

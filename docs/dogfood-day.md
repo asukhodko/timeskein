@@ -294,7 +294,7 @@ Telemetry stays local in SQLite. Event payloads are technical only; raw Work Ite
 For a Dogfood Release Candidate day, run the RC evidence check after saving the report:
 
 ```bash
-pnpm dogfood:rc-check
+pnpm dogfood:rc-check:save
 ```
 
 The command prints hard blockers and review items for the Session replacement gate.
@@ -304,7 +304,7 @@ For a previous date:
 ```bash
 pnpm export:focus-day --date 2026-06-30 > timeskein-day.md
 pnpm dogfood:finish -- --date 2026-06-30 > timeskein-dogfood-report.md
-pnpm dogfood:rc-check -- --date 2026-06-30
+pnpm dogfood:rc-check -- --date 2026-06-30 --save
 ```
 
 The dogfood report includes the focus-day export and prompts for:

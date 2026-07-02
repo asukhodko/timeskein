@@ -120,6 +120,15 @@ export type AppEventKind =
   | "report_copied"
   | "report_copy_failed"
   | "manual_copy_fallback_shown"
+  | "capture_create_requested"
+  | "capture_created"
+  | "capture_create_failed"
+  | "capture_resolve_requested"
+  | "capture_resolved"
+  | "capture_resolve_failed"
+  | "capture_convert_requested"
+  | "capture_converted"
+  | "capture_convert_failed"
   | "api_error";
 
 export interface AppEventView {
@@ -144,6 +153,15 @@ export interface AppEventSummary {
   api_errors: number;
   copy_failures: number;
   manual_copy_fallbacks: number;
+  capture_create_requests: number;
+  capture_created: number;
+  capture_create_failures: number;
+  capture_resolve_requests: number;
+  capture_resolved: number;
+  capture_resolve_failures: number;
+  capture_convert_requests: number;
+  capture_converted: number;
+  capture_convert_failures: number;
   window_shown: number;
   window_hidden: number;
   window_drag_started: number;

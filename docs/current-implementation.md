@@ -121,7 +121,7 @@ Runtime smoke on macOS:
 - `focus.start`, `focus.stop`, `focus.list`, and Work Item focus switching work against the real SQLite-backed agent
 - `pnpm smoke:macos-app` launches the packaged `.app` binary with a temporary home directory and verifies embedded-agent `agent.status`, `inventory.list`, focus start/stop/list, title reuse, focus switching, active Work Item deletion, and active focus restoration after app restart
 - `pnpm smoke:macos-app` also verifies Capture Inbox create/resolve/convert while ensuring capture actions do not interrupt the active focus session
-- `pnpm smoke:macos-app` also verifies startup normalization of legacy active Work Items, orphan active focus sessions, and stale `agent.lock` / `agent.port` recovery
+- `pnpm smoke:macos-app` also verifies startup normalization of legacy active Work Items, orphan active focus sessions, stale `agent.lock` / `agent.port` recovery, and migration of older `app_events` kind constraints
 - `pnpm smoke:export-focus-day` verifies fallback Markdown export, including Work Item notes for touched items, against a temporary SQLite database
 - `pnpm smoke:app-events` verifies the local app-event migration, metrics summary, and Markdown export against a temporary SQLite database
 - `pnpm smoke:dogfood-report` verifies the evening dogfood report wrapper, Work Item notes, Capture Activity, open captures, analysis prompts, and App Telemetry section
@@ -232,7 +232,7 @@ Second real dogfood day:
 - Destructive confirmation dialogs focus `Cancel` by default and do not confirm on `Enter`
 - Focus input is refocused when the window becomes visible and no block is active
 - SQLite storage through the embedded Rust agent
-- Local app-event telemetry for dogfood analysis: app start, agent start/reuse/recovery, show/hide/drag, focus start/switch/stop, report copy, manual copy fallback, and API errors
+- Local app-event telemetry for dogfood analysis: app start, agent start/reuse/recovery, show/hide/drag, focus start/switch/stop, Capture Inbox create/resolve/convert, report copy, manual copy fallback, and API errors
 - Mock server for browser development
 
 ## Focus Session Data
@@ -288,6 +288,7 @@ Tracked event groups:
 - app and embedded-agent startup, reuse, and stale runtime recovery;
 - window show, hide, and drag start;
 - focus start, switch, stop requests and outcomes;
+- Capture Inbox create, resolve, convert requests and outcomes;
 - report copy attempts, clipboard failures, and manual copy fallback;
 - Local API errors.
 
@@ -302,7 +303,7 @@ pnpm dogfood:report
 pnpm dogfood:finish:save
 ```
 
-The report telemetry section includes action counts, start/switch/stop failures, API errors, window show/hide counts, copy fallback counts, average start latency, likely show-to-start friction gaps, attempts to start the already active Work Item, and stale runtime recovery events.
+The report telemetry section includes action counts, start/switch/stop failures, Capture Inbox action counts and failures, API errors, window show/hide counts, copy fallback counts, average start latency, likely show-to-start friction gaps, attempts to start the already active Work Item, and stale runtime recovery events.
 
 ## Global Shortcut and Tray
 

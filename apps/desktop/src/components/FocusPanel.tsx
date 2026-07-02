@@ -828,6 +828,8 @@ function formatAppTelemetryMarkdown(summary: AppEventSummary) {
     `Window drag starts: ${summary.window_drag_started}`,
     `Copy failures: ${summary.copy_failures}`,
     `Manual copy fallbacks: ${summary.manual_copy_fallbacks}`,
+    `Capture created/resolved/converted: ${summary.capture_created}/${summary.capture_resolved}/${summary.capture_converted}`,
+    `Capture failures create/resolve/convert: ${summary.capture_create_failures}/${summary.capture_resolve_failures}/${summary.capture_convert_failures}`,
     `API errors: ${summary.api_errors}`,
     `Already-active start attempts: ${summary.already_active_start_attempts}`,
     `Stale runtime recoveries: ${summary.stale_runtime_recoveries}`,

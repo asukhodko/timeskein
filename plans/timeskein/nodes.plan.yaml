@@ -278,7 +278,7 @@ nodes:
     effort: 2
     deps:
       - id: ts.day_review.export
-    notes: SQLite app_events, Local API, UI/agent/script logging, metrics export, dogfood report section, and smoke coverage are implemented. Payloads must stay technical and must not store raw titles, notes, URLs, or typed text.
+    notes: SQLite app_events, Local API, UI/agent/script logging, metrics export, dogfood report section, and smoke coverage are implemented. Capture Inbox create/resolve/convert actions are included in telemetry, including failure counters. Payloads must stay technical and must not store raw titles, notes, URLs, or typed text.
     x:
       ops:
         attention_class: current
@@ -357,7 +357,7 @@ nodes:
     effort: 2
     deps:
       - id: ts.day_review.analysis_gate
-    notes: dogfood:preflight covers script syntax, contracts build, desktop typecheck, Markdown export smoke, dogfood start/status/ready/rc-check/reset/stop-active/open-app smoke, packaged macOS build, embedded agent smoke, focus switching, capture API, stale lock/port recovery, and restart/restore. Browser UI smoke is still manual.
+    notes: dogfood:preflight covers script syntax, contracts build, desktop typecheck, Markdown export smoke, dogfood start/status/ready/rc-check/reset/stop-active/open-app smoke, packaged macOS build, embedded agent smoke, focus switching, capture API, Capture Inbox telemetry, stale lock/port recovery, app_events constraint migration, and restart/restore. Browser UI smoke is still manual.
     x:
       ops:
         attention_class: current

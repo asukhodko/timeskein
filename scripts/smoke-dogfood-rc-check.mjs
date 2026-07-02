@@ -77,6 +77,20 @@ try {
     "missing active-focus capture review item"
   );
 
+  const captureFailureDb = join(tempDir, "capture-failure.db");
+  await copyDb(goodDb, captureFailureDb);
+  await runSql(captureFailureDb, `
+    INSERT INTO app_events (id, ts, source, kind, payload)
+    VALUES ('e5', '2026-06-30T10:30:00Z', 'ui', 'capture_create_failed', '{"action_id":"c1","error_code":"validation_error"}');
+  `);
+  const captureFailure = await runRcCheck(captureFailureDb);
+  assert(captureFailure.code === 0, "capture failure should be a review item, not a hard blocker");
+  assert(captureFailure.stdout.includes("Capture failures: 1"), "capture failure count is missing");
+  assert(
+    captureFailure.stdout.includes("Capture Inbox failure event"),
+    "capture failure review item is missing"
+  );
+
   const emptyDb = join(tempDir, "empty.db");
   await migrate(emptyDb);
   const empty = await runRcCheck(emptyDb);

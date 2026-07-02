@@ -71,6 +71,15 @@ const APP_EVENT_KINDS = new Set<string>([
   "report_copied",
   "report_copy_failed",
   "manual_copy_fallback_shown",
+  "capture_create_requested",
+  "capture_created",
+  "capture_create_failed",
+  "capture_resolve_requested",
+  "capture_resolved",
+  "capture_resolve_failed",
+  "capture_convert_requested",
+  "capture_converted",
+  "capture_convert_failed",
   "api_error",
 ]);
 

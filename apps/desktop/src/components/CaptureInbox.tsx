@@ -6,6 +6,7 @@ import {
   useOpenCaptures,
   useResolveCapture,
 } from '../hooks/useCaptures'
+import { logAppEvent } from '../api/client'
 import { formatClockTime, truncate } from '../utils/formatTime'
 
 interface CaptureInboxProps {
@@ -25,10 +26,46 @@ export default function CaptureInbox({ focusSessionId }: CaptureInboxProps) {
   const createCapture = () => {
     if (!trimmed || createMutation.isPending) return
 
+    const actionId = createTelemetryActionId()
+    void logAppEvent({
+      source: 'ui',
+      kind: 'capture_create_requested',
+      focus_session_id: focusSessionId,
+      payload: {
+        action_id: actionId,
+        control: 'capture_input',
+        has_active_focus: Boolean(focusSessionId),
+      },
+    })
+
     createMutation.mutate(
       { text: trimmed, focus_session_id: focusSessionId },
       {
-        onSuccess: () => setText(''),
+        onSuccess: (capture) => {
+          setText('')
+          void logAppEvent({
+            source: 'ui',
+            kind: 'capture_created',
+            focus_session_id: capture.focus_session_id,
+            payload: {
+              action_id: actionId,
+              control: 'capture_input',
+              has_active_focus: Boolean(capture.focus_session_id),
+            },
+          })
+        },
+        onError: (error) => {
+          void logAppEvent({
+            source: 'ui',
+            kind: 'capture_create_failed',
+            focus_session_id: focusSessionId,
+            payload: {
+              action_id: actionId,
+              control: 'capture_input',
+              error_code: error instanceof Error && 'code' in error ? String(error.code) : 'unknown',
+            },
+          })
+        },
       }
     )
   }
@@ -74,8 +111,91 @@ export default function CaptureInbox({ focusSessionId }: CaptureInboxProps) {
               <CaptureRow
                 key={capture.id}
                 capture={capture}
-                onResolve={() => resolveMutation.mutate(capture.id)}
-                onConvert={() => convertMutation.mutate({ id: capture.id })}
+                onResolve={() => {
+                  const actionId = createTelemetryActionId()
+                  void logAppEvent({
+                    source: 'ui',
+                    kind: 'capture_resolve_requested',
+                    work_item_id: capture.work_item_id,
+                    focus_session_id: capture.focus_session_id,
+                    payload: {
+                      action_id: actionId,
+                      control: 'done_button',
+                      had_focus_link: Boolean(capture.focus_session_id),
+                    },
+                  })
+                  resolveMutation.mutate(capture.id, {
+                    onSuccess: (resolved) => {
+                      void logAppEvent({
+                        source: 'ui',
+                        kind: 'capture_resolved',
+                        work_item_id: resolved.work_item_id,
+                        focus_session_id: resolved.focus_session_id,
+                        payload: {
+                          action_id: actionId,
+                          control: 'done_button',
+                          had_focus_link: Boolean(resolved.focus_session_id),
+                        },
+                      })
+                    },
+                    onError: (error) => {
+                      void logAppEvent({
+                        source: 'ui',
+                        kind: 'capture_resolve_failed',
+                        work_item_id: capture.work_item_id,
+                        focus_session_id: capture.focus_session_id,
+                        payload: {
+                          action_id: actionId,
+                          control: 'done_button',
+                          error_code: error instanceof Error && 'code' in error ? String(error.code) : 'unknown',
+                        },
+                      })
+                    },
+                  })
+                }}
+                onConvert={() => {
+                  const actionId = createTelemetryActionId()
+                  void logAppEvent({
+                    source: 'ui',
+                    kind: 'capture_convert_requested',
+                    work_item_id: capture.work_item_id,
+                    focus_session_id: capture.focus_session_id,
+                    payload: {
+                      action_id: actionId,
+                      control: 'make_item_button',
+                      had_focus_link: Boolean(capture.focus_session_id),
+                    },
+                  })
+                  convertMutation.mutate({ id: capture.id }, {
+                    onSuccess: (result) => {
+                      void logAppEvent({
+                        source: 'ui',
+                        kind: 'capture_converted',
+                        work_item_id: result.work_item_id,
+                        focus_session_id: result.capture.focus_session_id,
+                        payload: {
+                          action_id: actionId,
+                          control: 'make_item_button',
+                          had_focus_link: Boolean(result.capture.focus_session_id),
+                          reused: result.reused,
+                        },
+                      })
+                    },
+                    onError: (error) => {
+                      void logAppEvent({
+                        source: 'ui',
+                        kind: 'capture_convert_failed',
+                        work_item_id: capture.work_item_id,
+                        focus_session_id: capture.focus_session_id,
+                        payload: {
+                          action_id: actionId,
+                          control: 'make_item_button',
+                          error_code: error instanceof Error && 'code' in error ? String(error.code) : 'unknown',
+                        },
+                      })
+                    },
+                  })
+                }}
                 busy={resolveMutation.isPending || convertMutation.isPending}
               />
             ))}
@@ -84,6 +204,10 @@ export default function CaptureInbox({ focusSessionId }: CaptureInboxProps) {
       )}
     </div>
   )
+}
+
+function createTelemetryActionId() {
+  return globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`
 }
 
 function CaptureRow({

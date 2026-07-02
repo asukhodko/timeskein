@@ -25,7 +25,12 @@ try {
       ('e5', '2026-06-30T06:20:01Z', 'ui', 'focus_stopped', 'w1', 's1', '{"action_id":"a2"}'),
       ('e6', '2026-06-30T06:30:00Z', 'agent', 'agent_stale_runtime_recovered', NULL, NULL, NULL),
       ('e7', '2026-06-30T06:40:00Z', 'ui', 'report_copy_failed', NULL, NULL, '{"report_kind":"dogfood"}'),
-      ('e8', '2026-06-30T06:40:01Z', 'ui', 'manual_copy_fallback_shown', NULL, NULL, '{"report_kind":"dogfood"}');
+      ('e8', '2026-06-30T06:40:01Z', 'ui', 'manual_copy_fallback_shown', NULL, NULL, '{"report_kind":"dogfood"}'),
+      ('e9', '2026-06-30T06:50:00Z', 'ui', 'capture_create_requested', NULL, 's1', '{"action_id":"c1","control":"capture_input","has_active_focus":true}'),
+      ('e10', '2026-06-30T06:50:01Z', 'ui', 'capture_created', NULL, 's1', '{"action_id":"c1","control":"capture_input","has_active_focus":true}'),
+      ('e11', '2026-06-30T06:55:00Z', 'ui', 'capture_resolve_requested', NULL, 's1', '{"action_id":"c2","control":"done_button","had_focus_link":true}'),
+      ('e12', '2026-06-30T06:55:01Z', 'ui', 'capture_resolved', NULL, 's1', '{"action_id":"c2","control":"done_button","had_focus_link":true}'),
+      ('e13', '2026-06-30T06:58:00Z', 'ui', 'capture_convert_failed', NULL, 's1', '{"action_id":"c3","control":"make_item_button","error_code":"not_found"}');
   `);
 
   const { stdout: metricsStdout } = await execFileAsync(
@@ -34,9 +39,11 @@ try {
     { cwd: repoRoot }
   );
   assert(metricsStdout.includes("## App Telemetry"), "metrics did not include App Telemetry header");
-  assert(metricsStdout.includes("Total events: 8"), "metrics did not count events");
+  assert(metricsStdout.includes("Total events: 13"), "metrics did not count events");
   assert(metricsStdout.includes("Start requests: 1"), "metrics did not count start requests");
   assert(metricsStdout.includes("Manual copy fallbacks: 1"), "metrics did not count manual copy fallbacks");
+  assert(metricsStdout.includes("Capture created/resolved/converted: 1/1/0"), "metrics did not count capture outcomes");
+  assert(metricsStdout.includes("Capture failures create/resolve/convert: 0/0/1"), "metrics did not count capture failures");
   assert(metricsStdout.includes("Stale runtime recoveries: 1"), "metrics did not count stale recoveries");
   assert(metricsStdout.includes("Average start latency: 1000ms"), "metrics did not calculate start latency");
 
@@ -47,6 +54,7 @@ try {
   );
   assert(exportStdout.includes("# Timeskein app events"), "event export did not include title");
   assert(exportStdout.includes("focus_start_requested"), "event export did not include start request");
+  assert(exportStdout.includes("capture_created"), "event export did not include capture event");
   assert(exportStdout.includes("manual_copy_fallback_shown"), "event export did not include copy fallback");
 
   console.log(JSON.stringify({ ok: true, db_path: dbPath }, null, 2));

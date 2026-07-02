@@ -125,9 +125,9 @@ execution:
       progress: 1.0
       actual_start: "2026-06-30"
       actual_finish: "2026-06-30"
-      updated_at: "2026-07-01T20:55:00+03:00"
+      updated_at: "2026-07-02T19:00:00+03:00"
       confidence: 0.85
-      note: SQLite app_events, Local API app_event.log/list/summary, UI/agent/script logging, dogfood:metrics, export:app-events, dogfood report section, and smoke:app-events are implemented. The first real dogfood day showed that these metrics are useful for analysis; the next RC check should confirm they remain enough with Capture Inbox in use.
+      note: SQLite app_events, Local API app_event.log/list/summary, UI/agent/script logging, dogfood:metrics, export:app-events, dogfood report section, and smoke:app-events are implemented. Capture Inbox create/resolve/convert actions now appear in telemetry and failure counters. The next RC check should confirm they remain enough with Capture Inbox in real use.
     ts.day_review.analysis_gate:
       progress: 1.0
       actual_start: "2026-07-01"
@@ -158,9 +158,9 @@ execution:
     ts.hardening.smoke:
       progress: 0.97
       actual_start: "2026-06-30"
-      updated_at: "2026-07-01T22:25:00+03:00"
+      updated_at: "2026-07-02T19:00:00+03:00"
       confidence: 0.9
-      note: Added smoke:capture-api, packaged-app capture checks, and dogfood:rc-check smoke coverage for release-candidate evidence. Browser UI smoke is still manual.
+      note: Added smoke:capture-api, packaged-app capture checks, Capture Inbox telemetry checks, older app_events constraint migration coverage, and dogfood:rc-check smoke coverage for release-candidate evidence. Browser UI smoke is still manual.
     ts.hardening.release_notes:
       progress: 0.75
       actual_start: "2026-07-01"

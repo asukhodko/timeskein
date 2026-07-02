@@ -327,6 +327,10 @@ function assessEvidence(evidence, minFocusSeconds) {
     reviewItems.push("Focus start/stop failures occurred. Check whether they broke trust in the timer.");
   }
 
+  if (evidence.telemetry.captureFailures > 0) {
+    reviewItems.push(`${evidence.telemetry.captureFailures} Capture Inbox failure event(s) found. Check whether interruption capture stayed trustworthy.`);
+  }
+
   if (evidence.gaps.length > 0) {
     reviewItems.push(`${evidence.gaps.length} significant gap(s) found. Classify them as real breaks or lost tracking.`);
   }
@@ -374,6 +378,7 @@ function buildRcReport(date, path, evidence, assessment, minFocusSeconds) {
     `- API errors: ${evidence.telemetry.apiErrors}`,
     `- Copy failures/manual fallbacks: ${evidence.telemetry.copyFailures}/${evidence.telemetry.manualCopyFallbacks}`,
     `- Start/stop failures: ${evidence.telemetry.startFailures}/${evidence.telemetry.stopFailures}`,
+    `- Capture failures: ${evidence.telemetry.captureFailures}`,
     `- Duplicate Work Item title groups: ${evidence.duplicateTitles.length}`,
     "",
   ];
@@ -530,6 +535,10 @@ function summarizeEvents(events) {
     manualCopyFallbacks: count("manual_copy_fallback_shown"),
     startFailures: count("focus_start_failed"),
     stopFailures: count("focus_stop_failed"),
+    captureFailures:
+      count("capture_create_failed") +
+      count("capture_resolve_failed") +
+      count("capture_convert_failed"),
   };
 }
 

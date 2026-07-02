@@ -56,6 +56,15 @@ try {
   });
   const day = await rpc(port, "focus.list", todayWindow());
   const appEvents = await waitForAppEvents(port, ["agent_started", "app_started", "focus_started", "focus_stopped"], 5_000);
+  await rpc(port, "app_event.log", {
+    source: "script",
+    kind: "capture_created",
+    work_item_id: started.work_item_id,
+    focus_session_id: started.id,
+    payload: {
+      control: "legacy_app_events_constraint_smoke",
+    },
+  });
   const appEventSummary = await rpc(port, "app_event.summary", todayWindow());
 
   assert(status.db_ok === true, "agent.status did not report db_ok=true");
@@ -89,6 +98,7 @@ try {
   assert(appEventSummary.by_kind.agent_started >= 1, "app_event.summary did not count agent_started");
   assert(appEventSummary.by_kind.focus_started >= 1, "app_event.summary did not count focus_started");
   assert(appEventSummary.by_kind.focus_stopped >= 1, "app_event.summary did not count focus_stopped");
+  assert(appEventSummary.by_kind.capture_created >= 1, "app_event.summary did not count capture_created");
   assertSessionsOldestFirst(day.sessions);
 
   const inventoryAfterFirstStart = await rpc(port, "inventory.list");
@@ -518,6 +528,63 @@ async function seedLegacyDbWithMultipleActiveWorkItems() {
 
       CREATE INDEX idx_focus_sessions_work_item
           ON focus_sessions(work_item_id);
+
+      CREATE TABLE app_events (
+        id TEXT PRIMARY KEY,
+        ts TEXT NOT NULL,
+        source TEXT NOT NULL
+            CHECK(source IN ('ui', 'agent', 'script', 'system')),
+        kind TEXT NOT NULL CHECK(kind IN (
+            'app_started',
+            'agent_started',
+            'agent_reused',
+            'agent_stale_runtime_recovered',
+            'window_shown',
+            'window_hidden',
+            'window_drag_started',
+            'focus_start_requested',
+            'focus_started',
+            'focus_start_failed',
+            'focus_switch_requested',
+            'focus_switched',
+            'focus_stop_requested',
+            'focus_stopped',
+            'focus_stop_failed',
+            'report_copy_requested',
+            'report_copied',
+            'report_copy_failed',
+            'manual_copy_fallback_shown',
+            'api_error'
+        )),
+        work_item_id TEXT,
+        focus_session_id TEXT,
+        payload TEXT,
+        FOREIGN KEY (work_item_id) REFERENCES work_items(id) ON DELETE SET NULL,
+        FOREIGN KEY (focus_session_id) REFERENCES focus_sessions(id) ON DELETE SET NULL
+      );
+
+      CREATE INDEX idx_app_events_ts
+          ON app_events(ts DESC);
+
+      CREATE INDEX idx_app_events_kind
+          ON app_events(kind);
+
+      CREATE INDEX idx_app_events_work_item
+          ON app_events(work_item_id);
+
+      CREATE INDEX idx_app_events_focus_session
+          ON app_events(focus_session_id);
+
+      INSERT INTO app_events (id, ts, source, kind, work_item_id, focus_session_id, payload)
+      VALUES (
+        '00000000-0000-4000-8000-000000000301',
+        '2026-06-30T07:00:00Z',
+        'agent',
+        'agent_started',
+        NULL,
+        NULL,
+        NULL
+      );
 
       INSERT INTO work_items (id, title, type, state, pinned, created_at, updated_at, last_seen_at)
       VALUES

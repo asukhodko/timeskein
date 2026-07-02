@@ -99,7 +99,7 @@ The RC passes only if all of these are true:
 - Timeskein was the primary focus tracker for one full real workday.
 - The day report is enough to discuss where the day went without rebuilding the
   timeline from memory.
-- Capture Inbox was used or consciously tested, and the result is known: it
+- Capture Inbox was used or consciously tested during an active focus block, and the result is known: it
   either helped preserve focus, or it produced specific blockers to fix.
 - No focus blocks are missing often enough to break trust.
 - No duplicate Work Items appear from normal title reuse.

@@ -274,7 +274,7 @@ Focus Session controls:
 
 - **Browser mode uses mock data** - SQLite persistence is available in the macOS app, not in browser dev mode
 - **Focus Session has no pause/resume/cancel yet** - the current baseline is start/stop only
-- **Capture Inbox has not yet been proven in a full dogfood day** - the UI and API work, but the next release-candidate day must use it for real incoming events
+- **Capture Inbox has not yet been proven in a full dogfood day** - the UI and API work, but the next release-candidate day must create at least one capture during an active focus block
 - **Work Item notes are not timestamped** - they appear in day reports for touched items, but they are still one mutable description field
 - **Activity zones are not implemented** - breaks tracked as Work Items still count into total focus
 - **macOS Command+Tab does not restore a hidden borderless window yet** - use the menu bar item or global shortcut

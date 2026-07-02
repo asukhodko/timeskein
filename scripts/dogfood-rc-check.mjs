@@ -115,6 +115,7 @@ async function loadEvidence(path, from, to, now) {
   const totalFocusSeconds = sessions.reduce((sum, session) => sum + session.active_seconds, 0);
   const workItemTotals = aggregateWorkItemTotals(sessions);
   const gaps = gapsBetweenSessions(sessions).filter((gap) => gap.seconds >= SIGNIFICANT_GAP_SECONDS);
+  const capturesDuringActiveFocus = capturesCreatedToday.filter((capture) => capture.focus_session_id).length;
   const telemetry = summarizeEvents(events);
 
   return {
@@ -124,6 +125,7 @@ async function loadEvidence(path, from, to, now) {
     duplicateTitles,
     openCaptures,
     capturesCreatedToday,
+    capturesDuringActiveFocus,
     events,
     totalFocusSeconds,
     workItemTotals,
@@ -305,6 +307,10 @@ function assessEvidence(evidence, minFocusSeconds) {
     reviewItems.push("No captures were created today. If there were interruptions, Capture Inbox was not tested in battle.");
   }
 
+  if (evidence.capturesCreatedToday.length > 0 && evidence.capturesDuringActiveFocus === 0) {
+    reviewItems.push("Captures were created, but none were linked to an active focus session. Capture Inbox did not prove interruption handling during focus.");
+  }
+
   if (evidence.telemetry.total === 0) {
     reviewItems.push("No App Telemetry events found for this date.");
   }
@@ -362,6 +368,7 @@ function buildRcReport(date, path, evidence, assessment, minFocusSeconds) {
     `- Work Items in report: ${evidence.workItemTotals.length}`,
     `- Significant gaps: ${evidence.gaps.length}`,
     `- Captures created today: ${evidence.capturesCreatedToday.length}`,
+    `- Captures during active focus: ${evidence.capturesDuringActiveFocus}`,
     `- Open captures: ${evidence.openCaptures.length}`,
     `- App telemetry events: ${evidence.telemetry.total}`,
     `- API errors: ${evidence.telemetry.apiErrors}`,

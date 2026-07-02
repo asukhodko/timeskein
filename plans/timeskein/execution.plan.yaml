@@ -154,7 +154,7 @@ execution:
       actual_start: "2026-07-01"
       updated_at: "2026-07-02T18:45:00+03:00"
       confidence: 0.75
-      note: Open captures can be resolved or converted to Work Items, and dogfood reports show Capture Activity plus separate open captures. Edit/delete and append-as-timestamped-note remain future work. The 2026-07-02 dogfood day created no captures, so real interruption handling is still unproven.
+      note: Open captures can be resolved or converted to Work Items, and dogfood reports show Capture Activity plus separate open captures. RC evidence now counts captures linked to an active focus session. Edit/delete and append-as-timestamped-note remain future work. The 2026-07-02 dogfood day created no captures, so real interruption handling is still unproven.
     ts.hardening.smoke:
       progress: 0.97
       actual_start: "2026-06-30"

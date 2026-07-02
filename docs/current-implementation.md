@@ -128,7 +128,7 @@ Runtime smoke on macOS:
 - `pnpm smoke:dogfood-finish` verifies the end-of-day gate: no active focus session, no active Work Item, and at least one focus block
 - `pnpm smoke:dogfood-status` verifies the embedded-agent status checker against healthy and unhealthy temporary HTTP agents
 - `pnpm smoke:dogfood-ready` verifies the real-database readiness checker against clean and contaminated temporary SQLite databases, including running-process visibility and the actionable next commands
-- `pnpm smoke:dogfood-rc-check` verifies the release-candidate evidence checker against good, open-capture, empty-day, duplicate-title, and active-session temporary databases
+- `pnpm smoke:dogfood-rc-check` verifies the release-candidate evidence checker against good, open-capture, no-active-focus-capture, empty-day, duplicate-title, and active-session temporary databases
 - `pnpm smoke:dogfood-reset-db` verifies dry-run, backup-reset behavior, and running-process refusal on temporary database files
 - `pnpm smoke:dogfood-start` verifies the start gate against clean and contaminated temporary SQLite databases, including clean-start reset, without opening the app
 - `pnpm smoke:dogfood-stop-active` verifies dry-run, direct SQLite fallback, running-process refusal, and running-agent API behavior for closing a stuck active focus block
@@ -276,7 +276,7 @@ The current baseline stores:
 - optional link to a Work Item after conversion;
 - created, updated, resolved, and converted timestamps.
 
-Capture is intentionally separate from focus sessions. Creating, resolving, or converting a capture must not stop or switch the active timer. Converting a capture creates or reuses a Work Item by normalized title, but does not start focus on that Work Item. The dogfood report includes a `Capture Activity` table for all captures created during the selected day, with state, focus context, and outcome.
+Capture is intentionally separate from focus sessions. Creating, resolving, or converting a capture must not stop or switch the active timer. Converting a capture creates or reuses a Work Item by normalized title, but does not start focus on that Work Item. The dogfood report includes a `Capture Activity` table for all captures created during the selected day, with state, focus context, and outcome. The RC checker also counts how many captures were linked to an active focus session, because that is the real evidence for interruption handling during focus.
 
 ## App Event Telemetry
 
@@ -338,7 +338,7 @@ On multi-monitor macOS setups, the tray/status item is controlled by the system 
 
 ## Next Engineering Steps
 
-1. Run the Dogfood Release Candidate gate during the next real workday, with Capture Inbox actually used for at least one incoming event and Session not used in parallel.
+1. Run the Dogfood Release Candidate gate during the next real workday, with Capture Inbox used for at least one incoming event while a focus block is active and Session not used in parallel.
 2. Fix only blockers proven by that day before expanding scope.
 3. Add timestamped Work Item notes or events if captured interruptions and stop notes are not enough for review.
 4. Add activity zones if break/idle tracking corrupts total focus data.

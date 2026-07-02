@@ -181,6 +181,7 @@ The second real dogfood day on 2026-07-02 showed that the core timer loop was en
 - no API errors, copy failures, duplicate-title groups, or active-state split brain in the saved report
 
 The remaining release-candidate gap is Capture Inbox: no captures were created during that day, so the interruption-preservation workflow still needs a real check.
+For the next release-candidate attempt, at least one real incoming event should be captured while a focus block is still active; `dogfood:rc-check` reports this as `Captures during active focus`.
 
 For the stricter daily-use gate, use [Dogfood Release Candidate](dogfood-release-candidate.md). The day protocol explains how to run the test; the release-candidate gate decides whether the current baseline is good enough to replace Session.
 
@@ -286,6 +287,7 @@ pnpm dogfood:finish > timeskein-dogfood-report.md
 `dogfood:finish` refuses to produce a final report while a focus block or Work Item is still active, or when there are no focus blocks for the selected date.
 The focus-day export includes a `Work Item Notes` section for touched Work Items that have a non-empty note. This is for evening analysis context; notes are still mutable Work Item descriptions, not timestamped event notes.
 The dogfood report also includes `Capture Activity` for every capture created during the selected day, including captures that were already resolved or converted. `Open Captures` remains a separate action list for unresolved inbox entries.
+For the release-candidate verdict, inspect whether `Capture Activity` rows were created during a real focus block. A capture made after stopping all work proves the inbox can store text, but it does not prove interruption handling during focus.
 
 The dogfood report includes an `App Telemetry` section. Use it to check whether Timeskein caused tracking friction:
 

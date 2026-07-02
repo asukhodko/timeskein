@@ -335,7 +335,7 @@ nodes:
     effort: 3
     deps:
       - id: ts.capture.quick_ui
-    notes: Open captures can be resolved or converted to a Work Item, and dogfood reports now show all captures created during the selected day, including resolved and converted items. Append-as-timestamped-note, edit/delete, and a fuller history view remain future work. The 2026-07-02 dogfood day created no captures, so the workflow still needs real interruption testing.
+    notes: Open captures can be resolved or converted to a Work Item, and dogfood reports now show all captures created during the selected day, including resolved and converted items. RC evidence also counts captures linked to an active focus session. Append-as-timestamped-note, edit/delete, and a fuller history view remain future work. The 2026-07-02 dogfood day created no captures, so the workflow still needs real interruption testing.
     x:
       ops:
         attention_class: current

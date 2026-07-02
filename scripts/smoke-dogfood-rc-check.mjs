@@ -40,6 +40,7 @@ try {
   assert(good.stdout.includes("Verdict: ready for human RC verdict"), "good day verdict is missing");
   assert(good.stdout.includes("Focus total: 3:30:00"), "good day focus total is missing");
   assert(good.stdout.includes("Captures created today: 1"), "good day capture count is missing");
+  assert(good.stdout.includes("Captures during active focus: 1"), "good day active-focus capture count is missing");
   assert(good.stdout.includes("## Capture Activity"), "good day capture activity section is missing");
   assert(good.stdout.includes("| resolved | Check incoming request later |"), "good day capture activity row is missing");
 
@@ -61,6 +62,20 @@ try {
   assert(openCapture.code === 0, "open capture should be a review item, not a hard blocker");
   assert(openCapture.stdout.includes("Open captures: 1"), "open capture count is missing");
   assert(openCapture.stdout.includes("Review Items"), "open capture review section is missing");
+
+  const noActiveFocusCaptureDb = join(tempDir, "no-active-focus-capture.db");
+  await copyDb(goodDb, noActiveFocusCaptureDb);
+  await runSql(noActiveFocusCaptureDb, "UPDATE captures SET focus_session_id = NULL WHERE id = 'c1';");
+  const noActiveFocusCapture = await runRcCheck(noActiveFocusCaptureDb);
+  assert(noActiveFocusCapture.code === 0, "capture without active focus should be a review item, not a hard blocker");
+  assert(
+    noActiveFocusCapture.stdout.includes("Captures during active focus: 0"),
+    "active-focus capture count should show zero"
+  );
+  assert(
+    noActiveFocusCapture.stdout.includes("none were linked to an active focus session"),
+    "missing active-focus capture review item"
+  );
 
   const emptyDb = join(tempDir, "empty.db");
   await migrate(emptyDb);

@@ -208,11 +208,26 @@ async function loadCapturesCreatedToday(path, from, to) {
   if (!(await tableExists(path, "captures"))) return [];
 
   return queryJson(path, `
-    SELECT id, text, state, created_at, resolved_at, converted_at
-    FROM captures
-    WHERE datetime(created_at) >= datetime(${sqlString(from.toISOString())})
-      AND datetime(created_at) < datetime(${sqlString(to.toISOString())})
-    ORDER BY datetime(created_at) ASC
+    SELECT
+      c.id,
+      c.text,
+      c.state,
+      c.work_item_id,
+      c.focus_session_id,
+      c.created_at,
+      c.updated_at,
+      c.resolved_at,
+      c.converted_at,
+      fs.title AS focus_title,
+      focus_wi.title AS focus_work_item_title,
+      capture_wi.title AS work_item_title
+    FROM captures c
+    LEFT JOIN focus_sessions fs ON fs.id = c.focus_session_id
+    LEFT JOIN work_items focus_wi ON focus_wi.id = fs.work_item_id
+    LEFT JOIN work_items capture_wi ON capture_wi.id = c.work_item_id
+    WHERE datetime(c.created_at) >= datetime(${sqlString(from.toISOString())})
+      AND datetime(c.created_at) < datetime(${sqlString(to.toISOString())})
+    ORDER BY datetime(c.created_at) ASC
   `);
 }
 
@@ -364,6 +379,10 @@ function buildRcReport(date, path, evidence, assessment, minFocusSeconds) {
     lines.push("");
   }
 
+  if (evidence.capturesCreatedToday.length > 0) {
+    lines.push(formatCaptureActivityMarkdown(evidence.capturesCreatedToday).trim(), "");
+  }
+
   if (assessment.hardBlockers.length > 0) {
     lines.push("## Hard Blockers", "");
     for (const item of assessment.hardBlockers) {
@@ -398,6 +417,44 @@ function buildRcReport(date, path, evidence, assessment, minFocusSeconds) {
   );
 
   return lines.join("\n");
+}
+
+function formatCaptureActivityMarkdown(captures) {
+  const lines = [
+    "## Capture Activity",
+    "",
+    "| Time | State | Capture | During | Outcome |",
+    "| --- | --- | --- | --- | --- |",
+  ];
+
+  for (const capture of captures) {
+    lines.push(
+      `| ${escapeMarkdownTable(formatClockTime(capture.created_at))} | ${escapeMarkdownTable(capture.state)} | ${escapeMarkdownTable(capture.text)} | ${escapeMarkdownTable(formatCaptureDuring(capture))} | ${escapeMarkdownTable(formatCaptureOutcome(capture))} |`
+    );
+  }
+
+  return `${lines.join("\n")}\n`;
+}
+
+function formatCaptureDuring(capture) {
+  if (!capture.focus_session_id) {
+    return "no active focus";
+  }
+
+  return capture.focus_work_item_title ?? capture.focus_title ?? "linked focus block";
+}
+
+function formatCaptureOutcome(capture) {
+  if (capture.state === "resolved") {
+    return `resolved ${formatClockTime(capture.resolved_at ?? capture.updated_at)}`;
+  }
+
+  if (capture.state === "converted") {
+    const itemTitle = capture.work_item_title ? ` -> ${capture.work_item_title}` : "";
+    return `converted ${formatClockTime(capture.converted_at ?? capture.updated_at)}${itemTitle}`;
+  }
+
+  return "open";
 }
 
 function clippedActiveSeconds(startedAtValue, stoppedAtValue, from, to, now) {

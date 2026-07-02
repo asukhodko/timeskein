@@ -37,7 +37,7 @@ flowchart LR
     class focus_session_core exec_done
     day_review_export["Day review<br/>and export<br/>85%<br/>веха 2026-07-01"]
     class day_review_export exec_done
-    capture_inbox["Capture<br/>Inbox<br/>85%<br/>окно 2026-07-07..2026-07-08"]
+    capture_inbox["Capture<br/>Inbox<br/>90%<br/>окно 2026-07-07..2026-07-08"]
     class capture_inbox exec_mgmt_yellow
     dogfood_hardening["Dogfood<br/>hardening<br/>~95%<br/>веха 2026-07-06"]
     class dogfood_hardening exec_mgmt_neutral
@@ -135,9 +135,9 @@ gantt
 - Day review and export [in_progress] (9 focus-blocks) {85%}
 - Show focus blocks on a daily timeline [in_progress] (3 focus-blocks) {65%}
 - Compute totals, gaps, and entry count [in_progress] (2 focus-blocks) {90%}
-- Export dogfood day data as Markdown [in_progress] (2 focus-blocks) {95%}
-- Capture Inbox [in_progress] (9 focus-blocks) {85%}
-- Review and promote captured events [in_progress] (3 focus-blocks) {55%}
+- Export dogfood day data as Markdown [in_progress] (2 focus-blocks) {97%}
+- Capture Inbox [in_progress] (9 focus-blocks) {88%}
+- Review and promote captured events [in_progress] (3 focus-blocks) {65%}
 - Dogfood hardening [in_progress] (8 focus-blocks) {93% cov:75%}
 - Add smoke checks for focus-session flows [in_progress] (2 focus-blocks) {97%}
 - Fix first dogfood friction [in_progress] (2 focus-blocks) {95%}

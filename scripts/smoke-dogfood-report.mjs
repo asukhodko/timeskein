@@ -27,8 +27,11 @@ try {
       ('s2', 'Meetings', 'w2', 'stopped', 1500, NULL, '2026-06-30T07:00:00Z', '2026-06-30T07:30:00Z', '2026-06-30T07:30:00Z'),
       ('s3', 'Deep Work', 'w1', 'stopped', 1500, NULL, '2026-06-30T07:35:00Z', '2026-06-30T07:45:00Z', '2026-06-30T07:45:00Z');
 
-    INSERT INTO captures (id, text, state, created_at, updated_at)
-    VALUES ('c1', 'Reply to incoming thread after focus', 'open', '2026-06-30T07:10:00Z', '2026-06-30T07:10:00Z');
+    INSERT INTO captures (id, text, state, work_item_id, focus_session_id, created_at, updated_at, resolved_at, converted_at)
+    VALUES
+      ('c1', 'Reply to incoming thread after focus', 'open', NULL, NULL, '2026-06-30T07:10:00Z', '2026-06-30T07:10:00Z', NULL, NULL),
+      ('c2', 'Already handled interruption', 'resolved', NULL, 's1', '2026-06-30T07:12:00Z', '2026-06-30T07:20:00Z', '2026-06-30T07:20:00Z', NULL),
+      ('c3', 'Turn into follow-up', 'converted', 'w2', 's2', '2026-06-30T07:40:00Z', '2026-06-30T07:45:00Z', NULL, '2026-06-30T07:45:00Z');
   `);
 
   const { stdout } = await execFileAsync(
@@ -46,6 +49,11 @@ try {
   assert(stdout.includes("## App Telemetry"), "report did not include app telemetry section");
   assert(stdout.includes("## Open Captures"), "report did not include open captures section");
   assert(stdout.includes("Reply to incoming thread after focus"), "report did not include open capture text");
+  assert(stdout.includes("## Capture Activity"), "report did not include Capture Activity section");
+  assert(stdout.includes("| open | Reply to incoming thread after focus |"), "report did not include open capture activity");
+  assert(stdout.includes("| resolved | Already handled interruption |"), "report did not include resolved capture activity");
+  assert(stdout.includes("| converted | Turn into follow-up |"), "report did not include converted capture activity");
+  assert(stdout.includes("converted") && stdout.includes("Meetings"), "report did not include converted capture target");
   assert(stdout.includes("Total focus: 1:05:00"), "report did not include exported focus total");
   assert(stdout.includes("## By Work Item"), "report did not include work item totals");
   assert(stdout.includes("## Work Item Notes"), "report did not include Work Item Notes section");

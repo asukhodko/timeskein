@@ -7,7 +7,7 @@ import {
   useTodayFocusSessions,
 } from '../hooks/useFocusSessions'
 import { useInventory } from '../hooks/useInventory'
-import { useOpenCaptures } from '../hooks/useCaptures'
+import { useCaptureActivity, useOpenCaptures } from '../hooks/useCaptures'
 import { appEventApi, logAppEvent, shellApi } from '../api/client'
 import { formatClockTime, formatDuration, truncate } from '../utils/formatTime'
 import CaptureInbox from './CaptureInbox'
@@ -32,6 +32,7 @@ export default function FocusPanel({ selectedItem }: FocusPanelProps) {
   const todayQuery = useTodayFocusSessions()
   const inventoryQuery = useInventory()
   const capturesQuery = useOpenCaptures()
+  const captureActivityQuery = useCaptureActivity()
   const startMutation = useStartFocusSession()
   const stopMutation = useStopFocusSession()
 
@@ -45,6 +46,10 @@ export default function FocusPanel({ selectedItem }: FocusPanelProps) {
   )
   const activeSecondsTotal = todayQuery.data?.active_seconds_total ?? 0
   const openCaptures = capturesQuery.data?.captures ?? []
+  const captureActivity = useMemo(
+    () => capturesForLocalDay(captureActivityQuery.data?.captures ?? [], now),
+    [captureActivityQuery.data?.captures, now]
+  )
   const sessionsWithGaps = useMemo(() => withGaps([...sessions].reverse()), [sessions])
   const openGap = useMemo(
     () => (current ? undefined : openGapAfterLastSession(sessions, now)),
@@ -336,6 +341,9 @@ export default function FocusPanel({ selectedItem }: FocusPanelProps) {
       current,
       activeWorkItems,
       openCaptures,
+      captureActivity,
+      sessions,
+      inventoryItems,
       now
     )
 
@@ -628,6 +636,9 @@ async function buildDogfoodReportMarkdown(
   activeFocus?: FocusSessionView,
   activeWorkItems: WorkItemView[] = [],
   openCaptures: CaptureView[] = [],
+  captureActivity: CaptureView[] = [],
+  sessions: FocusSessionView[] = [],
+  workItems: WorkItemView[] = [],
   now = new Date()
 ) {
   const hasActiveWorkItems = activeWorkItems.length > 0
@@ -676,6 +687,13 @@ async function buildDogfoodReportMarkdown(
     )
   }
 
+  if (captureActivity.length > 0) {
+    lines.push(
+      formatCaptureActivityMarkdown(captureActivity, sessions, workItems).trim(),
+      ''
+    )
+  }
+
   const appTelemetryMarkdown = await buildAppTelemetryMarkdown(now)
 
   lines.push(
@@ -719,6 +737,64 @@ async function buildDogfoodReportMarkdown(
   )
 
   return `${lines.join('\n')}\n`
+}
+
+function capturesForLocalDay(captures: CaptureView[], now: Date) {
+  const dayStart = startOfLocalDay(now).getTime()
+  const dayEnd = nextLocalDay(startOfLocalDay(now)).getTime()
+
+  return captures
+    .filter((capture) => {
+      const createdAt = new Date(capture.created_at).getTime()
+      return createdAt >= dayStart && createdAt < dayEnd
+    })
+    .sort((left, right) => new Date(left.created_at).getTime() - new Date(right.created_at).getTime())
+}
+
+function formatCaptureActivityMarkdown(
+  captures: CaptureView[],
+  sessions: FocusSessionView[],
+  workItems: WorkItemView[]
+) {
+  const sessionsById = new Map(sessions.map((session) => [session.id, session]))
+  const workItemsById = new Map(workItems.map((item) => [item.id, item]))
+  const lines = [
+    '## Capture Activity',
+    '',
+    '| Time | State | Capture | During | Outcome |',
+    '| --- | --- | --- | --- | --- |',
+  ]
+
+  for (const capture of captures) {
+    lines.push(
+      `| ${escapeMarkdownTable(formatClockTime(capture.created_at))} | ${escapeMarkdownTable(capture.state)} | ${escapeMarkdownTable(capture.text)} | ${escapeMarkdownTable(formatCaptureDuring(capture, sessionsById))} | ${escapeMarkdownTable(formatCaptureOutcome(capture, workItemsById))} |`
+    )
+  }
+
+  return `${lines.join('\n')}\n`
+}
+
+function formatCaptureDuring(capture: CaptureView, sessionsById: Map<string, FocusSessionView>) {
+  if (!capture.focus_session_id) {
+    return 'no active focus'
+  }
+
+  const session = sessionsById.get(capture.focus_session_id)
+  return session?.work_item_title ?? session?.title ?? 'linked focus block'
+}
+
+function formatCaptureOutcome(capture: CaptureView, workItemsById: Map<string, WorkItemView>) {
+  if (capture.state === 'resolved') {
+    return `resolved ${formatClockTime(capture.resolved_at ?? capture.updated_at)}`
+  }
+
+  if (capture.state === 'converted') {
+    const item = capture.work_item_id ? workItemsById.get(capture.work_item_id) : undefined
+    const itemTitle = item ? ` -> ${item.title}` : ''
+    return `converted ${formatClockTime(capture.converted_at ?? capture.updated_at)}${itemTitle}`
+  }
+
+  return 'open'
 }
 
 async function buildAppTelemetryMarkdown(now: Date) {

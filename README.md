@@ -142,7 +142,7 @@ At the end of the day, export the analysis note:
 pnpm dogfood:finish:save
 ```
 
-This writes `timeskein-dogfood-report-YYYY-MM-DD.md` in the current directory. The report includes focus blocks, Work Item totals, Work Item notes for items touched that day, open Capture Inbox entries, and local app telemetry: starts, switches, stops, API errors, show/hide events, copy failures, and likely friction points.
+This writes `timeskein-dogfood-report-YYYY-MM-DD.md` in the current directory. The report includes focus blocks, Work Item totals, Work Item notes for items touched that day, Capture Activity for the day, open Capture Inbox entries, and local app telemetry: starts, switches, stops, API errors, show/hide events, copy failures, and likely friction points.
 Saved dogfood reports and RC checks can contain personal or internal work context, so they are ignored by git.
 To print the report to stdout instead:
 
@@ -259,7 +259,7 @@ Focus Session controls:
 - Day panel with focus blocks, total active time, entrance count, and gaps
 - Open gap warning when no focus block is running and the time since the last stopped block is significant
 - Day totals count the part of each focus block that overlaps the selected local day
-- Markdown dogfood report from the Today panel or CLI, with focus data, Work Item totals, Work Item notes for touched items, significant gaps, open captures, review prompts, and draft warning while a focus block or Work Item is active
+- Markdown dogfood report from the Today panel or CLI, with focus data, Work Item totals, Work Item notes for touched items, significant gaps, Capture Activity, open captures, review prompts, and draft warning while a focus block or Work Item is active
 - macOS menu bar item shows the active focus duration as a short `12m Focus` status while a block is running
 - Work item states: active, waiting, blocked, done, someday, unknown
 - Refs: URLs, file paths, issue keys with conflict detection

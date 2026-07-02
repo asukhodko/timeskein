@@ -156,7 +156,7 @@ Current status: first one-day trial passed on 2026-07-01. Timeskein is usable fo
 | Today block list and totals | `focus.list` and UI show block duration, time range, stop note, total focus, entrances | The list matches remembered work blocks |
 | Significant gaps | UI and Markdown show gap ranges of 20+ minutes | Long breaks and lost intervals are visible enough |
 | Capture Inbox | `pnpm smoke:capture-api`, `pnpm smoke:mock-api`, and `pnpm smoke:macos-app` verify capture create/list/resolve/convert without interrupting focus | Incoming events can be remembered without switching away from the current block |
-| Markdown export | `Copy Report` exports timeline, `By Work Item`, gaps, open captures, app telemetry, and review prompts; `Copy MD` exports the raw day picture; failed clipboard writes show selected Markdown; `pnpm smoke:export-focus-day` and `pnpm smoke:dogfood-report` verify SQLite fallbacks | Copied note is enough for evening analysis |
+| Markdown export | `Copy Report` exports timeline, `By Work Item`, gaps, Capture Activity, open captures, app telemetry, and review prompts; `Copy MD` exports the raw day picture; failed clipboard writes show selected Markdown; `pnpm smoke:export-focus-day` and `pnpm smoke:dogfood-report` verify SQLite fallbacks | Copied note is enough for evening analysis |
 | App friction telemetry | `app_events` stores local technical events, `pnpm smoke:app-events` verifies metrics/export, and `pnpm dogfood:report` includes `App Telemetry` | Start/switch/stop/copy/API/window friction is visible without relying only on memory |
 | macOS app with embedded agent and SQLite | `pnpm smoke:macos-app` verifies app launch, SQLite health, focus flow, stale lock/port recovery, and active focus restore after app restart | The real app survives normal workday use |
 
@@ -285,6 +285,7 @@ pnpm dogfood:finish > timeskein-dogfood-report.md
 
 `dogfood:finish` refuses to produce a final report while a focus block or Work Item is still active, or when there are no focus blocks for the selected date.
 The focus-day export includes a `Work Item Notes` section for touched Work Items that have a non-empty note. This is for evening analysis context; notes are still mutable Work Item descriptions, not timestamped event notes.
+The dogfood report also includes `Capture Activity` for every capture created during the selected day, including captures that were already resolved or converted. `Open Captures` remains a separate action list for unresolved inbox entries.
 
 The dogfood report includes an `App Telemetry` section. Use it to check whether Timeskein caused tracking friction:
 

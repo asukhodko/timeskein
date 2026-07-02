@@ -266,7 +266,7 @@ nodes:
     effort: 2
     deps:
       - id: ts.day_review.totals_gaps
-    notes: Today can copy the raw day picture or a dogfood report with review prompts, and shows selected Markdown if clipboard access fails. UI and CLI reports are marked as draft when a focus session or Work Item is still active. SQLite fallback export, CLI dogfood report, and dogfood:finish end-of-day gate are implemented; finish refuses active focus sessions, stuck active Work Items, and empty days. Reports now include Work Item notes for touched items. JSON/CSV export remains future work.
+    notes: Today can copy the raw day picture or a dogfood report with review prompts, and shows selected Markdown if clipboard access fails. UI and CLI reports are marked as draft when a focus session or Work Item is still active. SQLite fallback export, CLI dogfood report, and dogfood:finish end-of-day gate are implemented; finish refuses active focus sessions, stuck active Work Items, and empty days. Reports now include Work Item notes for touched items and Capture Activity for created, resolved, and converted captures. JSON/CSV export remains future work.
     x:
       ops:
         attention_class: current
@@ -335,7 +335,7 @@ nodes:
     effort: 3
     deps:
       - id: ts.capture.quick_ui
-    notes: Open captures can be resolved or converted to a Work Item. Append-as-timestamped-note, edit/delete, and a fuller history view remain future work. The 2026-07-02 dogfood day created no captures, so the workflow still needs real interruption testing.
+    notes: Open captures can be resolved or converted to a Work Item, and dogfood reports now show all captures created during the selected day, including resolved and converted items. Append-as-timestamped-note, edit/delete, and a fuller history view remain future work. The 2026-07-02 dogfood day created no captures, so the workflow still needs real interruption testing.
     x:
       ops:
         attention_class: current

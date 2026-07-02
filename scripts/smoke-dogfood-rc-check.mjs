@@ -24,8 +24,8 @@ try {
       ('s1', 'Deep Work', 'w1', 'stopped', 1500, NULL, '2026-06-30T06:00:00Z', '2026-06-30T08:00:00Z', '2026-06-30T08:00:00Z'),
       ('s2', 'Review', 'w2', 'stopped', 1500, NULL, '2026-06-30T08:30:00Z', '2026-06-30T10:00:00Z', '2026-06-30T10:00:00Z');
 
-    INSERT INTO captures (id, text, state, created_at, updated_at, resolved_at)
-    VALUES ('c1', 'Check incoming request later', 'resolved', '2026-06-30T07:00:00Z', '2026-06-30T10:10:00Z', '2026-06-30T10:10:00Z');
+    INSERT INTO captures (id, text, state, focus_session_id, created_at, updated_at, resolved_at)
+    VALUES ('c1', 'Check incoming request later', 'resolved', 's1', '2026-06-30T07:00:00Z', '2026-06-30T10:10:00Z', '2026-06-30T10:10:00Z');
 
     INSERT INTO app_events (id, ts, source, kind, payload)
     VALUES
@@ -40,6 +40,8 @@ try {
   assert(good.stdout.includes("Verdict: ready for human RC verdict"), "good day verdict is missing");
   assert(good.stdout.includes("Focus total: 3:30:00"), "good day focus total is missing");
   assert(good.stdout.includes("Captures created today: 1"), "good day capture count is missing");
+  assert(good.stdout.includes("## Capture Activity"), "good day capture activity section is missing");
+  assert(good.stdout.includes("| resolved | Check incoming request later |"), "good day capture activity row is missing");
 
   const savedPath = join(tempDir, "rc-check.md");
   const saved = await runRcCheck(goodDb, ["--out", savedPath]);

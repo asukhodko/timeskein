@@ -124,7 +124,7 @@ Runtime smoke on macOS:
 - `pnpm smoke:macos-app` also verifies startup normalization of legacy active Work Items, orphan active focus sessions, and stale `agent.lock` / `agent.port` recovery
 - `pnpm smoke:export-focus-day` verifies fallback Markdown export, including Work Item notes for touched items, against a temporary SQLite database
 - `pnpm smoke:app-events` verifies the local app-event migration, metrics summary, and Markdown export against a temporary SQLite database
-- `pnpm smoke:dogfood-report` verifies the evening dogfood report wrapper, Work Item notes, open captures, analysis prompts, and App Telemetry section
+- `pnpm smoke:dogfood-report` verifies the evening dogfood report wrapper, Work Item notes, Capture Activity, open captures, analysis prompts, and App Telemetry section
 - `pnpm smoke:dogfood-finish` verifies the end-of-day gate: no active focus session, no active Work Item, and at least one focus block
 - `pnpm smoke:dogfood-status` verifies the embedded-agent status checker against healthy and unhealthy temporary HTTP agents
 - `pnpm smoke:dogfood-ready` verifies the real-database readiness checker against clean and contaminated temporary SQLite databases, including running-process visibility and the actionable next commands
@@ -152,7 +152,7 @@ Dogfood launch helper:
 - `pnpm export:focus-day` prints a Markdown day report from the local SQLite database as a fallback to UI copy
 - `pnpm dogfood:metrics` prints dogfood telemetry aggregates from the local SQLite app-event journal
 - `pnpm export:app-events` prints a Markdown event table for deeper inspection of show/hide/start/switch/stop/copy/API behavior
-- `pnpm dogfood:report` prints a Markdown dogfood report with focus data, open captures, app telemetry, and evening review prompts, marked as a draft if a focus block or Work Item is still active
+- `pnpm dogfood:report` prints a Markdown dogfood report with focus data, Capture Activity, open captures, app telemetry, and evening review prompts, marked as a draft if a focus block or Work Item is still active
 
 Runtime smoke in browser/mock mode:
 
@@ -211,7 +211,8 @@ Second real dogfood day:
 - Captures link to the active focus session when one exists
 - Open captures are visible in the focus panel
 - Captures can be resolved as done or converted into Work Items
-- Open captures appear in the UI and CLI dogfood report for evening review
+- The dogfood report shows Capture Activity for captures created during the day, including captures that were already resolved or converted
+- Open captures appear separately in the UI and CLI dogfood report for evening review
 - Manual Work Item inventory UI
 - Search
 - Create Work Item
@@ -275,7 +276,7 @@ The current baseline stores:
 - optional link to a Work Item after conversion;
 - created, updated, resolved, and converted timestamps.
 
-Capture is intentionally separate from focus sessions. Creating, resolving, or converting a capture must not stop or switch the active timer. Converting a capture creates or reuses a Work Item by normalized title, but does not start focus on that Work Item.
+Capture is intentionally separate from focus sessions. Creating, resolving, or converting a capture must not stop or switch the active timer. Converting a capture creates or reuses a Work Item by normalized title, but does not start focus on that Work Item. The dogfood report includes a `Capture Activity` table for all captures created during the selected day, with state, focus context, and outcome.
 
 ## App Event Telemetry
 

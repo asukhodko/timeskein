@@ -116,11 +116,11 @@ execution:
       confidence: 0.9
       note: UI and Markdown export show total active time, entrance count, per-Work-Item totals, significant gaps of 20+ minutes between focus blocks, and an Open Gap after the last stopped block when tracking is currently idle. Day-window queries include overlapping blocks and clip their duration to the selected local day.
     ts.day_review.export:
-      progress: 0.95
+      progress: 0.97
       actual_start: "2026-06-30"
-      updated_at: "2026-07-02T18:30:00+03:00"
+      updated_at: "2026-07-02T18:45:00+03:00"
       confidence: 0.9
-      note: Today can copy raw Markdown or a dogfood report with evening prompts, and shows selected Markdown when clipboard access fails. The same day data can be exported from SQLite with pnpm export:focus-day; pnpm dogfood:finish checks overlapping day blocks and active focus before printing the report. Reports now include App Telemetry and Work Item notes for touched items. JSON/CSV export is not implemented.
+      note: Today can copy raw Markdown or a dogfood report with evening prompts, and shows selected Markdown when clipboard access fails. The same day data can be exported from SQLite with pnpm export:focus-day; pnpm dogfood:finish checks overlapping day blocks and active focus before printing the report. Reports now include App Telemetry, Work Item notes for touched items, and Capture Activity for created, resolved, and converted captures. JSON/CSV export is not implemented.
     ts.day_review.app_telemetry:
       progress: 1.0
       actual_start: "2026-06-30"
@@ -150,11 +150,11 @@ execution:
       confidence: 0.85
       note: Implemented Capture input and open Inbox list in the focus panel. Capture actions do not stop or switch active focus.
     ts.capture.review_flow:
-      progress: 0.55
+      progress: 0.65
       actual_start: "2026-07-01"
-      updated_at: "2026-07-02T18:30:00+03:00"
+      updated_at: "2026-07-02T18:45:00+03:00"
       confidence: 0.75
-      note: Open captures can be resolved or converted to Work Items, and open captures appear in UI/CLI dogfood reports. Edit/delete and append-as-timestamped-note remain future work. The 2026-07-02 dogfood day created no captures, so real interruption handling is still unproven.
+      note: Open captures can be resolved or converted to Work Items, and dogfood reports show Capture Activity plus separate open captures. Edit/delete and append-as-timestamped-note remain future work. The 2026-07-02 dogfood day created no captures, so real interruption handling is still unproven.
     ts.hardening.smoke:
       progress: 0.97
       actual_start: "2026-06-30"

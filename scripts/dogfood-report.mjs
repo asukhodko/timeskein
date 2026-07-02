@@ -9,7 +9,10 @@ import { promisify } from "node:util";
 const execFileAsync = promisify(execFile);
 const repoRoot = resolve(import.meta.dirname, "..");
 const options = parseArgs(process.argv.slice(2));
-const reportDate = options.date ?? formatLocalDate(new Date());
+const reportDay = options.date ? parseLocalDate(options.date) : new Date();
+const reportDate = options.date ?? formatLocalDate(reportDay);
+const from = startOfLocalDay(reportDay);
+const to = nextLocalDay(from);
 const dbPath = options.db
   ? resolve(options.db)
   : join(homedir(), "Library/Application Support/Timeskein/timeskein.db");
@@ -22,8 +25,8 @@ if (options.date) {
 }
 
 const activeSummary = existsSync(dbPath)
-  ? await loadActiveSummary(dbPath)
-  : { activeFocus: undefined, activeWorkItems: [], openCaptures: [] };
+  ? await loadActiveSummary(dbPath, from, to)
+  : { activeFocus: undefined, activeWorkItems: [], openCaptures: [], captureActivity: [] };
 const { stdout: dayMarkdown } = await execFileAsync(process.execPath, exportArgs, {
   cwd: repoRoot,
   maxBuffer: 10 * 1024 * 1024,
@@ -40,7 +43,8 @@ process.stdout.write(
     telemetryMarkdown,
     activeSummary.activeFocus,
     activeSummary.activeWorkItems,
-    activeSummary.openCaptures
+    activeSummary.openCaptures,
+    activeSummary.captureActivity
   )
 );
 
@@ -78,8 +82,29 @@ The report includes the focus-day export plus review prompts for evening analysi
 If a focus block or Work Item is still active, the report is marked as a draft.`);
 }
 
-async function loadActiveSummary(path) {
-  const [activeFocusRows, activeWorkItems, openCaptures] = await Promise.all([
+function parseLocalDate(value) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    throw new Error(`Invalid --date value, expected YYYY-MM-DD: ${value}`);
+  }
+
+  const [year, month, day] = value.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
+function startOfLocalDay(date) {
+  const result = new Date(date);
+  result.setHours(0, 0, 0, 0);
+  return result;
+}
+
+function nextLocalDay(date) {
+  const result = new Date(date);
+  result.setDate(result.getDate() + 1);
+  return result;
+}
+
+async function loadActiveSummary(path, from, to) {
+  const [activeFocusRows, activeWorkItems, openCaptures, captureActivity] = await Promise.all([
     queryJson(path, `
       SELECT
         fs.title,
@@ -98,11 +123,12 @@ async function loadActiveSummary(path) {
       ORDER BY datetime(updated_at) DESC
     `),
     loadOpenCaptures(path),
+    loadCaptureActivity(path, from, to),
   ]);
 
   const row = activeFocusRows[0];
   if (!row) {
-    return { activeFocus: undefined, activeWorkItems, openCaptures };
+    return { activeFocus: undefined, activeWorkItems, openCaptures, captureActivity };
   }
 
   const activeSeconds = Math.max(
@@ -118,6 +144,7 @@ async function loadActiveSummary(path) {
     },
     activeWorkItems,
     openCaptures,
+    captureActivity,
   };
 }
 
@@ -131,6 +158,35 @@ async function loadOpenCaptures(path) {
     FROM captures
     WHERE state = 'open'
     ORDER BY datetime(created_at) ASC
+  `);
+}
+
+async function loadCaptureActivity(path, from, to) {
+  if (!(await tableExists(path, "captures"))) {
+    return [];
+  }
+
+  return queryJson(path, `
+    SELECT
+      c.id,
+      c.text,
+      c.state,
+      c.work_item_id,
+      c.focus_session_id,
+      c.created_at,
+      c.updated_at,
+      c.resolved_at,
+      c.converted_at,
+      fs.title AS focus_title,
+      focus_wi.title AS focus_work_item_title,
+      capture_wi.title AS work_item_title
+    FROM captures c
+    LEFT JOIN focus_sessions fs ON fs.id = c.focus_session_id
+    LEFT JOIN work_items focus_wi ON focus_wi.id = fs.work_item_id
+    LEFT JOIN work_items capture_wi ON capture_wi.id = c.work_item_id
+    WHERE datetime(c.created_at) >= datetime(${sqlString(from.toISOString())})
+      AND datetime(c.created_at) < datetime(${sqlString(to.toISOString())})
+    ORDER BY datetime(c.created_at) ASC
   `);
 }
 
@@ -155,7 +211,15 @@ function sqliteReadArgs(path, sql) {
   return ["-readonly", "-cmd", ".timeout 5000", "-json", path, sql];
 }
 
-function buildDogfoodReport(date, dayMarkdown, telemetryMarkdown, activeFocus, activeWorkItems, openCaptures = []) {
+function buildDogfoodReport(
+  date,
+  dayMarkdown,
+  telemetryMarkdown,
+  activeFocus,
+  activeWorkItems,
+  openCaptures = [],
+  captureActivity = []
+) {
   const hasActiveWorkItems = activeWorkItems.length > 0;
   const reportState = activeFocus
     ? "draft - focus block still active"
@@ -202,6 +266,10 @@ function buildDogfoodReport(date, dayMarkdown, telemetryMarkdown, activeFocus, a
     );
   }
 
+  if (captureActivity.length > 0) {
+    lines.push(formatCaptureActivityMarkdown(captureActivity).trim(), "");
+  }
+
   lines.push(
     "## Focus Data",
     "",
@@ -245,6 +313,44 @@ function buildDogfoodReport(date, dayMarkdown, telemetryMarkdown, activeFocus, a
   return `${lines.join("\n")}\n`;
 }
 
+function formatCaptureActivityMarkdown(captures) {
+  const lines = [
+    "## Capture Activity",
+    "",
+    "| Time | State | Capture | During | Outcome |",
+    "| --- | --- | --- | --- | --- |",
+  ];
+
+  for (const capture of captures) {
+    lines.push(
+      `| ${escapeMarkdownTable(formatClockTime(capture.created_at))} | ${escapeMarkdownTable(capture.state)} | ${escapeMarkdownTable(capture.text)} | ${escapeMarkdownTable(formatCaptureDuring(capture))} | ${escapeMarkdownTable(formatCaptureOutcome(capture))} |`
+    );
+  }
+
+  return `${lines.join("\n")}\n`;
+}
+
+function formatCaptureDuring(capture) {
+  if (!capture.focus_session_id) {
+    return "no active focus";
+  }
+
+  return capture.focus_work_item_title ?? capture.focus_title ?? "linked focus block";
+}
+
+function formatCaptureOutcome(capture) {
+  if (capture.state === "resolved") {
+    return `resolved ${formatClockTime(capture.resolved_at ?? capture.updated_at)}`;
+  }
+
+  if (capture.state === "converted") {
+    const itemTitle = capture.work_item_title ? ` -> ${capture.work_item_title}` : "";
+    return `converted ${formatClockTime(capture.converted_at ?? capture.updated_at)}${itemTitle}`;
+  }
+
+  return "open";
+}
+
 function formatClockTime(value) {
   return new Date(value).toLocaleTimeString([], {
     hour: "2-digit",
@@ -267,6 +373,10 @@ function formatDuration(totalSeconds) {
 
 function formatMarkdownListText(value) {
   return String(value ?? "").replace(/\s+/g, " ").trim();
+}
+
+function escapeMarkdownTable(value) {
+  return String(value ?? "").replaceAll("|", "\\|").replace(/\s+/g, " ").trim();
 }
 
 function sqlString(value) {

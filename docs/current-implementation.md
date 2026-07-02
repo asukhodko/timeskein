@@ -2,7 +2,7 @@
 
 ## Status
 
-Last updated: 2026-07-01.
+Last updated: 2026-07-02.
 
 This document describes what the repository actually runs today. Target architecture and future plans remain in RFCs and roadmap documents.
 
@@ -122,9 +122,9 @@ Runtime smoke on macOS:
 - `pnpm smoke:macos-app` launches the packaged `.app` binary with a temporary home directory and verifies embedded-agent `agent.status`, `inventory.list`, focus start/stop/list, title reuse, focus switching, active Work Item deletion, and active focus restoration after app restart
 - `pnpm smoke:macos-app` also verifies Capture Inbox create/resolve/convert while ensuring capture actions do not interrupt the active focus session
 - `pnpm smoke:macos-app` also verifies startup normalization of legacy active Work Items, orphan active focus sessions, and stale `agent.lock` / `agent.port` recovery
-- `pnpm smoke:export-focus-day` verifies fallback Markdown export against a temporary SQLite database
+- `pnpm smoke:export-focus-day` verifies fallback Markdown export, including Work Item notes for touched items, against a temporary SQLite database
 - `pnpm smoke:app-events` verifies the local app-event migration, metrics summary, and Markdown export against a temporary SQLite database
-- `pnpm smoke:dogfood-report` verifies the evening dogfood report wrapper, open captures, analysis prompts, and App Telemetry section
+- `pnpm smoke:dogfood-report` verifies the evening dogfood report wrapper, Work Item notes, open captures, analysis prompts, and App Telemetry section
 - `pnpm smoke:dogfood-finish` verifies the end-of-day gate: no active focus session, no active Work Item, and at least one focus block
 - `pnpm smoke:dogfood-status` verifies the embedded-agent status checker against healthy and unhealthy temporary HTTP agents
 - `pnpm smoke:dogfood-ready` verifies the real-database readiness checker against clean and contaminated temporary SQLite databases, including running-process visibility and the actionable next commands
@@ -172,6 +172,14 @@ First real dogfood day:
 - App telemetry exposed two API errors from creating a Work Item directly in `Active`; this path is now covered by smoke tests and fixed in the agent
 - The follow-up baseline adds Capture Inbox, so incoming events can be recorded during a focus block without turning them into timed work immediately
 
+Second real dogfood day:
+
+- 2026-07-02 was tracked through Timeskein without using Session in parallel
+- Result: 6:31:31 active focus, 19 entrances, 12 Work Items, two significant gaps, one open gap
+- The saved report had no API errors, copy failures, duplicate-title groups, or active-state split brain
+- The report now includes Work Item notes for touched items, because those notes became important review context during the second day
+- Capture Inbox was visible but not used; release-candidate status therefore remains open until incoming-event capture is tested in real work
+
 ## Implemented Features
 
 - Focus Session panel
@@ -197,6 +205,7 @@ First real dogfood day:
 - Today's focus picture can be copied as Markdown from the focus panel, including per-Work-Item totals and significant gaps
 - Today's focus picture can also be exported from SQLite with `pnpm export:focus-day`
 - Evening dogfood report can be copied from the focus panel, shown as selected Markdown if clipboard access fails, or generated with `pnpm dogfood:report`
+- Day reports include a `Work Item Notes` section for touched Work Items that have non-empty notes
 - The UI and CLI label the report as a draft while a focus block or Work Item is still active and include an active-state warning in the Markdown
 - Capture Inbox for incoming events that should not interrupt the current focus block
 - Captures link to the active focus session when one exists
@@ -240,7 +249,7 @@ The Rust agent stores focus sessions in SQLite. Partial unique indexes enforce a
 
 ## First Dogfood Findings
 
-The 2026-07-01 dogfood day showed that the core timer loop works, but the next useful product slice is not more reporting. It is protecting the active focus block from incoming events.
+The 2026-07-01 and 2026-07-02 dogfood days showed that the core timer loop works, but the next useful product slice is not more reporting. It is protecting the active focus block from incoming events.
 
 High-signal findings:
 
@@ -250,6 +259,9 @@ High-signal findings:
 - The report needs activity zones before `break` or `idle` blocks can be tracked without polluting total focus.
 - Work Item notes are currently a single mutable description, not a timestamped activity log.
 - Capture Inbox is now the next dogfood surface: it should prove whether incoming events can be remembered without switching away from the current focus.
+- Work Item notes matter for review and now appear in day reports for touched items; they are still not timestamped.
+- Command+Tab does not restore a hidden borderless Timeskein window yet.
+- The menu bar focus counter can lag until the status item is clicked.
 
 ## Capture Inbox Data
 
@@ -313,7 +325,9 @@ On multi-monitor macOS setups, the tray/status item is controlled by the system 
 - Focus Session has a compact day list and Markdown copy, but not a full reporting/JSON/CSV export view yet.
 - App-event telemetry has CLI/report output, but no in-app inspection screen yet.
 - Capture Inbox is minimal: no edit/delete UI yet, no append-to-Work-Item-note action yet, and no separate capture history screen beyond the open list and dogfood report.
-- Work Item notes are not timestamped and do not appear as a separate timeline.
+- Work Item notes are included in day reports for touched items, but they are not timestamped and do not appear as a separate timeline.
+- Command+Tab does not restore the hidden borderless macOS window yet.
+- The menu bar focus counter can lag until the status item is clicked.
 - Activity zones are not implemented, so breaks tracked as Work Items still count into total focus.
 - Automated e2e tests are not implemented yet.
 - Cross-platform CI is not implemented yet.
@@ -323,7 +337,7 @@ On multi-monitor macOS setups, the tray/status item is controlled by the system 
 
 ## Next Engineering Steps
 
-1. Run the Dogfood Release Candidate gate during the next real workday, with Capture Inbox enabled and Session not used in parallel.
+1. Run the Dogfood Release Candidate gate during the next real workday, with Capture Inbox actually used for at least one incoming event and Session not used in parallel.
 2. Fix only blockers proven by that day before expanding scope.
 3. Add timestamped Work Item notes or events if captured interruptions and stop notes are not enough for review.
 4. Add activity zones if break/idle tracking corrupts total focus data.

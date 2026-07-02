@@ -18,7 +18,7 @@ A desktop application for quickly tracking focus sessions and work items with re
 
 **What works now:** Focus Session tracking, Capture Inbox, and Work Item inventory in browser mock mode and in the macOS `.app` with an embedded Rust agent.
 
-**Current focus:** Continued macOS dogfooding after the first real tracked day on 2026-07-01. The next test is whether the new Capture Inbox makes incoming distractions cheap to remember without switching focus. Windows packaging is deferred.
+**Current focus:** Continued macOS dogfooding after real tracked days on 2026-07-01 and 2026-07-02. The core timer loop is good enough to replace Session for personal use, but the release-candidate gate still needs a real Capture Inbox check. Windows packaging is deferred.
 
 See [Current Implementation](docs/current-implementation.md) for the exact state of what runs today.
 Use [Dogfood Day Protocol](docs/dogfood-day.md) when testing Timeskein as a Session replacement for a real workday.
@@ -142,7 +142,8 @@ At the end of the day, export the analysis note:
 pnpm dogfood:finish:save
 ```
 
-This writes `timeskein-dogfood-report-YYYY-MM-DD.md` in the current directory. The report includes focus blocks, open Capture Inbox entries, and local app telemetry: starts, switches, stops, API errors, show/hide events, copy failures, and likely friction points.
+This writes `timeskein-dogfood-report-YYYY-MM-DD.md` in the current directory. The report includes focus blocks, Work Item totals, Work Item notes for items touched that day, open Capture Inbox entries, and local app telemetry: starts, switches, stops, API errors, show/hide events, copy failures, and likely friction points.
+Saved dogfood reports and RC checks can contain personal or internal work context, so they are ignored by git.
 To print the report to stdout instead:
 
 ```bash
@@ -258,7 +259,7 @@ Focus Session controls:
 - Day panel with focus blocks, total active time, entrance count, and gaps
 - Open gap warning when no focus block is running and the time since the last stopped block is significant
 - Day totals count the part of each focus block that overlaps the selected local day
-- Markdown dogfood report from the Today panel or CLI, with focus data, Work Item totals, significant gaps, open captures, review prompts, and draft warning while a focus block or Work Item is active
+- Markdown dogfood report from the Today panel or CLI, with focus data, Work Item totals, Work Item notes for touched items, significant gaps, open captures, review prompts, and draft warning while a focus block or Work Item is active
 - macOS menu bar item shows the active focus duration as a short `12m Focus` status while a block is running
 - Work item states: active, waiting, blocked, done, someday, unknown
 - Refs: URLs, file paths, issue keys with conflict detection
@@ -273,6 +274,11 @@ Focus Session controls:
 
 - **Browser mode uses mock data** - SQLite persistence is available in the macOS app, not in browser dev mode
 - **Focus Session has no pause/resume/cancel yet** - the current baseline is start/stop only
+- **Capture Inbox has not yet been proven in a full dogfood day** - the UI and API work, but the next release-candidate day must use it for real incoming events
+- **Work Item notes are not timestamped** - they appear in day reports for touched items, but they are still one mutable description field
+- **Activity zones are not implemented** - breaks tracked as Work Items still count into total focus
+- **macOS Command+Tab does not restore a hidden borderless window yet** - use the menu bar item or global shortcut
+- **The menu bar focus counter can lag until the item is clicked** - this is known dogfood friction
 - **macOS packaging produces `.app` only** - DMG packaging is deferred
 - **Windows packaging deferred** - current recovery baseline targets browser and macOS first
 - **Automated e2e tests are not implemented yet** - current validation is manual smoke plus build/type checks

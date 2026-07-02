@@ -16,10 +16,10 @@ try {
   await runSqlFile(join(repoRoot, "apps/agent/migrations/002_focus_sessions.sql"));
   await runSqlFile(join(repoRoot, "apps/agent/migrations/004_captures.sql"));
   await runSql(`
-    INSERT INTO work_items (id, title, type, state, pinned, created_at, updated_at, last_seen_at)
+    INSERT INTO work_items (id, title, type, state, pinned, note, created_at, updated_at, last_seen_at)
     VALUES
-      ('w1', 'Deep Work', 'task', 'unknown', 0, '2026-06-30T06:00:00Z', '2026-06-30T06:00:00Z', '2026-06-30T06:00:00Z'),
-      ('w2', 'Meetings', 'task', 'unknown', 0, '2026-06-30T06:00:00Z', '2026-06-30T06:00:00Z', '2026-06-30T06:00:00Z');
+      ('w1', 'Deep Work', 'task', 'unknown', 0, 'Keep the implementation context here.', '2026-06-30T06:00:00Z', '2026-06-30T06:00:00Z', '2026-06-30T06:00:00Z'),
+      ('w2', 'Meetings', 'task', 'unknown', 0, NULL, '2026-06-30T06:00:00Z', '2026-06-30T06:00:00Z', '2026-06-30T06:00:00Z');
 
     INSERT INTO focus_sessions (id, title, work_item_id, state, target_seconds, note, started_at, stopped_at, updated_at)
     VALUES
@@ -48,6 +48,11 @@ try {
   assert(stdout.includes("Reply to incoming thread after focus"), "report did not include open capture text");
   assert(stdout.includes("Total focus: 1:05:00"), "report did not include exported focus total");
   assert(stdout.includes("## By Work Item"), "report did not include work item totals");
+  assert(stdout.includes("## Work Item Notes"), "report did not include Work Item Notes section");
+  assert(
+    stdout.includes("- Deep Work: Keep the implementation context here."),
+    "report did not include Work Item note"
+  );
   assert(stdout.includes("## Gaps >= 20:00"), "report did not include significant gaps");
   assert(stdout.includes("### Entry Cost"), "report did not include entry cost prompts");
   assert(stdout.includes("Enough data to discuss the day: yes/no"), "report did not include verdict prompts");

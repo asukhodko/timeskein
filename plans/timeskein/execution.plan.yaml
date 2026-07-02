@@ -116,11 +116,11 @@ execution:
       confidence: 0.9
       note: UI and Markdown export show total active time, entrance count, per-Work-Item totals, significant gaps of 20+ minutes between focus blocks, and an Open Gap after the last stopped block when tracking is currently idle. Day-window queries include overlapping blocks and clip their duration to the selected local day.
     ts.day_review.export:
-      progress: 0.9
+      progress: 0.95
       actual_start: "2026-06-30"
-      updated_at: "2026-06-30T18:29:00+03:00"
+      updated_at: "2026-07-02T18:30:00+03:00"
       confidence: 0.9
-      note: Today can copy raw Markdown or a dogfood report with evening prompts, and shows selected Markdown when clipboard access fails. The same day data can be exported from SQLite with pnpm export:focus-day; pnpm dogfood:finish checks overlapping day blocks and active focus before printing the report. The dogfood report now also includes App Telemetry. JSON/CSV export is not implemented.
+      note: Today can copy raw Markdown or a dogfood report with evening prompts, and shows selected Markdown when clipboard access fails. The same day data can be exported from SQLite with pnpm export:focus-day; pnpm dogfood:finish checks overlapping day blocks and active focus before printing the report. Reports now include App Telemetry and Work Item notes for touched items. JSON/CSV export is not implemented.
     ts.day_review.app_telemetry:
       progress: 1.0
       actual_start: "2026-06-30"
@@ -152,9 +152,9 @@ execution:
     ts.capture.review_flow:
       progress: 0.55
       actual_start: "2026-07-01"
-      updated_at: "2026-07-01T20:10:00+03:00"
+      updated_at: "2026-07-02T18:30:00+03:00"
       confidence: 0.75
-      note: Open captures can be resolved or converted to Work Items, and open captures appear in UI/CLI dogfood reports. Edit/delete and append-as-timestamped-note remain future work.
+      note: Open captures can be resolved or converted to Work Items, and open captures appear in UI/CLI dogfood reports. Edit/delete and append-as-timestamped-note remain future work. The 2026-07-02 dogfood day created no captures, so real interruption handling is still unproven.
     ts.hardening.smoke:
       progress: 0.97
       actual_start: "2026-06-30"
@@ -162,17 +162,17 @@ execution:
       confidence: 0.9
       note: Added smoke:capture-api, packaged-app capture checks, and dogfood:rc-check smoke coverage for release-candidate evidence. Browser UI smoke is still manual.
     ts.hardening.release_notes:
-      progress: 0.65
+      progress: 0.75
       actual_start: "2026-07-01"
-      updated_at: "2026-07-01T22:25:00+03:00"
+      updated_at: "2026-07-02T18:30:00+03:00"
       confidence: 0.85
-      note: Added Dogfood Release Candidate gate doc, dogfood:rc-check evidence checker, and dogfood:rc-check:save Markdown artifact. The milestone still needs a real next dogfood day and final known-limits update based on that result.
+      note: Added Dogfood Release Candidate gate doc, dogfood:rc-check evidence checker, and dogfood:rc-check:save Markdown artifact. Second dogfood day proved core Session replacement without Session, but RC remains open until Capture Inbox gets a real verdict.
     ts.hardening.post_dogfood_friction:
-      progress: 0.9
+      progress: 0.95
       actual_start: "2026-07-01"
-      updated_at: "2026-07-01T20:55:00+03:00"
+      updated_at: "2026-07-02T18:30:00+03:00"
       confidence: 0.85
-      note: Fixed C/С shortcut capture while typing, active Work Item creation, visible create errors, ambiguous last-seen labels, and added minimal Capture Inbox. Full preflight passed after these fixes; remaining proof is a next real dogfood day with Capture Inbox.
+      note: Fixed C/С shortcut capture while typing, active Work Item creation, visible create errors, ambiguous last-seen labels, and added minimal Capture Inbox. Second dogfood day found that Work Item notes must appear in reports; that export gap is now fixed. Remaining proof is a real day with Capture Inbox.
     ts.hardening.package_app:
       progress: 1.0
       actual_start: "2026-06-30"

@@ -39,7 +39,7 @@ flowchart LR
     class day_review_export exec_done
     capture_inbox["Capture<br/>Inbox<br/>85%<br/>окно 2026-07-07..2026-07-08"]
     class capture_inbox exec_mgmt_yellow
-    dogfood_hardening["Dogfood<br/>hardening<br/>~90%<br/>веха 2026-07-06"]
+    dogfood_hardening["Dogfood<br/>hardening<br/>~95%<br/>веха 2026-07-06"]
     class dogfood_hardening exec_mgmt_neutral
     future_directions["Future<br/>directions<br/>n/a"]
     class future_directions exec_mgmt_neutral
@@ -132,17 +132,17 @@ gantt
 - Focus Session core [in_progress] (17 focus-blocks) {85%}
 - Add FocusSession and SessionEvent persistence [in_progress] (3 focus-blocks) {70%}
 - Implement start, pause, resume, stop, cancel [in_progress] (3 focus-blocks) {45%}
-- Day review and export [in_progress] (9 focus-blocks) {84%}
+- Day review and export [in_progress] (9 focus-blocks) {85%}
 - Show focus blocks on a daily timeline [in_progress] (3 focus-blocks) {65%}
 - Compute totals, gaps, and entry count [in_progress] (2 focus-blocks) {90%}
-- Export dogfood day data as Markdown [in_progress] (2 focus-blocks) {90%}
+- Export dogfood day data as Markdown [in_progress] (2 focus-blocks) {95%}
 - Capture Inbox [in_progress] (9 focus-blocks) {85%}
 - Review and promote captured events [in_progress] (3 focus-blocks) {55%}
-- Dogfood hardening [in_progress] (8 focus-blocks) {90% cov:75%}
+- Dogfood hardening [in_progress] (8 focus-blocks) {93% cov:75%}
 - Add smoke checks for focus-session flows [in_progress] (2 focus-blocks) {97%}
-- Fix first dogfood friction [in_progress] (2 focus-blocks) {90%}
+- Fix first dogfood friction [in_progress] (2 focus-blocks) {95%}
 - Document macOS multi-monitor status item limits [planned] (1 focus-blocks)
-- Write dogfood release notes and known limitations [planned] (1 focus-blocks) {65%}
+- Write dogfood release notes and known limitations [planned] (1 focus-blocks) {75%}
 - Session replacement dogfood baseline [planned]
 <!-- GENERATED:END -->
 

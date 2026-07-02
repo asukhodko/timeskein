@@ -16,7 +16,7 @@ In scope:
 - manual focus-session tracking;
 - Work Items created or reused by title;
 - Capture Inbox for incoming events that should not interrupt focus;
-- Markdown day report, open captures, gaps, Work Item totals, and app telemetry;
+- Markdown day report, open captures, gaps, Work Item totals, Work Item notes, and app telemetry;
 - documentation, known limits, and opskarta status.
 
 Out of scope for this gate:
@@ -76,12 +76,14 @@ pnpm dogfood:rc-check:save
 and prints review items that must be resolved or consciously accepted before the
 milestone can be marked done. `dogfood:rc-check:save` writes
 `timeskein-dogfood-rc-check-YYYY-MM-DD.md` next to the saved day report.
+Both saved files can contain personal or internal work context and are ignored by git.
 
 The final evidence must include:
 
 - focus blocks for the real workday;
 - total focus time;
 - Work Item totals;
+- Work Item notes for touched items;
 - significant gaps and open gap, if any;
 - open captures, if any;
 - App Telemetry;

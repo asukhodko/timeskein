@@ -266,7 +266,7 @@ nodes:
     effort: 2
     deps:
       - id: ts.day_review.totals_gaps
-    notes: Today can copy the raw day picture or a dogfood report with review prompts, and shows selected Markdown if clipboard access fails. UI and CLI reports are marked as draft when a focus session or Work Item is still active. SQLite fallback export, CLI dogfood report, and dogfood:finish end-of-day gate are implemented; finish refuses active focus sessions, stuck active Work Items, and empty days. JSON/CSV export remains future work.
+    notes: Today can copy the raw day picture or a dogfood report with review prompts, and shows selected Markdown if clipboard access fails. UI and CLI reports are marked as draft when a focus session or Work Item is still active. SQLite fallback export, CLI dogfood report, and dogfood:finish end-of-day gate are implemented; finish refuses active focus sessions, stuck active Work Items, and empty days. Reports now include Work Item notes for touched items. JSON/CSV export remains future work.
     x:
       ops:
         attention_class: current
@@ -335,7 +335,7 @@ nodes:
     effort: 3
     deps:
       - id: ts.capture.quick_ui
-    notes: Open captures can be resolved or converted to a Work Item. Append-as-timestamped-note, edit/delete, and a fuller history view remain future work.
+    notes: Open captures can be resolved or converted to a Work Item. Append-as-timestamped-note, edit/delete, and a fuller history view remain future work. The 2026-07-02 dogfood day created no captures, so the workflow still needs real interruption testing.
     x:
       ops:
         attention_class: current
@@ -369,7 +369,7 @@ nodes:
     effort: 2
     deps:
       - id: ts.focus_core.dogfood_gate
-    notes: Fix typing C/С opening Create, creating a new active Work Item, ambiguous last-seen timestamps, and add the first Capture Inbox baseline. Remaining friction goes to activity zones, editable stop notes, and timeline notes.
+    notes: Fixed typing C/С opening Create, creating a new active Work Item, ambiguous last-seen timestamps, and added the first Capture Inbox baseline. Second dogfood day confirmed Session is no longer needed for core tracking, but showed remaining friction; Command+Tab restore, stale menu-bar counter, Work Item editing, split resizing, and time-spent columns are still open.
     x:
       ops:
         attention_class: current
@@ -405,7 +405,7 @@ nodes:
     deps:
       - id: ts.hardening.package_app
       - id: ts.hardening.backup_reset
-    notes: Dogfood Release Candidate doc defines the pass/fail gate. dogfood:rc-check turns the saved SQLite day into hard blockers, review items, and manual verdict prompts; dogfood:rc-check:save preserves that evidence as a Markdown artifact.
+    notes: Dogfood Release Candidate doc defines the pass/fail gate. dogfood:rc-check turns the saved SQLite day into hard blockers, review items, and manual verdict prompts; dogfood:rc-check:save preserves that evidence as a local ignored Markdown artifact. The next update should record the Capture Inbox verdict from a real day.
     x:
       ops:
         attention_class: current
@@ -417,7 +417,7 @@ nodes:
     milestone: true
     deps:
       - id: ts.hardening.release_notes
-    notes: Timeskein can replace the free Session timer for personal tracking.
+    notes: Core timer replacement is proven by the 2026-07-02 dogfood day without Session. The milestone is still held open until Capture Inbox is tested in real work and remaining known limits are accepted.
     x:
       ops:
         attention_class: current
@@ -493,7 +493,7 @@ nodes:
     parent: ts.future
     status: deferred
     effort: 8
-    notes: Explore only after the manual timer data is useful.
+    notes: Explore only after the manual timer data is useful. Future sources include active apps, browser tabs and URLs, messenger channels/chats, screenshots or screen chunks, and AI-assisted interpretation of activity, all behind explicit opt-in privacy controls.
     x:
       ops:
         attention_class: future

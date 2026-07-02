@@ -91,6 +91,7 @@ async function loadSessions(path, from, to, now) {
       fs.title,
       fs.work_item_id,
       wi.title AS work_item_title,
+      wi.note AS work_item_note,
       fs.state,
       fs.target_seconds,
       fs.note,
@@ -116,6 +117,7 @@ async function loadSessions(path, from, to, now) {
       title: row.title,
       work_item_id: row.work_item_id ?? undefined,
       work_item_title: row.work_item_title ?? undefined,
+      work_item_note: row.work_item_note ?? undefined,
       state: row.state,
       target_seconds: row.target_seconds ?? 1500,
       active_seconds: clippedActiveSeconds(row.started_at, row.stopped_at, from, to, now),
@@ -195,6 +197,8 @@ function buildDayMarkdown(sessionsOldestFirst, activeSecondsTotal, day, now) {
     }
   }
 
+  appendWorkItemNotes(lines, workItemTotals);
+
   const gaps = gapsBetweenSessions(sessionsOldestFirst).filter(
     (gap) => gap.seconds >= SIGNIFICANT_GAP_SECONDS
   );
@@ -237,9 +241,17 @@ function aggregateWorkItemTotals(sessions) {
   for (const session of sessions) {
     const key = session.work_item_id ?? `title:${session.title}`;
     const title = session.work_item_title ?? session.title;
-    const current = totals.get(key) ?? { title, activeSeconds: 0, entrances: 0 };
+    const current = totals.get(key) ?? {
+      title,
+      note: session.work_item_note,
+      activeSeconds: 0,
+      entrances: 0,
+    };
 
     current.title = title;
+    if (session.work_item_note) {
+      current.note = session.work_item_note;
+    }
     current.activeSeconds += session.active_seconds;
     current.entrances += 1;
     totals.set(key, current);
@@ -252,6 +264,18 @@ function aggregateWorkItemTotals(sessions) {
 
     return left.title.localeCompare(right.title);
   });
+}
+
+function appendWorkItemNotes(lines, workItemTotals) {
+  const itemsWithNotes = workItemTotals.filter((item) => item.note?.trim());
+  if (itemsWithNotes.length === 0) {
+    return;
+  }
+
+  lines.push("", "## Work Item Notes");
+  for (const item of itemsWithNotes) {
+    lines.push(`- ${formatMarkdownListText(item.title)}: ${formatMarkdownListText(item.note)}`);
+  }
 }
 
 function gapsBetweenSessions(sessionsOldestFirst) {
@@ -303,6 +327,10 @@ function openGapAfterLastSession(sessionsOldestFirst, now, dayStart, dayEnd) {
 
 function escapeMarkdownTable(value) {
   return value.replaceAll("|", "\\|").replace(/\s+/g, " ").trim();
+}
+
+function formatMarkdownListText(value) {
+  return value.replace(/\s+/g, " ").trim();
 }
 
 function formatDuration(totalSeconds) {

@@ -19,10 +19,10 @@ try {
   await runSqlFile(join(repoRoot, "apps/agent/migrations/001_initial.sql"));
   await runSqlFile(join(repoRoot, "apps/agent/migrations/002_focus_sessions.sql"));
   await runSql(`
-    INSERT INTO work_items (id, title, type, state, pinned, created_at, updated_at, last_seen_at)
+    INSERT INTO work_items (id, title, type, state, pinned, note, created_at, updated_at, last_seen_at)
     VALUES
-      ('w1', 'Deep Work', 'task', 'unknown', 0, '2026-06-30T06:00:00Z', '2026-06-30T06:00:00Z', '2026-06-30T06:00:00Z'),
-      ('w2', 'Meetings', 'task', 'unknown', 0, '2026-06-30T06:00:00Z', '2026-06-30T06:00:00Z', '2026-06-30T06:00:00Z');
+      ('w1', 'Deep Work', 'task', 'unknown', 0, 'Keep the implementation context here.', '2026-06-30T06:00:00Z', '2026-06-30T06:00:00Z', '2026-06-30T06:00:00Z'),
+      ('w2', 'Meetings', 'task', 'unknown', 0, NULL, '2026-06-30T06:00:00Z', '2026-06-30T06:00:00Z', '2026-06-30T06:00:00Z');
 
     INSERT INTO focus_sessions (id, title, work_item_id, state, target_seconds, note, started_at, stopped_at, updated_at)
     VALUES
@@ -57,6 +57,11 @@ try {
   assert(stdout.includes("## By Work Item"), "export did not include By Work Item section");
   assert(stdout.includes("| 45:00 | 3 | Deep Work |"), "export did not aggregate Deep Work");
   assert(stdout.includes("| 30:00 | 1 | Meetings |"), "export did not aggregate Meetings");
+  assert(stdout.includes("## Work Item Notes"), "export did not include Work Item Notes section");
+  assert(
+    stdout.includes("- Deep Work: Keep the implementation context here."),
+    "export did not include Work Item note"
+  );
   assert(stdout.includes("## Gaps >= 20:00"), "export did not include significant gaps section");
   assert(stdout.includes(": 35:00"), "export did not include expected significant gap duration");
   assert(stdout.includes("## Open Gap"), "export did not include open gap section");

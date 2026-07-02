@@ -38,9 +38,10 @@ export default function FocusPanel({ selectedItem }: FocusPanelProps) {
   const current = currentQuery.data?.session
   const currentId = current?.id
   const sessions = todayQuery.data?.sessions ?? []
+  const inventoryItems = useMemo(() => inventoryQuery.data?.items ?? [], [inventoryQuery.data?.items])
   const activeWorkItems = useMemo(
-    () => (inventoryQuery.data?.items ?? []).filter((item) => item.state === 'active'),
-    [inventoryQuery.data?.items]
+    () => inventoryItems.filter((item) => item.state === 'active'),
+    [inventoryItems]
   )
   const activeSecondsTotal = todayQuery.data?.active_seconds_total ?? 0
   const openCaptures = capturesQuery.data?.captures ?? []
@@ -52,8 +53,8 @@ export default function FocusPanel({ selectedItem }: FocusPanelProps) {
   const reportIsDraft = current?.state === 'active' || activeWorkItems.length > 0
   const trayStatusTitle = useMemo(() => buildTrayStatusTitle(current), [current])
   const todayMarkdown = useMemo(
-    () => buildTodayMarkdown(sessions, activeSecondsTotal, now),
-    [sessions, activeSecondsTotal, now]
+    () => buildTodayMarkdown(sessions, activeSecondsTotal, now, inventoryItems),
+    [sessions, activeSecondsTotal, now, inventoryItems]
   )
   const focusTitleInput = ({ force = false } = {}) => {
     window.requestAnimationFrame(() => {
@@ -536,9 +537,19 @@ function createTelemetryActionId() {
   return globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`
 }
 
-function buildTodayMarkdown(sessionsOldestFirst: FocusSessionView[], activeSecondsTotal: number, now: Date) {
+function buildTodayMarkdown(
+  sessionsOldestFirst: FocusSessionView[],
+  activeSecondsTotal: number,
+  now: Date,
+  workItems: WorkItemView[] = []
+) {
   const dayStart = startOfLocalDay(now)
   const dayEnd = nextLocalDay(dayStart)
+  const workItemNotes = new Map(
+    workItems
+      .filter((item) => item.note?.trim())
+      .map((item) => [item.id, item.note?.trim() ?? ''])
+  )
   const dateTitle = now.toLocaleDateString([], {
     year: 'numeric',
     month: '2-digit',
@@ -577,7 +588,7 @@ function buildTodayMarkdown(sessionsOldestFirst: FocusSessionView[], activeSecon
     }
   }
 
-  const workItemTotals = aggregateWorkItemTotals(sessionsOldestFirst)
+  const workItemTotals = aggregateWorkItemTotals(sessionsOldestFirst, workItemNotes)
   if (workItemTotals.length > 0) {
     lines.push('', '## By Work Item', '', '| Duration | Entrances | Work Item |', '| ---: | ---: | --- |')
     for (const item of workItemTotals) {
@@ -586,6 +597,8 @@ function buildTodayMarkdown(sessionsOldestFirst: FocusSessionView[], activeSecon
       )
     }
   }
+
+  appendWorkItemNotes(lines, workItemTotals)
 
   const gaps = gapsBetweenSessions(sessionsOldestFirst).filter(
     (gap) => gap.seconds >= SIGNIFICANT_GAP_SECONDS
@@ -759,15 +772,19 @@ function formatAppTelemetryMarkdown(summary: AppEventSummary) {
   return `${lines.join('\n')}\n`
 }
 
-function aggregateWorkItemTotals(sessions: FocusSessionView[]) {
-  const totals = new Map<string, { title: string; activeSeconds: number; entrances: number }>()
+function aggregateWorkItemTotals(sessions: FocusSessionView[], workItemNotes = new Map<string, string>()) {
+  const totals = new Map<string, { title: string; note?: string; activeSeconds: number; entrances: number }>()
 
   for (const session of sessions) {
     const key = session.work_item_id ?? `title:${session.title}`
     const title = session.work_item_title ?? session.title
-    const current = totals.get(key) ?? { title, activeSeconds: 0, entrances: 0 }
+    const note = session.work_item_id ? workItemNotes.get(session.work_item_id) : undefined
+    const current = totals.get(key) ?? { title, note, activeSeconds: 0, entrances: 0 }
 
     current.title = title
+    if (note) {
+      current.note = note
+    }
     current.activeSeconds += session.active_seconds
     current.entrances += 1
     totals.set(key, current)
@@ -780,6 +797,21 @@ function aggregateWorkItemTotals(sessions: FocusSessionView[]) {
 
     return left.title.localeCompare(right.title)
   })
+}
+
+function appendWorkItemNotes(
+  lines: string[],
+  workItemTotals: Array<{ title: string; note?: string }>
+) {
+  const itemsWithNotes = workItemTotals.filter((item) => item.note?.trim())
+  if (itemsWithNotes.length === 0) {
+    return
+  }
+
+  lines.push('', '## Work Item Notes')
+  for (const item of itemsWithNotes) {
+    lines.push(`- ${formatMarkdownListText(item.title)}: ${formatMarkdownListText(item.note ?? '')}`)
+  }
 }
 
 function gapsBetweenSessions(sessionsOldestFirst: FocusSessionView[]) {

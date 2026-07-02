@@ -97,7 +97,7 @@ x:
         mgmt:
           health: green
           owner: a.sukhodko
-          sync_note: First dogfood day produced usable focus data, gaps, Work Item totals, and app telemetry.
+          sync_note: Second dogfood day produced usable focus data, gaps, Work Item totals, Work Item notes, and app telemetry without Session.
       capture-inbox:
         title: Capture Inbox
         scope_nodes:
@@ -106,7 +106,7 @@ x:
         mgmt:
           health: yellow
           owner: a.sukhodko
-          next_sync_goal: Capture incoming events without interrupting the active focus block.
+          next_sync_goal: Use Capture Inbox for at least one real incoming event during a dogfood day.
       dogfood-hardening:
         title: Dogfood hardening
         scope_nodes:

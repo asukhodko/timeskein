@@ -37,12 +37,15 @@ End of day:
 - if only the raw day picture is needed, run `pnpm export:focus-day > timeskein-day.md`.
 - if Timeskein itself felt awkward, run `pnpm dogfood:metrics` and `pnpm export:app-events` to inspect the local app-event telemetry.
 
+Saved dogfood reports and RC checks can contain personal or internal work context. They are local evidence files and are ignored by git.
+
 ## Goal
 
 Timeskein is ready for regular use when it can capture a workday without side tracking:
 
 - what focus blocks happened;
 - which Work Item each block belonged to;
+- which Work Item descriptions were relevant to the day;
 - how long each block lasted;
 - where the meaningful gaps were;
 - how much active focus time the day contained.
@@ -169,6 +172,16 @@ The first real dogfood day met this gate:
 
 Product friction found during the day is tracked in the roadmap. The most important next dogfood check is whether Capture Inbox makes incoming events cheap to remember without interrupting the current focus block.
 
+The second real dogfood day on 2026-07-02 showed that the core timer loop was enough to stop using Session in parallel:
+
+- 6:31:31 active focus
+- 19 entrances
+- 12 Work Items in the day report
+- two significant gaps and one open gap
+- no API errors, copy failures, duplicate-title groups, or active-state split brain in the saved report
+
+The remaining release-candidate gap is Capture Inbox: no captures were created during that day, so the interruption-preservation workflow still needs a real check.
+
 For the stricter daily-use gate, use [Dogfood Release Candidate](dogfood-release-candidate.md). The day protocol explains how to run the test; the release-candidate gate decides whether the current baseline is good enough to replace Session.
 
 ## During the Day
@@ -271,6 +284,7 @@ pnpm dogfood:finish > timeskein-dogfood-report.md
 ```
 
 `dogfood:finish` refuses to produce a final report while a focus block or Work Item is still active, or when there are no focus blocks for the selected date.
+The focus-day export includes a `Work Item Notes` section for touched Work Items that have a non-empty note. This is for evening analysis context; notes are still mutable Work Item descriptions, not timestamped event notes.
 
 The dogfood report includes an `App Telemetry` section. Use it to check whether Timeskein caused tracking friction:
 

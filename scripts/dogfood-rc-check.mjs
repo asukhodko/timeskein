@@ -156,13 +156,18 @@ async function loadEvidence(path, from, to, now) {
 }
 
 async function loadSessions(path, from, to, now) {
+  const hasActivityZone = await columnExists(path, "focus_sessions", "activity_zone");
+  const activityZoneExpression = hasActivityZone
+    ? "fs.activity_zone"
+    : `${sqlString(WORK_ACTIVITY_ZONE)}`;
+
   const rows = await queryJson(path, `
     SELECT
       fs.id,
       fs.title,
       fs.work_item_id,
       wi.title AS work_item_title,
-      fs.activity_zone AS activity_zone,
+      ${activityZoneExpression} AS activity_zone,
       wi.note AS work_item_note,
       fs.state,
       fs.note,
@@ -298,15 +303,24 @@ async function loadWorkItemEvents(path, from, to) {
 async function loadDayEvents(path, from, to) {
   if (!(await tableExists(path, "day_events"))) return [];
 
+  const [hasFocusSessionId, hasActivityZone, hasUpdatedAt] = await Promise.all([
+    columnExists(path, "day_events", "focus_session_id"),
+    columnExists(path, "day_events", "activity_zone"),
+    columnExists(path, "day_events", "updated_at"),
+  ]);
+  const focusSessionExpression = hasFocusSessionId ? "focus_session_id" : "NULL";
+  const activityZoneExpression = hasActivityZone ? "activity_zone" : "NULL";
+  const updatedAtExpression = hasUpdatedAt ? "updated_at" : "ts";
+
   const rows = await queryJson(path, `
     SELECT
       id,
       ts,
       kind,
       text,
-      focus_session_id,
-      activity_zone,
-      updated_at
+      ${focusSessionExpression} AS focus_session_id,
+      ${activityZoneExpression} AS activity_zone,
+      ${updatedAtExpression} AS updated_at
     FROM day_events
     WHERE kind = 'note_added'
       AND datetime(ts) >= datetime(${sqlString(from.toISOString())})
@@ -351,6 +365,15 @@ async function tableExists(path, tableName) {
   );
 
   return (rows[0]?.count ?? 0) > 0;
+}
+
+async function columnExists(path, tableName, columnName) {
+  if (!(await tableExists(path, tableName))) {
+    return false;
+  }
+
+  const rows = await queryJson(path, `PRAGMA table_info(${quoteIdentifier(tableName)})`);
+  return rows.some((row) => row.name === columnName);
 }
 
 async function queryJson(path, sql) {
@@ -526,6 +549,8 @@ function buildRcReport(date, path, evidence, assessment, minFocusSeconds) {
     "",
   ];
 
+  lines.push(...formatGoalAuditMarkdown(evidence, assessment, minFocusSeconds), "");
+
   if (evidence.workItemTotals.length > 0) {
     lines.push("## By Work Item", "", "| Duration | Entrances | Work Item |", "| ---: | ---: | --- |");
     for (const item of evidence.workItemTotals) {
@@ -603,6 +628,94 @@ function buildRcReport(date, path, evidence, assessment, minFocusSeconds) {
   );
 
   return lines.join("\n");
+}
+
+function formatGoalAuditMarkdown(evidence, assessment, minFocusSeconds) {
+  const rows = [
+    {
+      requirement: "Final state clean",
+      status: evidence.activeSessions.length === 0 && evidence.activeWorkItems.length === 0 ? "pass" : "block",
+      evidence: `${evidence.activeSessions.length} active focus session(s), ${evidence.activeWorkItems.length} active Work Item(s)`,
+    },
+    {
+      requirement: "Focus blocks visible",
+      status: evidence.sessions.length === 0
+        ? "block"
+        : evidence.totalFocusSeconds >= minFocusSeconds
+          ? "pass"
+          : "review",
+      evidence: `${evidence.sessions.length} entrance(s), ${formatDuration(evidence.totalFocusSeconds)} tracked`,
+    },
+    {
+      requirement: "Work Item totals available",
+      status: evidence.workItemTotals.length > 0 ? "pass" : "block",
+      evidence: `${evidence.workItemTotals.length} Work Item total row(s)`,
+    },
+    {
+      requirement: "Activity Zones separated",
+      status: evidence.sessions.length === 0
+        ? "block"
+        : evidence.activityZoneTotals.length > 1 && evidence.nonWorkSeconds > 0
+          ? "pass"
+          : "review",
+      evidence: `${evidence.activityZoneTotals.length} zone(s), ${formatDuration(evidence.workFocusSeconds)} work, ${formatDuration(evidence.nonWorkSeconds)} non-work`,
+    },
+    {
+      requirement: "Day and Work Item context present",
+      status: evidence.dayEvents.length + evidence.workItemEvents.length + evidence.workItemNoteCount > 0
+        ? "pass"
+        : "review",
+      evidence: `${evidence.dayEvents.length} Day Event(s), ${evidence.workItemEvents.length} Work Item Event(s), ${evidence.workItemNoteCount} Work Item note(s)`,
+    },
+    {
+      requirement: "Gaps and captures visible",
+      status: "pass",
+      evidence: `${evidence.gaps.length} significant gap(s), ${evidence.openCaptures.length} open capture(s), ${evidence.capturesCreatedToday.length} capture(s) today`,
+    },
+    {
+      requirement: "Window and menubar friction evidenced",
+      status: evidence.telemetry.total === 0
+        ? "review"
+        : evidence.telemetry.apiErrors +
+            evidence.telemetry.copyFailures +
+            evidence.telemetry.startFailures +
+            evidence.telemetry.stopFailures >
+          0
+          ? "review"
+          : "pass",
+      evidence: `${evidence.telemetry.windowShown}/${evidence.telemetry.windowHidden} show/hide, ${evidence.telemetry.windowDragStarted} drag start(s), ${evidence.telemetry.apiErrors} API error(s)`,
+    },
+    {
+      requirement: "Tracking correction or review evidenced",
+      status: evidence.sessions.length === 0
+        ? "block"
+        : evidence.telemetry.corrections > 0 || evidence.telemetry.correctionReviews > 0
+          ? "pass"
+          : "review",
+      evidence: `${evidence.telemetry.correctionRequests}/${evidence.telemetry.corrections}/${evidence.telemetry.correctionReviews}/${evidence.telemetry.correctionFailures} requested/applied/reviewed/failed`,
+    },
+    {
+      requirement: "Hard blockers absent",
+      status: assessment.hardBlockers.length === 0 ? "pass" : "block",
+      evidence: `${assessment.hardBlockers.length} hard blocker(s)`,
+    },
+    {
+      requirement: "Local gates",
+      status: "manual",
+      evidence: "Run pnpm test and pnpm dogfood:preflight on the same code before closing the goal",
+    },
+  ];
+
+  return [
+    "## Daily Control Goal Audit",
+    "",
+    "| Requirement | Status | Evidence |",
+    "| --- | --- | --- |",
+    ...rows.map(
+      (row) =>
+        `| ${escapeMarkdownTable(row.requirement)} | ${escapeMarkdownTable(row.status)} | ${escapeMarkdownTable(row.evidence)} |`
+    ),
+  ];
 }
 
 function formatCaptureActivityMarkdown(captures) {
@@ -811,6 +924,10 @@ function nextLocalDay(date) {
 
 function sqlString(value) {
   return `'${String(value).replaceAll("'", "''")}'`;
+}
+
+function quoteIdentifier(value) {
+  return `"${String(value).replaceAll('"', '""')}"`;
 }
 
 function formatDuration(totalSeconds) {

@@ -83,6 +83,9 @@ Both saved files can contain personal or internal work context and are ignored b
 The RC evidence summary also checks the post-baseline review data: work focus vs
 non-work tracked time, Activity Zone coverage, Work Item notes/events, Capture
 Inbox coverage, focus correction/review telemetry, and window/show-hide telemetry.
+The `Daily Control Goal Audit` section maps that evidence to the current
+daily-control goal, so the next dogfood day can be judged requirement by
+requirement instead of by memory.
 
 The final evidence must include:
 

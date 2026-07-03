@@ -363,7 +363,9 @@ For a Dogfood Release Candidate day, run the RC evidence check after saving the 
 pnpm dogfood:rc-check:save
 ```
 
-The command prints hard blockers and review items for the Session replacement gate. Its evidence summary includes total tracked time, work focus, non-work tracked time, Activity Zone coverage, Work Item notes/events, Capture Inbox coverage, correction telemetry, window telemetry, and product-friction counters.
+The command prints hard blockers and review items for the Session replacement gate. Its evidence summary includes total tracked time, work focus, non-work tracked time, Activity Zone coverage, Work Item notes/events, Capture Inbox coverage, correction telemetry, window telemetry, and product-friction counters. The `Daily Control Goal Audit` table maps the day to the active daily-control goal: focus blocks, Work Item totals, Activity Zones, notes/events, gaps/captures, window friction evidence, tracking correction evidence, hard blockers, and the manual local gates.
+
+The RC-check scripts read old SQLite databases defensively. If a previous dogfood day was captured before Activity Zone columns existed, reports fall back to `Work` rather than crashing. A fresh dogfood day should still be started through the app so real migrations run before new data is captured.
 
 For a previous date:
 

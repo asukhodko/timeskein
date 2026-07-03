@@ -87,13 +87,16 @@ function startOfLocalDay(date) {
 }
 
 async function loadSessions(path, from, to, now) {
+  const hasActivityZone = await columnExists(path, "focus_sessions", "activity_zone");
+  const activityZoneExpression = hasActivityZone ? "fs.activity_zone" : "'work'";
+
   const query = `
     SELECT
       fs.id,
       fs.title,
       fs.work_item_id,
       wi.title AS work_item_title,
-      fs.activity_zone AS activity_zone,
+      ${activityZoneExpression} AS activity_zone,
       wi.note AS work_item_note,
       fs.state,
       fs.target_seconds,
@@ -182,15 +185,24 @@ async function loadDayEvents(path, from, to) {
     return [];
   }
 
+  const [hasFocusSessionId, hasActivityZone, hasUpdatedAt] = await Promise.all([
+    columnExists(path, "day_events", "focus_session_id"),
+    columnExists(path, "day_events", "activity_zone"),
+    columnExists(path, "day_events", "updated_at"),
+  ]);
+  const focusSessionExpression = hasFocusSessionId ? "focus_session_id" : "NULL";
+  const activityZoneExpression = hasActivityZone ? "activity_zone" : "NULL";
+  const updatedAtExpression = hasUpdatedAt ? "updated_at" : "ts";
+
   const query = `
     SELECT
       id,
       ts,
       kind,
       text,
-      focus_session_id,
-      activity_zone,
-      updated_at
+      ${focusSessionExpression} AS focus_session_id,
+      ${activityZoneExpression} AS activity_zone,
+      ${updatedAtExpression} AS updated_at
     FROM day_events
     WHERE kind = 'note_added'
       AND datetime(ts) >= datetime(${sqlString(from.toISOString())})
@@ -225,6 +237,22 @@ async function tableExists(path, tableName) {
   return (rows[0]?.count ?? 0) > 0;
 }
 
+async function columnExists(path, tableName, columnName) {
+  if (!(await tableExists(path, tableName))) {
+    return false;
+  }
+
+  const { stdout } = await execFileAsync(
+    "sqlite3",
+    sqliteReadArgs(path, `PRAGMA table_info(${quoteIdentifier(tableName)})`),
+    {
+      maxBuffer: 1024 * 1024,
+    }
+  );
+  const rows = stdout.trim() ? JSON.parse(stdout) : [];
+  return rows.some((row) => row.name === columnName);
+}
+
 function parseJsonPayload(value) {
   if (!value) return undefined;
 
@@ -250,6 +278,10 @@ function sqliteReadArgs(path, sql) {
 
 function sqlString(value) {
   return `'${value.replaceAll("'", "''")}'`;
+}
+
+function quoteIdentifier(value) {
+  return `"${String(value).replaceAll('"', '""')}"`;
 }
 
 function buildDayMarkdown(sessionsOldestFirst, activeSecondsTotal, day, now, workItemEvents = [], dayEvents = []) {

@@ -130,13 +130,13 @@ Runtime smoke on macOS:
 - `pnpm smoke:macos-app` also verifies Work Item Event add/update/delete/list against the packaged SQLite-backed app
 - `pnpm smoke:macos-app` also verifies Day Event add/update/delete/list against the packaged SQLite-backed app while ensuring day notes do not interrupt the active focus session
 - `pnpm smoke:macos-app` also verifies startup normalization of legacy active Work Items, orphan active focus sessions, stale `agent.lock` / `agent.port` recovery, and migration of older `app_events` kind constraints
-- `pnpm smoke:export-focus-day` verifies fallback Markdown export, including Day Events, Work Item notes, and timestamped Work Item Events for touched items, against a temporary SQLite database
+- `pnpm smoke:export-focus-day` verifies fallback Markdown export, including Day Events, Work Item notes, timestamped Work Item Events for touched items, and legacy focus-session schemas without Activity Zone columns, against temporary SQLite databases
 - `pnpm smoke:app-events` verifies the local app-event migration, metrics summary, and Markdown export against a temporary SQLite database
 - `pnpm smoke:dogfood-report` verifies the evening dogfood report wrapper, Review Checklist, Activity Zone evidence warnings, correction evidence prompts and accepted correction review, Day Events, Work Item notes, Work Item Events, Capture Activity, open captures, analysis prompts, and App Telemetry section
 - `pnpm smoke:dogfood-finish` verifies the end-of-day gate: no active focus session, no active Work Item, and at least one focus block
 - `pnpm smoke:dogfood-status` verifies the embedded-agent status checker against healthy and unhealthy temporary HTTP agents
 - `pnpm smoke:dogfood-ready` verifies the real-database readiness checker against clean and contaminated temporary SQLite databases, including running-process visibility and the actionable next commands
-- `pnpm smoke:dogfood-rc-check` verifies the release-candidate evidence checker against good, open-capture, no-active-focus-capture, empty-day, duplicate-title, and active-session temporary databases, including Day Event evidence
+- `pnpm smoke:dogfood-rc-check` verifies the release-candidate evidence checker against good, legacy-schema, open-capture, no-active-focus-capture, empty-day, duplicate-title, and active-session temporary databases, including Day Event evidence and the `Daily Control Goal Audit`
 - `pnpm smoke:dogfood-reset-db` verifies dry-run, backup-reset behavior, and running-process refusal on temporary database files
 - `pnpm smoke:dogfood-start` verifies the start gate against clean and contaminated temporary SQLite databases, including clean-start reset, without opening the app
 - `pnpm smoke:dogfood-stop-active` verifies dry-run, direct SQLite fallback, running-process refusal, and running-agent API behavior for closing a stuck active focus block
@@ -151,7 +151,7 @@ Dogfood launch helper:
 - `pnpm dogfood:finish:save` runs the same end-of-day gate and saves the Markdown report to `timeskein-dogfood-report-YYYY-MM-DD.md`
 - `pnpm dogfood:preflight` runs the local checks needed before trusting a real dogfood day, including Work Item list mode tests, isolated mock API, export, and dogfood-report smoke checks
 - `pnpm dogfood:ready` inspects the real local SQLite database for active sessions, active Work Items, duplicate titles, existing focus blocks for today, agent responsiveness, and running app processes; when the day is not ready it prints exact stop/reset commands
-- `pnpm dogfood:rc-check` prints the release-candidate evidence summary, hard blockers, review items, and manual verdict prompts for the saved dogfood day; the summary includes total tracked time, work focus, non-work tracked time, Activity Zone coverage, Work Item notes/events, Capture Inbox coverage, correction telemetry, window telemetry, and product-friction counters
+- `pnpm dogfood:rc-check` prints the release-candidate evidence summary, `Daily Control Goal Audit`, hard blockers, review items, and manual verdict prompts for the saved dogfood day; the summary includes total tracked time, work focus, non-work tracked time, Activity Zone coverage, Work Item notes/events, Capture Inbox coverage, correction telemetry, window telemetry, and product-friction counters
 - `pnpm dogfood:rc-check:save` saves the same RC evidence to `timeskein-dogfood-rc-check-YYYY-MM-DD.md`
 - `pnpm dogfood:reset-db` moves the real local SQLite database and sidecar files aside only when `--apply` is passed; it refuses while the agent or app process appears alive unless `--force` is passed
 - `pnpm dogfood:stop-active` stops active focus sessions, writes a stop note, and clears active Work Items only when `--apply` is passed; it uses the running agent API when available and direct SQLite only when neither agent nor app process is alive, unless `--force` is passed

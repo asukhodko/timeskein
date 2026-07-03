@@ -133,6 +133,46 @@ try {
   assert(activeStdout.includes("-now | 15:00 | Work | Active Draft Work"), "active export did not show active block ending at now");
   assert(!activeStdout.includes("## Open Gap"), "active export showed open gap while latest block is active");
 
+  const legacyDbPath = join(tempDir, "legacy.db");
+  await runSqlFileAt(legacyDbPath, join(repoRoot, "apps/agent/migrations/001_initial.sql"));
+  await runSqlAt(legacyDbPath, `
+    CREATE TABLE focus_sessions (
+      id TEXT PRIMARY KEY,
+      title TEXT NOT NULL,
+      work_item_id TEXT,
+      state TEXT NOT NULL DEFAULT 'active' CHECK(state IN ('active', 'stopped')),
+      target_seconds INTEGER NOT NULL DEFAULT 1500,
+      note TEXT,
+      started_at TEXT NOT NULL,
+      stopped_at TEXT,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY (work_item_id) REFERENCES work_items(id) ON DELETE SET NULL
+    );
+
+    INSERT INTO work_items (id, title, type, state, pinned, note, created_at, updated_at, last_seen_at)
+    VALUES ('legacy-w1', 'Legacy Work', 'task', 'unknown', 0, 'old schema note', '2026-06-30T06:00:00Z', '2026-06-30T06:00:00Z', '2026-06-30T06:00:00Z');
+
+    INSERT INTO focus_sessions (id, title, work_item_id, state, target_seconds, note, started_at, stopped_at, updated_at)
+    VALUES ('legacy-s1', 'Legacy Work', 'legacy-w1', 'stopped', 1500, 'old schema block', '2026-06-30T06:00:00Z', '2026-06-30T06:30:00Z', '2026-06-30T06:30:00Z');
+  `);
+
+  const { stdout: legacyStdout } = await execFileAsync(
+    "node",
+    [
+      join(repoRoot, "scripts/export-focus-day.mjs"),
+      "--db",
+      legacyDbPath,
+      "--date",
+      "2026-06-30",
+      "--now",
+      "2026-06-30T08:15:00Z",
+    ],
+    { cwd: repoRoot }
+  );
+  assert(legacyStdout.includes("Total tracked: 30:00"), "legacy export did not include expected total");
+  assert(legacyStdout.includes("Work focus: 30:00"), "legacy export did not fall back to Work focus");
+  assert(legacyStdout.includes("| 30:00 | 1 | Work |"), "legacy export did not include fallback Work zone total");
+
   console.log(
     JSON.stringify(
       {
@@ -153,8 +193,20 @@ async function runSqlFile(path) {
   });
 }
 
+async function runSqlFileAt(path, sqlFile) {
+  await execFileAsync("sqlite3", [path, `.read ${sqlFile}`], {
+    maxBuffer: 10 * 1024 * 1024,
+  });
+}
+
 async function runSql(sql) {
   await execFileAsync("sqlite3", [dbPath, sql], {
+    maxBuffer: 10 * 1024 * 1024,
+  });
+}
+
+async function runSqlAt(path, sql) {
+  await execFileAsync("sqlite3", [path, sql], {
     maxBuffer: 10 * 1024 * 1024,
   });
 }

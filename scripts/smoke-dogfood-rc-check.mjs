@@ -63,6 +63,11 @@ try {
   assert(good.stdout.includes("Work Item Events: 1"), "good day Work Item Events count is missing");
   assert(good.stdout.includes("Corrections requested/applied/reviewed/failed: 1/1/0/0"), "good day correction telemetry is missing");
   assert(good.stdout.includes("Window shown/hidden: 1/1"), "good day window telemetry is missing");
+  assert(good.stdout.includes("## Daily Control Goal Audit"), "good day goal audit section is missing");
+  assert(good.stdout.includes("| Focus blocks visible | pass |"), "good day focus-block audit row is missing");
+  assert(good.stdout.includes("| Activity Zones separated | pass |"), "good day activity-zone audit row is missing");
+  assert(good.stdout.includes("| Tracking correction or review evidenced | pass |"), "good day correction audit row is missing");
+  assert(good.stdout.includes("| Local gates | manual |"), "good day local-gates audit row is missing");
   assert(good.stdout.includes("## By Activity Zone"), "good day zone section is missing");
   assert(good.stdout.includes("## Day Events"), "good day Day Events section is missing");
   assert(good.stdout.includes("Meeting buffer was costly"), "good day Day Event text is missing");
@@ -97,6 +102,34 @@ try {
     reviewedOnly.stdout.includes("No focus correction or correction-review telemetry found") === false,
     "accepted correction review should clear missing-correction review item"
   );
+
+  const legacyDb = join(tempDir, "legacy.db");
+  await runSqlFile(legacyDb, join(repoRoot, "apps/agent/migrations/001_initial.sql"));
+  await runSql(legacyDb, `
+    CREATE TABLE focus_sessions (
+      id TEXT PRIMARY KEY,
+      title TEXT NOT NULL,
+      work_item_id TEXT,
+      state TEXT NOT NULL DEFAULT 'active' CHECK(state IN ('active', 'stopped')),
+      target_seconds INTEGER NOT NULL DEFAULT 1500,
+      note TEXT,
+      started_at TEXT NOT NULL,
+      stopped_at TEXT,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY (work_item_id) REFERENCES work_items(id) ON DELETE SET NULL
+    );
+
+    INSERT INTO work_items (id, title, type, state, pinned, note, created_at, updated_at, last_seen_at)
+    VALUES ('lw1', 'Legacy Work', 'task', 'unknown', 0, 'Legacy context', '2026-06-30T06:00:00Z', '2026-06-30T08:00:00Z', '2026-06-30T08:00:00Z');
+
+    INSERT INTO focus_sessions (id, title, work_item_id, state, target_seconds, note, started_at, stopped_at, updated_at)
+    VALUES ('ls1', 'Legacy Work', 'lw1', 'stopped', 1500, NULL, '2026-06-30T06:00:00Z', '2026-06-30T08:00:00Z', '2026-06-30T08:00:00Z');
+  `);
+  const legacy = await runRcCheck(legacyDb, ["--min-focus-minutes", "60"]);
+  assert(legacy.code === 0, "legacy schema should not crash the RC check");
+  assert(legacy.stdout.includes("Total tracked: 2:00:00"), "legacy schema total tracked is missing");
+  assert(legacy.stdout.includes("## Daily Control Goal Audit"), "legacy schema goal audit section is missing");
+  assert(legacy.stdout.includes("| 2:00:00 | 1 | Work |"), "legacy schema should fall back to Work zone");
 
   const openCaptureDb = join(tempDir, "open-capture.db");
   await copyDb(goodDb, openCaptureDb);

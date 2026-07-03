@@ -186,11 +186,9 @@ pub async fn handle_work_item_set_state(
             activate_work_item_for_focus(&state, &mut item, request_id, "work_item_set_active")
                 .await?;
     } else {
-        if let Some((mut session, _, _)) =
-            state.db.get_active_focus_session().await.map_err(|e| {
-                RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
-            })?
-        {
+        if let Some((mut session, _)) = state.db.get_active_focus_session().await.map_err(|e| {
+            RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
+        })? {
             if session.work_item_id == Some(id) {
                 let _ = state
                     .db
@@ -692,7 +690,7 @@ pub async fn handle_work_item_delete(
     let state = state.write().await;
 
     let mut stopped_focus_session_id = None;
-    if let Some((mut session, _, _)) =
+    if let Some((mut session, _)) =
         state.db.get_active_focus_session().await.map_err(|e| {
             RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
         })?
@@ -787,7 +785,7 @@ async fn activate_work_item_for_focus(
         .get_active_focus_session()
         .await
         .map_err(|e| RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string()))?
-        .map(|(session, _, _)| session);
+        .map(|(session, _)| session);
 
     let was_switch = active_session
         .as_ref()
@@ -864,7 +862,7 @@ async fn activate_work_item_for_focus(
             .await;
         Ok(Some(session.id))
     } else {
-        let session = FocusSession::new(item.title.clone(), Some(id), None);
+        let session = FocusSession::new(item.title.clone(), Some(id), item.activity_zone, None);
         state.db.create_focus_session(&session).await.map_err(|e| {
             RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
         })?;

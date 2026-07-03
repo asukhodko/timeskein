@@ -7,6 +7,8 @@ CREATE TABLE IF NOT EXISTS focus_sessions (
     work_item_id TEXT,
     state TEXT NOT NULL DEFAULT 'active'
         CHECK(state IN ('active', 'stopped')),
+    activity_zone TEXT NOT NULL DEFAULT 'work'
+        CHECK(activity_zone IN ('work', 'coordination', 'recovery', 'idle', 'personal')),
     target_seconds INTEGER NOT NULL DEFAULT 1500,
     note TEXT,
     started_at TEXT NOT NULL,

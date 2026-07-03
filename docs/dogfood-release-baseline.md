@@ -56,9 +56,9 @@ These were accepted limitations for the dogfood baseline, not blockers:
   separately as Work Item Events.
 - Capture Inbox can edit/delete open captures and append captures as Work Item
   Events. A fuller capture history screen is not implemented yet.
-- Activity zones are Work Item-level only. Reports now separate `Total tracked`,
-  `Work focus`, non-work tracked time, and per-zone totals, but there is no
-  per-session zone override yet.
+- Activity zones are copied from Work Items into focus blocks. Stopped blocks
+  can be corrected independently, and reports separate `Total tracked`,
+  `Work focus`, non-work tracked time, and per-zone totals.
 - macOS window restore and menu bar status refresh were known baseline
   limitations; both have been fixed in code after acceptance and need the next
   dogfood day for real-use confirmation.
@@ -68,12 +68,13 @@ These were accepted limitations for the dogfood baseline, not blockers:
 
 Post-dogfood correction and first review enrichment are now partly implemented:
 
-- stopped focus blocks can be edited, split, and reassigned by Work Item title;
+- stopped focus blocks can be edited, split, reassigned by Work Item title, and
+  re-zoned;
 - Work Item titles and basic fields can be edited with duplicate-title
   protection;
 - copied reports use the corrected focus-session rows.
-- Work Items carry Activity Zones, the list shows today/total spent time, and
-  copied reports include Activity Zone totals.
+- Work Items carry Activity Zones, focus blocks keep zone snapshots, the list
+  shows today/total spent time, and copied reports include Activity Zone totals.
 - Timestamped Work Item Events can be appended from the note editor and appear
   in UI/CLI day reports.
 - Captures can be appended as timestamped Work Item Events.
@@ -84,7 +85,8 @@ Post-dogfood correction and first review enrichment are now partly implemented:
 Remaining entry and review polish:
 
 - verify capture-to-Work-Item-event promotion during the next dogfood day.
-- decide whether per-session zone overrides are needed after the next dogfood day.
+- decide whether per-block zone correction is enough, or whether day review
+  needs a faster bulk zone editor.
 
 Activity evidence from apps, browser tabs, messenger channels, screenshots, or
 AI interpretation remains a future opt-in layer. It should not be started until

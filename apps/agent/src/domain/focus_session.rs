@@ -38,6 +38,7 @@ pub struct FocusSession {
     pub id: Uuid,
     pub title: String,
     pub work_item_id: Option<Uuid>,
+    pub activity_zone: ActivityZone,
     pub state: FocusSessionState,
     pub target_seconds: i64,
     pub note: Option<String>,
@@ -47,12 +48,18 @@ pub struct FocusSession {
 }
 
 impl FocusSession {
-    pub fn new(title: String, work_item_id: Option<Uuid>, target_seconds: Option<i64>) -> Self {
+    pub fn new(
+        title: String,
+        work_item_id: Option<Uuid>,
+        activity_zone: ActivityZone,
+        target_seconds: Option<i64>,
+    ) -> Self {
         let now = Utc::now();
         Self {
             id: Uuid::new_v4(),
             title,
             work_item_id,
+            activity_zone,
             state: FocusSessionState::Active,
             target_seconds: target_seconds.unwrap_or(25 * 60).max(60),
             note: None,
@@ -110,7 +117,6 @@ impl FocusSessionView {
     pub fn from_session(
         session: &FocusSession,
         work_item_title: Option<String>,
-        activity_zone: Option<ActivityZone>,
         now: DateTime<Utc>,
     ) -> Self {
         let active_seconds = session.active_seconds_at(now);
@@ -119,7 +125,7 @@ impl FocusSessionView {
             title: session.title.clone(),
             work_item_id: session.work_item_id,
             work_item_title,
-            activity_zone: activity_zone.unwrap_or_default().as_str().to_string(),
+            activity_zone: session.activity_zone.as_str().to_string(),
             state: session.state.as_str().to_string(),
             target_seconds: session.target_seconds,
             active_seconds,

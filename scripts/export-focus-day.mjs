@@ -92,7 +92,7 @@ async function loadSessions(path, from, to, now) {
       fs.title,
       fs.work_item_id,
       wi.title AS work_item_title,
-      wi.activity_zone AS activity_zone,
+      fs.activity_zone AS activity_zone,
       wi.note AS work_item_note,
       fs.state,
       fs.target_seconds,

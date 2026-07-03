@@ -468,6 +468,7 @@ export interface FocusUpdateParams {
   id: string;
   title?: string;
   work_item_id?: string | null;
+  activity_zone?: ActivityZone;
   target_seconds?: number;
   note?: string | null;
   started_at?: string;  // ISO 8601

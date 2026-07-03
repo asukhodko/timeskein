@@ -466,11 +466,13 @@ async function runCorrectionSmoke(port) {
     title: correctedTitle,
     started_at: start.toISOString(),
     stopped_at: end.toISOString(),
+    activity_zone: "recovery",
     note: "packaged correction note",
   });
 
   assert(updated.id === started.id, "focus.update returned a different session");
   assert(updated.work_item_title === correctedTitle, "focus.update did not reassign work item");
+  assert(updated.activity_zone === "recovery", "focus.update did not set packaged activity zone");
   assert(updated.active_seconds >= 59, "focus.update did not update duration");
 
   const rightTitle = `${title} right`;
@@ -484,16 +486,32 @@ async function runCorrectionSmoke(port) {
   assert(split.left.id === updated.id, "focus.split did not keep the original left id");
   assert(split.right.id !== split.left.id, "focus.split did not create a right block");
   assert(split.right.work_item_title === rightTitle, "focus.split did not assign right title");
+  assert(split.right.activity_zone === "work", "focus.split did not snapshot packaged right zone");
 
   const editedRightTitle = `${rightTitle} edited`;
   const editedItem = await rpc(port, "work_item.update", {
     id: split.right.work_item_id,
     title: editedRightTitle,
     type: "project",
+    activity_zone: "coordination",
     note: "packaged edited item note",
   });
   assert(editedItem.title === editedRightTitle, "work_item.update did not update title");
   assert(editedItem.type === "project", "work_item.update did not update type");
+  assert(editedItem.activity_zone === "coordination", "work_item.update did not update activity zone");
+
+  const beforeZoneCorrection = await rpc(port, "focus.list", todayWindow());
+  const rightBeforeZoneCorrection = beforeZoneCorrection.sessions.find((session) => session.id === split.right.id);
+  assert(
+    rightBeforeZoneCorrection?.activity_zone === "work",
+    "work_item.update unexpectedly changed packaged focus block zone"
+  );
+
+  const zoneCorrected = await rpc(port, "focus.update", {
+    id: split.right.id,
+    activity_zone: "coordination",
+  });
+  assert(zoneCorrected.activity_zone === "coordination", "focus.update did not correct packaged zone");
 
   const eventWindowStart = new Date(Date.now() - 60_000).toISOString();
   const event = await rpc(port, "work_item.add_event", {
@@ -538,6 +556,7 @@ async function runCorrectionSmoke(port) {
   const day = await rpc(port, "focus.list", todayWindow());
   const rightFound = day.sessions.find((session) => session.id === split.right.id);
   assert(rightFound?.work_item_title === editedRightTitle, "focus.list did not reflect edited item title");
+  assert(rightFound?.activity_zone === "coordination", "focus.list did not reflect corrected packaged zone");
 }
 
 async function waitForPortFile(path, timeoutMs) {

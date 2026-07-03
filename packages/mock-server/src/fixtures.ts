@@ -702,11 +702,6 @@ export class MockDataStore {
     }
     if (params.activity_zone !== undefined) {
       item.activity_zone = params.activity_zone;
-      for (const session of this.focusSessions.values()) {
-        if (session.work_item_id === item.id) {
-          session.activity_zone = item.activity_zone;
-        }
-      }
     }
     if (params.note !== undefined) {
       item.note = params.note?.trim() || undefined;
@@ -944,6 +939,7 @@ export class MockDataStore {
     params: {
       title?: string;
       work_item_id?: string | null;
+      activity_zone?: ActivityZone;
       target_seconds?: number;
       note?: string | null;
       started_at?: string;
@@ -964,7 +960,7 @@ export class MockDataStore {
     session.title = assignment.title;
     session.work_item_id = assignment.workItemId;
     session.work_item_title = assignment.workItemTitle;
-    session.activity_zone = assignment.activityZone;
+    session.activity_zone = params.activity_zone || assignment.activityZone;
 
     if (params.target_seconds !== undefined) {
       session.target_seconds = Math.max(params.target_seconds, 60);

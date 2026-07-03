@@ -375,9 +375,9 @@ The dogfood day fails if any of these happens often enough to break trust:
 ## Known Limits for This Trial
 
 - There is no pause/resume/cancel model yet. Stop and start again instead.
-- Stopped focus blocks can be edited or split from the Today list. The correction workflow is basic: there is no drag timeline or bulk edit yet.
+- Stopped focus blocks can be edited, re-zoned, reassigned, or split from the Today list. The correction workflow is basic: there is no drag timeline or bulk edit yet.
 - Capture Inbox is compact. It can create, edit/delete open captures, resolve, convert captures, and append them as Work Item Events, but it has no separate capture history screen yet.
-- Activity Zones are Work Item-level only. A Work Item named `Break` should be assigned to `recovery` or `idle`; it still contributes to `Total tracked`, but not to `Work focus`.
+- Activity Zones are copied from the Work Item into each focus block. A Work Item named `Break` should default to `recovery` or `idle`; an individual stopped block can still be corrected later. Non-work zones contribute to `Total tracked`, but not to `Work focus`.
 - Work Item notes are a single mutable field; timestamped observations are separate Work Item Events. User-authored Work Item Events can be edited or deleted, while generated system history is not exposed as an editable log.
 - There is no automatic active-window detection.
 - There is no synchronization between devices.

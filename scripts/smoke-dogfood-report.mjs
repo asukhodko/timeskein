@@ -39,6 +39,7 @@ try {
       ('e1', '2026-06-30T06:12:00Z', 'w1', 'note_added', '{"text":"implementation checkpoint","focus_session_id":"s1"}');
 
     UPDATE work_items SET activity_zone = 'coordination' WHERE id = 'w2';
+    UPDATE focus_sessions SET activity_zone = 'coordination' WHERE work_item_id = 'w2';
   `);
 
   const { stdout } = await execFileAsync(

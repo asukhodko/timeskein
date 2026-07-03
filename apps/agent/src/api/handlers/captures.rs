@@ -43,7 +43,7 @@ pub async fn handle_capture_create(
             .map_err(|error| {
                 RpcResponse::error(request_id.to_string(), "internal_error", &error.to_string())
             })?
-            .map(|(session, _, _)| session.id),
+            .map(|(session, _)| session.id),
     };
 
     let capture = Capture::new(text.to_string(), focus_session_id);
@@ -313,7 +313,7 @@ async fn infer_capture_work_item_id(
         )
     })?;
 
-    let (session, _, _) = state
+    let (session, _) = state
         .db
         .get_focus_session(focus_session_id)
         .await

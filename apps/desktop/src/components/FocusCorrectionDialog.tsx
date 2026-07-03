@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import type { FocusSessionView } from '@timeskein/contracts'
+import type { ActivityZone, FocusSessionView } from '@timeskein/contracts'
 import { useSplitFocusSession, useUpdateFocusSession } from '../hooks/useFocusSessions'
 import { formatClockTime } from '../utils/formatTime'
+
+const activityZones: ActivityZone[] = ['work', 'coordination', 'recovery', 'idle', 'personal']
 
 interface FocusCorrectionDialogProps {
   session: FocusSessionView
@@ -13,6 +15,7 @@ export default function FocusCorrectionDialog({ session, onClose }: FocusCorrect
   const [title, setTitle] = useState(session.work_item_title ?? session.title)
   const [startedAt, setStartedAt] = useState(toLocalInputValue(session.started_at))
   const [stoppedAt, setStoppedAt] = useState(toLocalInputValue(session.stopped_at ?? session.started_at))
+  const [activityZone, setActivityZone] = useState<ActivityZone>(session.activity_zone)
   const [note, setNote] = useState(session.note ?? '')
   const [splitAt, setSplitAt] = useState(toLocalInputValue(midpointIso(session)))
   const [rightTitle, setRightTitle] = useState(session.work_item_title ?? session.title)
@@ -30,6 +33,7 @@ export default function FocusCorrectionDialog({ session, onClose }: FocusCorrect
       {
         id: session.id,
         title: trimmedTitle,
+        activity_zone: activityZone,
         started_at: fromLocalInputValue(startedAt),
         stopped_at: fromLocalInputValue(stoppedAt),
         note: note.trim() || null,
@@ -111,6 +115,21 @@ export default function FocusCorrectionDialog({ session, onClose }: FocusCorrect
               onChange={(event) => setStoppedAt(event.target.value)}
               className="rounded-md border border-gray-600 bg-gray-900 px-3 py-2 text-gray-100 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
             />
+          </label>
+
+          <label className="grid gap-1 text-sm text-gray-300 md:col-span-2">
+            <span>Activity Zone</span>
+            <select
+              value={activityZone}
+              onChange={(event) => setActivityZone(event.target.value as ActivityZone)}
+              className="rounded-md border border-gray-600 bg-gray-900 px-3 py-2 text-gray-100 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            >
+              {activityZones.map((zone) => (
+                <option key={zone} value={zone}>
+                  {formatZoneLabel(zone)}
+                </option>
+              ))}
+            </select>
           </label>
 
           <label className="grid gap-1 text-sm text-gray-300 md:col-span-2">
@@ -206,4 +225,15 @@ function midpointIso(session: FocusSessionView) {
   const start = new Date(session.started_at).getTime()
   const stop = new Date(session.stopped_at ?? session.started_at).getTime()
   return new Date(start + Math.max(Math.floor((stop - start) / 2), 0)).toISOString()
+}
+
+function formatZoneLabel(zone: ActivityZone) {
+  const labels: Record<ActivityZone, string> = {
+    work: 'Work',
+    coordination: 'Coordination',
+    recovery: 'Recovery',
+    idle: 'Idle',
+    personal: 'Personal',
+  }
+  return labels[zone]
 }

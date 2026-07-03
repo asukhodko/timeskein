@@ -30,7 +30,7 @@ Out of scope for this gate:
 - Evidence Mode and active-window automation;
 - body metrics integrations;
 - full reporting UI;
-- deeper activity-zone editing, such as per-session zone overrides.
+- deeper activity-zone editing, such as timeline bulk corrections.
 
 ## Start Conditions
 

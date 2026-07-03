@@ -553,6 +553,7 @@ function handleMethod(
       const session = store.updateFocusSession(id, {
         title: typeof params.title === "string" ? params.title.trim() : undefined,
         work_item_id: params.work_item_id as string | null | undefined,
+        activity_zone: params.activity_zone as ActivityZone | undefined,
         target_seconds: params.target_seconds as number | undefined,
         note: params.note as string | null | undefined,
         started_at: params.started_at as string | undefined,

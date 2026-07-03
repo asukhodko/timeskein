@@ -13,13 +13,14 @@ impl Database {
     pub async fn create_focus_session(&self, session: &FocusSession) -> Result<()> {
         sqlx::query(
             "INSERT INTO focus_sessions (
-                id, title, work_item_id, state, target_seconds, note, started_at, stopped_at, updated_at
+                id, title, work_item_id, activity_zone, state, target_seconds, note, started_at, stopped_at, updated_at
              )
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)"
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)"
         )
         .bind(session.id.to_string())
         .bind(&session.title)
         .bind(session.work_item_id.map(|id| id.to_string()))
+        .bind(session.activity_zone.as_str())
         .bind(session.state.as_str())
         .bind(session.target_seconds)
         .bind(&session.note)
@@ -33,9 +34,7 @@ impl Database {
     }
 
     /// Return the currently active focus session, if any.
-    pub async fn get_active_focus_session(
-        &self,
-    ) -> Result<Option<(FocusSession, Option<String>, Option<ActivityZone>)>> {
+    pub async fn get_active_focus_session(&self) -> Result<Option<(FocusSession, Option<String>)>> {
         let sql = focus_session_select_sql("WHERE fs.state = 'active' LIMIT 1");
         let row = sqlx::query(&sql).fetch_optional(self.pool()).await?;
 
@@ -46,7 +45,7 @@ impl Database {
     pub async fn get_focus_session(
         &self,
         id: Uuid,
-    ) -> Result<Option<(FocusSession, Option<String>, Option<ActivityZone>)>> {
+    ) -> Result<Option<(FocusSession, Option<String>)>> {
         let sql = focus_session_select_sql("WHERE fs.id = ?1");
         let row = sqlx::query(&sql)
             .bind(id.to_string())
@@ -62,7 +61,7 @@ impl Database {
         from: Option<DateTime<Utc>>,
         to: Option<DateTime<Utc>>,
         now: DateTime<Utc>,
-    ) -> Result<Vec<(FocusSession, Option<String>, Option<ActivityZone>)>> {
+    ) -> Result<Vec<(FocusSession, Option<String>)>> {
         let sql = focus_session_select_sql(
             "WHERE (?1 IS NULL OR julianday(COALESCE(fs.stopped_at, ?3)) > julianday(?1))
              AND (?2 IS NULL OR julianday(fs.started_at) < julianday(?2))
@@ -84,17 +83,19 @@ impl Database {
             "UPDATE focus_sessions
              SET title = ?2,
                  work_item_id = ?3,
-                 state = ?4,
-                 target_seconds = ?5,
-                 note = ?6,
-                 started_at = ?7,
-                 stopped_at = ?8,
-                 updated_at = ?9
+                 activity_zone = ?4,
+                 state = ?5,
+                 target_seconds = ?6,
+                 note = ?7,
+                 started_at = ?8,
+                 stopped_at = ?9,
+                 updated_at = ?10
              WHERE id = ?1",
         )
         .bind(session.id.to_string())
         .bind(&session.title)
         .bind(session.work_item_id.map(|id| id.to_string()))
+        .bind(session.activity_zone.as_str())
         .bind(session.state.as_str())
         .bind(session.target_seconds)
         .bind(&session.note)
@@ -114,23 +115,21 @@ fn focus_session_select_sql(where_clause: &str) -> String {
             fs.id,
             fs.title,
             fs.work_item_id,
+            fs.activity_zone,
             fs.state,
             fs.target_seconds,
             fs.note,
             fs.started_at,
             fs.stopped_at,
             fs.updated_at,
-            wi.title AS work_item_title,
-            wi.activity_zone AS activity_zone
+            wi.title AS work_item_title
          FROM focus_sessions fs
          LEFT JOIN work_items wi ON wi.id = fs.work_item_id
          {where_clause}"
     )
 }
 
-fn focus_session_from_row(
-    row: &sqlx::sqlite::SqliteRow,
-) -> Result<(FocusSession, Option<String>, Option<ActivityZone>)> {
+fn focus_session_from_row(row: &sqlx::sqlite::SqliteRow) -> Result<(FocusSession, Option<String>)> {
     let id = Uuid::parse_str(&row.get::<String, _>("id"))?;
     let work_item_id = row
         .get::<Option<String>, _>("work_item_id")
@@ -138,6 +137,8 @@ fn focus_session_from_row(
 
     let state = FocusSessionState::from_str(&row.get::<String, _>("state"))
         .unwrap_or(FocusSessionState::Stopped);
+    let activity_zone_str: String = row.get("activity_zone");
+    let activity_zone = ActivityZone::from_str(&activity_zone_str).unwrap_or_default();
 
     let started_at =
         DateTime::parse_from_rfc3339(&row.get::<String, _>("started_at"))?.with_timezone(&Utc);
@@ -152,6 +153,7 @@ fn focus_session_from_row(
         id,
         title: row.get("title"),
         work_item_id,
+        activity_zone,
         state,
         target_seconds: row.get("target_seconds"),
         note: row.get("note"),
@@ -160,10 +162,5 @@ fn focus_session_from_row(
         updated_at,
     };
 
-    let activity_zone = row
-        .get::<Option<String>, _>("activity_zone")
-        .as_deref()
-        .and_then(ActivityZone::from_str);
-
-    Ok((session, row.get("work_item_title"), activity_zone))
+    Ok((session, row.get("work_item_title")))
 }

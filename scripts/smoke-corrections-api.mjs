@@ -81,12 +81,14 @@ const updated = await rpc("focus.update", {
   title: correctedTitle,
   started_at: start.toISOString(),
   stopped_at: end.toISOString(),
+  activity_zone: "recovery",
   note: "corrected whole block",
 });
 
 assert(updated.state === "stopped", "focus.update changed stopped session state");
 assert(updated.work_item_id, "focus.update with title did not link a work item");
 assert(updated.work_item_title === correctedTitle, "focus.update did not assign the corrected work item");
+assert(updated.activity_zone === "recovery", "focus.update did not update activity zone");
 assert(updated.note === "corrected whole block", "focus.update did not update note");
 assert(updated.active_seconds >= 59, "focus.update did not update duration");
 
@@ -101,6 +103,7 @@ const split = await rpc("focus.split", {
 assert(split.left.id === updated.id, "focus.split did not keep the original id on the left block");
 assert(split.right.id !== split.left.id, "focus.split did not create a new right block");
 assert(split.right.work_item_title === rightTitle, "focus.split did not assign the right work item");
+assert(split.right.activity_zone === "work", "focus.split did not snapshot the right activity zone");
 assert(split.right.note === "right block note", "focus.split did not set right block note");
 assert(split.left.active_seconds >= 29, "focus.split left block duration is too small");
 assert(split.right.active_seconds >= 29, "focus.split right block duration is too small");
@@ -110,12 +113,27 @@ const editedItem = await rpc("work_item.update", {
   id: split.right.work_item_id,
   title: editedRightTitle,
   type: "project",
+  activity_zone: "coordination",
   note: "edited item note",
 });
 
 assert(editedItem.title === editedRightTitle, "work_item.update did not update title");
 assert(editedItem.type === "project", "work_item.update did not update type");
+assert(editedItem.activity_zone === "coordination", "work_item.update did not update activity zone");
 assert(editedItem.note === "edited item note", "work_item.update did not update note");
+
+const beforeZoneCorrection = await rpc("focus.list", todayWindow());
+const rightBeforeZoneCorrection = beforeZoneCorrection.sessions.find((session) => session.id === split.right.id);
+assert(
+  rightBeforeZoneCorrection?.activity_zone === "work",
+  "work_item.update unexpectedly changed an existing focus block zone"
+);
+
+const zoneCorrected = await rpc("focus.update", {
+  id: split.right.id,
+  activity_zone: "coordination",
+});
+assert(zoneCorrected.activity_zone === "coordination", "focus.update did not correct split block activity zone");
 
 const eventWindowStart = new Date(Date.now() - 60_000).toISOString();
 const event = await rpc("work_item.add_event", {
@@ -179,6 +197,7 @@ const rightFound = day.sessions.find((session) => session.id === split.right.id)
 assert(leftFound, "focus.list did not include corrected left block");
 assert(rightFound, "focus.list did not include split right block");
 assert(rightFound.work_item_title === editedRightTitle, "focus.list did not reflect edited Work Item title");
+assert(rightFound.activity_zone === "coordination", "focus.list did not reflect corrected activity zone");
 
 console.log(
   JSON.stringify(

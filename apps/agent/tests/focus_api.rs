@@ -323,6 +323,7 @@ async fn stopped_focus_block_can_be_updated_split_and_reported_correctly() {
             "title": "Correction Left",
             "started_at": start.to_rfc3339(),
             "stopped_at": end.to_rfc3339(),
+            "activity_zone": "recovery",
             "note": "corrected note",
         }),
         "update",
@@ -332,6 +333,7 @@ async fn stopped_focus_block_can_be_updated_split_and_reported_correctly() {
 
     assert_eq!(updated["state"].as_str(), Some("stopped"));
     assert_eq!(updated["work_item_title"].as_str(), Some("Correction Left"));
+    assert_eq!(updated["activity_zone"].as_str(), Some("recovery"));
     assert_eq!(updated["note"].as_str(), Some("corrected note"));
     assert_eq!(updated["active_seconds"].as_i64(), Some(180));
 
@@ -357,6 +359,7 @@ async fn stopped_focus_block_can_be_updated_split_and_reported_correctly() {
     assert_eq!(split["right"]["note"].as_str(), Some("right note"));
     assert_eq!(split["left"]["active_seconds"].as_i64(), Some(60));
     assert_eq!(split["right"]["active_seconds"].as_i64(), Some(120));
+    assert_eq!(split["right"]["activity_zone"].as_str(), Some("work"));
 
     let right_item_id = split["right"]["work_item_id"]
         .as_str()
@@ -384,6 +387,49 @@ async fn stopped_focus_block_can_be_updated_split_and_reported_correctly() {
     assert_eq!(edited_item["type"].as_str(), Some("project"));
     assert_eq!(edited_item["activity_zone"].as_str(), Some("coordination"));
     assert_eq!(edited_item["note"].as_str(), Some("edited item note"));
+
+    let listed_before_zone_correction = handle_focus_list(
+        &state,
+        json!({
+            "from": (start - Duration::minutes(1)).to_rfc3339(),
+            "to": (end + Duration::minutes(1)).to_rfc3339(),
+        }),
+        "list-before-zone-correction",
+    )
+    .await
+    .expect("list before zone correction");
+    let sessions_before_zone_correction = listed_before_zone_correction["sessions"]
+        .as_array()
+        .expect("sessions before zone correction");
+    let right_before_zone_correction = sessions_before_zone_correction
+        .iter()
+        .find(|session| session["id"].as_str() == Some(right_session_id))
+        .expect("right session before zone correction");
+
+    assert_eq!(
+        right_before_zone_correction["work_item_title"].as_str(),
+        Some("Correction Right Edited")
+    );
+    assert_eq!(
+        right_before_zone_correction["activity_zone"].as_str(),
+        Some("work")
+    );
+
+    let right_zone_corrected = handle_focus_update(
+        &state,
+        json!({
+            "id": right_session_id,
+            "activity_zone": "coordination",
+        }),
+        "correct-right-zone",
+    )
+    .await
+    .expect("correct right zone");
+
+    assert_eq!(
+        right_zone_corrected["activity_zone"].as_str(),
+        Some("coordination")
+    );
 
     let event_window_start = Utc::now() - Duration::minutes(1);
     let added_event = handle_work_item_add_event(

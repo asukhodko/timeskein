@@ -293,7 +293,7 @@ High-signal findings:
 - Capture Inbox worked in real use on 2026-07-03: incoming events were captured during active focus, then resolved or converted later.
 - Work Item notes matter for review and appear in day reports for touched items; timestamped Work Item Events now cover day-specific observations.
 - Wrong Work Item assignment happened during dogfood; stopped blocks can now be corrected and split after the fact.
-- Activity Zones are now available at Work Item level and appear in day reports. The UI and Markdown separate total tracked time, work focus, non-work tracked time, and per-zone totals for work, coordination, recovery, idle, and personal.
+- Activity Zones are now available on Work Items and copied into each focus block as a snapshot. Stopped blocks can be corrected independently, so changing a Work Item later does not rewrite past day reports. The UI and Markdown separate total tracked time, work focus, non-work tracked time, and per-zone totals for work, coordination, recovery, idle, and personal.
 - macOS window restore and the menu bar counter were newly fixed after the third dogfood day; the next dogfood day should verify that Command+Tab/Dock return and status refresh feel reliable in real use.
 
 ## Capture Inbox Data
@@ -375,12 +375,12 @@ On multi-monitor macOS setups, the tray/status item is controlled by the system 
 - Focus Session does not implement pause, resume, or cancel yet.
 - Focus Session has a compact day list and Markdown copy, but not a full reporting/JSON/CSV export view yet.
 - App-event telemetry has CLI/report output, but no in-app inspection screen yet.
-- Post-factum correction is intentionally basic: stopped blocks can be edited and split, but there is no drag timeline, bulk edit, or dedicated correction wizard yet.
+- Post-factum correction is intentionally basic: stopped blocks can be edited, reassigned, re-zoned, and split, but there is no drag timeline, bulk edit, or dedicated correction wizard yet.
 - Capture Inbox is still compact: open captures can be edited or deleted, but there is no separate capture history screen beyond the open list and dogfood report.
 - Work Item Events are report-visible. User-authored `note_added` events can be edited or deleted; generated system events remain internal history.
 - Work Item notes are included in day reports for touched items, but they remain mutable descriptions rather than dated observations.
 - macOS window restore and menu bar status refresh were newly fixed after the third dogfood day, but still need one real dogfood pass before being considered fully proven.
-- Activity Zones are Work Item-level only; there is no per-session zone override yet.
+- Activity Zones have per-focus-block snapshots and overrides; there is no bulk zone correction UI yet.
 - Automated e2e tests are not implemented yet.
 - Cross-platform CI is not implemented yet.
 - Settings UI is not implemented yet.
@@ -390,6 +390,6 @@ On multi-monitor macOS setups, the tray/status item is controlled by the system 
 ## Next Engineering Steps
 
 1. Verify the new macOS window return and native menu bar status refresh in the next dogfood day.
-2. Add a clearer correction workflow if split + update is not enough after the next dogfood day.
+2. Add a clearer correction workflow if split + update + zone correction is not enough after the next dogfood day.
 3. Verify capture-to-Work-Item-event promotion in the next dogfood day.
-4. Decide whether per-session zone overrides are needed after the next dogfood day.
+4. Decide whether the current per-block zone override is enough, or whether day review needs a faster bulk editor.

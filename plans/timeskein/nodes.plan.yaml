@@ -254,7 +254,7 @@ nodes:
     effort: 2
     deps:
       - id: ts.day_review.timeline
-    notes: Track total tracked time, work-focus time, non-work tracked time, number of focus entrances, per-Work-Item totals, Activity Zone totals, gaps longer than 20 minutes, open gaps after the last stopped block, and target-reaching ratio.
+    notes: Track total tracked time, work-focus time, non-work tracked time, number of focus entrances, per-Work-Item totals, per-focus-block Activity Zone totals, gaps longer than 20 minutes, open gaps after the last stopped block, and target-reaching ratio.
     x:
       ops:
         attention_class: current
@@ -266,7 +266,7 @@ nodes:
     effort: 2
     deps:
       - id: ts.day_review.totals_gaps
-    notes: Today can copy the raw day picture or a dogfood report with review prompts, and shows selected Markdown if clipboard access fails. UI and CLI reports are marked as draft when a focus session or Work Item is still active. SQLite fallback export, CLI dogfood report, and dogfood:finish end-of-day gate are implemented; finish refuses active focus sessions, stuck active Work Items, and empty days. Reports now include Total tracked, Work focus, Non-work tracked, Activity Zone totals, Work Item notes, Work Item Events, and Capture Activity for created, resolved, and converted captures. JSON/CSV export remains future work.
+    notes: Today can copy the raw day picture or a dogfood report with review prompts, and shows selected Markdown if clipboard access fails. UI and CLI reports are marked as draft when a focus session or Work Item is still active. SQLite fallback export, CLI dogfood report, and dogfood:finish end-of-day gate are implemented; finish refuses active focus sessions, stuck active Work Items, and empty days. Reports now include Total tracked, Work focus, Non-work tracked, per-focus-block Activity Zone totals, Work Item notes, Work Item Events, and Capture Activity for created, resolved, and converted captures. JSON/CSV export remains future work.
     x:
       ops:
         attention_class: current
@@ -290,7 +290,7 @@ nodes:
     effort: 3
     deps:
       - id: ts.day_review.export
-    notes: Stopped focus blocks can be edited, reassigned to a Work Item by title, split at a timestamp, and corrected through the Today list. Work Item title/type/Activity Zone/note editing is implemented with duplicate-title protection. Markdown reports use the corrected SQLite rows, so evening review can fix tracking mistakes before copying the final day picture.
+    notes: Stopped focus blocks can be edited, reassigned to a Work Item by title, re-zoned, split at a timestamp, and corrected through the Today list. New focus blocks snapshot their Work Item Activity Zone, and later Work Item zone changes do not rewrite old sessions. Work Item title/type/Activity Zone/note editing is implemented with duplicate-title protection. Markdown reports use the corrected SQLite rows, so evening review can fix tracking mistakes before copying the final day picture.
     x:
       ops:
         attention_class: current
@@ -393,7 +393,7 @@ nodes:
     effort: 2
     deps:
       - id: ts.focus_core.dogfood_gate
-    notes: Fixed typing C/С opening Create, creating a new active Work Item, ambiguous last-seen timestamps, and added the first Capture Inbox baseline. Post-baseline work added Work Item title/basic-field editing, focus-block correction, Activity Zones, Work Item today/total time, timestamped Work Item Events, capture-to-event promotion, capture edit/delete for open items, Command+Tab/Dock restore, non-always-on-top window policy, native menu-bar status refresh, and separate Total tracked / Work focus / Non-work tracked report totals. Remaining friction includes split resizing and review-flow polish.
+    notes: Fixed typing C/С opening Create, creating a new active Work Item, ambiguous last-seen timestamps, and added the first Capture Inbox baseline. Post-baseline work added Work Item title/basic-field editing, focus-block correction, per-block Activity Zone snapshots/overrides, Work Item today/total time, timestamped Work Item Events, capture-to-event promotion, capture edit/delete for open items, Command+Tab/Dock restore, non-always-on-top window policy, native menu-bar status refresh, and separate Total tracked / Work focus / Non-work tracked report totals. Remaining friction includes split resizing and review-flow polish.
     x:
       ops:
         attention_class: current
@@ -429,7 +429,7 @@ nodes:
     deps:
       - id: ts.hardening.package_app
       - id: ts.hardening.backup_reset
-    notes: "Dogfood Release Candidate doc defines the pass/fail gate. Dogfood Release Baseline records the accepted 2026-07-03 verdict and known limitations. Since acceptance, post-factum focus correction, Work Item title/type/Activity Zone editing, separate Total tracked / Work focus / Non-work tracked report totals, Activity Zone report totals, today/total Work Item time, timestamped Work Item Events with user-authored event edit/delete, capture-to-event promotion, capture edit/delete for open items, window restore, and native menu bar counter refresh are implemented. Remaining limitations include richer correction/review UI."
+    notes: "Dogfood Release Candidate doc defines the pass/fail gate. Dogfood Release Baseline records the accepted 2026-07-03 verdict and known limitations. Since acceptance, post-factum focus correction, per-block Activity Zone correction, Work Item title/type/Activity Zone editing, separate Total tracked / Work focus / Non-work tracked report totals, Activity Zone report totals, today/total Work Item time, timestamped Work Item Events with user-authored event edit/delete, capture-to-event promotion, capture edit/delete for open items, window restore, and native menu bar counter refresh are implemented. Remaining limitations include richer correction/review UI."
     x:
       ops:
         attention_class: current

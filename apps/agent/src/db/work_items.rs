@@ -271,7 +271,7 @@ impl Database {
         let sessions = self.list_focus_sessions(from, to, now).await?;
         let mut totals = std::collections::HashMap::new();
 
-        for (session, _, _) in sessions {
+        for (session, _) in sessions {
             let Some(work_item_id) = session.work_item_id else {
                 continue;
             };

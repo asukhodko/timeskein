@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 
+import { randomInt } from "node:crypto";
 import { spawn } from "node:child_process";
 import { resolve } from "node:path";
 
 const repoRoot = resolve(import.meta.dirname, "..");
-const port = process.env.TIMESKEIN_MOCK_PORT || "3457";
+const port = process.env.TIMESKEIN_MOCK_PORT || String(randomInt(20_000, 60_000));
 const apiUrl = `http://127.0.0.1:${port}/api`;
 
 const server = spawn("pnpm", ["--filter", "@timeskein/mock-server", "start"], {

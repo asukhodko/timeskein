@@ -77,6 +77,39 @@ impl Database {
 
         self.ensure_work_item_activity_zones().await?;
         self.ensure_work_item_note_events().await?;
+        self.ensure_focus_session_activity_zones().await?;
+
+        Ok(())
+    }
+
+    async fn ensure_focus_session_activity_zones(&self) -> Result<()> {
+        let has_activity_zone = sqlx::query("PRAGMA table_info(focus_sessions)")
+            .fetch_all(&self.pool)
+            .await?
+            .iter()
+            .any(|row| {
+                use sqlx::Row;
+                row.get::<String, _>("name") == "activity_zone"
+            });
+
+        if !has_activity_zone {
+            info!("Migrating focus_sessions activity_zone column...");
+            let activity_zones_sql =
+                include_str!("../../migrations/007_focus_session_activity_zones.sql");
+            sqlx::raw_sql(activity_zones_sql)
+                .execute(&self.pool)
+                .await?;
+            return Ok(());
+        }
+
+        sqlx::raw_sql(
+            "
+            CREATE INDEX IF NOT EXISTS idx_focus_sessions_activity_zone
+                ON focus_sessions(activity_zone);
+            ",
+        )
+        .execute(&self.pool)
+        .await?;
 
         Ok(())
     }

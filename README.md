@@ -10,7 +10,7 @@ A desktop application for quickly tracking focus sessions and work items with re
 |-----------|--------|-------|
 | Frontend (React + Tailwind) | Working | Runs in browser via Vite |
 | Focus Session | Working baseline | Start, live timer, manual stop, post-factum correction, day list, tracked/work totals |
-| Activity Zones | Basic | Work Item-level `work`, `coordination`, `recovery`, `idle`, `personal` zones with day-report totals |
+| Activity Zones | Basic | `work`, `coordination`, `recovery`, `idle`, `personal` zones with per-focus-block snapshots and day-report totals |
 | Capture Inbox | Working baseline | Quick incoming-event capture without interrupting the active focus block |
 | Work Item Events | Working baseline | Timestamped notes linked to Work Items and optionally to focus blocks |
 | Dogfood Telemetry | Working baseline | Local app-event journal and CLI metrics for tracking UX friction |
@@ -274,7 +274,7 @@ Focus Session controls:
 
 - Manual work item management (create/edit/touch/note/state/pin/refs/delete)
 - Manual focus sessions with 25-minute target and overflow tracking
-- Post-factum correction for stopped focus blocks: edit time/note/Work Item or split the block
+- Post-factum correction for stopped focus blocks: edit time/note/Work Item/Activity Zone or split the block
 - Capture Inbox for incoming events that should be handled later without interrupting the current focus block
 - Timestamped Work Item Events for observations during the day, with edit/delete cleanup for user-authored notes
 - Open captures can be edited, deleted, resolved, converted to Work Items, or appended as timestamped Work Item Events
@@ -287,7 +287,7 @@ Focus Session controls:
 - Markdown dogfood report from the Today panel or CLI, with focus data, Work Item totals, Activity Zone totals, Work Item notes and timestamped events for touched items, significant gaps, Capture Activity, open captures, review prompts, and draft warning while a focus block or Work Item is active
 - macOS menu bar item shows the active focus duration as a short `12m Focus` status while a block is running, and today's total when no block is active
 - Work item states: active, waiting, blocked, done, someday, unknown
-- Work Item activity zones: work, coordination, recovery, idle, personal
+- Work Item activity zones: work, coordination, recovery, idle, personal; focus blocks keep their own zone snapshot for report correction
 - Work Item list shows last touched time plus today/total tracked time when available
 - Refs: URLs, file paths, issue keys with conflict detection
 - Pin items to keep them at top of list
@@ -305,7 +305,7 @@ Focus Session controls:
 - **Capture Inbox is still compact** - proven in one full dogfood day, with edit/delete for open captures; a fuller capture history screen is not implemented yet
 - **Work Item Events are basic** - user-authored `note_added` events can be appended, promoted from captures, edited, deleted, and reported; generated system events are not exposed as an editable history yet
 - **Work Item notes remain mutable descriptions** - timestamped observations should use Work Item Events instead
-- **Activity zones are Work Item-level only** - reports separate `Total tracked`, `Work focus`, and non-work zones, but there is no per-session zone override yet
+- **Activity zone correction is basic** - new focus blocks snapshot the Work Item zone and stopped blocks can be corrected, but there is no bulk zone editor yet
 - **macOS window restore and menu bar counter are newly fixed** - the packaged app now avoids always-on-top/task-switcher hiding, handles macOS reopen, and updates the menu bar title from the native shell; verify this in the next dogfood day
 - **macOS packaging produces `.app` only** - DMG packaging is deferred
 - **Windows packaging deferred** - current recovery baseline targets browser and macOS first

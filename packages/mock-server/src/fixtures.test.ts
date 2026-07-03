@@ -87,10 +87,12 @@ test("focus correction update, split and work item edit are reflected in day dat
     title: "Mock Correction Left",
     started_at: start,
     stopped_at: stop,
+    activity_zone: "recovery",
     note: "corrected note",
   });
 
   assert.equal(updated?.work_item_title, "Mock Correction Left");
+  assert.equal(updated?.activity_zone, "recovery");
   assert.equal(updated?.note, "corrected note");
   assert.equal(updated?.active_seconds, 180);
 
@@ -104,6 +106,7 @@ test("focus correction update, split and work item edit are reflected in day dat
   assert.equal(split.left.active_seconds, 60);
   assert.equal(split.right.active_seconds, 120);
   assert.equal(split.right.work_item_title, "Mock Correction Right");
+  assert.equal(split.right.activity_zone, "work");
 
   const edited = store.updateWorkItem(split.right.work_item_id!, {
     title: "Mock Correction Right Edited",
@@ -115,6 +118,19 @@ test("focus correction update, split and work item edit are reflected in day dat
   assert.equal(edited?.title, "Mock Correction Right Edited");
   assert.equal(edited?.type, "project");
   assert.equal(edited?.activity_zone, "coordination");
+
+  const beforeZoneCorrection = store.listFocusSessions(
+    new Date(now - 240_000).toISOString(),
+    new Date(now + 60_000).toISOString()
+  );
+  const rightBeforeZoneCorrection = beforeZoneCorrection.find((session) => session.id === split.right.id);
+  assert.equal(rightBeforeZoneCorrection?.work_item_title, "Mock Correction Right Edited");
+  assert.equal(rightBeforeZoneCorrection?.activity_zone, "work");
+
+  const zoneCorrected = store.updateFocusSession(split.right.id, {
+    activity_zone: "coordination",
+  });
+  assert.equal(zoneCorrected?.activity_zone, "coordination");
 
   const eventWindowStart = new Date(Date.now() - 60_000).toISOString();
   const event = store.addWorkItemEvent({

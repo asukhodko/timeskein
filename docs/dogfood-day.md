@@ -146,6 +146,31 @@ Check the basics before starting work:
 - The divider above Work Item search can resize the Today list; double-click resets it.
 - There is no unexpected active focus block from a previous experiment.
 
+## Next Dogfood Focus
+
+The next dogfood day must verify the post-baseline daily-control loop, not only
+that the timer still works. During the day, deliberately exercise these paths
+when the real situation appears:
+
+- open, hide, and restore Timeskein through the menu bar, `Esc`, Command+Tab,
+  and the normal app entrypoint;
+- start one new Work Item by typed title and continue one existing Work Item
+  from the list;
+- use at least two Activity Zones, with one non-work zone such as `recovery`,
+  `idle`, `coordination`, or `personal`;
+- add one Day Event with an explicit zone;
+- use `Explain` on a significant gap or open gap, then edit the prepared Day
+  Event text or zone before the final report;
+- add or promote one timestamped Work Item Event if a detail matters for
+  evening analysis;
+- create at least one capture during an active focus block and resolve,
+  convert, or consciously leave it open for the report;
+- intentionally correct one safe tracking detail before final copy, such as a
+  stopped block note, Work Item assignment, split point, or Activity Zone.
+
+At evening review, the goal is not a perfect day. The goal is a report that lets
+the day be discussed without reconstructing the timeline from memory.
+
 ## Readiness Audit
 
 Current status: the macOS dogfood release baseline was accepted on 2026-07-03. Timeskein is usable as the primary daily personal focus tracker, with known limitations documented in [Dogfood Release Baseline](dogfood-release-baseline.md).

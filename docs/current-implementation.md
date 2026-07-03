@@ -256,9 +256,9 @@ The first Focus Session baseline is intentionally small. It stores manual contac
 
 The Rust agent stores focus sessions in SQLite. Partial unique indexes enforce at most one active focus session and at most one active Work Item. Work Item `active` is treated as the UI marker for the currently timed item: switching it stops the old focus block and starts a new linked block, while stopping a linked focus block clears `active` from Work Items. On startup, the agent normalizes old active Work Item rows and stops an active focus session if its linked Work Item is missing or deleted. Starting focus from typed text first searches for an existing Work Item with the same normalized title; if none exists, it creates one. The mock server exposes the same `focus.current`, `focus.start`, `focus.stop`, and `focus.list` RPC methods for browser development.
 
-## First Dogfood Findings
+## Dogfood Findings
 
-The 2026-07-01 and 2026-07-02 dogfood days showed that the core timer loop works, but the next useful product slice is not more reporting. It is protecting the active focus block from incoming events.
+The 2026-07-01, 2026-07-02, and 2026-07-03 dogfood days showed that the core timer loop works, and that Capture Inbox can preserve incoming events without switching away from the current focus. The next useful product slice is post-factum correction and entry polish.
 
 High-signal findings:
 
@@ -267,7 +267,7 @@ High-signal findings:
 - `last_seen_at` labels looked like spent duration; the UI now says `ago`.
 - The report needs activity zones before `break` or `idle` blocks can be tracked without polluting total focus.
 - Work Item notes are currently a single mutable description, not a timestamped activity log.
-- Capture Inbox is now the next dogfood surface: it should prove whether incoming events can be remembered without switching away from the current focus.
+- Capture Inbox worked in real use on 2026-07-03: incoming events were captured during active focus, then resolved or converted later.
 - Work Item notes matter for review and now appear in day reports for touched items; they are still not timestamped.
 - Command+Tab does not restore a hidden borderless Timeskein window yet.
 - The menu bar focus counter can lag until the status item is clicked.

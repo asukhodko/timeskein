@@ -37,6 +37,8 @@ try {
     INSERT INTO work_item_events (id, ts, work_item_id, kind, payload)
     VALUES
       ('e1', '2026-06-30T06:12:00Z', 'w1', 'note_added', '{"text":"implementation checkpoint","focus_session_id":"s1"}');
+
+    UPDATE work_items SET activity_zone = 'coordination' WHERE id = 'w2';
   `);
 
   const { stdout } = await execFileAsync(
@@ -59,9 +61,13 @@ try {
   assert(stdout.includes("| resolved | Already handled interruption |"), "report did not include resolved capture activity");
   assert(stdout.includes("| converted | Turn into follow-up |"), "report did not include converted capture activity");
   assert(stdout.includes("converted") && stdout.includes("Meetings"), "report did not include converted capture target");
-  assert(stdout.includes("Total focus: 1:05:00"), "report did not include exported focus total");
+  assert(stdout.includes("Total tracked: 1:05:00"), "report did not include exported tracked total");
+  assert(stdout.includes("Work focus: 35:00"), "report did not include exported work focus total");
+  assert(stdout.includes("Non-work tracked: 30:00"), "report did not include exported non-work total");
   assert(stdout.includes("## By Work Item"), "report did not include work item totals");
   assert(stdout.includes("## By Activity Zone"), "report did not include activity zone totals");
+  assert(stdout.includes("| 35:00 | 2 | Work |"), "report did not include Work zone total");
+  assert(stdout.includes("| 30:00 | 1 | Coordination |"), "report did not include Coordination zone total");
   assert(stdout.includes("## Work Item Notes"), "report did not include Work Item Notes section");
   assert(
     stdout.includes("- Deep Work: Keep the implementation context here."),

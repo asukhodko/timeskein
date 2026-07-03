@@ -9,7 +9,7 @@ A desktop application for quickly tracking focus sessions and work items with re
 | Component | Status | Notes |
 |-----------|--------|-------|
 | Frontend (React + Tailwind) | Working | Runs in browser via Vite |
-| Focus Session | Working baseline | Start, live timer, manual stop, post-factum correction, day list, total active time |
+| Focus Session | Working baseline | Start, live timer, manual stop, post-factum correction, day list, tracked/work totals |
 | Activity Zones | Basic | Work Item-level `work`, `coordination`, `recovery`, `idle`, `personal` zones with day-report totals |
 | Capture Inbox | Working baseline | Quick incoming-event capture without interrupting the active focus block |
 | Work Item Events | Working baseline | Timestamped append-only notes linked to Work Items and optionally to focus blocks |
@@ -280,7 +280,7 @@ Focus Session controls:
 - Running focus session restored from SQLite after frontend/app restart
 - Focus sessions are linked to Work Items; typed titles reuse existing Work Items instead of creating duplicates
 - Setting a Work Item to `active` starts or switches the linked focus session; stopping it clears `active`
-- Day panel with focus blocks, total active time, entrance count, zones, and gaps
+- Day panel with focus blocks, total tracked time, work focus, non-work tracked time, entrance count, zones, and gaps
 - Open gap warning when no focus block is running and the time since the last stopped block is significant
 - Day totals count the part of each focus block that overlaps the selected local day
 - Markdown dogfood report from the Today panel or CLI, with focus data, Work Item totals, Activity Zone totals, Work Item notes and timestamped events for touched items, significant gaps, Capture Activity, open captures, review prompts, and draft warning while a focus block or Work Item is active
@@ -304,7 +304,7 @@ Focus Session controls:
 - **Capture Inbox is minimal** - proven in one full dogfood day, but capture edit/delete and append-as-Work-Item-event are not implemented yet
 - **Work Item Events are basic** - timestamped events can be appended and reported, but they cannot be edited, deleted, or promoted from captures yet
 - **Work Item notes remain mutable descriptions** - timestamped observations should use Work Item Events instead
-- **Activity zones are Work Item-level only** - reports show zone totals, but the top-line `Total focus` still sums every tracked interval
+- **Activity zones are Work Item-level only** - reports separate `Total tracked`, `Work focus`, and non-work zones, but there is no per-session zone override yet
 - **macOS window restore and menu bar counter are newly fixed** - the packaged app now avoids always-on-top/task-switcher hiding, handles macOS reopen, and updates the menu bar title from the native shell; verify this in the next dogfood day
 - **macOS packaging produces `.app` only** - DMG packaging is deferred
 - **Windows packaging deferred** - current recovery baseline targets browser and macOS first

@@ -143,11 +143,11 @@ gantt
 - Implement start, pause, resume, stop, cancel [in_progress] (3 focus-blocks) {45%}
 - Day review and export [in_progress] (14 focus-blocks) {92%}
 - Show focus blocks on a daily timeline [in_progress] (3 focus-blocks) {65%}
-- Compute totals, gaps, and entry count [in_progress] (2 focus-blocks) {96%}
-- Export dogfood day data as Markdown [in_progress] (2 focus-blocks) {97%}
-- Dogfood hardening [in_progress] (8 focus-blocks) {99% cov:75%}
+- Compute totals, gaps, and entry count [in_progress] (2 focus-blocks) {98%}
+- Export dogfood day data as Markdown [in_progress] (2 focus-blocks) {98%}
+- Dogfood hardening [in_progress] (8 focus-blocks) {100% cov:75%}
 - Add smoke checks for focus-session flows [in_progress] (2 focus-blocks) {99%}
-- Fix first dogfood friction [in_progress] (2 focus-blocks) {99%}
+- Fix first dogfood friction [in_progress] (2 focus-blocks) {100%}
 <!-- GENERATED:END -->
 
 ## Deferred directions

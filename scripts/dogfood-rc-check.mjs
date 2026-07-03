@@ -295,7 +295,7 @@ function assessEvidence(evidence, minFocusSeconds) {
 
   if (evidence.totalFocusSeconds < minFocusSeconds && evidence.sessions.length > 0) {
     reviewItems.push(
-      `Total focus is ${formatDuration(evidence.totalFocusSeconds)}, below the RC review threshold ${formatDuration(minFocusSeconds)}. Confirm whether this was still a full workday.`
+      `Total tracked is ${formatDuration(evidence.totalFocusSeconds)}, below the RC review threshold ${formatDuration(minFocusSeconds)}. Confirm whether this was still a full workday.`
     );
   }
 

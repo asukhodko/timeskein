@@ -202,6 +202,9 @@ function sqlString(value) {
 function buildDayMarkdown(sessionsOldestFirst, activeSecondsTotal, day, now, workItemEvents = []) {
   const dayStart = startOfLocalDay(day);
   const dayEnd = nextLocalDay(dayStart);
+  const zoneTotals = aggregateActivityZoneTotals(sessionsOldestFirst);
+  const workFocusSeconds = getZoneActiveSeconds(zoneTotals, "work");
+  const nonWorkSeconds = Math.max(activeSecondsTotal - workFocusSeconds, 0);
   const dateTitle = day.toLocaleDateString([], {
     year: "numeric",
     month: "2-digit",
@@ -211,7 +214,9 @@ function buildDayMarkdown(sessionsOldestFirst, activeSecondsTotal, day, now, wor
   const lines = [
     `# Timeskein focus day - ${dateTitle}`,
     "",
-    `Total focus: ${formatDuration(activeSecondsTotal)}`,
+    `Total tracked: ${formatDuration(activeSecondsTotal)}`,
+    `Work focus: ${formatDuration(workFocusSeconds)}`,
+    `Non-work tracked: ${formatDuration(nonWorkSeconds)}`,
     `Entrances: ${sessionsOldestFirst.length}`,
     "",
     "| Time | Duration | Zone | Work Item | Note |",
@@ -253,7 +258,6 @@ function buildDayMarkdown(sessionsOldestFirst, activeSecondsTotal, day, now, wor
   appendWorkItemNotes(lines, workItemTotals);
   appendWorkItemEvents(lines, workItemEvents, sessionsOldestFirst);
 
-  const zoneTotals = aggregateActivityZoneTotals(sessionsOldestFirst);
   if (zoneTotals.length > 0) {
     lines.push("", "## By Activity Zone", "", "| Duration | Entrances | Zone |", "| ---: | ---: | --- |");
     for (const zone of zoneTotals) {
@@ -352,6 +356,10 @@ function aggregateActivityZoneTotals(sessions) {
 
     return left.zone.localeCompare(right.zone);
   });
+}
+
+function getZoneActiveSeconds(zoneTotals, zone) {
+  return zoneTotals.find((item) => item.zone === zone)?.activeSeconds ?? 0;
 }
 
 function appendWorkItemNotes(lines, workItemTotals) {

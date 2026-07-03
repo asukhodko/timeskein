@@ -57,6 +57,8 @@ export default function FocusPanel({ selectedItem }: FocusPanelProps) {
     [inventoryItems]
   )
   const activeSecondsTotal = todayQuery.data?.active_seconds_total ?? 0
+  const activityZoneTotals = useMemo(() => aggregateActivityZoneTotals(sessions), [sessions])
+  const workFocusSeconds = getZoneActiveSeconds(activityZoneTotals, 'work')
   const openCaptures = capturesQuery.data?.captures ?? []
   const captureActivity = useMemo(
     () => capturesForLocalDay(captureActivityQuery.data?.captures ?? [], now),
@@ -496,7 +498,7 @@ export default function FocusPanel({ selectedItem }: FocusPanelProps) {
             </div>
           </div>
           <span className="shrink-0 text-gray-400">
-            {formatDuration(activeSecondsTotal)} focus · {sessions.length} entrances
+            {formatDuration(workFocusSeconds)} work · {formatDuration(activeSecondsTotal)} tracked · {sessions.length} entrances
           </span>
         </div>
 
@@ -603,11 +605,16 @@ function buildTodayMarkdown(
     month: '2-digit',
     day: '2-digit',
   })
+  const zoneTotals = aggregateActivityZoneTotals(sessionsOldestFirst)
+  const workFocusSeconds = getZoneActiveSeconds(zoneTotals, 'work')
+  const nonWorkSeconds = Math.max(activeSecondsTotal - workFocusSeconds, 0)
 
   const lines = [
     `# Timeskein focus day - ${dateTitle}`,
     '',
-    `Total focus: ${formatDuration(activeSecondsTotal)}`,
+    `Total tracked: ${formatDuration(activeSecondsTotal)}`,
+    `Work focus: ${formatDuration(workFocusSeconds)}`,
+    `Non-work tracked: ${formatDuration(nonWorkSeconds)}`,
     `Entrances: ${sessionsOldestFirst.length}`,
     '',
     '| Time | Duration | Zone | Work Item | Note |',
@@ -646,7 +653,6 @@ function buildTodayMarkdown(
     }
   }
 
-  const zoneTotals = aggregateActivityZoneTotals(sessionsOldestFirst)
   if (zoneTotals.length > 0) {
     lines.push('', '## By Activity Zone', '', '| Duration | Entrances | Zone |', '| ---: | ---: | --- |')
     for (const zone of zoneTotals) {
@@ -991,6 +997,13 @@ function aggregateActivityZoneTotals(sessions: FocusSessionView[]) {
 
     return left.zone.localeCompare(right.zone)
   })
+}
+
+function getZoneActiveSeconds(
+  zoneTotals: Array<{ zone: ActivityZone; activeSeconds: number }>,
+  zone: ActivityZone
+) {
+  return zoneTotals.find((item) => item.zone === zone)?.activeSeconds ?? 0
 }
 
 function appendWorkItemNotes(

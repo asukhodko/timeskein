@@ -155,7 +155,7 @@ Current status: the macOS dogfood release baseline was accepted on 2026-07-03. T
 | One active timer and one active Work Item | Smoke checks switching by title, by Work Item state, deleting the active Work Item, SQLite single-active guards, and startup normalization | No visible split brain while switching tasks |
 | Stop and later continue same Work Item | Smoke checks repeat `focus.start` with the same title | Continuing yesterday/today items is discoverable |
 | Show, hide, move window | Implemented in macOS shell and header drag | Window behavior does not irritate during the day |
-| Today block list and totals | `focus.list` and UI show block duration, time range, stop note, total focus, entrances | The list matches remembered work blocks |
+| Today block list and totals | `focus.list` and UI show block duration, time range, stop note, work focus, total tracked time, zones, and entrances | The list matches remembered work blocks |
 | Post-factum correction | `cargo test -p timeskein-agent`, `pnpm smoke:corrections-api`, and `pnpm smoke:macos-app` verify update, split, reassignment, Work Item edit, and corrected day-list data | Wrong Work Item assignments can be fixed before copying the final report |
 | Significant gaps | UI and Markdown show gap ranges of 20+ minutes | Long breaks and lost intervals are visible enough |
 | Capture Inbox | `pnpm smoke:capture-api`, `pnpm smoke:mock-api`, and `pnpm smoke:macos-app` verify capture create/list/resolve/convert without interrupting focus | Incoming events can be remembered without switching away from the current block |
@@ -268,7 +268,7 @@ Creating a Work Item from the `+` dialog does not start a timer unless `Active` 
 At the end of the day:
 
 1. Open Timeskein.
-2. Check Today total focus time and entrance count.
+2. Check Today work focus, total tracked time, zones, and entrance count.
 3. Click `Copy Report`.
 4. Paste the Markdown dogfood report into the day note or analysis thread.
 
@@ -375,7 +375,7 @@ The dogfood day fails if any of these happens often enough to break trust:
 - There is no pause/resume/cancel model yet. Stop and start again instead.
 - Stopped focus blocks can be edited or split from the Today list. The correction workflow is basic: there is no drag timeline or bulk edit yet.
 - Capture Inbox is minimal. It can create, resolve, and convert captures, but cannot edit/delete captures or append them as Work Item Events yet.
-- There are no activity zones yet. A Work Item named `Break` still contributes to total focus.
+- Activity Zones are Work Item-level only. A Work Item named `Break` should be assigned to `recovery` or `idle`; it still contributes to `Total tracked`, but not to `Work focus`.
 - Work Item notes are a single mutable field; timestamped observations are separate Work Item Events.
 - There is no automatic active-window detection.
 - There is no synchronization between devices.

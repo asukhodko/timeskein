@@ -218,7 +218,7 @@ Third real dogfood day and release baseline:
 - 25-minute target with elapsed contact time and overflow display
 - Manual stop with optional note
 - Active focus session restored from SQLite after frontend/app restart
-- Today's focus blocks with total active time, entrance count, Activity Zone, stop notes, and significant gap ranges of 20+ minutes
+- Today's focus blocks with total tracked time, work focus, non-work tracked time, entrance count, Activity Zone, stop notes, and significant gap ranges of 20+ minutes
 - Day views include focus blocks that overlap the selected local day; duration totals are clipped to the selected day window
 - Today and Markdown export show an `Open Gap` when no focus block is running and the interval after the last stopped block is at least 20 minutes
 - Markdown reports use the corrected focus-session rows, so post-factum edits are reflected in copied day data
@@ -286,12 +286,12 @@ High-signal findings:
 - Quick text entry must stay safe: `C`/`С` opening Create while typing was a real blocker and is fixed.
 - Creating a new Work Item directly as `Active` must work; the first dogfood day hit this twice and the path is now fixed.
 - `last_seen_at` labels looked like spent duration; the UI now says `ago`.
-- The report needs activity zones before `break` or `idle` blocks can be tracked without polluting total focus.
+- The report needs explicit zone totals before `break` or `idle` blocks can be tracked without polluting work-focus review.
 - Work Item notes are still mutable descriptions; timestamped observations now live in separate Work Item Events.
 - Capture Inbox worked in real use on 2026-07-03: incoming events were captured during active focus, then resolved or converted later.
 - Work Item notes matter for review and appear in day reports for touched items; timestamped Work Item Events now cover day-specific observations.
 - Wrong Work Item assignment happened during dogfood; stopped blocks can now be corrected and split after the fact.
-- Activity Zones are now available at Work Item level and appear in day reports. They separate review data by work, coordination, recovery, idle, and personal, but the top-line total still counts every tracked block.
+- Activity Zones are now available at Work Item level and appear in day reports. The UI and Markdown separate total tracked time, work focus, non-work tracked time, and per-zone totals for work, coordination, recovery, idle, and personal.
 - macOS window restore and the menu bar counter were newly fixed after the third dogfood day; the next dogfood day should verify that Command+Tab/Dock return and status refresh feel reliable in real use.
 
 ## Capture Inbox Data
@@ -376,7 +376,7 @@ On multi-monitor macOS setups, the tray/status item is controlled by the system 
 - Work Item Events are append-only and report-visible, but they cannot be edited, deleted, or created directly from Capture Inbox yet.
 - Work Item notes are included in day reports for touched items, but they remain mutable descriptions rather than dated observations.
 - macOS window restore and menu bar status refresh were newly fixed after the third dogfood day, but still need one real dogfood pass before being considered fully proven.
-- Activity Zones are Work Item-level only; there is no per-session zone override or filtered top-line work-only total yet.
+- Activity Zones are Work Item-level only; there is no per-session zone override yet.
 - Automated e2e tests are not implemented yet.
 - Cross-platform CI is not implemented yet.
 - Settings UI is not implemented yet.
@@ -388,4 +388,4 @@ On multi-monitor macOS setups, the tray/status item is controlled by the system 
 1. Verify the new macOS window return and native menu bar status refresh in the next dogfood day.
 2. Add a clearer correction workflow if split + update is not enough after the next dogfood day.
 3. Add capture-to-Work-Item-event promotion if captures often become review notes rather than follow-up tasks.
-4. Decide whether Activity Zone totals should also produce filtered top-line numbers such as work-only focus and recovery time.
+4. Decide whether per-session zone overrides are needed after the next dogfood day.

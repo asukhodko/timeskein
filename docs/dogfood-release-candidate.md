@@ -30,8 +30,7 @@ Out of scope for this gate:
 - Evidence Mode and active-window automation;
 - body metrics integrations;
 - full reporting UI;
-- activity zones, unless break tracking corrupts the next dogfood day enough to
-  block trust in the data.
+- deeper activity-zone editing, such as per-session zone overrides.
 
 ## Start Conditions
 
@@ -52,8 +51,8 @@ Track every intentional block of contact with work:
    without switching away from the current block.
 3. Stop the focus block when real contact with the work stops.
 4. Use stop notes for facts that help evening review.
-5. Do not track breaks as focus unless the break itself is intentionally being
-   studied; activity zones are not implemented yet.
+5. Put breaks into a `recovery` or `idle` Work Item when they are intentionally
+   tracked, so they affect `Total tracked` without inflating `Work focus`.
 
 ## End-Of-Day Evidence
 
@@ -85,7 +84,7 @@ Both saved files can contain personal or internal work context and are ignored b
 The final evidence must include:
 
 - focus blocks for the real workday;
-- total focus time;
+- total tracked time, work focus, and non-work tracked time;
 - Work Item totals;
 - Work Item notes for touched items;
 - Capture Activity for created, resolved, and converted captures;

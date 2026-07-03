@@ -55,8 +55,9 @@ These were accepted limitations for the dogfood baseline, not blockers:
   separately as Work Item Events.
 - Capture Inbox cannot edit or delete captures, and cannot append a capture as
   a Work Item Event yet.
-- Activity zones are Work Item-level only. Reports show zone totals, but the
-  top-line `Total focus` still counts every tracked block.
+- Activity zones are Work Item-level only. Reports now separate `Total tracked`,
+  `Work focus`, non-work tracked time, and per-zone totals, but there is no
+  per-session zone override yet.
 - macOS window restore and menu bar status refresh were known baseline
   limitations; both have been fixed in code after acceptance and need the next
   dogfood day for real-use confirmation.
@@ -78,8 +79,7 @@ Post-dogfood correction and first review enrichment are now partly implemented:
 Remaining entry and review polish:
 
 - add capture-to-Work-Item-event promotion if captures often become review notes.
-- decide whether top-line report totals should include filtered numbers such as
-  work-only focus and recovery time.
+- decide whether per-session zone overrides are needed after the next dogfood day.
 
 Activity evidence from apps, browser tabs, messenger channels, screenshots, or
 AI interpretation remains a future opt-in layer. It should not be started until

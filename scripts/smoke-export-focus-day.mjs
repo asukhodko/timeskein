@@ -35,6 +35,8 @@ try {
     INSERT INTO work_item_events (id, ts, work_item_id, kind, payload)
     VALUES
       ('e1', '2026-06-30T06:12:00Z', 'w1', 'note_added', '{"text":"implementation checkpoint","focus_session_id":"s1"}');
+
+    UPDATE work_items SET activity_zone = 'coordination' WHERE id = 'w2';
   `);
 
   const { stdout } = await execFileAsync(
@@ -51,7 +53,9 @@ try {
     { cwd: repoRoot }
   );
 
-  assert(stdout.includes("Total focus: 1:15:00"), "export did not include expected total focus");
+  assert(stdout.includes("Total tracked: 1:15:00"), "export did not include expected tracked total");
+  assert(stdout.includes("Work focus: 45:00"), "export did not include expected work focus total");
+  assert(stdout.includes("Non-work tracked: 30:00"), "export did not include expected non-work total");
   assert(stdout.includes("Entrances: 4"), "export did not include expected entrance count");
   assert(stdout.includes("started before day"), "export did not include overlapping session");
   assert(stdout.includes("## Day-Boundary Blocks"), "export did not flag day-boundary blocks");
@@ -61,6 +65,8 @@ try {
   );
   assert(stdout.includes("## By Work Item"), "export did not include By Work Item section");
   assert(stdout.includes("## By Activity Zone"), "export did not include By Activity Zone section");
+  assert(stdout.includes("| 45:00 | 3 | Work |"), "export did not aggregate Work zone");
+  assert(stdout.includes("| 30:00 | 1 | Coordination |"), "export did not aggregate Coordination zone");
   assert(stdout.includes("| 45:00 | 3 | Deep Work |"), "export did not aggregate Deep Work");
   assert(stdout.includes("| 30:00 | 1 | Meetings |"), "export did not aggregate Meetings");
   assert(stdout.includes("## Work Item Notes"), "export did not include Work Item Notes section");
@@ -103,7 +109,9 @@ try {
     { cwd: repoRoot }
   );
 
-  assert(activeStdout.includes("Total focus: 1:30:00"), "active export did not include running total");
+  assert(activeStdout.includes("Total tracked: 1:30:00"), "active export did not include running total");
+  assert(activeStdout.includes("Work focus: 1:00:00"), "active export did not include running work focus total");
+  assert(activeStdout.includes("Non-work tracked: 30:00"), "active export did not include running non-work total");
   assert(activeStdout.includes("Entrances: 5"), "active export did not include running entrance count");
   assert(activeStdout.includes("Active Draft Work"), "active export did not include active work item");
   assert(activeStdout.includes("-now | 15:00 | Work | Active Draft Work"), "active export did not show active block ending at now");

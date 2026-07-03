@@ -13,6 +13,8 @@ The current post-baseline gate is the Daily Control Goal Audit in the UI/CLI
 dogfood report and in `pnpm dogfood:rc-check`: it checks whether a real day has
 enough evidence for focus blocks, Work Item totals, Activity Zones,
 notes/events, captures, gaps, corrections, and app-friction review.
+`pnpm dogfood:finish:save` now saves both the readable day report and the
+RC-check evidence file, so the evening package is collected in one step.
 
 ## Executive view
 

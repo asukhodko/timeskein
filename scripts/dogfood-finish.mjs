@@ -56,6 +56,9 @@ const outputPath = outputReportPath(options, dateArg);
 if (outputPath) {
   await writeFile(outputPath, stdout);
   process.stdout.write(`Saved Timeskein dogfood report: ${outputPath}\n`);
+  if (options.save) {
+    await saveRcCheck(dateArg, dbPath);
+  }
 } else {
   process.stdout.write(stdout);
 }
@@ -91,6 +94,7 @@ function printHelp() {
 
 Finishes a dogfood day by checking that there is no active focus session or active Work Item and that the day has at least one focus block.
 On success, prints the Markdown dogfood report, or saves it to a file when --save or --out is passed.
+When --save is used, it also saves the dogfood RC check next to the day report.
 On failure, prints a Markdown diagnostic and exits with code 1.`);
 }
 
@@ -104,6 +108,36 @@ function outputReportPath(options, date) {
   }
 
   return undefined;
+}
+
+async function saveRcCheck(date, path) {
+  const rcArgs = [
+    resolve(repoRoot, "scripts/dogfood-rc-check.mjs"),
+    "--date",
+    date,
+    "--db",
+    path,
+    "--save",
+  ];
+
+  try {
+    const { stdout, stderr } = await execFileAsync(process.execPath, rcArgs, {
+      cwd: process.cwd(),
+      maxBuffer: 10 * 1024 * 1024,
+    });
+    process.stdout.write(stdout);
+    if (stderr) {
+      process.stderr.write(stderr);
+    }
+  } catch (error) {
+    if (error.stdout) {
+      process.stdout.write(error.stdout);
+    }
+    if (error.stderr) {
+      process.stderr.write(error.stderr);
+    }
+    process.exitCode = error.code ?? 1;
+  }
 }
 
 function parseLocalDate(value) {

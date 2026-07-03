@@ -33,7 +33,7 @@ End of day:
 - if the button says `Copy Draft`, stop the active focus block or clear the active Work Item before treating the report as final;
 - use `Copy MD` when only the raw day picture is needed;
 - if clipboard access is unavailable, copy the selected Markdown from the fallback text box;
-- if you want a saved Markdown file, run `pnpm dogfood:finish:save`;
+- if you want saved Markdown evidence, run `pnpm dogfood:finish:save`; it writes both the day report and the RC check;
 - if UI copy fails, run `pnpm dogfood:finish > timeskein-dogfood-report.md`;
 - if only the raw day picture is needed, run `pnpm export:focus-day > timeskein-day.md`.
 - if Timeskein itself felt awkward, run `pnpm dogfood:metrics` and `pnpm export:app-events` to inspect the local app-event telemetry.
@@ -173,6 +173,7 @@ the day be discussed without reconstructing the timeline from memory. `Copy
 Report`, `pnpm dogfood:report`, and `pnpm dogfood:finish:save` include a
 `Daily Control Goal Audit` section before the raw focus data, so weak evidence
 is visible during the normal report flow, not only in the separate RC check.
+With `--save`, the separate RC check is saved automatically next to the day report.
 
 ## Readiness Audit
 
@@ -330,6 +331,7 @@ pnpm dogfood:finish:save
 ```
 
 This writes `timeskein-dogfood-report-YYYY-MM-DD.md` in the current directory. To print the report to stdout instead:
+It also writes `timeskein-dogfood-rc-check-YYYY-MM-DD.md`, so the evening evidence package has both the readable report and the stricter RC audit.
 
 ```bash
 pnpm dogfood:finish > timeskein-dogfood-report.md
@@ -360,7 +362,7 @@ pnpm export:app-events
 
 Telemetry stays local in SQLite. Event payloads are technical only; raw Work Item titles, notes, URLs, and typed text should not appear there.
 
-For a Dogfood Release Candidate day, run the RC evidence check after saving the report:
+For a Dogfood Release Candidate day, rerun the RC evidence check when you want to inspect it without re-saving the day report:
 
 ```bash
 pnpm dogfood:rc-check:save

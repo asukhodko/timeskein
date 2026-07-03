@@ -56,11 +56,16 @@ Track every intentional block of contact with work:
 
 ## End-Of-Day Evidence
 
-Save the report:
+Save the end-of-day evidence:
 
 ```bash
 pnpm dogfood:finish:save
 ```
+
+This writes both local evidence files:
+
+- `timeskein-dogfood-report-YYYY-MM-DD.md`;
+- `timeskein-dogfood-rc-check-YYYY-MM-DD.md`.
 
 Inspect the telemetry when something felt wrong:
 
@@ -69,7 +74,7 @@ pnpm dogfood:metrics
 pnpm export:app-events
 ```
 
-Run the release-candidate evidence check:
+Rerun the release-candidate evidence check when you want to inspect it without regenerating the day report:
 
 ```bash
 pnpm dogfood:rc-check:save
@@ -77,8 +82,7 @@ pnpm dogfood:rc-check:save
 
 `dogfood:rc-check` does not replace the human verdict. It catches hard blockers
 and prints review items that must be resolved or consciously accepted before the
-milestone can be marked done. `dogfood:rc-check:save` writes
-`timeskein-dogfood-rc-check-YYYY-MM-DD.md` next to the saved day report.
+milestone can be marked done.
 Both saved files can contain personal or internal work context and are ignored by git.
 The RC evidence summary also checks the post-baseline review data: work focus vs
 non-work tracked time, Activity Zone coverage, Work Item notes/events, Capture

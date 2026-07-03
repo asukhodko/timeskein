@@ -53,6 +53,31 @@ try {
   );
   assert(cleanSavedMarkdown.includes("### Entry Cost"), "saved report did not include review prompts");
 
+  const cleanSavedDefault = await runFinish(cleanDb, ["--save"], tempDir);
+  assert(cleanSavedDefault.code === 0, "stopped day should save default report and RC check");
+  const defaultReportPath = join(tempDir, "timeskein-dogfood-report-2026-06-30.md");
+  const defaultRcPath = join(tempDir, "timeskein-dogfood-rc-check-2026-06-30.md");
+  assert(
+    cleanSavedDefault.stdout.includes("Saved Timeskein dogfood report:") &&
+      cleanSavedDefault.stdout.includes("timeskein-dogfood-report-2026-06-30.md"),
+    "finish --save did not report saved dogfood report"
+  );
+  assert(
+    cleanSavedDefault.stdout.includes("Saved Timeskein dogfood RC check:") &&
+      cleanSavedDefault.stdout.includes("timeskein-dogfood-rc-check-2026-06-30.md"),
+    "finish --save did not report saved RC check"
+  );
+  const defaultReportMarkdown = await readFile(defaultReportPath, "utf8");
+  const defaultRcMarkdown = await readFile(defaultRcPath, "utf8");
+  assert(
+    defaultReportMarkdown.includes("## Daily Control Goal Audit"),
+    "saved default report did not include daily control audit"
+  );
+  assert(
+    defaultRcMarkdown.includes("## Daily Control Goal Audit"),
+    "saved RC check did not include daily control audit"
+  );
+
   const activeDb = join(tempDir, "active.db");
   await migrate(activeDb);
   await runSql(activeDb, `
@@ -106,13 +131,13 @@ async function migrate(path) {
   await runSqlFile(path, join(repoRoot, "apps/agent/migrations/005_activity_zones.sql"));
 }
 
-async function runFinish(path, extraArgs = []) {
+async function runFinish(path, extraArgs = [], cwd = repoRoot) {
   try {
     const { stdout, stderr } = await execFileAsync(
       "node",
       [join(repoRoot, "scripts/dogfood-finish.mjs"), "--db", path, "--date", "2026-06-30", ...extraArgs],
       {
-        cwd: repoRoot,
+        cwd,
         maxBuffer: 10 * 1024 * 1024,
       }
     );

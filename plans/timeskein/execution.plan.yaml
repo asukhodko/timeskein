@@ -142,7 +142,7 @@ execution:
       actual_start: "2026-06-30"
       updated_at: "2026-07-03T21:46:00+03:00"
       confidence: 0.9
-      note: Today can copy raw Markdown or a dogfood report with evening prompts, and shows selected Markdown when clipboard access fails. The same day data can be exported from SQLite with pnpm export:focus-day; pnpm dogfood:finish checks overlapping day blocks and active focus before printing the report. Reports now include Total tracked, Work focus, Non-work tracked, App Telemetry, per-focus-block Activity Zone totals, Day Events, Work Item notes, timestamped Work Item Events, and Capture Activity for created, resolved, and converted captures. Corrected focus-session rows are reflected in the copied report. JSON/CSV export is not implemented.
+      note: Today can copy raw Markdown or a dogfood report with evening prompts, and shows selected Markdown when clipboard access fails. The same day data can be exported from SQLite with pnpm export:focus-day; pnpm dogfood:finish checks overlapping day blocks and active focus before printing the report. pnpm dogfood:finish:save now saves both the readable day report and the RC-check evidence file. Reports include Total tracked, Work focus, Non-work tracked, App Telemetry, per-focus-block Activity Zone totals, Day Events, Work Item notes, timestamped Work Item Events, and Capture Activity for created, resolved, and converted captures. Corrected focus-session rows are reflected in the copied report. JSON/CSV export is not implemented.
     ts.day_review.work_item_events:
       progress: 1.0
       actual_start: "2026-07-03"

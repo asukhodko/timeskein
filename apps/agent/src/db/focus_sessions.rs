@@ -6,7 +6,7 @@ use sqlx::Row;
 use uuid::Uuid;
 
 use crate::db::Database;
-use crate::domain::{FocusSession, FocusSessionState};
+use crate::domain::{ActivityZone, FocusSession, FocusSessionState};
 
 impl Database {
     /// Create a focus session. SQLite enforces at most one active session.
@@ -33,7 +33,9 @@ impl Database {
     }
 
     /// Return the currently active focus session, if any.
-    pub async fn get_active_focus_session(&self) -> Result<Option<(FocusSession, Option<String>)>> {
+    pub async fn get_active_focus_session(
+        &self,
+    ) -> Result<Option<(FocusSession, Option<String>, Option<ActivityZone>)>> {
         let sql = focus_session_select_sql("WHERE fs.state = 'active' LIMIT 1");
         let row = sqlx::query(&sql).fetch_optional(self.pool()).await?;
 
@@ -44,7 +46,7 @@ impl Database {
     pub async fn get_focus_session(
         &self,
         id: Uuid,
-    ) -> Result<Option<(FocusSession, Option<String>)>> {
+    ) -> Result<Option<(FocusSession, Option<String>, Option<ActivityZone>)>> {
         let sql = focus_session_select_sql("WHERE fs.id = ?1");
         let row = sqlx::query(&sql)
             .bind(id.to_string())
@@ -60,7 +62,7 @@ impl Database {
         from: Option<DateTime<Utc>>,
         to: Option<DateTime<Utc>>,
         now: DateTime<Utc>,
-    ) -> Result<Vec<(FocusSession, Option<String>)>> {
+    ) -> Result<Vec<(FocusSession, Option<String>, Option<ActivityZone>)>> {
         let sql = focus_session_select_sql(
             "WHERE (?1 IS NULL OR julianday(COALESCE(fs.stopped_at, ?3)) > julianday(?1))
              AND (?2 IS NULL OR julianday(fs.started_at) < julianday(?2))
@@ -118,14 +120,17 @@ fn focus_session_select_sql(where_clause: &str) -> String {
             fs.started_at,
             fs.stopped_at,
             fs.updated_at,
-            wi.title AS work_item_title
+            wi.title AS work_item_title,
+            wi.activity_zone AS activity_zone
          FROM focus_sessions fs
          LEFT JOIN work_items wi ON wi.id = fs.work_item_id
          {where_clause}"
     )
 }
 
-fn focus_session_from_row(row: &sqlx::sqlite::SqliteRow) -> Result<(FocusSession, Option<String>)> {
+fn focus_session_from_row(
+    row: &sqlx::sqlite::SqliteRow,
+) -> Result<(FocusSession, Option<String>, Option<ActivityZone>)> {
     let id = Uuid::parse_str(&row.get::<String, _>("id"))?;
     let work_item_id = row
         .get::<Option<String>, _>("work_item_id")
@@ -155,5 +160,10 @@ fn focus_session_from_row(row: &sqlx::sqlite::SqliteRow) -> Result<(FocusSession
         updated_at,
     };
 
-    Ok((session, row.get("work_item_title")))
+    let activity_zone = row
+        .get::<Option<String>, _>("activity_zone")
+        .as_deref()
+        .and_then(ActivityZone::from_str);
+
+    Ok((session, row.get("work_item_title"), activity_zone))
 }

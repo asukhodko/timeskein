@@ -103,6 +103,7 @@ try {
 async function migrate(path) {
   await runSqlFile(path, join(repoRoot, "apps/agent/migrations/001_initial.sql"));
   await runSqlFile(path, join(repoRoot, "apps/agent/migrations/002_focus_sessions.sql"));
+  await runSqlFile(path, join(repoRoot, "apps/agent/migrations/005_activity_zones.sql"));
 }
 
 async function runFinish(path, extraArgs = []) {

@@ -91,6 +91,47 @@ impl WorkItemType {
     }
 }
 
+/// Broad activity zone for day review.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, sqlx::Type)]
+#[serde(rename_all = "lowercase")]
+#[sqlx(rename_all = "lowercase")]
+pub enum ActivityZone {
+    Work,
+    Coordination,
+    Recovery,
+    Idle,
+    Personal,
+}
+
+impl ActivityZone {
+    pub fn from_str(s: &str) -> Option<Self> {
+        match s.to_lowercase().as_str() {
+            "work" => Some(Self::Work),
+            "coordination" => Some(Self::Coordination),
+            "recovery" => Some(Self::Recovery),
+            "idle" => Some(Self::Idle),
+            "personal" => Some(Self::Personal),
+            _ => None,
+        }
+    }
+
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::Work => "work",
+            Self::Coordination => "coordination",
+            Self::Recovery => "recovery",
+            Self::Idle => "idle",
+            Self::Personal => "personal",
+        }
+    }
+}
+
+impl Default for ActivityZone {
+    fn default() -> Self {
+        Self::Work
+    }
+}
+
 /// Work item entity
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WorkItem {
@@ -98,6 +139,7 @@ pub struct WorkItem {
     pub title: String,
     #[serde(rename = "type")]
     pub item_type: Option<WorkItemType>,
+    pub activity_zone: ActivityZone,
     pub state: WorkItemState,
     pub pinned: bool,
     pub note: Option<String>,
@@ -112,6 +154,7 @@ impl WorkItem {
     pub fn new(
         title: String,
         item_type: Option<WorkItemType>,
+        activity_zone: Option<ActivityZone>,
         state: Option<WorkItemState>,
         note: Option<String>,
     ) -> Self {
@@ -120,6 +163,7 @@ impl WorkItem {
             id: Uuid::new_v4(),
             title,
             item_type,
+            activity_zone: activity_zone.unwrap_or_default(),
             state: state.unwrap_or_default(),
             pinned: false,
             note,
@@ -180,12 +224,15 @@ pub struct WorkItemView {
     pub title: String,
     #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
     pub item_type: Option<String>,
+    pub activity_zone: String,
     pub state: String,
     pub pinned: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub note: Option<String>,
     pub refs_count: usize,
     pub refs: Vec<super::RefView>,
+    pub today_active_seconds: i64,
+    pub total_active_seconds: i64,
     pub created_at: String,
     pub updated_at: String,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -194,15 +241,27 @@ pub struct WorkItemView {
 
 impl WorkItemView {
     pub fn from_work_item(item: &WorkItem, refs: Vec<super::RefView>) -> Self {
+        Self::from_work_item_with_stats(item, refs, 0, 0)
+    }
+
+    pub fn from_work_item_with_stats(
+        item: &WorkItem,
+        refs: Vec<super::RefView>,
+        today_active_seconds: i64,
+        total_active_seconds: i64,
+    ) -> Self {
         Self {
             id: item.id,
             title: item.title.clone(),
             item_type: item.item_type.map(|t| t.as_str().to_string()),
+            activity_zone: item.activity_zone.as_str().to_string(),
             state: item.state.as_str().to_string(),
             pinned: item.pinned,
             note: item.note.clone(),
             refs_count: refs.len(),
             refs,
+            today_active_seconds,
+            total_active_seconds,
             created_at: item.created_at.to_rfc3339(),
             updated_at: item.updated_at.to_rfc3339(),
             last_seen_at: item.last_seen_at.map(|dt| dt.to_rfc3339()),

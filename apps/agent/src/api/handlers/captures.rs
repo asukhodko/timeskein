@@ -6,7 +6,7 @@ use tokio::sync::RwLock;
 use uuid::Uuid;
 
 use crate::api::handlers::RpcResponse;
-use crate::domain::{Capture, CaptureState, WorkItem, WorkItemState, WorkItemType};
+use crate::domain::{ActivityZone, Capture, CaptureState, WorkItem, WorkItemState, WorkItemType};
 use crate::AppState;
 
 pub async fn handle_capture_create(
@@ -40,7 +40,7 @@ pub async fn handle_capture_create(
             .map_err(|error| {
                 RpcResponse::error(request_id.to_string(), "internal_error", &error.to_string())
             })?
-            .map(|(session, _)| session.id),
+            .map(|(session, _, _)| session.id),
     };
 
     let capture = Capture::new(text.to_string(), focus_session_id);
@@ -135,6 +135,7 @@ pub async fn handle_capture_convert_to_work_item(
         let item = WorkItem::new(
             title,
             Some(WorkItemType::Task),
+            Some(ActivityZone::Work),
             Some(WorkItemState::Unknown),
             None,
         );

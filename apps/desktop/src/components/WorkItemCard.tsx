@@ -1,6 +1,6 @@
 import clsx from 'clsx'
-import type { WorkItemView, WorkItemState } from '@timeskein/contracts'
-import { formatRelativeTime, truncate } from '../utils/formatTime'
+import type { ActivityZone, WorkItemView, WorkItemState } from '@timeskein/contracts'
+import { formatDuration, formatRelativeTime, truncate } from '../utils/formatTime'
 
 interface WorkItemCardProps {
   item: WorkItemView
@@ -18,6 +18,14 @@ const stateColorClasses: Record<WorkItemState, string> = {
   done: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
 }
 
+const zoneColorClasses: Record<ActivityZone, string> = {
+  work: 'border-blue-500/30 text-blue-300',
+  coordination: 'border-cyan-500/30 text-cyan-300',
+  recovery: 'border-emerald-500/30 text-emerald-300',
+  idle: 'border-gray-500/30 text-gray-400',
+  personal: 'border-fuchsia-500/30 text-fuchsia-300',
+}
+
 export default function WorkItemCard({
   item,
   isSelected,
@@ -26,6 +34,8 @@ export default function WorkItemCard({
 }: WorkItemCardProps) {
   const lastSeen = formatRelativeTime(item.last_seen_at)
   const lastSeenLabel = lastSeen === '—' || lastSeen === 'now' ? lastSeen : `${lastSeen} ago`
+  const hasToday = item.today_active_seconds > 0
+  const hasTotal = item.total_active_seconds > 0
 
   return (
     <div
@@ -67,6 +77,26 @@ export default function WorkItemCard({
               {truncate(item.note, 60)}
             </div>
           )}
+          <div className="mt-1 flex flex-wrap items-center gap-1 text-[11px]">
+            <span
+              className={clsx(
+                'rounded border px-1.5 py-0.5 uppercase tracking-wide',
+                zoneColorClasses[item.activity_zone] || zoneColorClasses.work
+              )}
+            >
+              {item.activity_zone}
+            </span>
+            {hasToday && (
+              <span className="rounded border border-gray-700 px-1.5 py-0.5 text-gray-300">
+                today {formatDuration(item.today_active_seconds)}
+              </span>
+            )}
+            {hasTotal && (
+              <span className="rounded border border-gray-800 px-1.5 py-0.5 text-gray-500">
+                total {formatDuration(item.total_active_seconds)}
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Meta */}

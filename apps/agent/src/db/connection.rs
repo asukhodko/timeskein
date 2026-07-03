@@ -75,6 +75,40 @@ impl Database {
         let captures_sql = include_str!("../../migrations/004_captures.sql");
         sqlx::raw_sql(captures_sql).execute(&self.pool).await?;
 
+        self.ensure_work_item_activity_zones().await?;
+
+        Ok(())
+    }
+
+    async fn ensure_work_item_activity_zones(&self) -> Result<()> {
+        let has_activity_zone = sqlx::query("PRAGMA table_info(work_items)")
+            .fetch_all(&self.pool)
+            .await?
+            .iter()
+            .any(|row| {
+                use sqlx::Row;
+                row.get::<String, _>("name") == "activity_zone"
+            });
+
+        if !has_activity_zone {
+            info!("Migrating work_items activity_zone column...");
+            let activity_zones_sql = include_str!("../../migrations/005_activity_zones.sql");
+            sqlx::raw_sql(activity_zones_sql)
+                .execute(&self.pool)
+                .await?;
+            return Ok(());
+        }
+
+        sqlx::raw_sql(
+            "
+            CREATE INDEX IF NOT EXISTS idx_work_items_activity_zone
+                ON work_items(activity_zone)
+                WHERE deleted_at IS NULL;
+            ",
+        )
+        .execute(&self.pool)
+        .await?;
+
         Ok(())
     }
 

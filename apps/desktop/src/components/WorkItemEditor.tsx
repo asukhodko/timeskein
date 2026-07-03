@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import type { WorkItemType, WorkItemView } from '@timeskein/contracts'
+import type { ActivityZone, WorkItemType, WorkItemView } from '@timeskein/contracts'
 import { useUpdateWorkItem } from '../hooks/useInventory'
 
 interface WorkItemEditorProps {
@@ -9,10 +9,12 @@ interface WorkItemEditorProps {
 }
 
 const itemTypes: WorkItemType[] = ['task', 'project', 'question']
+const activityZones: ActivityZone[] = ['work', 'coordination', 'recovery', 'idle', 'personal']
 
 export default function WorkItemEditor({ item, onClose }: WorkItemEditorProps) {
   const [title, setTitle] = useState(item.title)
   const [type, setType] = useState<WorkItemType>(item.type ?? 'task')
+  const [activityZone, setActivityZone] = useState<ActivityZone>(item.activity_zone)
   const [note, setNote] = useState(item.note ?? '')
   const updateMutation = useUpdateWorkItem()
 
@@ -26,6 +28,7 @@ export default function WorkItemEditor({ item, onClose }: WorkItemEditorProps) {
         id: item.id,
         title: trimmedTitle,
         type,
+        activity_zone: activityZone,
         note: note.trim() || null,
       },
       {
@@ -67,6 +70,21 @@ export default function WorkItemEditor({ item, onClose }: WorkItemEditorProps) {
             {itemTypes.map((itemType) => (
               <option key={itemType} value={itemType}>
                 {itemType}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="mb-3 grid gap-1 text-sm text-gray-300">
+          <span>Zone</span>
+          <select
+            value={activityZone}
+            onChange={(event) => setActivityZone(event.target.value as ActivityZone)}
+            className="rounded-md border border-gray-600 bg-gray-900 px-3 py-2 text-gray-100 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+          >
+            {activityZones.map((zone) => (
+              <option key={zone} value={zone}>
+                {zone}
               </option>
             ))}
           </select>

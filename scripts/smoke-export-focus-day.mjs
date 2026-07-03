@@ -18,6 +18,7 @@ const overlappingStop = shiftedIso(smokeDayStart, 10 * 60);
 try {
   await runSqlFile(join(repoRoot, "apps/agent/migrations/001_initial.sql"));
   await runSqlFile(join(repoRoot, "apps/agent/migrations/002_focus_sessions.sql"));
+  await runSqlFile(join(repoRoot, "apps/agent/migrations/005_activity_zones.sql"));
   await runSql(`
     INSERT INTO work_items (id, title, type, state, pinned, note, created_at, updated_at, last_seen_at)
     VALUES
@@ -55,6 +56,7 @@ try {
     "export did not explain clipped day-boundary duration"
   );
   assert(stdout.includes("## By Work Item"), "export did not include By Work Item section");
+  assert(stdout.includes("## By Activity Zone"), "export did not include By Activity Zone section");
   assert(stdout.includes("| 45:00 | 3 | Deep Work |"), "export did not aggregate Deep Work");
   assert(stdout.includes("| 30:00 | 1 | Meetings |"), "export did not aggregate Meetings");
   assert(stdout.includes("## Work Item Notes"), "export did not include Work Item Notes section");
@@ -95,7 +97,7 @@ try {
   assert(activeStdout.includes("Total focus: 1:30:00"), "active export did not include running total");
   assert(activeStdout.includes("Entrances: 5"), "active export did not include running entrance count");
   assert(activeStdout.includes("Active Draft Work"), "active export did not include active work item");
-  assert(activeStdout.includes("-now | 15:00 | Active Draft Work"), "active export did not show active block ending at now");
+  assert(activeStdout.includes("-now | 15:00 | Work | Active Draft Work"), "active export did not show active block ending at now");
   assert(!activeStdout.includes("## Open Gap"), "active export showed open gap while latest block is active");
 
   console.log(

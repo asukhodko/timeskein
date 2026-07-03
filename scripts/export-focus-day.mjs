@@ -91,6 +91,7 @@ async function loadSessions(path, from, to, now) {
       fs.title,
       fs.work_item_id,
       wi.title AS work_item_title,
+      wi.activity_zone AS activity_zone,
       wi.note AS work_item_note,
       fs.state,
       fs.target_seconds,
@@ -117,6 +118,7 @@ async function loadSessions(path, from, to, now) {
       title: row.title,
       work_item_id: row.work_item_id ?? undefined,
       work_item_title: row.work_item_title ?? undefined,
+      activity_zone: row.activity_zone ?? "work",
       work_item_note: row.work_item_note ?? undefined,
       state: row.state,
       target_seconds: row.target_seconds ?? 1500,
@@ -161,15 +163,15 @@ function buildDayMarkdown(sessionsOldestFirst, activeSecondsTotal, day, now) {
     `Total focus: ${formatDuration(activeSecondsTotal)}`,
     `Entrances: ${sessionsOldestFirst.length}`,
     "",
-    "| Time | Duration | Work Item | Note |",
-    "| --- | ---: | --- | --- |",
+    "| Time | Duration | Zone | Work Item | Note |",
+    "| --- | ---: | --- | --- | --- |",
   ];
 
   for (const session of sessionsOldestFirst) {
     const title = session.work_item_title ?? session.title;
     const range = `${formatClockTime(session.started_at)}-${formatClockTime(session.stopped_at)}`;
     lines.push(
-      `| ${escapeMarkdownTable(range)} | ${escapeMarkdownTable(formatDuration(session.active_seconds))} | ${escapeMarkdownTable(title)} | ${escapeMarkdownTable(session.note ?? "")} |`
+      `| ${escapeMarkdownTable(range)} | ${escapeMarkdownTable(formatDuration(session.active_seconds))} | ${escapeMarkdownTable(formatActivityZoneLabel(session.activity_zone))} | ${escapeMarkdownTable(title)} | ${escapeMarkdownTable(session.note ?? "")} |`
     );
   }
 
@@ -198,6 +200,16 @@ function buildDayMarkdown(sessionsOldestFirst, activeSecondsTotal, day, now) {
   }
 
   appendWorkItemNotes(lines, workItemTotals);
+
+  const zoneTotals = aggregateActivityZoneTotals(sessionsOldestFirst);
+  if (zoneTotals.length > 0) {
+    lines.push("", "## By Activity Zone", "", "| Duration | Entrances | Zone |", "| ---: | ---: | --- |");
+    for (const zone of zoneTotals) {
+      lines.push(
+        `| ${escapeMarkdownTable(formatDuration(zone.activeSeconds))} | ${zone.entrances} | ${escapeMarkdownTable(formatActivityZoneLabel(zone.zone))} |`
+      );
+    }
+  }
 
   const gaps = gapsBetweenSessions(sessionsOldestFirst).filter(
     (gap) => gap.seconds >= SIGNIFICANT_GAP_SECONDS
@@ -266,6 +278,30 @@ function aggregateWorkItemTotals(sessions) {
   });
 }
 
+function aggregateActivityZoneTotals(sessions) {
+  const totals = new Map();
+
+  for (const session of sessions) {
+    const current = totals.get(session.activity_zone) ?? {
+      zone: session.activity_zone,
+      activeSeconds: 0,
+      entrances: 0,
+    };
+
+    current.activeSeconds += session.active_seconds;
+    current.entrances += 1;
+    totals.set(session.activity_zone, current);
+  }
+
+  return Array.from(totals.values()).sort((left, right) => {
+    if (right.activeSeconds !== left.activeSeconds) {
+      return right.activeSeconds - left.activeSeconds;
+    }
+
+    return left.zone.localeCompare(right.zone);
+  });
+}
+
 function appendWorkItemNotes(lines, workItemTotals) {
   const itemsWithNotes = workItemTotals.filter((item) => item.note?.trim());
   if (itemsWithNotes.length === 0) {
@@ -331,6 +367,18 @@ function escapeMarkdownTable(value) {
 
 function formatMarkdownListText(value) {
   return value.replace(/\s+/g, " ").trim();
+}
+
+function formatActivityZoneLabel(zone) {
+  const labels = {
+    work: "Work",
+    coordination: "Coordination",
+    recovery: "Recovery",
+    idle: "Idle",
+    personal: "Personal",
+  };
+
+  return labels[zone] ?? "Work";
 }
 
 function formatDuration(totalSeconds) {

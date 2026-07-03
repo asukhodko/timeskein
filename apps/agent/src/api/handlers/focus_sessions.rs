@@ -8,8 +8,8 @@ use uuid::Uuid;
 
 use crate::api::handlers::RpcResponse;
 use crate::domain::{
-    AppEvent, AppEventKind, AppEventSource, FocusSession, FocusSessionState, FocusSessionView,
-    WorkItem, WorkItemState, WorkItemType,
+    ActivityZone, AppEvent, AppEventKind, AppEventSource, FocusSession, FocusSessionState,
+    FocusSessionView, WorkItem, WorkItemState, WorkItemType,
 };
 use crate::AppState;
 
@@ -26,8 +26,8 @@ pub async fn handle_focus_current(
         .get_active_focus_session()
         .await
         .map_err(|e| RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string()))?
-        .map(|(session, work_item_title)| {
-            FocusSessionView::from_session(&session, work_item_title, now)
+        .map(|(session, work_item_title, activity_zone)| {
+            FocusSessionView::from_session(&session, work_item_title, activity_zone, now)
         });
 
     Ok(serde_json::json!({ "session": session }))
@@ -90,6 +90,7 @@ pub async fn handle_focus_start(
             let item = WorkItem::new(
                 title.clone(),
                 Some(WorkItemType::Task),
+                Some(ActivityZone::Work),
                 Some(WorkItemState::Unknown),
                 None,
             );
@@ -101,16 +102,21 @@ pub async fn handle_focus_start(
     };
     let work_item_id = Some(linked_work_item.id);
     let work_item_title = Some(linked_work_item.title.clone());
+    let activity_zone = Some(linked_work_item.activity_zone);
     let title = linked_work_item.title.clone();
 
-    if let Some((mut active_session, active_work_item_title)) =
+    if let Some((mut active_session, active_work_item_title, active_activity_zone)) =
         state.db.get_active_focus_session().await.map_err(|e| {
             RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
         })?
     {
         if active_session.work_item_id == work_item_id {
-            let view =
-                FocusSessionView::from_session(&active_session, active_work_item_title, Utc::now());
+            let view = FocusSessionView::from_session(
+                &active_session,
+                active_work_item_title,
+                active_activity_zone,
+                Utc::now(),
+            );
             let _ = state
                 .db
                 .log_app_event(&agent_event(
@@ -166,7 +172,7 @@ pub async fn handle_focus_start(
     item.set_state(WorkItemState::Active);
     let _ = state.db.update_work_item(&item).await;
 
-    let view = FocusSessionView::from_session(&session, work_item_title, Utc::now());
+    let view = FocusSessionView::from_session(&session, work_item_title, activity_zone, Utc::now());
     let focus_session_id = session.id;
     let event_kind = if reused_work_item || requested_work_item_id.is_some() {
         AppEventKind::FocusSwitched
@@ -209,7 +215,7 @@ pub async fn handle_focus_stop(
 
     let state = state.write().await;
 
-    let (mut session, work_item_title) = if let Some(id) = requested_id {
+    let (mut session, work_item_title, activity_zone) = if let Some(id) = requested_id {
         state
             .db
             .get_focus_session(id)
@@ -256,7 +262,7 @@ pub async fn handle_focus_stop(
             })?;
     }
 
-    let view = FocusSessionView::from_session(&session, work_item_title, Utc::now());
+    let view = FocusSessionView::from_session(&session, work_item_title, activity_zone, Utc::now());
     let work_item_id = session.work_item_id;
     let focus_session_id = session.id;
     let _ = state
@@ -302,7 +308,7 @@ pub async fn handle_focus_update(
     let requested_note = parse_nullable_note(params.get("note"), request_id)?;
 
     let state = state.write().await;
-    let (mut session, work_item_title) = state
+    let (mut session, work_item_title, activity_zone) = state
         .db
         .get_focus_session(id)
         .await
@@ -323,16 +329,18 @@ pub async fn handle_focus_update(
         ));
     }
 
-    let (title, work_item_id, updated_work_item_title) = resolve_focus_assignment(
-        &state,
-        requested_title,
-        requested_work_item_id,
-        session.title.clone(),
-        session.work_item_id,
-        work_item_title,
-        request_id,
-    )
-    .await?;
+    let (title, work_item_id, updated_work_item_title, updated_activity_zone) =
+        resolve_focus_assignment(
+            &state,
+            requested_title,
+            requested_work_item_id,
+            session.title.clone(),
+            session.work_item_id,
+            work_item_title,
+            activity_zone,
+            request_id,
+        )
+        .await?;
 
     session.title = title;
     session.work_item_id = work_item_id;
@@ -363,7 +371,12 @@ pub async fn handle_focus_update(
         RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
     })?;
 
-    let view = FocusSessionView::from_session(&session, updated_work_item_title, Utc::now());
+    let view = FocusSessionView::from_session(
+        &session,
+        updated_work_item_title,
+        updated_activity_zone,
+        Utc::now(),
+    );
     Ok(serde_json::to_value(view).unwrap())
 }
 
@@ -380,7 +393,7 @@ pub async fn handle_focus_split(
     let right_note = parse_nullable_note(params.get("right_note"), request_id)?;
 
     let state = state.write().await;
-    let (mut left, left_work_item_title) = state
+    let (mut left, left_work_item_title, left_activity_zone) = state
         .db
         .get_focus_session(id)
         .await
@@ -417,16 +430,18 @@ pub async fn handle_focus_split(
         ));
     }
 
-    let (right_title, right_work_item_id, right_work_item_title) = resolve_focus_assignment(
-        &state,
-        right_title,
-        right_work_item_id,
-        left.title.clone(),
-        left.work_item_id,
-        left_work_item_title.clone(),
-        request_id,
-    )
-    .await?;
+    let (right_title, right_work_item_id, right_work_item_title, right_activity_zone) =
+        resolve_focus_assignment(
+            &state,
+            right_title,
+            right_work_item_id,
+            left.title.clone(),
+            left.work_item_id,
+            left_work_item_title.clone(),
+            left_activity_zone,
+            request_id,
+        )
+        .await?;
 
     let now = Utc::now();
     left.stopped_at = Some(split_at);
@@ -452,8 +467,8 @@ pub async fn handle_focus_split(
     })?;
 
     Ok(serde_json::json!({
-        "left": FocusSessionView::from_session(&left, left_work_item_title, now),
-        "right": FocusSessionView::from_session(&right, right_work_item_title, now),
+        "left": FocusSessionView::from_session(&left, left_work_item_title, left_activity_zone, now),
+        "right": FocusSessionView::from_session(&right, right_work_item_title, right_activity_zone, now),
     }))
 }
 
@@ -487,8 +502,9 @@ pub async fn handle_focus_list(
         .await
         .map_err(|e| RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string()))?
         .into_iter()
-        .map(|(session, work_item_title)| {
-            let mut view = FocusSessionView::from_session(&session, work_item_title, now);
+        .map(|(session, work_item_title, activity_zone)| {
+            let mut view =
+                FocusSessionView::from_session(&session, work_item_title, activity_zone, now);
             if from.is_some() || to.is_some() {
                 view.active_seconds = clipped_active_seconds(&session, now, from, to);
                 view.over_target_seconds = (view.active_seconds - view.target_seconds).max(0);
@@ -517,8 +533,9 @@ async fn resolve_focus_assignment(
     fallback_title: String,
     fallback_work_item_id: Option<Uuid>,
     fallback_work_item_title: Option<String>,
+    fallback_activity_zone: Option<ActivityZone>,
     request_id: &str,
-) -> Result<(String, Option<Uuid>, Option<String>), RpcResponse> {
+) -> Result<(String, Option<Uuid>, Option<String>, Option<ActivityZone>), RpcResponse> {
     if let Some(work_item_id) = requested_work_item_id {
         if let Some(work_item_id) = work_item_id {
             let item = state
@@ -532,11 +549,16 @@ async fn resolve_focus_assignment(
                     RpcResponse::error(request_id.to_string(), "not_found", "Work item not found")
                 })?;
 
-            return Ok((item.title.clone(), Some(item.id), Some(item.title)));
+            return Ok((
+                item.title.clone(),
+                Some(item.id),
+                Some(item.title),
+                Some(item.activity_zone),
+            ));
         }
 
         let title = requested_title.unwrap_or(fallback_title);
-        return Ok((title, None, None));
+        return Ok((title, None, None, None));
     }
 
     if let Some(title) = requested_title {
@@ -553,6 +575,7 @@ async fn resolve_focus_assignment(
             let item = WorkItem::new(
                 title,
                 Some(WorkItemType::Task),
+                Some(ActivityZone::Work),
                 Some(WorkItemState::Unknown),
                 None,
             );
@@ -562,13 +585,19 @@ async fn resolve_focus_assignment(
             item
         };
 
-        return Ok((item.title.clone(), Some(item.id), Some(item.title)));
+        return Ok((
+            item.title.clone(),
+            Some(item.id),
+            Some(item.title),
+            Some(item.activity_zone),
+        ));
     }
 
     Ok((
         fallback_title,
         fallback_work_item_id,
         fallback_work_item_title,
+        fallback_activity_zone,
     ))
 }
 

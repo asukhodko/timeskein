@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import type { AppEventSummary, CaptureView, FocusSessionView, WorkItemView } from '@timeskein/contracts'
+import type { ActivityZone, AppEventSummary, CaptureView, FocusSessionView, WorkItemView } from '@timeskein/contracts'
 import {
   useCurrentFocusSession,
   useStartFocusSession,
@@ -584,15 +584,15 @@ function buildTodayMarkdown(
     `Total focus: ${formatDuration(activeSecondsTotal)}`,
     `Entrances: ${sessionsOldestFirst.length}`,
     '',
-    '| Time | Duration | Work Item | Note |',
-    '| --- | ---: | --- | --- |',
+    '| Time | Duration | Zone | Work Item | Note |',
+    '| --- | ---: | --- | --- | --- |',
   ]
 
   for (const session of sessionsOldestFirst) {
     const title = session.work_item_title ?? session.title
     const range = `${formatClockTime(session.started_at)}-${formatClockTime(session.stopped_at)}`
     lines.push(
-      `| ${escapeMarkdownTable(range)} | ${escapeMarkdownTable(formatDuration(session.active_seconds))} | ${escapeMarkdownTable(title)} | ${escapeMarkdownTable(session.note ?? '')} |`
+      `| ${escapeMarkdownTable(range)} | ${escapeMarkdownTable(formatDuration(session.active_seconds))} | ${escapeMarkdownTable(formatActivityZoneLabel(session.activity_zone))} | ${escapeMarkdownTable(title)} | ${escapeMarkdownTable(session.note ?? '')} |`
     )
   }
 
@@ -616,6 +616,16 @@ function buildTodayMarkdown(
     for (const item of workItemTotals) {
       lines.push(
         `| ${escapeMarkdownTable(formatDuration(item.activeSeconds))} | ${item.entrances} | ${escapeMarkdownTable(item.title)} |`
+      )
+    }
+  }
+
+  const zoneTotals = aggregateActivityZoneTotals(sessionsOldestFirst)
+  if (zoneTotals.length > 0) {
+    lines.push('', '## By Activity Zone', '', '| Duration | Entrances | Zone |', '| ---: | ---: | --- |')
+    for (const zone of zoneTotals) {
+      lines.push(
+        `| ${escapeMarkdownTable(formatDuration(zone.activeSeconds))} | ${zone.entrances} | ${escapeMarkdownTable(formatActivityZoneLabel(zone.zone))} |`
       )
     }
   }
@@ -891,6 +901,30 @@ function aggregateWorkItemTotals(sessions: FocusSessionView[], workItemNotes = n
   })
 }
 
+function aggregateActivityZoneTotals(sessions: FocusSessionView[]) {
+  const totals = new Map<ActivityZone, { zone: ActivityZone; activeSeconds: number; entrances: number }>()
+
+  for (const session of sessions) {
+    const current = totals.get(session.activity_zone) ?? {
+      zone: session.activity_zone,
+      activeSeconds: 0,
+      entrances: 0,
+    }
+
+    current.activeSeconds += session.active_seconds
+    current.entrances += 1
+    totals.set(session.activity_zone, current)
+  }
+
+  return Array.from(totals.values()).sort((left, right) => {
+    if (right.activeSeconds !== left.activeSeconds) {
+      return right.activeSeconds - left.activeSeconds
+    }
+
+    return left.zone.localeCompare(right.zone)
+  })
+}
+
 function appendWorkItemNotes(
   lines: string[],
   workItemTotals: Array<{ title: string; note?: string }>
@@ -964,6 +998,18 @@ function escapeMarkdownTable(value: string) {
 
 function formatMarkdownListText(value: string) {
   return value.replace(/\s+/g, ' ').trim()
+}
+
+function formatActivityZoneLabel(zone: ActivityZone) {
+  const labels: Record<ActivityZone, string> = {
+    work: 'Work',
+    coordination: 'Coordination',
+    recovery: 'Recovery',
+    idle: 'Idle',
+    personal: 'Personal',
+  }
+
+  return labels[zone]
 }
 
 function formatLocalDate(date: Date) {
@@ -1117,6 +1163,9 @@ function FocusSessionRow({
               item
             </span>
           )}
+          <span className="shrink-0 rounded border border-gray-700 px-1 text-[10px] uppercase tracking-wide text-gray-500">
+            {formatActivityZoneLabel(session.activity_zone)}
+          </span>
         </span>
         <span className={stateClass}>{range}</span>
         <button

@@ -7,7 +7,7 @@ use uuid::Uuid;
 
 use crate::api::handlers::RpcResponse;
 use crate::domain::{
-    AppEvent, AppEventKind, AppEventSource, FocusSession, WorkItem, WorkItemEvent,
+    ActivityZone, AppEvent, AppEventKind, AppEventSource, FocusSession, WorkItem, WorkItemEvent,
     WorkItemEventKind, WorkItemState, WorkItemType, WorkItemView,
 };
 use crate::AppState;
@@ -35,6 +35,11 @@ pub async fn handle_work_item_create(
         .get("type")
         .and_then(|v| v.as_str())
         .and_then(WorkItemType::from_str);
+
+    let activity_zone = params
+        .get("activity_zone")
+        .and_then(|v| v.as_str())
+        .and_then(ActivityZone::from_str);
 
     let item_state = params
         .get("state")
@@ -66,7 +71,13 @@ pub async fn handle_work_item_create(
         } else {
             item_state
         };
-        let item = WorkItem::new(title.to_string(), item_type, initial_state, note);
+        let item = WorkItem::new(
+            title.to_string(),
+            item_type,
+            activity_zone,
+            initial_state,
+            note,
+        );
         state.db.create_work_item(&item).await.map_err(|e| {
             RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
         })?;
@@ -175,9 +186,11 @@ pub async fn handle_work_item_set_state(
             activate_work_item_for_focus(&state, &mut item, request_id, "work_item_set_active")
                 .await?;
     } else {
-        if let Some((mut session, _)) = state.db.get_active_focus_session().await.map_err(|e| {
-            RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
-        })? {
+        if let Some((mut session, _, _)) =
+            state.db.get_active_focus_session().await.map_err(|e| {
+                RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
+            })?
+        {
             if session.work_item_id == Some(id) {
                 let _ = state
                     .db
@@ -335,6 +348,23 @@ pub async fn handle_work_item_update(
         None
     };
 
+    let requested_activity_zone = if let Some(value) = params.get("activity_zone") {
+        Some(
+            value
+                .as_str()
+                .and_then(ActivityZone::from_str)
+                .ok_or_else(|| {
+                    RpcResponse::error(
+                        request_id.to_string(),
+                        "validation_error",
+                        "Valid activity zone is required",
+                    )
+                })?,
+        )
+    } else {
+        None
+    };
+
     let requested_note = if let Some(value) = params.get("note") {
         if value.is_null() {
             Some(None)
@@ -399,6 +429,10 @@ pub async fn handle_work_item_update(
 
     if let Some(item_type) = requested_type {
         item.item_type = item_type;
+    }
+
+    if let Some(activity_zone) = requested_activity_zone {
+        item.activity_zone = activity_zone;
     }
 
     if let Some(note) = requested_note {
@@ -485,7 +519,7 @@ pub async fn handle_work_item_delete(
     let state = state.write().await;
 
     let mut stopped_focus_session_id = None;
-    if let Some((mut session, _)) =
+    if let Some((mut session, _, _)) =
         state.db.get_active_focus_session().await.map_err(|e| {
             RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
         })?
@@ -580,7 +614,7 @@ async fn activate_work_item_for_focus(
         .get_active_focus_session()
         .await
         .map_err(|e| RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string()))?
-        .map(|(session, _)| session);
+        .map(|(session, _, _)| session);
 
     let was_switch = active_session
         .as_ref()

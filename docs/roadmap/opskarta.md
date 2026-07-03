@@ -138,13 +138,13 @@ gantt
 - Focus Session core [in_progress] (17 focus-blocks) {85%}
 - Add FocusSession and SessionEvent persistence [in_progress] (3 focus-blocks) {70%}
 - Implement start, pause, resume, stop, cancel [in_progress] (3 focus-blocks) {45%}
-- Day review and export [in_progress] (12 focus-blocks) {89%}
+- Day review and export [in_progress] (12 focus-blocks) {90%}
 - Show focus blocks on a daily timeline [in_progress] (3 focus-blocks) {65%}
-- Compute totals, gaps, and entry count [in_progress] (2 focus-blocks) {90%}
+- Compute totals, gaps, and entry count [in_progress] (2 focus-blocks) {96%}
 - Export dogfood day data as Markdown [in_progress] (2 focus-blocks) {97%}
-- Dogfood hardening [in_progress] (8 focus-blocks) {98% cov:75%}
+- Dogfood hardening [in_progress] (8 focus-blocks) {99% cov:75%}
 - Add smoke checks for focus-session flows [in_progress] (2 focus-blocks) {99%}
-- Fix first dogfood friction [in_progress] (2 focus-blocks) {95%}
+- Fix first dogfood friction [in_progress] (2 focus-blocks) {97%}
 - Document macOS multi-monitor status item limits [planned] (1 focus-blocks)
 <!-- GENERATED:END -->
 

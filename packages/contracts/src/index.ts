@@ -23,6 +23,11 @@ export type WorkItemState =
 export type WorkItemType = "task" | "project" | "question";
 
 /**
+ * Broad activity zone used for day review.
+ */
+export type ActivityZone = "work" | "coordination" | "recovery" | "idle" | "personal";
+
+/**
  * Type of reference attached to a work item
  */
 export type RefKind = "url" | "file_path" | "issue_key" | "custom";
@@ -34,11 +39,14 @@ export interface WorkItemView {
   id: string;
   title: string;
   type?: WorkItemType;
+  activity_zone: ActivityZone;
   state: WorkItemState;
   pinned: boolean;
   note?: string;
   refs_count: number;
   refs: RefView[];
+  today_active_seconds: number;
+  total_active_seconds: number;
   created_at: string;  // ISO 8601
   updated_at: string;  // ISO 8601
   last_seen_at?: string;  // ISO 8601
@@ -63,6 +71,7 @@ export interface FocusSessionView {
   title: string;
   work_item_id?: string;
   work_item_title?: string;
+  activity_zone: ActivityZone;
   state: FocusSessionState;
   target_seconds: number;
   active_seconds: number;
@@ -321,6 +330,10 @@ export interface InventoryListParams {
     pinned?: boolean;
     search?: string;
   };
+  focus_window?: {
+    from?: string;  // ISO 8601
+    to?: string;  // ISO 8601
+  };
   sort?: {
     field: "last_seen_at" | "created_at" | "updated_at" | "title";
     order: "asc" | "desc";
@@ -335,6 +348,7 @@ export interface InventoryListParams {
 export interface WorkItemCreateParams {
   title: string;
   type?: WorkItemType;
+  activity_zone?: ActivityZone;
   state?: WorkItemState;
   note?: string;
 }
@@ -355,6 +369,7 @@ export interface WorkItemUpdateParams {
   id: string;
   title?: string;
   type?: WorkItemType;
+  activity_zone?: ActivityZone;
   note?: string | null;
 }
 

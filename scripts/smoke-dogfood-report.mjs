@@ -14,6 +14,7 @@ const dbPath = join(tempDir, "timeskein.db");
 try {
   await runSqlFile(join(repoRoot, "apps/agent/migrations/001_initial.sql"));
   await runSqlFile(join(repoRoot, "apps/agent/migrations/002_focus_sessions.sql"));
+  await runSqlFile(join(repoRoot, "apps/agent/migrations/005_activity_zones.sql"));
   await runSqlFile(join(repoRoot, "apps/agent/migrations/004_captures.sql"));
   await runSql(`
     INSERT INTO work_items (id, title, type, state, pinned, note, created_at, updated_at, last_seen_at)
@@ -56,6 +57,7 @@ try {
   assert(stdout.includes("converted") && stdout.includes("Meetings"), "report did not include converted capture target");
   assert(stdout.includes("Total focus: 1:05:00"), "report did not include exported focus total");
   assert(stdout.includes("## By Work Item"), "report did not include work item totals");
+  assert(stdout.includes("## By Activity Zone"), "report did not include activity zone totals");
   assert(stdout.includes("## Work Item Notes"), "report did not include Work Item Notes section");
   assert(
     stdout.includes("- Deep Work: Keep the implementation context here."),

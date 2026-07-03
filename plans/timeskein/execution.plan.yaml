@@ -110,24 +110,24 @@ execution:
       confidence: 0.8
       note: Compact Today list shows focus blocks with time range, duration, linked Work Item, active state, and significant gaps. A full timeline view is not implemented.
     ts.day_review.totals_gaps:
-      progress: 0.9
+      progress: 0.96
       actual_start: "2026-06-30"
-      updated_at: "2026-06-30T18:59:00+03:00"
+      updated_at: "2026-07-03T20:55:00+03:00"
       confidence: 0.9
-      note: UI and Markdown export show total active time, entrance count, per-Work-Item totals, significant gaps of 20+ minutes between focus blocks, and an Open Gap after the last stopped block when tracking is currently idle. Day-window queries include overlapping blocks and clip their duration to the selected local day.
+      note: UI and Markdown export show total active time, entrance count, per-Work-Item totals, Activity Zone totals, significant gaps of 20+ minutes between focus blocks, and an Open Gap after the last stopped block when tracking is currently idle. The Work Item list shows today/total tracked time when available. Day-window queries include overlapping blocks and clip their duration to the selected local day.
     ts.day_review.export:
       progress: 0.97
       actual_start: "2026-06-30"
-      updated_at: "2026-07-02T18:45:00+03:00"
+      updated_at: "2026-07-03T20:55:00+03:00"
       confidence: 0.9
-      note: Today can copy raw Markdown or a dogfood report with evening prompts, and shows selected Markdown when clipboard access fails. The same day data can be exported from SQLite with pnpm export:focus-day; pnpm dogfood:finish checks overlapping day blocks and active focus before printing the report. Reports now include App Telemetry, Work Item notes for touched items, and Capture Activity for created, resolved, and converted captures. Corrected focus-session rows are reflected in the copied report. JSON/CSV export is not implemented.
+      note: Today can copy raw Markdown or a dogfood report with evening prompts, and shows selected Markdown when clipboard access fails. The same day data can be exported from SQLite with pnpm export:focus-day; pnpm dogfood:finish checks overlapping day blocks and active focus before printing the report. Reports now include App Telemetry, Activity Zone totals, Work Item notes for touched items, and Capture Activity for created, resolved, and converted captures. Corrected focus-session rows are reflected in the copied report. JSON/CSV export is not implemented.
     ts.day_review.corrections:
       progress: 1.0
       actual_start: "2026-07-03"
       actual_finish: "2026-07-03"
       updated_at: "2026-07-03T19:00:00+03:00"
       confidence: 0.85
-      note: Implemented focus.update and focus.split in the Rust agent and mock API, Work Item title/type/note editing with duplicate-title protection, Today-row correction UI, and smoke coverage for whole-block update, split, reassignment, and report reflection.
+      note: Implemented focus.update and focus.split in the Rust agent and mock API, Work Item title/type/Activity Zone/note editing with duplicate-title protection, Today-row correction UI, and smoke coverage for whole-block update, split, reassignment, zone propagation, inventory time totals, and report reflection.
     ts.day_review.app_telemetry:
       progress: 1.0
       actual_start: "2026-06-30"
@@ -173,15 +173,15 @@ execution:
       progress: 1.0
       actual_start: "2026-07-01"
       actual_finish: "2026-07-03"
-      updated_at: "2026-07-03T18:20:00+03:00"
+      updated_at: "2026-07-03T20:55:00+03:00"
       confidence: 0.9
-      note: Added Dogfood Release Candidate gate doc, dogfood:rc-check evidence checker, dogfood:rc-check:save Markdown artifact, and Dogfood Release Baseline. The baseline records the accepted 2026-07-03 verdict and known limitations.
+      note: Added Dogfood Release Candidate gate doc, dogfood:rc-check evidence checker, dogfood:rc-check:save Markdown artifact, and Dogfood Release Baseline. The baseline records the accepted 2026-07-03 verdict and current post-baseline state, including implemented correction, Work Item editing, Activity Zone totals, and today/total list metrics.
     ts.hardening.post_dogfood_friction:
-      progress: 0.95
+      progress: 0.97
       actual_start: "2026-07-01"
-      updated_at: "2026-07-03T19:00:00+03:00"
+      updated_at: "2026-07-03T20:55:00+03:00"
       confidence: 0.85
-      note: Fixed C/С shortcut capture while typing, active Work Item creation, visible create errors, ambiguous last-seen labels, Work Item notes in reports, minimal Capture Inbox, Work Item basic editing, and post-factum focus-block correction. Remaining friction is mostly window behavior, menu bar counter refresh, and richer list metrics.
+      note: Fixed C/С shortcut capture while typing, active Work Item creation, visible create errors, ambiguous last-seen labels, Work Item notes in reports, minimal Capture Inbox, Work Item basic editing, post-factum focus-block correction, Activity Zone totals, and Work Item today/total list metrics. Remaining friction is mostly window behavior, menu bar counter refresh, and timestamped notes/events.
     ts.hardening.package_app:
       progress: 1.0
       actual_start: "2026-06-30"

@@ -11,6 +11,7 @@ import {
   type CaptureState,
   type AppEventKind,
   type AppEventSource,
+  type ActivityZone,
 } from "@timeskein/contracts";
 import { MockDataStore } from "./fixtures";
 
@@ -245,8 +246,11 @@ function handleMethod(
       const stateFilter = params.filter && typeof params.filter === "object"
         ? (params.filter as Record<string, unknown>).state as WorkItemState[] | undefined
         : undefined;
+      const focusWindow = params.focus_window && typeof params.focus_window === "object"
+        ? params.focus_window as { from?: string; to?: string }
+        : undefined;
 
-      const items = store.listWorkItems(search, stateFilter);
+      const items = store.listWorkItems(search, stateFilter, focusWindow);
       return successResponse(requestId, {
         items,
         total: items.length,
@@ -277,6 +281,7 @@ function handleMethod(
         title,
         params.type as "task" | "project" | "question" | undefined,
         params.state as WorkItemState | undefined,
+        params.activity_zone as ActivityZone | undefined,
         params.note as string | undefined
       );
       return successResponse(requestId, {
@@ -346,6 +351,7 @@ function handleMethod(
       const item = store.updateWorkItem(id, {
         title,
         type: params.type as "task" | "project" | "question" | null | undefined,
+        activity_zone: params.activity_zone as ActivityZone | undefined,
         note: params.note as string | null | undefined,
       });
       if (!item) {

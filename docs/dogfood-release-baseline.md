@@ -15,7 +15,7 @@ trustworthy enough for regular dogfooding:
 - start or switch a focus block quickly;
 - keep one active timer and one active Work Item;
 - capture incoming interruptions without switching away from the current block;
-- produce an end-of-day report with focus blocks, Work Item totals, gaps,
+- produce an end-of-day report with focus blocks, Work Item totals, Activity Zone totals, gaps,
   Capture Activity, open captures, Work Item notes, and app telemetry.
 
 ## Evidence
@@ -46,37 +46,38 @@ Capture Inbox failure or data-loss risk.
 
 These were accepted limitations for the dogfood baseline, not blockers:
 
-- Focus blocks cannot be edited, split, moved, or reassigned after the fact.
-  When a timer is left on the wrong Work Item, the report preserves total focus
-  time but Work Item totals need a manual note.
-- Work Item title editing is not implemented yet; current Work Item editing is
-  limited to notes, refs, state, pinning, touch, and delete.
+- Focus correction is basic: stopped blocks can be edited, split, and reassigned,
+  but there is no drag timeline, bulk edit, or dedicated correction workflow yet.
+- Work Item editing covers title, type, Activity Zone, and note; refs, state,
+  pinning, touch, and delete remain separate actions.
 - Stop notes cannot be edited after the block is stopped.
 - Work Item notes are mutable descriptions, not timestamped activity notes.
 - Capture Inbox cannot edit or delete captures, and cannot append a capture as
   a timestamped Work Item note yet.
-- Activity zones are not implemented, so breaks tracked as Work Items still
-  count into total focus.
+- Activity zones are Work Item-level only. Reports show zone totals, but the
+  top-line `Total focus` still counts every tracked block.
 - The macOS borderless window can stay visually on top in awkward moments and
   cannot be restored through Command+Tab after being hidden.
 - The menu bar focus counter can lag until the status item is clicked.
-- The Work Item list does not yet show today/total time spent per item.
+- The Work Item list shows today/total time spent per item when available.
 
 ## Next Slice
 
-Post-dogfood correction was the next useful engineering slice and is now partly
-implemented:
+Post-dogfood correction and first review enrichment are now partly implemented:
 
 - stopped focus blocks can be edited, split, and reassigned by Work Item title;
 - Work Item titles and basic fields can be edited with duplicate-title
   protection;
 - copied reports use the corrected focus-session rows.
+- Work Items carry Activity Zones, the list shows today/total spent time, and
+  copied reports include Activity Zone totals.
 
 Remaining entry and review polish:
 
 - make hidden-window restore and status-bar updates less surprising;
-- show today/total time in the Work Item list;
 - add timestamped notes or events if stop notes and captures are not enough.
+- decide whether top-line report totals should include filtered numbers such as
+  work-only focus and recovery time.
 
 Activity evidence from apps, browser tabs, messenger channels, screenshots, or
 AI interpretation remains a future opt-in layer. It should not be started until

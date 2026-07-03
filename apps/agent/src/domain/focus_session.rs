@@ -4,6 +4,8 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+use super::ActivityZone;
+
 /// Focus session state.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, sqlx::Type)]
 #[serde(rename_all = "lowercase")]
@@ -91,6 +93,7 @@ pub struct FocusSessionView {
     pub work_item_id: Option<Uuid>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub work_item_title: Option<String>,
+    pub activity_zone: String,
     pub state: String,
     pub target_seconds: i64,
     pub active_seconds: i64,
@@ -107,6 +110,7 @@ impl FocusSessionView {
     pub fn from_session(
         session: &FocusSession,
         work_item_title: Option<String>,
+        activity_zone: Option<ActivityZone>,
         now: DateTime<Utc>,
     ) -> Self {
         let active_seconds = session.active_seconds_at(now);
@@ -115,6 +119,7 @@ impl FocusSessionView {
             title: session.title.clone(),
             work_item_id: session.work_item_id,
             work_item_title,
+            activity_zone: activity_zone.unwrap_or_default().as_str().to_string(),
             state: session.state.as_str().to_string(),
             target_seconds: session.target_seconds,
             active_seconds,

@@ -3,8 +3,10 @@ import {
   type ApiRequest,
   type ApiResponse,
   type InventoryListResponse,
+  type InventoryListParams,
   type WorkItemView,
   type WorkItemUpdateParams,
+  type WorkItemCreateParams,
   type WorkItemCreateResponse,
   type WorkItemDeleteResponse,
   type AgentStatus,
@@ -114,14 +116,14 @@ export const agentApi = {
 
 // Inventory API
 export const inventoryApi = {
-  list: (params?: { filter?: { search?: string; state?: string[] } }) =>
+  list: (params?: InventoryListParams) =>
     rpc<InventoryListResponse>('inventory.list', params),
   get: (id: string) => rpc<WorkItemView>('inventory.get', { id }),
 }
 
 // Work Item API
 export const workItemApi = {
-  create: (params: { title: string; type?: string; state?: string; note?: string }) =>
+  create: (params: WorkItemCreateParams) =>
     rpc<WorkItemCreateResponse>('work_item.create', params),
   update: (params: WorkItemUpdateParams) =>
     rpc<WorkItemView>('work_item.update', params),

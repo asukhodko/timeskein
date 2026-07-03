@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { inventoryApi, workItemApi, refApi } from '../api/client'
-import type { WorkItemState, WorkItemUpdateParams } from '@timeskein/contracts'
+import type { WorkItemCreateParams, WorkItemState, WorkItemUpdateParams } from '@timeskein/contracts'
 
 // Query keys
 export const queryKeys = {
@@ -10,9 +10,21 @@ export const queryKeys = {
 
 // Inventory hook
 export function useInventory(search?: string) {
+  const now = new Date()
+  const dayStart = new Date(now)
+  dayStart.setHours(0, 0, 0, 0)
+  const dayEnd = new Date(dayStart)
+  dayEnd.setDate(dayEnd.getDate() + 1)
+
   return useQuery({
-    queryKey: [...queryKeys.inventory, search],
-    queryFn: () => inventoryApi.list({ filter: search ? { search } : undefined }),
+    queryKey: [...queryKeys.inventory, search, dayStart.toISOString(), dayEnd.toISOString()],
+    queryFn: () => inventoryApi.list({
+      filter: search ? { search } : undefined,
+      focus_window: {
+        from: dayStart.toISOString(),
+        to: dayEnd.toISOString(),
+      },
+    }),
   })
 }
 
@@ -21,7 +33,7 @@ export function useCreateWorkItem() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (params: { title: string; type?: string; state?: string; note?: string }) =>
+    mutationFn: (params: WorkItemCreateParams) =>
       workItemApi.create(params),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.inventory })

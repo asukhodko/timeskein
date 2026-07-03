@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useCreateWorkItem } from '../hooks/useInventory'
-import type { WorkItemState, WorkItemType } from '@timeskein/contracts'
+import type { ActivityZone, WorkItemState, WorkItemType } from '@timeskein/contracts'
 
 interface CreateDialogProps {
   onClose: () => void
@@ -12,6 +12,7 @@ export default function CreateDialog({ onClose, initialTitle = '' }: CreateDialo
   const [note, setNote] = useState('')
   const [state, setState] = useState<WorkItemState>('unknown')
   const [type, setType] = useState<WorkItemType>('task')
+  const [activityZone, setActivityZone] = useState<ActivityZone>('work')
   const [error, setError] = useState<string | null>(null)
   
   const titleRef = useRef<HTMLInputElement>(null)
@@ -32,6 +33,7 @@ export default function CreateDialog({ onClose, initialTitle = '' }: CreateDialo
       await createMutation.mutateAsync({
         title: title.trim(),
         type,
+        activity_zone: activityZone,
         state,
         note: note.trim() || undefined,
       })
@@ -109,6 +111,22 @@ export default function CreateDialog({ onClose, initialTitle = '' }: CreateDialo
                 <option value="done">Done</option>
               </select>
             </div>
+          </div>
+
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">Zone</label>
+            <select
+              value={activityZone}
+              onChange={(e) => setActivityZone(e.target.value as ActivityZone)}
+              className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded
+                         text-gray-200 focus:border-blue-500"
+            >
+              <option value="work">Work</option>
+              <option value="coordination">Coordination</option>
+              <option value="recovery">Recovery</option>
+              <option value="idle">Idle</option>
+              <option value="personal">Personal</option>
+            </select>
           </div>
 
           {/* Note */}

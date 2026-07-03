@@ -173,6 +173,7 @@ async fn stopped_focus_block_can_be_updated_split_and_reported_correctly() {
             "id": split["right"]["work_item_id"].as_str().expect("right item id"),
             "title": "Correction Right Edited",
             "type": "project",
+            "activity_zone": "coordination",
             "note": "edited item note",
         }),
         "edit-item",
@@ -180,8 +181,12 @@ async fn stopped_focus_block_can_be_updated_split_and_reported_correctly() {
     .await
     .expect("edit item");
 
-    assert_eq!(edited_item["title"].as_str(), Some("Correction Right Edited"));
+    assert_eq!(
+        edited_item["title"].as_str(),
+        Some("Correction Right Edited")
+    );
     assert_eq!(edited_item["type"].as_str(), Some("project"));
+    assert_eq!(edited_item["activity_zone"].as_str(), Some("coordination"));
     assert_eq!(edited_item["note"].as_str(), Some("edited item note"));
 
     let listed = handle_focus_list(
@@ -202,4 +207,26 @@ async fn stopped_focus_block_can_be_updated_split_and_reported_correctly() {
         sessions[1]["work_item_title"].as_str(),
         Some("Correction Right Edited")
     );
+    assert_eq!(sessions[1]["activity_zone"].as_str(), Some("coordination"));
+
+    let inventory = handle_inventory_list(
+        &state,
+        json!({
+            "focus_window": {
+                "from": (start - Duration::minutes(1)).to_rfc3339(),
+                "to": (end + Duration::minutes(1)).to_rfc3339(),
+            }
+        }),
+        "inventory",
+    )
+    .await
+    .expect("inventory");
+    let items = inventory["items"].as_array().expect("items");
+    let right_item = items
+        .iter()
+        .find(|item| item["title"].as_str() == Some("Correction Right Edited"))
+        .expect("right item in inventory");
+
+    assert_eq!(right_item["today_active_seconds"].as_i64(), Some(120));
+    assert_eq!(right_item["total_active_seconds"].as_i64(), Some(120));
 }

@@ -218,11 +218,11 @@ Third real dogfood day and release baseline:
 - 25-minute target with elapsed contact time and overflow display
 - Manual stop with optional note
 - Active focus session restored from SQLite after frontend/app restart
-- Today's focus blocks with total active time, entrance count, stop notes, and significant gap ranges of 20+ minutes
+- Today's focus blocks with total active time, entrance count, Activity Zone, stop notes, and significant gap ranges of 20+ minutes
 - Day views include focus blocks that overlap the selected local day; duration totals are clipped to the selected day window
 - Today and Markdown export show an `Open Gap` when no focus block is running and the interval after the last stopped block is at least 20 minutes
 - Markdown reports use the corrected focus-session rows, so post-factum edits are reflected in copied day data
-- Today's focus picture can be copied as Markdown from the focus panel, including per-Work-Item totals and significant gaps
+- Today's focus picture can be copied as Markdown from the focus panel, including per-Work-Item totals, Activity Zone totals, and significant gaps
 - Today's focus picture can also be exported from SQLite with `pnpm export:focus-day`
 - Evening dogfood report can be copied from the focus panel, shown as selected Markdown if clipboard access fails, or generated with `pnpm dogfood:report`
 - Day reports include a `Work Item Notes` section for touched Work Items that have non-empty notes
@@ -236,7 +236,8 @@ Third real dogfood day and release baseline:
 - Manual Work Item inventory UI
 - Search
 - Create Work Item
-- Edit Work Item title, type, and note
+- Edit Work Item title, type, Activity Zone, and note
+- Work Item cards show last touched time plus today/total tracked time when available
 - Create Work Item directly in `active` starts or switches the focus timer instead of leaving split active state
 - Touch
 - State changes
@@ -285,6 +286,7 @@ High-signal findings:
 - Capture Inbox worked in real use on 2026-07-03: incoming events were captured during active focus, then resolved or converted later.
 - Work Item notes matter for review and now appear in day reports for touched items; they are still not timestamped.
 - Wrong Work Item assignment happened during dogfood; stopped blocks can now be corrected and split after the fact.
+- Activity Zones are now available at Work Item level and appear in day reports. They separate review data by work, coordination, recovery, idle, and personal, but the top-line total still counts every tracked block.
 - Command+Tab does not restore a hidden borderless Timeskein window yet.
 - The menu bar focus counter can lag until the status item is clicked.
 
@@ -356,8 +358,7 @@ On multi-monitor macOS setups, the tray/status item is controlled by the system 
 - Command+Tab does not restore the hidden borderless macOS window yet.
 - The borderless macOS window can remain visually on top in awkward moments.
 - The menu bar focus counter can lag until the status item is clicked.
-- The Work Item list does not show today/total time spent per item yet.
-- Activity zones are not implemented, so breaks tracked as Work Items still count into total focus.
+- Activity Zones are Work Item-level only; there is no per-session zone override or filtered top-line work-only total yet.
 - Automated e2e tests are not implemented yet.
 - Cross-platform CI is not implemented yet.
 - Settings UI is not implemented yet.
@@ -368,7 +369,6 @@ On multi-monitor macOS setups, the tray/status item is controlled by the system 
 
 1. Improve macOS window return behavior, especially hidden-window restore through Command+Tab and surprising always-on-top moments.
 2. Make the menu bar focus counter update reliably without click refresh.
-3. Show today/total time spent per Work Item in the list.
-4. Add a clearer correction workflow if split + update is not enough after the next dogfood day.
-5. Add timestamped Work Item notes or events if captures and stop notes are not enough for review.
-6. Add activity zones if break/idle tracking corrupts total focus data.
+3. Add a clearer correction workflow if split + update is not enough after the next dogfood day.
+4. Add timestamped Work Item notes or events if captures and stop notes are not enough for review.
+5. Decide whether Activity Zone totals should also produce filtered top-line numbers such as work-only focus and recovery time.

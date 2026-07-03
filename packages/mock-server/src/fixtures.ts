@@ -10,6 +10,7 @@ import type {
   AppEventSource,
   AppEventSummary,
   AppEventView,
+  ActivityZone,
 } from "@timeskein/contracts";
 import { v4 as uuidv4 } from "uuid";
 
@@ -50,11 +51,14 @@ export const mockWorkItems: WorkItemView[] = [
     id: "item-1",
     title: "Implement global hotkey palette",
     type: "task",
+    activity_zone: "work",
     state: "unknown",
     pinned: true,
     note: "Next: finish keyboard navigation, then test on Windows",
     refs_count: 2,
     refs: mockRefs["item-1"],
+    today_active_seconds: 0,
+    total_active_seconds: 0,
     created_at: weekAgo,
     updated_at: hourAgo,
     last_seen_at: hourAgo,
@@ -63,11 +67,14 @@ export const mockWorkItems: WorkItemView[] = [
     id: "item-2",
     title: "Fix validation error on login form",
     type: "task",
+    activity_zone: "work",
     state: "unknown",
     pinned: false,
     note: "Check PROJ-123 for repro steps",
     refs_count: 1,
     refs: mockRefs["item-2"],
+    today_active_seconds: 0,
+    total_active_seconds: 0,
     created_at: twoDaysAgo,
     updated_at: dayAgo,
     last_seen_at: dayAgo,
@@ -76,11 +83,14 @@ export const mockWorkItems: WorkItemView[] = [
     id: "item-3",
     title: "Review API documentation",
     type: "task",
+    activity_zone: "coordination",
     state: "waiting",
     pinned: false,
     note: "Waiting for backend team to finalize endpoints",
     refs_count: 1,
     refs: mockRefs["item-3"],
+    today_active_seconds: 0,
+    total_active_seconds: 0,
     created_at: weekAgo,
     updated_at: twoDaysAgo,
     last_seen_at: twoDaysAgo,
@@ -89,11 +99,14 @@ export const mockWorkItems: WorkItemView[] = [
     id: "item-4",
     title: "Refactor state management",
     type: "project",
+    activity_zone: "work",
     state: "someday",
     pinned: false,
     note: undefined,
     refs_count: 0,
     refs: [],
+    today_active_seconds: 0,
+    total_active_seconds: 0,
     created_at: weekAgo,
     updated_at: weekAgo,
     last_seen_at: undefined,
@@ -102,11 +115,14 @@ export const mockWorkItems: WorkItemView[] = [
     id: "item-5",
     title: "Staging environment access",
     type: "task",
+    activity_zone: "work",
     state: "blocked",
     pinned: false,
     note: "Need VPN access from IT",
     refs_count: 1,
     refs: mockRefs["item-5"],
+    today_active_seconds: 0,
+    total_active_seconds: 0,
     created_at: twoDaysAgo,
     updated_at: dayAgo,
     last_seen_at: dayAgo,
@@ -115,11 +131,14 @@ export const mockWorkItems: WorkItemView[] = [
     id: "item-6",
     title: "Get design feedback",
     type: "question",
+    activity_zone: "coordination",
     state: "waiting",
     pinned: false,
     note: "Sent designs to designer on Monday",
     refs_count: 1,
     refs: mockRefs["item-6"],
+    today_active_seconds: 0,
+    total_active_seconds: 0,
     created_at: weekAgo,
     updated_at: twoDaysAgo,
     last_seen_at: twoDaysAgo,
@@ -224,7 +243,7 @@ export class MockDataStore {
 
     const itemTitle = title?.trim() || capture.text;
     const existing = this.findWorkItemByTitle(itemTitle);
-    const item = this.createWorkItem(itemTitle, "task", "unknown");
+    const item = this.createWorkItem(itemTitle, "task", "unknown", "work");
     const now = new Date().toISOString();
 
     capture.state = "converted";
@@ -370,7 +389,11 @@ export class MockDataStore {
   }
 
   // Inventory methods
-  listWorkItems(search?: string, stateFilter?: WorkItemState[]): WorkItemView[] {
+  listWorkItems(
+    search?: string,
+    stateFilter?: WorkItemState[],
+    focusWindow?: { from?: string; to?: string }
+  ): WorkItemView[] {
     let items = Array.from(this.workItems.values()).filter(
       (item) => !item.id.startsWith("deleted-")
     );
@@ -415,7 +438,14 @@ export class MockDataStore {
       return bTime - aTime;
     });
 
-    return items;
+    const todayTotals = this.aggregateWorkItemFocusSeconds(focusWindow?.from, focusWindow?.to);
+    const totalTotals = this.aggregateWorkItemFocusSeconds();
+
+    return items.map((item) => ({
+      ...item,
+      today_active_seconds: todayTotals.get(item.id) ?? 0,
+      total_active_seconds: totalTotals.get(item.id) ?? 0,
+    }));
   }
 
   getWorkItem(id: string): WorkItemView | undefined {
@@ -436,6 +466,7 @@ export class MockDataStore {
     title: string,
     type?: "task" | "project" | "question",
     state?: WorkItemState,
+    activityZone?: ActivityZone,
     note?: string
   ): WorkItemView {
     const existing = this.findWorkItemByTitle(title);
@@ -451,11 +482,14 @@ export class MockDataStore {
       id: uuidv4(),
       title: title.trim(),
       type: type || "task",
+      activity_zone: activityZone || "work",
       state: state || "unknown",
       pinned: false,
       note,
       refs_count: 0,
       refs: [],
+      today_active_seconds: 0,
+      total_active_seconds: 0,
       created_at: now,
       updated_at: now,
       last_seen_at: now,
@@ -525,7 +559,7 @@ export class MockDataStore {
 
   updateWorkItem(
     id: string,
-    params: { title?: string; type?: "task" | "project" | "question" | null; note?: string | null }
+    params: { title?: string; type?: "task" | "project" | "question" | null; activity_zone?: ActivityZone; note?: string | null }
   ): WorkItemView | undefined {
     const item = this.workItems.get(id);
     if (!item) return undefined;
@@ -541,6 +575,14 @@ export class MockDataStore {
     }
     if (params.type !== undefined) {
       item.type = params.type || undefined;
+    }
+    if (params.activity_zone !== undefined) {
+      item.activity_zone = params.activity_zone;
+      for (const session of this.focusSessions.values()) {
+        if (session.work_item_id === item.id) {
+          session.activity_zone = item.activity_zone;
+        }
+      }
     }
     if (params.note !== undefined) {
       item.note = params.note?.trim() || undefined;
@@ -703,7 +745,7 @@ export class MockDataStore {
       if (!title) {
         throw new Error("Title is required");
       }
-      workItem = this.findWorkItemByTitle(title) || this.createWorkItem(title, "task", "unknown");
+      workItem = this.findWorkItemByTitle(title) || this.createWorkItem(title, "task", "unknown", "work");
     }
 
     const current = this.getActiveFocusSession();
@@ -724,6 +766,7 @@ export class MockDataStore {
       title: workItem.title,
       work_item_id: workItem.id,
       work_item_title: workItem.title,
+      activity_zone: workItem.activity_zone,
       state: "active",
       target_seconds: Math.max(params.target_seconds || 25 * 60, 60),
       active_seconds: 0,
@@ -792,10 +835,12 @@ export class MockDataStore {
       fallbackTitle: session.title,
       fallbackWorkItemId: session.work_item_id,
       fallbackWorkItemTitle: session.work_item_title,
+      fallbackActivityZone: session.activity_zone,
     });
     session.title = assignment.title;
     session.work_item_id = assignment.workItemId;
     session.work_item_title = assignment.workItemTitle;
+    session.activity_zone = assignment.activityZone;
 
     if (params.target_seconds !== undefined) {
       session.target_seconds = Math.max(params.target_seconds, 60);
@@ -842,6 +887,7 @@ export class MockDataStore {
       fallbackTitle: left.title,
       fallbackWorkItemId: left.work_item_id,
       fallbackWorkItemTitle: left.work_item_title,
+      fallbackActivityZone: left.activity_zone,
     });
     const now = new Date().toISOString();
     const oldStoppedAt = left.stopped_at;
@@ -855,6 +901,7 @@ export class MockDataStore {
       title: assignment.title,
       work_item_id: assignment.workItemId,
       work_item_title: assignment.workItemTitle,
+      activity_zone: assignment.activityZone,
       state: "stopped",
       target_seconds: left.target_seconds,
       active_seconds: 0,
@@ -926,30 +973,53 @@ export class MockDataStore {
     fallbackTitle: string;
     fallbackWorkItemId?: string;
     fallbackWorkItemTitle?: string;
-  }): { title: string; workItemId?: string; workItemTitle?: string } {
+    fallbackActivityZone?: ActivityZone;
+  }): { title: string; workItemId?: string; workItemTitle?: string; activityZone: ActivityZone } {
     if (params.work_item_id !== undefined) {
       if (params.work_item_id === null) {
         const title = params.title?.trim() || params.fallbackTitle;
-        return { title };
+        return { title, activityZone: "work" };
       }
 
       const item = this.workItems.get(params.work_item_id);
       if (item) {
-        return { title: item.title, workItemId: item.id, workItemTitle: item.title };
+        return { title: item.title, workItemId: item.id, workItemTitle: item.title, activityZone: item.activity_zone };
       }
     }
 
     const title = params.title?.trim();
     if (title) {
-      const item = this.findWorkItemByTitle(title) || this.createWorkItem(title, "task", "unknown");
-      return { title: item.title, workItemId: item.id, workItemTitle: item.title };
+      const item = this.findWorkItemByTitle(title) || this.createWorkItem(title, "task", "unknown", "work");
+      return { title: item.title, workItemId: item.id, workItemTitle: item.title, activityZone: item.activity_zone };
     }
 
     return {
       title: params.fallbackTitle,
       workItemId: params.fallbackWorkItemId,
       workItemTitle: params.fallbackWorkItemTitle,
+      activityZone: params.fallbackActivityZone || "work",
     };
+  }
+
+  private aggregateWorkItemFocusSeconds(from?: string, to?: string): Map<string, number> {
+    const totals = new Map<string, number>();
+    const fromTime = from ? new Date(from).getTime() : Number.NEGATIVE_INFINITY;
+    const toTime = to ? new Date(to).getTime() : Number.POSITIVE_INFINITY;
+    const now = Date.now();
+
+    for (const session of this.focusSessions.values()) {
+      if (!session.work_item_id) continue;
+      const startedAt = new Date(session.started_at).getTime();
+      const stoppedAt = session.stopped_at ? new Date(session.stopped_at).getTime() : now;
+      if (stoppedAt <= fromTime || startedAt >= toTime) continue;
+
+      const clippedStart = Math.max(startedAt, fromTime);
+      const clippedStop = Math.min(stoppedAt, toTime);
+      const seconds = Math.max(Math.floor((clippedStop - clippedStart) / 1000), 0);
+      totals.set(session.work_item_id, (totals.get(session.work_item_id) ?? 0) + seconds);
+    }
+
+    return totals;
   }
 }
 

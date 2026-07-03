@@ -254,7 +254,7 @@ nodes:
     effort: 2
     deps:
       - id: ts.day_review.timeline
-    notes: Track total active time, number of focus entrances, gaps longer than 20 minutes, open gaps after the last stopped block, and target-reaching ratio.
+    notes: Track total active time, number of focus entrances, per-Work-Item totals, Activity Zone totals, gaps longer than 20 minutes, open gaps after the last stopped block, and target-reaching ratio.
     x:
       ops:
         attention_class: current
@@ -266,7 +266,7 @@ nodes:
     effort: 2
     deps:
       - id: ts.day_review.totals_gaps
-    notes: Today can copy the raw day picture or a dogfood report with review prompts, and shows selected Markdown if clipboard access fails. UI and CLI reports are marked as draft when a focus session or Work Item is still active. SQLite fallback export, CLI dogfood report, and dogfood:finish end-of-day gate are implemented; finish refuses active focus sessions, stuck active Work Items, and empty days. Reports now include Work Item notes for touched items and Capture Activity for created, resolved, and converted captures. JSON/CSV export remains future work.
+    notes: Today can copy the raw day picture or a dogfood report with review prompts, and shows selected Markdown if clipboard access fails. UI and CLI reports are marked as draft when a focus session or Work Item is still active. SQLite fallback export, CLI dogfood report, and dogfood:finish end-of-day gate are implemented; finish refuses active focus sessions, stuck active Work Items, and empty days. Reports now include Activity Zone totals, Work Item notes for touched items, and Capture Activity for created, resolved, and converted captures. JSON/CSV export remains future work.
     x:
       ops:
         attention_class: current
@@ -278,7 +278,7 @@ nodes:
     effort: 3
     deps:
       - id: ts.day_review.export
-    notes: Stopped focus blocks can be edited, reassigned to a Work Item by title, split at a timestamp, and corrected through the Today list. Work Item title/type/note editing is implemented with duplicate-title protection. Markdown reports use the corrected SQLite rows, so evening review can fix tracking mistakes before copying the final day picture.
+    notes: Stopped focus blocks can be edited, reassigned to a Work Item by title, split at a timestamp, and corrected through the Today list. Work Item title/type/Activity Zone/note editing is implemented with duplicate-title protection. Markdown reports use the corrected SQLite rows, so evening review can fix tracking mistakes before copying the final day picture.
     x:
       ops:
         attention_class: current
@@ -417,7 +417,7 @@ nodes:
     deps:
       - id: ts.hardening.package_app
       - id: ts.hardening.backup_reset
-    notes: "Dogfood Release Candidate doc defines the pass/fail gate. Dogfood Release Baseline records the accepted 2026-07-03 verdict and known limitations: post-factum focus correction, Work Item title editing, stop-note editing, Capture Inbox edit/delete, window restore, menu bar counter refresh, activity zones, and today/total Work Item time."
+    notes: "Dogfood Release Candidate doc defines the pass/fail gate. Dogfood Release Baseline records the accepted 2026-07-03 verdict and known limitations. Since acceptance, post-factum focus correction, Work Item title/type/Activity Zone editing, Activity Zone report totals, and today/total Work Item time are implemented. Remaining limitations include stop-note editing, Capture Inbox edit/delete, window restore, and menu bar counter refresh."
     x:
       ops:
         attention_class: current

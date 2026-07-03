@@ -5,7 +5,9 @@ use sqlx::Row;
 use uuid::Uuid;
 
 use crate::db::Database;
-use crate::domain::{WorkItem, WorkItemEvent, WorkItemEventKind, WorkItemState, WorkItemType};
+use crate::domain::{
+    ActivityZone, WorkItem, WorkItemEvent, WorkItemEventKind, WorkItemState, WorkItemType,
+};
 
 impl Database {
     /// List all work items (not deleted), sorted by pinned, state priority, last_seen
@@ -15,8 +17,8 @@ impl Database {
         state_filter: Option<&[WorkItemState]>,
     ) -> Result<Vec<WorkItem>> {
         let mut sql = String::from(
-            "SELECT id, title, type, state, pinned, note, created_at, updated_at, last_seen_at, deleted_at 
-             FROM work_items 
+            "SELECT id, title, type, activity_zone, state, pinned, note, created_at, updated_at, last_seen_at, deleted_at
+             FROM work_items
              WHERE deleted_at IS NULL"
         );
 
@@ -68,8 +70,8 @@ impl Database {
     /// Get a single work item by ID
     pub async fn get_work_item(&self, id: Uuid) -> Result<Option<WorkItem>> {
         let row = sqlx::query(
-            "SELECT id, title, type, state, pinned, note, created_at, updated_at, last_seen_at, deleted_at 
-             FROM work_items 
+            "SELECT id, title, type, activity_zone, state, pinned, note, created_at, updated_at, last_seen_at, deleted_at
+             FROM work_items
              WHERE id = ?1 AND deleted_at IS NULL"
         )
         .bind(id.to_string())
@@ -90,7 +92,7 @@ impl Database {
         }
 
         let row = sqlx::query(
-            "SELECT id, title, type, state, pinned, note, created_at, updated_at, last_seen_at, deleted_at
+            "SELECT id, title, type, activity_zone, state, pinned, note, created_at, updated_at, last_seen_at, deleted_at
              FROM work_items
              WHERE deleted_at IS NULL
                AND lower(trim(title)) = lower(trim(?1))
@@ -110,12 +112,13 @@ impl Database {
     /// Create a new work item
     pub async fn create_work_item(&self, item: &WorkItem) -> Result<()> {
         sqlx::query(
-            "INSERT INTO work_items (id, title, type, state, pinned, note, created_at, updated_at, last_seen_at, deleted_at)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)"
+            "INSERT INTO work_items (id, title, type, activity_zone, state, pinned, note, created_at, updated_at, last_seen_at, deleted_at)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)"
         )
         .bind(item.id.to_string())
         .bind(&item.title)
         .bind(item.item_type.map(|t| t.as_str()))
+        .bind(item.activity_zone.as_str())
         .bind(item.state.as_str())
         .bind(item.pinned)
         .bind(&item.note)
@@ -140,14 +143,15 @@ impl Database {
     /// Update a work item
     pub async fn update_work_item(&self, item: &WorkItem) -> Result<()> {
         sqlx::query(
-            "UPDATE work_items 
-             SET title = ?2, type = ?3, state = ?4, pinned = ?5, note = ?6, 
-                 updated_at = ?7, last_seen_at = ?8, deleted_at = ?9
+            "UPDATE work_items
+             SET title = ?2, type = ?3, activity_zone = ?4, state = ?5, pinned = ?6, note = ?7,
+                 updated_at = ?8, last_seen_at = ?9, deleted_at = ?10
              WHERE id = ?1",
         )
         .bind(item.id.to_string())
         .bind(&item.title)
         .bind(item.item_type.map(|t| t.as_str()))
+        .bind(item.activity_zone.as_str())
         .bind(item.state.as_str())
         .bind(item.pinned)
         .bind(&item.note)
@@ -256,6 +260,35 @@ impl Database {
         Ok(count)
     }
 
+    /// Aggregate focus seconds by Work Item over an optional time window.
+    pub async fn work_item_focus_totals(
+        &self,
+        from: Option<chrono::DateTime<chrono::Utc>>,
+        to: Option<chrono::DateTime<chrono::Utc>>,
+        now: chrono::DateTime<chrono::Utc>,
+    ) -> Result<std::collections::HashMap<Uuid, i64>> {
+        let sessions = self.list_focus_sessions(from, to, now).await?;
+        let mut totals = std::collections::HashMap::new();
+
+        for (session, _, _) in sessions {
+            let Some(work_item_id) = session.work_item_id else {
+                continue;
+            };
+
+            let started_at = from
+                .map(|from| session.started_at.max(from))
+                .unwrap_or(session.started_at);
+            let stopped_at = to
+                .map(|to| session.stopped_at.unwrap_or(now).min(to))
+                .unwrap_or_else(|| session.stopped_at.unwrap_or(now));
+            let active_seconds = (stopped_at - started_at).num_seconds().max(0);
+
+            *totals.entry(work_item_id).or_insert(0) += active_seconds;
+        }
+
+        Ok(totals)
+    }
+
     /// Log a work item event
     pub async fn log_event(&self, event: &WorkItemEvent) -> Result<()> {
         sqlx::query(
@@ -287,6 +320,12 @@ fn work_item_from_row(row: &sqlx::sqlite::SqliteRow) -> Result<WorkItem> {
     let type_str: Option<String> = row.get("type");
     let item_type = type_str.and_then(|s| WorkItemType::from_str(&s));
 
+    let activity_zone_str: Option<String> = row.try_get("activity_zone").ok();
+    let activity_zone = activity_zone_str
+        .as_deref()
+        .and_then(ActivityZone::from_str)
+        .unwrap_or_default();
+
     let created_at_str: String = row.get("created_at");
     let created_at = DateTime::parse_from_rfc3339(&created_at_str)?.with_timezone(&chrono::Utc);
 
@@ -307,6 +346,7 @@ fn work_item_from_row(row: &sqlx::sqlite::SqliteRow) -> Result<WorkItem> {
         id,
         title: row.get("title"),
         item_type,
+        activity_zone,
         state,
         pinned: row.get("pinned"),
         note: row.get("note"),

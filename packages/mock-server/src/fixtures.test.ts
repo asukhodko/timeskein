@@ -87,11 +87,13 @@ test("focus correction update, split and work item edit are reflected in day dat
   const edited = store.updateWorkItem(split.right.work_item_id!, {
     title: "Mock Correction Right Edited",
     type: "project",
+    activity_zone: "coordination",
     note: "edited note",
   });
 
   assert.equal(edited?.title, "Mock Correction Right Edited");
   assert.equal(edited?.type, "project");
+  assert.equal(edited?.activity_zone, "coordination");
 
   const listed = store.listFocusSessions(
     new Date(now - 240_000).toISOString(),
@@ -101,4 +103,17 @@ test("focus correction update, split and work item edit are reflected in day dat
 
   assert.equal(listed.length, 2);
   assert.equal(right?.work_item_title, "Mock Correction Right Edited");
+  assert.equal(right?.activity_zone, "coordination");
+
+  const inventory = store.listWorkItems(
+    undefined,
+    undefined,
+    {
+      from: new Date(now - 240_000).toISOString(),
+      to: new Date(now + 60_000).toISOString(),
+    }
+  );
+  const editedItem = inventory.find((item) => item.id === split.right.work_item_id);
+  assert.equal(editedItem?.today_active_seconds, 120);
+  assert.equal(editedItem?.total_active_seconds, 120);
 });

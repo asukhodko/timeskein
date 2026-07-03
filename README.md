@@ -203,7 +203,8 @@ pnpm test
 ```
 
 This runs contracts build, TypeScript typecheck, Rust agent tests, mock-store
-tests, mock API smoke, and key SQLite/report smoke checks.
+tests, Work Item list mode tests, mock API smoke, and key SQLite/report smoke
+checks.
 
 Full dogfood preflight, including macOS `.app` build and packaged-app smoke:
 

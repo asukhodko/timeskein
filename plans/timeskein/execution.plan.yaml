@@ -195,9 +195,9 @@ execution:
     ts.hardening.smoke:
       progress: 0.99
       actual_start: "2026-06-30"
-      updated_at: "2026-07-03T20:05:00+03:00"
+      updated_at: "2026-07-03T23:45:00+03:00"
       confidence: 0.9
-      note: "Added pnpm test as a fast regression suite: contracts build, TypeScript typecheck, Rust agent integration tests against temporary SQLite, mock-store unit tests, mock API smoke, and key SQLite/report smoke. dogfood:preflight also runs cargo test and mock-store tests before the macOS packaged-app smoke. Browser UI smoke is still manual."
+      note: "Added pnpm test as a fast regression suite: contracts build, TypeScript typecheck, Rust agent integration tests against temporary SQLite, mock-store unit tests, Work Item list mode tests, mock API smoke, and key SQLite/report smoke. dogfood:preflight also runs cargo test, mock-store tests, and Work Item list mode tests before the macOS packaged-app smoke. Browser UI smoke is still manual."
     ts.hardening.release_notes:
       progress: 1.0
       actual_start: "2026-07-01"

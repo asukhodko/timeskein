@@ -27,6 +27,7 @@
     "export:app-events": "node scripts/export-app-events.mjs",
     "mock-server": "pnpm --filter @timeskein/mock-server start",
     "smoke:focus-api": "node scripts/smoke-focus-api.mjs",
+    "smoke:inventory-modes": "tsx --test scripts/smoke-inventory-modes.test.ts",
     "smoke:corrections-api": "node scripts/smoke-corrections-api.mjs",
     "smoke:capture-api": "node scripts/smoke-capture-api.mjs",
     "smoke:mock-api": "node scripts/smoke-mock-api.mjs",
@@ -48,6 +49,7 @@
     "test:full": "pnpm dogfood:preflight"
   },
   "devDependencies": {
+    "tsx": "^4.21.0",
     "typescript": "^5.7.3"
   },
   "engines": {

@@ -147,7 +147,7 @@ Dogfood launch helper:
 - `pnpm dogfood:status` waits for the local embedded-agent port file and verifies `agent.status`
 - `pnpm dogfood:finish` checks that the day can be closed with no active focus session or active Work Item, then prints the Markdown dogfood report
 - `pnpm dogfood:finish:save` runs the same end-of-day gate and saves the Markdown report to `timeskein-dogfood-report-YYYY-MM-DD.md`
-- `pnpm dogfood:preflight` runs the local checks needed before trusting a real dogfood day, including isolated mock API, export, and dogfood-report smoke checks
+- `pnpm dogfood:preflight` runs the local checks needed before trusting a real dogfood day, including Work Item list mode tests, isolated mock API, export, and dogfood-report smoke checks
 - `pnpm dogfood:ready` inspects the real local SQLite database for active sessions, active Work Items, duplicate titles, existing focus blocks for today, agent responsiveness, and running app processes; when the day is not ready it prints exact stop/reset commands
 - `pnpm dogfood:rc-check` prints the release-candidate evidence summary, hard blockers, review items, and manual verdict prompts for the saved dogfood day
 - `pnpm dogfood:rc-check:save` saves the same RC evidence to `timeskein-dogfood-rc-check-YYYY-MM-DD.md`
@@ -163,7 +163,7 @@ Dogfood launch helper:
 Runtime smoke in browser/mock mode:
 
 - mock server starts on localhost
-- `pnpm test` runs the fast local suite: contracts build, TypeScript typecheck, Rust agent tests, mock-store tests, mock API smoke, and key SQLite/report smoke checks
+- `pnpm test` runs the fast local suite: contracts build, TypeScript typecheck, Rust agent tests, mock-store tests, Work Item list mode tests, mock API smoke, and key SQLite/report smoke checks
 - `cargo test -p timeskein-agent` includes handler-level integration tests against a temporary SQLite database for focus start/switch coherence and post-factum correction
 - `pnpm --filter @timeskein/mock-server test` covers mock-store invariants for one-active focus, Capture Inbox non-interruption and cleanup, and correction update/split/edit reflection
 - `focus.start`, `focus.stop`, `focus.list`, and Work Item focus switching work against the mock API

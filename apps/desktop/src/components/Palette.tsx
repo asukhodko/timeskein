@@ -22,17 +22,15 @@ import NoteEditor from './NoteEditor'
 import WorkItemEditor from './WorkItemEditor'
 import RefsPanel from './RefsPanel'
 import ConfirmDialog from './ConfirmDialog'
-import type { WorkItemState, WorkItemView } from '@timeskein/contracts'
+import type { WorkItemState } from '@timeskein/contracts'
 import { useCurrentFocusSession, useStartFocusSession } from '../hooks/useFocusSessions'
-
-type InventoryMode = 'recent' | 'today' | 'pinned' | 'all'
-
-const inventoryModes: Array<{ id: InventoryMode; label: string }> = [
-  { id: 'recent', label: 'Recent' },
-  { id: 'today', label: 'Today' },
-  { id: 'pinned', label: 'Pinned' },
-  { id: 'all', label: 'All' },
-]
+import {
+  countInventoryModes,
+  getVisibleInventoryItems,
+  inventoryModes,
+  modeTitle,
+  type InventoryMode,
+} from '../utils/inventoryModes'
 
 export default function Palette() {
   const [search, setSearch] = useState('')
@@ -49,7 +47,7 @@ export default function Palette() {
   const items = data?.items ?? []
   const searchText = search.trim()
   const visibleItems = useMemo(
-    () => searchText ? items : filterInventoryItems(items, inventoryMode),
+    () => getVisibleInventoryItems(items, inventoryMode, searchText),
     [items, inventoryMode, searchText]
   )
   const modeCounts = useMemo(() => countInventoryModes(items), [items])
@@ -573,55 +571,4 @@ function InventoryModeTabs({
       </div>
     </div>
   )
-}
-
-function filterInventoryItems(items: WorkItemView[], mode: InventoryMode) {
-  switch (mode) {
-    case 'today':
-      return items.filter(isTodayInventoryItem)
-    case 'pinned':
-      return items.filter((item) => item.pinned)
-    case 'all':
-      return items
-    case 'recent':
-    default:
-      return items.filter(isRecentInventoryItem)
-  }
-}
-
-function countInventoryModes(items: WorkItemView[]): Record<InventoryMode, number> {
-  return {
-    recent: items.filter(isRecentInventoryItem).length,
-    today: items.filter(isTodayInventoryItem).length,
-    pinned: items.filter((item) => item.pinned).length,
-    all: items.length,
-  }
-}
-
-function isTodayInventoryItem(item: WorkItemView) {
-  return item.pinned || item.state === 'active' || item.today_active_seconds > 0
-}
-
-function isRecentInventoryItem(item: WorkItemView) {
-  if (isTodayInventoryItem(item)) return true
-
-  const touchedAt = item.last_seen_at || item.updated_at || item.created_at
-  const touchedMs = Date.parse(touchedAt)
-  if (!Number.isFinite(touchedMs)) return false
-
-  return Date.now() - touchedMs <= 72 * 60 * 60 * 1000
-}
-
-function modeTitle(mode: InventoryMode) {
-  switch (mode) {
-    case 'today':
-      return 'Items touched by today focus blocks plus pinned and active items'
-    case 'pinned':
-      return 'Pinned items'
-    case 'all':
-      return 'All items'
-    case 'recent':
-    default:
-      return 'Pinned, active, today, and recently touched items'
-  }
 }

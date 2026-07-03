@@ -407,7 +407,7 @@ nodes:
     effort: 2
     deps:
       - id: ts.day_review.analysis_gate
-    notes: "pnpm test now covers contracts build, TypeScript typecheck, Rust agent integration tests with temporary SQLite, mock-store unit tests, mock API smoke, and key SQLite/report smoke. dogfood:preflight adds script syntax checks, packaged macOS build, embedded-agent smoke, focus switching, post-factum correction API, Work Item editing, capture API, Capture Inbox telemetry, stale lock/port recovery, app_events constraint migration, restart/restore, and dogfood start/status/ready/rc-check/reset/stop-active/open-app smoke. Browser UI smoke is still manual."
+    notes: "pnpm test now covers contracts build, TypeScript typecheck, Rust agent integration tests with temporary SQLite, mock-store unit tests, Work Item list mode tests, mock API smoke, and key SQLite/report smoke. dogfood:preflight adds script syntax checks, Work Item list mode tests, packaged macOS build, embedded-agent smoke, focus switching, post-factum correction API, Work Item editing, capture API, Capture Inbox telemetry, stale lock/port recovery, app_events constraint migration, restart/restore, and dogfood start/status/ready/rc-check/reset/stop-active/open-app smoke. Browser UI smoke is still manual."
     x:
       ops:
         attention_class: current

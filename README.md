@@ -12,7 +12,7 @@ A desktop application for quickly tracking focus sessions and work items with re
 | Focus Session | Working baseline | Start, live timer, manual stop, post-factum correction, day list, tracked/work totals |
 | Activity Zones | Basic | Work Item-level `work`, `coordination`, `recovery`, `idle`, `personal` zones with day-report totals |
 | Capture Inbox | Working baseline | Quick incoming-event capture without interrupting the active focus block |
-| Work Item Events | Working baseline | Timestamped append-only notes linked to Work Items and optionally to focus blocks |
+| Work Item Events | Working baseline | Timestamped notes linked to Work Items and optionally to focus blocks |
 | Dogfood Telemetry | Working baseline | Local app-event journal and CLI metrics for tracking UX friction |
 | Mock Server | Working | Full API implementation for development |
 | Rust Agent | Working | SQLite-backed Local API, embedded in macOS app |
@@ -276,7 +276,7 @@ Focus Session controls:
 - Manual focus sessions with 25-minute target and overflow tracking
 - Post-factum correction for stopped focus blocks: edit time/note/Work Item or split the block
 - Capture Inbox for incoming events that should be handled later without interrupting the current focus block
-- Timestamped Work Item Events for append-only observations during the day
+- Timestamped Work Item Events for observations during the day, with edit/delete cleanup for user-authored notes
 - Open captures can be edited, deleted, resolved, converted to Work Items, or appended as timestamped Work Item Events
 - Running focus session restored from SQLite after frontend/app restart
 - Focus sessions are linked to Work Items; typed titles reuse existing Work Items instead of creating duplicates
@@ -303,7 +303,7 @@ Focus Session controls:
 - **Focus Session has no pause/resume/cancel yet** - the current baseline is start/stop only
 - **Post-factum correction is basic** - stopped focus blocks can be edited and split, but there is not yet a drag timeline or multi-step correction wizard
 - **Capture Inbox is still compact** - proven in one full dogfood day, with edit/delete for open captures; a fuller capture history screen is not implemented yet
-- **Work Item Events are basic** - timestamped events can be appended, promoted from captures, and reported, but they cannot be edited or deleted yet
+- **Work Item Events are basic** - user-authored `note_added` events can be appended, promoted from captures, edited, deleted, and reported; generated system events are not exposed as an editable history yet
 - **Work Item notes remain mutable descriptions** - timestamped observations should use Work Item Events instead
 - **Activity zones are Work Item-level only** - reports separate `Total tracked`, `Work focus`, and non-work zones, but there is no per-session zone override yet
 - **macOS window restore and menu bar counter are newly fixed** - the packaged app now avoids always-on-top/task-switcher hiding, handles macOS reopen, and updates the menu bar title from the native shell; verify this in the next dogfood day

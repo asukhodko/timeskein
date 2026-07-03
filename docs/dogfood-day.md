@@ -299,7 +299,7 @@ pnpm dogfood:finish > timeskein-dogfood-report.md
 ```
 
 `dogfood:finish` refuses to produce a final report while a focus block or Work Item is still active, or when there are no focus blocks for the selected date.
-The focus-day export includes a `Work Item Notes` section for touched Work Items that have a non-empty note. This is for current Work Item context. Use timestamped Work Item Events for observations tied to a concrete moment in the day; those appear separately in `Work Item Events`.
+The focus-day export includes a `Work Item Notes` section for touched Work Items that have a non-empty note. This is for current Work Item context. Use timestamped Work Item Events for observations tied to a concrete moment in the day; those appear separately in `Work Item Events`. If a timestamped event was written with a typo or in the wrong form, edit or delete it from the Work Item Events panel before copying the final report.
 The dogfood report also includes `Capture Activity` for every capture created during the selected day, including captures that were already resolved or converted. `Open Captures` remains a separate action list for unresolved inbox entries.
 For the release-candidate verdict, inspect whether `Capture Activity` rows were created during a real focus block. A capture made after stopping all work proves the inbox can store text, but it does not prove interruption handling during focus.
 
@@ -378,7 +378,7 @@ The dogfood day fails if any of these happens often enough to break trust:
 - Stopped focus blocks can be edited or split from the Today list. The correction workflow is basic: there is no drag timeline or bulk edit yet.
 - Capture Inbox is compact. It can create, edit/delete open captures, resolve, convert captures, and append them as Work Item Events, but it has no separate capture history screen yet.
 - Activity Zones are Work Item-level only. A Work Item named `Break` should be assigned to `recovery` or `idle`; it still contributes to `Total tracked`, but not to `Work focus`.
-- Work Item notes are a single mutable field; timestamped observations are separate Work Item Events.
+- Work Item notes are a single mutable field; timestamped observations are separate Work Item Events. User-authored Work Item Events can be edited or deleted, while generated system history is not exposed as an editable log.
 - There is no automatic active-window detection.
 - There is no synchronization between devices.
 - Browser development mode uses mock data; the real dogfood trial should use the macOS app.

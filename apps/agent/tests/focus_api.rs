@@ -7,7 +7,8 @@ use timeskein_agent::api::{
     handle_capture_append_to_work_item_event, handle_capture_create, handle_capture_delete,
     handle_capture_update, handle_focus_list, handle_focus_split, handle_focus_start,
     handle_focus_stop, handle_focus_update, handle_inventory_list, handle_work_item_add_event,
-    handle_work_item_events, handle_work_item_update,
+    handle_work_item_delete_event, handle_work_item_events, handle_work_item_update,
+    handle_work_item_update_event,
 };
 use timeskein_agent::{db::Database, AppState};
 use tokio::sync::RwLock;
@@ -410,7 +411,7 @@ async fn stopped_focus_block_can_be_updated_split_and_reported_correctly() {
     let listed_events = handle_work_item_events(
         &state,
         json!({
-            "id": right_item_id,
+            "id": right_item_id.clone(),
             "from": event_window_start.to_rfc3339(),
             "to": (Utc::now() + Duration::minutes(1)).to_rfc3339(),
         }),
@@ -427,6 +428,54 @@ async fn stopped_focus_block_can_be_updated_split_and_reported_correctly() {
     assert_eq!(
         note_added_event["text"].as_str(),
         Some("timestamped implementation event")
+    );
+    let event_id = added_event["id"].as_str().expect("event id").to_string();
+
+    let updated_event = handle_work_item_update_event(
+        &state,
+        json!({
+            "id": event_id.clone(),
+            "text": "edited timestamped implementation event",
+        }),
+        "update-event",
+    )
+    .await
+    .expect("update event");
+
+    assert_eq!(
+        updated_event["text"].as_str(),
+        Some("edited timestamped implementation event")
+    );
+
+    let deleted_event = handle_work_item_delete_event(
+        &state,
+        json!({
+            "id": event_id.clone(),
+        }),
+        "delete-event",
+    )
+    .await
+    .expect("delete event");
+
+    assert_eq!(deleted_event["success"].as_bool(), Some(true));
+
+    let listed_after_delete = handle_work_item_events(
+        &state,
+        json!({
+            "id": right_item_id.clone(),
+            "from": event_window_start.to_rfc3339(),
+            "to": (Utc::now() + Duration::minutes(1)).to_rfc3339(),
+        }),
+        "list-events-after-delete",
+    )
+    .await
+    .expect("list events after delete");
+    let events_after_delete = listed_after_delete["events"].as_array().expect("events");
+    assert!(
+        events_after_delete
+            .iter()
+            .all(|event| event["id"].as_str() != Some(event_id.as_str())),
+        "deleted Work Item event remained visible"
     );
 
     let listed = handle_focus_list(

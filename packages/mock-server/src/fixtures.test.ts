@@ -136,6 +136,19 @@ test("focus correction update, split and work item edit are reflected in day dat
   assert.equal(events.length, 1);
   assert.equal(events[0].text, "timestamped mock event");
 
+  const updatedEvent = store.updateWorkItemEvent(event!.id, "edited timestamped mock event");
+  assert.equal(updatedEvent?.text, "edited timestamped mock event");
+
+  const deletedEvent = store.deleteWorkItemEvent(event!.id);
+  assert.equal(deletedEvent, true);
+
+  const eventsAfterDelete = store.listWorkItemEvents({
+    id: split.right.work_item_id!,
+    from: eventWindowStart,
+    to: new Date(Date.now() + 60_000).toISOString(),
+  });
+  assert.equal(eventsAfterDelete.length, 0);
+
   const listed = store.listFocusSessions(
     new Date(now - 240_000).toISOString(),
     new Date(now + 60_000).toISOString()

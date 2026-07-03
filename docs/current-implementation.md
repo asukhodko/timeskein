@@ -126,6 +126,7 @@ Runtime smoke on macOS:
 - `pnpm smoke:macos-app` launches the packaged `.app` binary with a temporary home directory and verifies embedded-agent `agent.status`, `inventory.list`, focus start/stop/list, title reuse, focus switching, active Work Item deletion, and active focus restoration after app restart
 - `pnpm smoke:macos-app` also verifies post-factum focus correction: stopped block update, split, Work Item reassignment, Work Item edit, and day-list reflection
 - `pnpm smoke:macos-app` also verifies Capture Inbox create/update/delete/resolve/convert/append-event while ensuring capture actions do not interrupt the active focus session
+- `pnpm smoke:macos-app` also verifies Work Item Event add/update/delete/list against the packaged SQLite-backed app
 - `pnpm smoke:macos-app` also verifies startup normalization of legacy active Work Items, orphan active focus sessions, stale `agent.lock` / `agent.port` recovery, and migration of older `app_events` kind constraints
 - `pnpm smoke:export-focus-day` verifies fallback Markdown export, including Work Item notes and timestamped Work Item Events for touched items, against a temporary SQLite database
 - `pnpm smoke:app-events` verifies the local app-event migration, metrics summary, and Markdown export against a temporary SQLite database
@@ -226,7 +227,7 @@ Third real dogfood day and release baseline:
 - Today's focus picture can also be exported from SQLite with `pnpm export:focus-day`
 - Evening dogfood report can be copied from the focus panel, shown as selected Markdown if clipboard access fails, or generated with `pnpm dogfood:report`
 - Day reports include a `Work Item Notes` section for touched Work Items that have non-empty notes
-- Day reports include a `Work Item Events` section for timestamped append-only Work Item observations created during the selected day
+- Day reports include a `Work Item Events` section for timestamped Work Item observations created during the selected day
 - The UI and CLI label the report as a draft while a focus block or Work Item is still active and include an active-state warning in the Markdown
 - Capture Inbox for incoming events that should not interrupt the current focus block
 - Captures link to the active focus session when one exists
@@ -311,7 +312,7 @@ Capture is intentionally separate from focus sessions. Creating, editing, deleti
 
 ## Work Item Events
 
-Work Item Events store timestamped append-only observations in SQLite table `work_item_events`.
+Work Item Events store timestamped observations in SQLite table `work_item_events`.
 They are separate from the mutable Work Item `note` field:
 
 - `note` is the current description/context of the Work Item;
@@ -320,9 +321,11 @@ They are separate from the mutable Work Item `note` field:
 The current API surface is:
 
 - `work_item.add_event` to append an event to a Work Item, optionally linked to the active focus session;
+- `work_item.update_event` to edit user-authored `note_added` event text;
+- `work_item.delete_event` to delete user-authored `note_added` events;
 - `work_item.events` to list events by Work Item and/or time window.
 
-The note editor can append a timestamped event without replacing the Work Item description. Capture Inbox can also append a capture as a Work Item Event, preserving the capture text and focus-session link. The focus panel shows the latest Work Item Events for the day, and UI/CLI Markdown exports include a `Work Item Events` section.
+The note editor can append a timestamped event without replacing the Work Item description. Capture Inbox can also append a capture as a Work Item Event, preserving the capture text and focus-session link. The focus panel shows Work Item Events for the day and lets user-authored note events be edited or deleted before the final report. UI/CLI Markdown exports include a `Work Item Events` section.
 
 ## App Event Telemetry
 
@@ -374,7 +377,7 @@ On multi-monitor macOS setups, the tray/status item is controlled by the system 
 - App-event telemetry has CLI/report output, but no in-app inspection screen yet.
 - Post-factum correction is intentionally basic: stopped blocks can be edited and split, but there is no drag timeline, bulk edit, or dedicated correction wizard yet.
 - Capture Inbox is still compact: open captures can be edited or deleted, but there is no separate capture history screen beyond the open list and dogfood report.
-- Work Item Events are append-only and report-visible, but they cannot be edited or deleted yet.
+- Work Item Events are report-visible. User-authored `note_added` events can be edited or deleted; generated system events remain internal history.
 - Work Item notes are included in day reports for touched items, but they remain mutable descriptions rather than dated observations.
 - macOS window restore and menu bar status refresh were newly fixed after the third dogfood day, but still need one real dogfood pass before being considered fully proven.
 - Activity Zones are Work Item-level only; there is no per-session zone override yet.

@@ -645,6 +645,29 @@ export class MockDataStore {
     return event;
   }
 
+  updateWorkItemEvent(id: string, text: string): WorkItemEventView | undefined {
+    const event = this.workItemEvents.get(id);
+    const trimmed = text.trim();
+    if (!event || event.kind !== "note_added" || !trimmed) return undefined;
+
+    const payload = { ...(event.payload ?? {}), text: trimmed };
+    const updated = {
+      ...event,
+      text: trimmed,
+      payload,
+    };
+
+    this.workItemEvents.set(id, updated);
+    return updated;
+  }
+
+  deleteWorkItemEvent(id: string): boolean {
+    const event = this.workItemEvents.get(id);
+    if (!event || event.kind !== "note_added") return false;
+
+    return this.workItemEvents.delete(id);
+  }
+
   listWorkItemEvents(params: { id?: string; from?: string; to?: string } = {}): WorkItemEventView[] {
     const fromTime = params.from ? new Date(params.from).getTime() : Number.NEGATIVE_INFINITY;
     const toTime = params.to ? new Date(params.to).getTime() : Number.POSITIVE_INFINITY;

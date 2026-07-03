@@ -514,6 +514,27 @@ async function runCorrectionSmoke(port) {
     "work_item.events did not list packaged event"
   );
 
+  const updatedEvent = await rpc(port, "work_item.update_event", {
+    id: event.id,
+    text: "edited packaged timestamped event",
+  });
+  assert(updatedEvent.text === "edited packaged timestamped event", "work_item.update_event did not edit packaged event");
+
+  const deletedEvent = await rpc(port, "work_item.delete_event", {
+    id: event.id,
+  });
+  assert(deletedEvent.success === true, "work_item.delete_event did not report success");
+
+  const eventsAfterDelete = await rpc(port, "work_item.events", {
+    id: editedItem.id,
+    from: eventWindowStart,
+    to: new Date(Date.now() + 60_000).toISOString(),
+  });
+  assert(
+    eventsAfterDelete.events.every((entry) => entry.id !== event.id),
+    "work_item.delete_event left packaged event visible"
+  );
+
   const day = await rpc(port, "focus.list", todayWindow());
   const rightFound = day.sessions.find((session) => session.id === split.right.id);
   assert(rightFound?.work_item_title === editedRightTitle, "focus.list did not reflect edited item title");

@@ -6,7 +6,7 @@ import {
   useStopFocusSession,
   useTodayFocusSessions,
 } from '../hooks/useFocusSessions'
-import { useInventory, useWorkItemEvents } from '../hooks/useInventory'
+import { useDeleteWorkItemEvent, useInventory, useUpdateWorkItemEvent, useWorkItemEvents } from '../hooks/useInventory'
 import { useCaptureActivity, useOpenCaptures } from '../hooks/useCaptures'
 import { appEventApi, logAppEvent, shellApi } from '../api/client'
 import { formatClockTime, formatDuration, truncate } from '../utils/formatTime'
@@ -823,11 +823,51 @@ function WorkItemEventsPanel({
   workItems: WorkItemView[]
   sessions: FocusSessionView[]
 }) {
-  const latest = [...events]
+  const [editingEventId, setEditingEventId] = useState<string | null>(null)
+  const [editingText, setEditingText] = useState('')
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
+  const updateEventMutation = useUpdateWorkItemEvent()
+  const deleteEventMutation = useDeleteWorkItemEvent()
+  const ordered = [...events]
     .sort((left, right) => new Date(right.ts).getTime() - new Date(left.ts).getTime())
-    .slice(0, 3)
   const workItemsById = new Map(workItems.map((item) => [item.id, item]))
   const sessionsById = new Map(sessions.map((session) => [session.id, session]))
+  const mutationError = updateEventMutation.error || deleteEventMutation.error
+
+  const startEditing = (event: WorkItemEventView) => {
+    setEditingEventId(event.id)
+    setEditingText(event.text ?? '')
+    setDeleteConfirmId(null)
+  }
+
+  const saveEditing = () => {
+    const trimmed = editingText.trim()
+    if (!editingEventId || !trimmed || updateEventMutation.isPending) return
+
+    updateEventMutation.mutate(
+      { id: editingEventId, text: trimmed },
+      {
+        onSuccess: () => {
+          setEditingEventId(null)
+          setEditingText('')
+        },
+      }
+    )
+  }
+
+  const deleteEvent = (eventId: string) => {
+    if (deleteEventMutation.isPending) return
+
+    deleteEventMutation.mutate(eventId, {
+      onSuccess: () => {
+        setDeleteConfirmId(null)
+        if (editingEventId === eventId) {
+          setEditingEventId(null)
+          setEditingText('')
+        }
+      },
+    })
+  }
 
   return (
     <div className="grid gap-1 rounded-md border border-gray-800 bg-gray-900/50 px-3 py-2 text-xs">
@@ -835,16 +875,112 @@ function WorkItemEventsPanel({
         <span className="font-medium text-gray-300">Work Item Events</span>
         <span>{events.length}</span>
       </div>
-      {latest.map((event) => (
-        <div key={event.id} className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-2 text-gray-300">
-          <span className="font-mono text-gray-500">{formatClockTime(event.ts)}</span>
-          <span className="min-w-0 truncate">
-            <span className="font-medium text-gray-200">{truncate(formatEventWorkItemTitle(event, workItemsById, sessionsById), 40)}</span>
-            <span className="text-gray-500"> · </span>
-            <span>{truncate(event.text ?? '', 80)}</span>
-          </span>
+      <div className="grid max-h-32 gap-1 overflow-auto pr-1">
+        {ordered.map((event) => {
+          const isEditing = editingEventId === event.id
+          const isDeleteConfirming = deleteConfirmId === event.id
+
+          return (
+            <div key={event.id} className="grid gap-1 rounded border border-gray-800/80 bg-gray-950/30 px-2 py-1 text-gray-300">
+              <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-2">
+                <span className="font-mono text-gray-500">{formatClockTime(event.ts)}</span>
+                <span className="min-w-0 truncate">
+                  <span className="font-medium text-gray-200">{truncate(formatEventWorkItemTitle(event, workItemsById, sessionsById), 40)}</span>
+                  <span className="text-gray-500"> · </span>
+                  <span>{truncate(event.text ?? '', 80)}</span>
+                </span>
+                <span className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => startEditing(event)}
+                    className="rounded border border-gray-700 px-1.5 py-0.5 text-[11px] text-gray-300 hover:border-gray-500 hover:text-gray-100"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDeleteConfirmId(isDeleteConfirming ? null : event.id)
+                      setEditingEventId(null)
+                    }}
+                    className="rounded border border-red-900/80 px-1.5 py-0.5 text-[11px] text-red-200 hover:border-red-600"
+                  >
+                    Del
+                  </button>
+                </span>
+              </div>
+
+              {isEditing && (
+                <div className="grid gap-1">
+                  <textarea
+                    value={editingText}
+                    onChange={(event) => setEditingText(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+                        event.preventDefault()
+                        saveEditing()
+                      }
+                      if (event.key === 'Escape') {
+                        event.preventDefault()
+                        setEditingEventId(null)
+                        setEditingText('')
+                      }
+                    }}
+                    rows={2}
+                    className="w-full resize-none rounded border border-gray-700 bg-gray-950 px-2 py-1 text-xs text-gray-100 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                  />
+                  <div className="flex justify-end gap-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditingEventId(null)
+                        setEditingText('')
+                      }}
+                      className="rounded px-2 py-0.5 text-[11px] text-gray-400 hover:bg-gray-800 hover:text-gray-200"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={saveEditing}
+                      disabled={!editingText.trim() || updateEventMutation.isPending}
+                      className="rounded bg-emerald-700 px-2 py-0.5 text-[11px] font-medium text-white hover:bg-emerald-600 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-500"
+                    >
+                      Save
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {isDeleteConfirming && (
+                <div className="flex items-center justify-end gap-1 text-[11px] text-red-200">
+                  <span>Delete this event?</span>
+                  <button
+                    type="button"
+                    onClick={() => setDeleteConfirmId(null)}
+                    className="rounded border border-gray-700 px-1.5 py-0.5 text-gray-300 hover:border-gray-500"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => deleteEvent(event.id)}
+                    disabled={deleteEventMutation.isPending}
+                    className="rounded border border-red-700 px-1.5 py-0.5 text-red-100 hover:border-red-500 disabled:cursor-not-allowed disabled:border-gray-700 disabled:text-gray-500"
+                  >
+                    Delete
+                  </button>
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+      {mutationError && (
+        <div className="text-[11px] text-red-300">
+          {mutationError instanceof Error ? mutationError.message : 'Work Item event update failed'}
         </div>
-      ))}
+      )}
     </div>
   )
 }

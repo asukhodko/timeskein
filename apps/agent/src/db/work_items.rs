@@ -346,6 +346,48 @@ impl Database {
 
         rows.iter().map(work_item_event_from_row).collect()
     }
+
+    /// Get a Work Item event by ID.
+    pub async fn get_work_item_event(&self, id: Uuid) -> Result<Option<WorkItemEvent>> {
+        let row = sqlx::query(
+            "SELECT id, ts, work_item_id, kind, payload
+             FROM work_item_events
+             WHERE id = ?1",
+        )
+        .bind(id.to_string())
+        .fetch_optional(self.pool())
+        .await?;
+
+        match row {
+            Some(row) => Ok(Some(work_item_event_from_row(&row)?)),
+            None => Ok(None),
+        }
+    }
+
+    /// Update a Work Item event payload.
+    pub async fn update_work_item_event(&self, event: &WorkItemEvent) -> Result<()> {
+        sqlx::query(
+            "UPDATE work_item_events
+             SET payload = ?2
+             WHERE id = ?1",
+        )
+        .bind(event.id.to_string())
+        .bind(event.payload.as_ref().map(|payload| payload.to_string()))
+        .execute(self.pool())
+        .await?;
+
+        Ok(())
+    }
+
+    /// Delete a Work Item event.
+    pub async fn delete_work_item_event(&self, id: Uuid) -> Result<bool> {
+        let result = sqlx::query("DELETE FROM work_item_events WHERE id = ?1")
+            .bind(id.to_string())
+            .execute(self.pool())
+            .await?;
+
+        Ok(result.rows_affected() > 0)
+    }
 }
 
 /// Parse a work item from a database row

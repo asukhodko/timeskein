@@ -138,6 +138,24 @@ assert(
   "work_item.events returned wrong event text"
 );
 
+const updatedEvent = await rpc("work_item.update_event", {
+  id: event.id,
+  text: "edited timestamped correction smoke event",
+});
+assert(updatedEvent.text === "edited timestamped correction smoke event", "work_item.update_event did not edit event text");
+
+const deletedEvent = await rpc("work_item.delete_event", {
+  id: event.id,
+});
+assert(deletedEvent.success === true, "work_item.delete_event did not report success");
+
+const eventsAfterDelete = await rpc("work_item.events", {
+  id: editedItem.id,
+  from: eventWindowStart,
+  to: new Date(Date.now() + 60_000).toISOString(),
+});
+assert(eventsAfterDelete.total === 0, "work_item.delete_event left deleted event visible");
+
 const duplicate = await rpc("work_item.create", {
   title: `${title} duplicate`,
   type: "task",

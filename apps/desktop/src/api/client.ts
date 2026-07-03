@@ -9,9 +9,11 @@ import {
   type WorkItemEventView,
   type WorkItemEventsParams,
   type WorkItemEventsResponse,
+  type WorkItemUpdateEventParams,
   type WorkItemUpdateParams,
   type WorkItemCreateParams,
   type WorkItemCreateResponse,
+  type WorkItemDeleteEventResponse,
   type WorkItemDeleteResponse,
   type AgentStatus,
   type Settings,
@@ -142,6 +144,10 @@ export const workItemApi = {
     rpc<WorkItemEventView>('work_item.add_event', params),
   events: (params?: WorkItemEventsParams) =>
     rpc<WorkItemEventsResponse>('work_item.events', params),
+  updateEvent: (params: WorkItemUpdateEventParams) =>
+    rpc<WorkItemEventView>('work_item.update_event', params),
+  deleteEvent: (id: string) =>
+    rpc<WorkItemDeleteEventResponse>('work_item.delete_event', { id }),
   togglePin: (id: string) =>
     rpc<{ success: boolean; pinned: boolean }>('work_item.toggle_pin', { id }),
   delete: (id: string, mode?: 'soft' | 'hard') =>

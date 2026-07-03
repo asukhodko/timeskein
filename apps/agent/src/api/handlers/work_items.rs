@@ -374,6 +374,103 @@ pub async fn handle_work_item_events(
     }))
 }
 
+/// Handle work_item.update_event
+pub async fn handle_work_item_update_event(
+    state: &Arc<RwLock<AppState>>,
+    params: serde_json::Value,
+    request_id: &str,
+) -> Result<serde_json::Value, RpcResponse> {
+    let id = get_event_id(&params, request_id)?;
+    let text = params
+        .get("text")
+        .and_then(|value| value.as_str())
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .ok_or_else(|| {
+            RpcResponse::error(
+                request_id.to_string(),
+                "validation_error",
+                "Event text is required",
+            )
+        })?;
+
+    let state = state.write().await;
+    let mut event = state
+        .db
+        .get_work_item_event(id)
+        .await
+        .map_err(|e| RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string()))?
+        .ok_or_else(|| {
+            RpcResponse::error(
+                request_id.to_string(),
+                "not_found",
+                "Work item event not found",
+            )
+        })?;
+
+    if event.kind != WorkItemEventKind::NoteAdded {
+        return Err(RpcResponse::error(
+            request_id.to_string(),
+            "validation_error",
+            "Only note_added Work Item events can be edited",
+        ));
+    }
+
+    let mut payload = event
+        .payload
+        .take()
+        .filter(|payload| payload.is_object())
+        .unwrap_or_else(|| serde_json::json!({}));
+    payload["text"] = serde_json::Value::String(text.to_string());
+    event.payload = Some(payload);
+
+    state.db.update_work_item_event(&event).await.map_err(|e| {
+        RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
+    })?;
+
+    Ok(serde_json::to_value(WorkItemEventView::from_event(event)).unwrap())
+}
+
+/// Handle work_item.delete_event
+pub async fn handle_work_item_delete_event(
+    state: &Arc<RwLock<AppState>>,
+    params: serde_json::Value,
+    request_id: &str,
+) -> Result<serde_json::Value, RpcResponse> {
+    let id = get_event_id(&params, request_id)?;
+
+    let state = state.write().await;
+    let event = state
+        .db
+        .get_work_item_event(id)
+        .await
+        .map_err(|e| RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string()))?
+        .ok_or_else(|| {
+            RpcResponse::error(
+                request_id.to_string(),
+                "not_found",
+                "Work item event not found",
+            )
+        })?;
+
+    if event.kind != WorkItemEventKind::NoteAdded {
+        return Err(RpcResponse::error(
+            request_id.to_string(),
+            "validation_error",
+            "Only note_added Work Item events can be deleted",
+        ));
+    }
+
+    let deleted = state.db.delete_work_item_event(id).await.map_err(|e| {
+        RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
+    })?;
+
+    Ok(serde_json::json!({
+        "success": deleted,
+        "id": id,
+    }))
+}
+
 /// Handle work_item.update
 pub async fn handle_work_item_update(
     state: &Arc<RwLock<AppState>>,
@@ -820,6 +917,24 @@ fn get_work_item_id(params: &serde_json::Value, request_id: &str) -> Result<Uuid
             request_id.to_string(),
             "validation_error",
             "Invalid work item ID",
+        )
+    })
+}
+
+fn get_event_id(params: &serde_json::Value, request_id: &str) -> Result<Uuid, RpcResponse> {
+    let id_str = params.get("id").and_then(|v| v.as_str()).ok_or_else(|| {
+        RpcResponse::error(
+            request_id.to_string(),
+            "validation_error",
+            "Work item event ID is required",
+        )
+    })?;
+
+    Uuid::parse_str(id_str).map_err(|_| {
+        RpcResponse::error(
+            request_id.to_string(),
+            "validation_error",
+            "Invalid Work Item event ID",
         )
     })
 }

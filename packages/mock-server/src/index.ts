@@ -428,6 +428,35 @@ function handleMethod(
       });
     }
 
+    case "work_item.update_event": {
+      const id = params.id as string;
+      const text = params.text as string;
+      if (!id) {
+        return errorResponse(requestId, "validation_error", "Work item event ID is required");
+      }
+      if (!text || !text.trim()) {
+        return errorResponse(requestId, "validation_error", "Event text is required");
+      }
+
+      const event = store.updateWorkItemEvent(id, text);
+      if (!event) {
+        return errorResponse(requestId, "not_found", "Editable Work item event not found");
+      }
+      return successResponse(requestId, event);
+    }
+
+    case "work_item.delete_event": {
+      const id = params.id as string;
+      if (!id) {
+        return errorResponse(requestId, "validation_error", "Work item event ID is required");
+      }
+
+      if (!store.deleteWorkItemEvent(id)) {
+        return errorResponse(requestId, "not_found", "Editable Work item event not found");
+      }
+      return successResponse(requestId, { success: true, id });
+    }
+
     case "work_item.update": {
       const id = params.id as string;
       if (!id) {

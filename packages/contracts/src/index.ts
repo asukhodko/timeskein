@@ -426,6 +426,16 @@ export interface WorkItemAddEventParams {
   focus_session_id?: string;
 }
 
+export interface WorkItemUpdateEventParams {
+  id: string;
+  text: string;
+}
+
+export interface WorkItemDeleteEventResponse {
+  success: boolean;
+  id: string;
+}
+
 export interface WorkItemEventsParams {
   id?: string;
   from?: string;  // ISO 8601

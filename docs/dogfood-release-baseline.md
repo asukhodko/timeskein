@@ -78,6 +78,8 @@ Post-dogfood correction and first review enrichment are now partly implemented:
   in UI/CLI day reports.
 - Captures can be appended as timestamped Work Item Events.
 - Open captures can be edited or deleted before the final day report.
+- User-authored Work Item Events can be edited or deleted before the final day
+  report.
 
 Remaining entry and review polish:
 

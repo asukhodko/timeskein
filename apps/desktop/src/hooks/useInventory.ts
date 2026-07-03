@@ -5,6 +5,7 @@ import type {
   WorkItemCreateParams,
   WorkItemEventsParams,
   WorkItemState,
+  WorkItemUpdateEventParams,
   WorkItemUpdateParams,
 } from '@timeskein/contracts'
 
@@ -98,6 +99,28 @@ export function useAddWorkItemEvent() {
     mutationFn: (params: WorkItemAddEventParams) => workItemApi.addEvent(params),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.inventory })
+      queryClient.invalidateQueries({ queryKey: ['workItemEvents'] })
+    },
+  })
+}
+
+export function useUpdateWorkItemEvent() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (params: WorkItemUpdateEventParams) => workItemApi.updateEvent(params),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['workItemEvents'] })
+    },
+  })
+}
+
+export function useDeleteWorkItemEvent() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (id: string) => workItemApi.deleteEvent(id),
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['workItemEvents'] })
     },
   })

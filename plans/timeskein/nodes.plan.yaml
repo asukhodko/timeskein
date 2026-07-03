@@ -278,7 +278,7 @@ nodes:
     effort: 2
     deps:
       - id: ts.day_review.export
-    notes: Work Item Events can be appended from the note editor or promoted from Capture Inbox, linked to the active focus session when applicable, listed through Local API, shown in the focus panel, and exported in UI/CLI Markdown reports. Event edit/delete remain future work.
+    notes: Work Item Events can be appended from the note editor or promoted from Capture Inbox, linked to the active focus session when applicable, listed through Local API, shown in the focus panel, edited/deleted for user-authored note_added events, and exported in UI/CLI Markdown reports. Generated system events remain internal history.
     x:
       ops:
         attention_class: current
@@ -429,7 +429,7 @@ nodes:
     deps:
       - id: ts.hardening.package_app
       - id: ts.hardening.backup_reset
-    notes: "Dogfood Release Candidate doc defines the pass/fail gate. Dogfood Release Baseline records the accepted 2026-07-03 verdict and known limitations. Since acceptance, post-factum focus correction, Work Item title/type/Activity Zone editing, separate Total tracked / Work focus / Non-work tracked report totals, Activity Zone report totals, today/total Work Item time, timestamped Work Item Events, capture-to-event promotion, capture edit/delete for open items, window restore, and native menu bar counter refresh are implemented. Remaining limitations include richer correction/review UI and Work Item Event edit/delete."
+    notes: "Dogfood Release Candidate doc defines the pass/fail gate. Dogfood Release Baseline records the accepted 2026-07-03 verdict and known limitations. Since acceptance, post-factum focus correction, Work Item title/type/Activity Zone editing, separate Total tracked / Work focus / Non-work tracked report totals, Activity Zone report totals, today/total Work Item time, timestamped Work Item Events with user-authored event edit/delete, capture-to-event promotion, capture edit/delete for open items, window restore, and native menu bar counter refresh are implemented. Remaining limitations include richer correction/review UI."
     x:
       ops:
         attention_class: current

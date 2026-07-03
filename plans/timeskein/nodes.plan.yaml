@@ -365,7 +365,7 @@ nodes:
     deps:
       - id: ts.day_review.app_telemetry
       - id: ts.day_review.review_checklist
-    notes: The UI/CLI dogfood report and RC evidence check summarize focus totals, Activity Zones, Day Events, Work Item notes/events, Capture Inbox coverage, window telemetry, and product-friction counters. They now include a Daily Control Goal Audit table, so the next dogfood day can be judged requirement by requirement against report usefulness rather than memory reconstruction.
+    notes: The UI/CLI dogfood report and RC evidence check summarize focus totals, Activity Zones, Day Events, Work Item notes/events, Capture Inbox coverage, window telemetry, and product-friction counters. They include a Daily Control Goal Audit table, and dogfood:rc-check:strict fails on unresolved review items, so the next dogfood day can be judged requirement by requirement against report usefulness rather than memory reconstruction.
     x:
       ops:
         attention_class: current

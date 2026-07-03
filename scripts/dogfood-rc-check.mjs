@@ -30,8 +30,10 @@ const from = startOfLocalDay(date);
 const to = nextLocalDay(from);
 const evidence = await loadEvidence(dbPath, from, to, now);
 const assessment = assessEvidence(evidence, minFocusSeconds);
-const output = buildRcReport(dateArg, dbPath, evidence, assessment, minFocusSeconds);
+const output = buildRcReport(dateArg, dbPath, evidence, assessment, minFocusSeconds, options.strict ?? false);
 const outputPath = outputReportPath(options, dateArg);
+const shouldFail =
+  assessment.hardBlockers.length > 0 || Boolean(options.strict && assessment.reviewItems.length > 0);
 
 if (outputPath) {
   await writeFile(outputPath, output);
@@ -39,7 +41,7 @@ if (outputPath) {
 } else {
   process.stdout.write(output);
 }
-process.exit(assessment.hardBlockers.length > 0 ? 1 : 0);
+process.exit(shouldFail ? 1 : 0);
 
 function parseArgs(args) {
   const result = {};
@@ -63,6 +65,8 @@ function parseArgs(args) {
       result.out = args[++index];
     } else if (arg === "--save") {
       result.save = true;
+    } else if (arg === "--strict") {
+      result.strict = true;
     } else if (arg === "--help" || arg === "-h") {
       printHelp();
       process.exit(0);
@@ -75,11 +79,12 @@ function parseArgs(args) {
 }
 
 function printHelp() {
-  console.log(`Usage: pnpm dogfood:rc-check [--date YYYY-MM-DD] [--db path/to/timeskein.db] [--min-focus-minutes N] [--save | --out path.md]
+  console.log(`Usage: pnpm dogfood:rc-check [--date YYYY-MM-DD] [--db path/to/timeskein.db] [--min-focus-minutes N] [--strict] [--save | --out path.md]
 
 Checks whether the saved Timeskein data is enough for the Dogfood Release Candidate verdict.
 It exits with code 1 for hard blockers such as active state, duplicate Work Item titles, or an empty day.
-Review items are printed but keep exit code 0 because the final RC verdict still needs human judgment.`);
+Review items are printed but keep exit code 0 because the final RC verdict still needs human judgment.
+With --strict, review items also make the command exit with code 1. Use this before marking the daily-control goal complete.`);
 }
 
 function outputReportPath(options, date) {
@@ -506,9 +511,11 @@ function buildMissingDbReport(date, path) {
   ].join("\n");
 }
 
-function buildRcReport(date, path, evidence, assessment, minFocusSeconds) {
+function buildRcReport(date, path, evidence, assessment, minFocusSeconds, strict) {
   const verdict = assessment.hardBlockers.length > 0
     ? "blocked"
+    : strict && assessment.reviewItems.length > 0
+      ? "blocked by review items in strict mode"
     : assessment.reviewItems.length > 0
       ? "ready for human RC verdict, with review items"
       : "ready for human RC verdict";
@@ -518,6 +525,7 @@ function buildRcReport(date, path, evidence, assessment, minFocusSeconds) {
     "",
     `Verdict: ${verdict}`,
     `DB: ${path}`,
+    `Strict mode: ${strict ? "yes" : "no"}`,
     "",
     "## Evidence Summary",
     "",

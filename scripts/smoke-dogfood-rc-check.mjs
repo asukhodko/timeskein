@@ -26,7 +26,7 @@ try {
     INSERT INTO focus_sessions (id, title, work_item_id, state, target_seconds, note, started_at, stopped_at, updated_at)
     VALUES
       ('s1', 'Deep Work', 'w1', 'stopped', 1500, NULL, '2026-06-30T06:00:00Z', '2026-06-30T08:00:00Z', '2026-06-30T08:00:00Z'),
-      ('s2', 'Review', 'w2', 'stopped', 1500, NULL, '2026-06-30T08:30:00Z', '2026-06-30T10:00:00Z', '2026-06-30T10:00:00Z');
+      ('s2', 'Review', 'w2', 'stopped', 1500, NULL, '2026-06-30T08:10:00Z', '2026-06-30T09:40:00Z', '2026-06-30T09:40:00Z');
     UPDATE focus_sessions SET activity_zone = 'coordination' WHERE id = 's2';
 
     INSERT INTO captures (id, text, state, focus_session_id, created_at, updated_at, resolved_at)
@@ -53,6 +53,7 @@ try {
   const good = await runRcCheck(goodDb);
   assert(good.code === 0, "good day should not be blocked");
   assert(good.stdout.includes("Verdict: ready for human RC verdict"), "good day verdict is missing");
+  assert(good.stdout.includes("Strict mode: no"), "good day strict-mode marker is missing");
   assert(good.stdout.includes("Total tracked: 3:30:00"), "good day total tracked is missing");
   assert(good.stdout.includes("Work focus: 2:00:00"), "good day work focus is missing");
   assert(good.stdout.includes("Non-work tracked: 1:30:00"), "good day non-work tracked is missing");
@@ -76,6 +77,10 @@ try {
   assert(good.stdout.includes("Captures during active focus: 1"), "good day active-focus capture count is missing");
   assert(good.stdout.includes("## Capture Activity"), "good day capture activity section is missing");
   assert(good.stdout.includes("| resolved | Check incoming request later |"), "good day capture activity row is missing");
+
+  const goodStrict = await runRcCheck(goodDb, ["--strict"]);
+  assert(goodStrict.code === 0, "good day should pass strict RC check");
+  assert(goodStrict.stdout.includes("Strict mode: yes"), "strict RC check marker is missing");
 
   const savedPath = join(tempDir, "rc-check.md");
   const saved = await runRcCheck(goodDb, ["--out", savedPath]);
@@ -141,6 +146,12 @@ try {
   assert(openCapture.code === 0, "open capture should be a review item, not a hard blocker");
   assert(openCapture.stdout.includes("Open captures: 1"), "open capture count is missing");
   assert(openCapture.stdout.includes("Review Items"), "open capture review section is missing");
+  const openCaptureStrict = await runRcCheck(openCaptureDb, ["--strict"]);
+  assert(openCaptureStrict.code !== 0, "strict RC check should fail on review items");
+  assert(
+    openCaptureStrict.stdout.includes("Verdict: blocked by review items in strict mode"),
+    "strict RC check should explain review-item failure"
+  );
 
   const noActiveFocusCaptureDb = join(tempDir, "no-active-focus-capture.db");
   await copyDb(goodDb, noActiveFocusCaptureDb);

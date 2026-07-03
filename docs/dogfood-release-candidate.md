@@ -83,6 +83,13 @@ pnpm dogfood:rc-check:save
 `dogfood:rc-check` does not replace the human verdict. It catches hard blockers
 and prints review items that must be resolved or consciously accepted before the
 milestone can be marked done.
+Use strict mode before marking the daily-control goal complete:
+
+```bash
+pnpm dogfood:rc-check:strict
+```
+
+In strict mode, review items also make the command fail.
 Both saved files can contain personal or internal work context and are ignored by git.
 The RC evidence summary also checks the post-baseline review data: work focus vs
 non-work tracked time, Activity Zone coverage, Work Item notes/events, Capture

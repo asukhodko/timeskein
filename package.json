@@ -16,6 +16,8 @@
     "dogfood:ready": "node scripts/dogfood-ready.mjs",
     "dogfood:rc-check": "node scripts/dogfood-rc-check.mjs",
     "dogfood:rc-check:save": "node scripts/dogfood-rc-check.mjs --save",
+    "dogfood:rc-check:strict": "node scripts/dogfood-rc-check.mjs --strict",
+    "dogfood:rc-check:strict:save": "node scripts/dogfood-rc-check.mjs --strict --save",
     "dogfood:reset-db": "node scripts/dogfood-reset-db.mjs",
     "dogfood:report": "node scripts/dogfood-report.mjs",
     "dogfood:start": "node scripts/dogfood-start.mjs",

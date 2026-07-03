@@ -15,6 +15,8 @@ enough evidence for focus blocks, Work Item totals, Activity Zones,
 notes/events, captures, gaps, corrections, and app-friction review.
 `pnpm dogfood:finish:save` now saves both the readable day report and the
 RC-check evidence file, so the evening package is collected in one step.
+For final goal closure, `pnpm dogfood:rc-check:strict` makes unresolved review
+items fail instead of only printing them.
 
 ## Executive view
 

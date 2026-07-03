@@ -2,11 +2,11 @@ import type { WorkItemView } from '@timeskein/contracts'
 
 export type InventoryMode = 'recent' | 'today' | 'pinned' | 'all'
 
-export const inventoryModes: Array<{ id: InventoryMode; label: string }> = [
-  { id: 'recent', label: 'Recent' },
-  { id: 'today', label: 'Today' },
-  { id: 'pinned', label: 'Pinned' },
-  { id: 'all', label: 'All' },
+export const inventoryModes: Array<{ id: InventoryMode; label: string; shortcut: string; shortcutCode: string }> = [
+  { id: 'recent', label: 'Recent', shortcut: 'Alt+1', shortcutCode: 'Digit1' },
+  { id: 'today', label: 'Today', shortcut: 'Alt+2', shortcutCode: 'Digit2' },
+  { id: 'pinned', label: 'Pinned', shortcut: 'Alt+3', shortcutCode: 'Digit3' },
+  { id: 'all', label: 'All', shortcut: 'Alt+4', shortcutCode: 'Digit4' },
 ]
 
 const recentWindowMs = 72 * 60 * 60 * 1000
@@ -18,6 +18,11 @@ export function getVisibleInventoryItems(
   nowMs = Date.now()
 ) {
   return searchText.trim() ? items : filterInventoryItems(items, mode, nowMs)
+}
+
+export function inventoryModeForShortcut(code: string, altKey: boolean, ctrlKey = false, metaKey = false) {
+  if (!altKey || ctrlKey || metaKey) return undefined
+  return inventoryModes.find((mode) => mode.shortcutCode === code)?.id
 }
 
 export function filterInventoryItems(

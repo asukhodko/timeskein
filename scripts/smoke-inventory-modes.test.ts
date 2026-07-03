@@ -5,6 +5,7 @@ import {
   countInventoryModes,
   filterInventoryItems,
   getVisibleInventoryItems,
+  inventoryModeForShortcut,
   isRecentInventoryItem,
   isTodayInventoryItem,
 } from '../apps/desktop/src/utils/inventoryModes'
@@ -80,6 +81,18 @@ test('today mode includes pinned and active items even before today focus time e
   assert.equal(isTodayInventoryItem(item('pinned', { pinned: true })), true)
   assert.equal(isTodayInventoryItem(item('active', { state: 'active' })), true)
   assert.equal(isTodayInventoryItem(item('fresh-but-idle', { updated_at: hoursAgo(1) })), false)
+})
+
+test('inventory mode shortcuts use Alt plus digits without stealing plain state digits', () => {
+  assert.equal(inventoryModeForShortcut('Digit1', true), 'recent')
+  assert.equal(inventoryModeForShortcut('Digit2', true), 'today')
+  assert.equal(inventoryModeForShortcut('Digit3', true), 'pinned')
+  assert.equal(inventoryModeForShortcut('Digit4', true), 'all')
+
+  assert.equal(inventoryModeForShortcut('Digit1', false), undefined)
+  assert.equal(inventoryModeForShortcut('Digit1', true, true), undefined)
+  assert.equal(inventoryModeForShortcut('Digit1', true, false, true), undefined)
+  assert.equal(inventoryModeForShortcut('Digit5', true), undefined)
 })
 
 function titles(items: WorkItemView[]) {

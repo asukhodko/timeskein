@@ -128,7 +128,7 @@ nodes:
     effort: 1
     deps:
       - id: ts.ux_entry.fast_track_flow
-    notes: Added Recent, Today, Pinned, and All modes to the Work Item list. The default Recent mode keeps pinned, active, today, and recently touched items visible; typed search still reaches older matching items.
+    notes: Added Recent, Today, Pinned, and All modes to the Work Item list. The default Recent mode keeps pinned, active, today, and recently touched items visible; typed search still reaches older matching items. Alt+1..4 switches modes without leaving the keyboard.
     x:
       ops:
         attention_class: current

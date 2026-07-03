@@ -228,6 +228,7 @@ Continue an existing item:
 3. Leave the focus input empty and press `Space`, or click `Start Item` / `Switch Item`.
 
 Faster path: double-click a Work Item to start or switch focus to it.
+Use `Alt+1`, `Alt+2`, `Alt+3`, and `Alt+4` to switch `Recent`, `Today`, `Pinned`, and `All` without leaving the keyboard.
 Typed search can still find old Work Items when the current mode is too narrow.
 
 Changing a Work Item state to `Active` is another way to start or switch focus:

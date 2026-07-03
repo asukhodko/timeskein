@@ -245,6 +245,7 @@ All shortcuts work regardless of keyboard layout (Russian, etc.):
 | `R` | Refs panel (add/remove/open) |
 | `Enter` | Open primary ref in browser, or edit the selected item when it has no refs |
 | `E` | Edit selected Work Item |
+| `Alt+1` / `Alt+2` / `Alt+3` / `Alt+4` | Switch Work Item list mode: Recent / Today / Pinned / All |
 | `Shift+Delete` | Delete item (with confirmation) |
 | `C` or `Alt+N` | Create new item |
 | `Esc` | Close dialogs; hide the macOS window when no dialog is open |

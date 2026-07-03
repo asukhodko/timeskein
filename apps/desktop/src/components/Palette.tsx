@@ -28,6 +28,7 @@ import {
   countInventoryModes,
   getVisibleInventoryItems,
   inventoryModes,
+  inventoryModeForShortcut,
   modeTitle,
   type InventoryMode,
 } from '../utils/inventoryModes'
@@ -240,6 +241,15 @@ export default function Palette() {
         e.preventDefault()
         e.stopPropagation()
         setShowCreate(true)
+        return
+      }
+
+      const shortcutMode = inventoryModeForShortcut(e.code, e.altKey, e.ctrlKey, e.metaKey)
+      if (shortcutMode) {
+        e.preventDefault()
+        e.stopPropagation()
+        setInventoryMode(shortcutMode)
+        setSelectedIndex(0)
         return
       }
 
@@ -626,7 +636,7 @@ function InventoryModeTabs({
                   ? 'bg-blue-500/20 text-blue-200'
                   : 'text-gray-500 hover:bg-gray-800/80 hover:text-gray-300',
               ].join(' ')}
-              title={modeTitle(item.id)}
+              title={`${modeTitle(item.id)} (${item.shortcut})`}
             >
               <span className="truncate">{item.label}</span>
               <span className={isActive ? 'text-blue-300/70' : 'text-gray-600'}>

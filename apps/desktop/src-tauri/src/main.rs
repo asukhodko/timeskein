@@ -10,7 +10,7 @@
 use tauri::{
     menu::{Menu, MenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
-    AppHandle, Manager, Runtime, WindowEvent,
+    AppHandle, Manager, RunEvent, Runtime, WindowEvent,
 };
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut};
 use timeskein_agent::{
@@ -22,6 +22,7 @@ use timeskein_agent::{
 };
 use tokio::sync::RwLock;
 
+use chrono::{Datelike, Duration as ChronoDuration, Local, TimeZone};
 use std::{fs, net::SocketAddr, path::Path, sync::Arc, time::Duration};
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
@@ -40,24 +41,36 @@ fn get_api_url(agent: tauri::State<'_, AgentRuntime>) -> String {
 
 #[tauri::command]
 fn set_tray_status_title(app: AppHandle, title: Option<String>) -> Result<(), String> {
+    set_tray_status_title_value(&app, title.as_deref())
+}
+
+fn set_tray_status_title_value<R: Runtime>(
+    app: &AppHandle<R>,
+    title: Option<&str>,
+) -> Result<(), String> {
     let Some(tray) = app.tray_by_id("main") else {
         return Ok(());
     };
 
-    let title = title
-        .map(|value| value.trim().to_string())
-        .filter(|value| !value.is_empty());
+    let title = title.map(str::trim).filter(|value| !value.is_empty());
     let tooltip = title
         .as_ref()
         .map(|value| format!("Timeskein: {value}"))
         .unwrap_or_else(|| "Timeskein: idle".to_string());
 
-    tray.set_title(title.as_deref())
-        .map_err(|error| error.to_string())?;
+    tray.set_title(title).map_err(|error| error.to_string())?;
     tray.set_tooltip(Some(tooltip))
         .map_err(|error| error.to_string())?;
 
     Ok(())
+}
+
+fn show_main_window<R: Runtime>(app: &AppHandle<R>) {
+    if let Some(window) = app.get_webview_window("main") {
+        let _ = window.unminimize();
+        let _ = window.show();
+        let _ = window.set_focus();
+    }
 }
 
 fn toggle_main_window<R: Runtime>(app: &AppHandle<R>) {
@@ -65,9 +78,148 @@ fn toggle_main_window<R: Runtime>(app: &AppHandle<R>) {
         if window.is_visible().unwrap_or(false) {
             let _ = window.hide();
         } else {
-            let _ = window.show();
-            let _ = window.set_focus();
+            show_main_window(app);
         }
+    }
+}
+
+fn start_tray_status_updater<R: Runtime>(app: AppHandle<R>, api_url: String) {
+    let Some(port) = parse_local_api_port(&api_url) else {
+        return;
+    };
+
+    tauri::async_runtime::spawn(async move {
+        loop {
+            if let Ok(title) = fetch_tray_focus_title(port).await {
+                let _ = set_tray_status_title_value(&app, title.as_deref());
+            }
+
+            time::sleep(Duration::from_secs(15)).await;
+        }
+    });
+}
+
+fn parse_local_api_port(api_url: &str) -> Option<u16> {
+    let value = api_url.strip_prefix("http://127.0.0.1:")?;
+    let port = value.split('/').next()?;
+    port.parse().ok()
+}
+
+async fn fetch_tray_focus_title(port: u16) -> anyhow::Result<Option<String>> {
+    let body =
+        r#"{"version":"1.0","request_id":"tray-status","method":"focus.current","params":{}}"#;
+    let response = send_local_api_request(port, body).await?;
+    let body = response
+        .split_once("\r\n\r\n")
+        .map(|(_, body)| body)
+        .unwrap_or(response.as_str());
+    let value: serde_json::Value = serde_json::from_str(body)?;
+    let Some(session) = value.pointer("/result/session") else {
+        return Ok(None);
+    };
+    if session.is_null() {
+        return fetch_tray_day_title(port).await;
+    }
+    if session.get("state").and_then(|value| value.as_str()) != Some("active") {
+        return fetch_tray_day_title(port).await;
+    }
+
+    let active_seconds = session
+        .get("active_seconds")
+        .and_then(|value| value.as_i64())
+        .unwrap_or(0);
+    let over_target_seconds = session
+        .get("over_target_seconds")
+        .and_then(|value| value.as_i64())
+        .unwrap_or(0);
+    let active = format_tray_duration(active_seconds);
+    if over_target_seconds > 0 {
+        return Ok(Some(format!(
+            "{active} Focus +{}",
+            format_tray_duration(over_target_seconds)
+        )));
+    }
+
+    Ok(Some(format!("{active} Focus")))
+}
+
+async fn fetch_tray_day_title(port: u16) -> anyhow::Result<Option<String>> {
+    let Some((from, to)) = local_day_window_rfc3339() else {
+        return Ok(None);
+    };
+    let body = format!(
+        r#"{{"version":"1.0","request_id":"tray-day-status","method":"focus.list","params":{{"from":"{from}","to":"{to}"}}}}"#
+    );
+    let response = send_local_api_request(port, &body).await?;
+    let body = response
+        .split_once("\r\n\r\n")
+        .map(|(_, body)| body)
+        .unwrap_or(response.as_str());
+    let value: serde_json::Value = serde_json::from_str(body)?;
+    let active_seconds_total = value
+        .pointer("/result/active_seconds_total")
+        .and_then(|value| value.as_i64())
+        .unwrap_or(0);
+
+    if active_seconds_total > 0 {
+        return Ok(Some(format!(
+            "{} Today",
+            format_tray_duration(active_seconds_total)
+        )));
+    }
+
+    Ok(None)
+}
+
+fn local_day_window_rfc3339() -> Option<(String, String)> {
+    let now = Local::now();
+    let from = Local
+        .with_ymd_and_hms(now.year(), now.month(), now.day(), 0, 0, 0)
+        .single()?;
+    let to = from + ChronoDuration::days(1);
+
+    Some((from.to_rfc3339(), to.to_rfc3339()))
+}
+
+async fn send_local_api_request(port: u16, body: &str) -> anyhow::Result<String> {
+    let mut stream = time::timeout(
+        Duration::from_millis(500),
+        tokio::net::TcpStream::connect(("127.0.0.1", port)),
+    )
+    .await??;
+    let request = format!(
+        "POST /api HTTP/1.1\r\nHost: 127.0.0.1:{port}\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
+        body.len()
+    );
+
+    time::timeout(
+        Duration::from_millis(500),
+        stream.write_all(request.as_bytes()),
+    )
+    .await??;
+
+    let mut response = String::new();
+    time::timeout(
+        Duration::from_millis(750),
+        stream.read_to_string(&mut response),
+    )
+    .await??;
+
+    Ok(response)
+}
+
+fn format_tray_duration(total_seconds: i64) -> String {
+    let minutes = (total_seconds.max(0) / 60).max(0);
+    if minutes < 60 {
+        return format!("{minutes}m");
+    }
+
+    let hours = minutes / 60;
+    let rest = minutes % 60;
+    if rest == 0 {
+        format!("{hours}h")
+    } else {
+        format!("{hours}h{rest}m")
     }
 }
 
@@ -226,6 +378,7 @@ fn main() {
         .invoke_handler(tauri::generate_handler![get_api_url, set_tray_status_title])
         .setup(|app| {
             let agent = tauri::async_runtime::block_on(start_embedded_agent())?;
+            let api_url = agent.api_url.clone();
             app.manage(agent);
 
             // Create tray menu
@@ -292,6 +445,8 @@ fn main() {
                 eprintln!("Timeskein started without a global shortcut; use the tray icon/menu.");
             }
 
+            start_tray_status_updater(app.handle().clone(), api_url);
+
             Ok(())
         })
         .on_window_event(|window, event| {
@@ -301,6 +456,17 @@ fn main() {
                 api.prevent_close();
             }
         })
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|app, event| {
+            if let RunEvent::Reopen {
+                has_visible_windows,
+                ..
+            } = event
+            {
+                if !has_visible_windows {
+                    show_main_window(app);
+                }
+            }
+        });
 }

@@ -249,8 +249,11 @@ Third real dogfood day and release baseline:
 - Delete with confirmation
 - Global shortcut registration with fallback candidates
 - Tray/menu bar entry point on macOS with Show/Hide and Quit actions
-- Tray/menu bar title shows a short active focus counter such as `12m Focus`
+- Tray/menu bar title shows a short active focus counter such as `12m Focus`, and today's total when no block is active
+- The native shell refreshes the tray/menu bar title through the local API even when the webview window is hidden
 - Borderless window can be moved by dragging the header
+- The macOS window is not configured as always-on-top and is not skipped from normal app switching
+- macOS `Reopen` is handled so a hidden window can be restored through the normal app return path
 - `Esc` hides the macOS window when no dialog is open
 - Palette shortcuts are ignored while typing in inputs, textareas, selects, or editable elements
 - Destructive confirmation dialogs focus `Cancel` by default and do not confirm on `Enter`
@@ -289,8 +292,7 @@ High-signal findings:
 - Work Item notes matter for review and appear in day reports for touched items; timestamped Work Item Events now cover day-specific observations.
 - Wrong Work Item assignment happened during dogfood; stopped blocks can now be corrected and split after the fact.
 - Activity Zones are now available at Work Item level and appear in day reports. They separate review data by work, coordination, recovery, idle, and personal, but the top-line total still counts every tracked block.
-- Command+Tab does not restore a hidden borderless Timeskein window yet.
-- The menu bar focus counter can lag until the status item is clicked.
+- macOS window restore and the menu bar counter were newly fixed after the third dogfood day; the next dogfood day should verify that Command+Tab/Dock return and status refresh feel reliable in real use.
 
 ## Capture Inbox Data
 
@@ -373,9 +375,7 @@ On multi-monitor macOS setups, the tray/status item is controlled by the system 
 - Capture Inbox is minimal: no edit/delete UI yet, no append-to-Work-Item-event action yet, and no separate capture history screen beyond the open list and dogfood report.
 - Work Item Events are append-only and report-visible, but they cannot be edited, deleted, or created directly from Capture Inbox yet.
 - Work Item notes are included in day reports for touched items, but they remain mutable descriptions rather than dated observations.
-- Command+Tab does not restore the hidden borderless macOS window yet.
-- The borderless macOS window can remain visually on top in awkward moments.
-- The menu bar focus counter can lag until the status item is clicked.
+- macOS window restore and menu bar status refresh were newly fixed after the third dogfood day, but still need one real dogfood pass before being considered fully proven.
 - Activity Zones are Work Item-level only; there is no per-session zone override or filtered top-line work-only total yet.
 - Automated e2e tests are not implemented yet.
 - Cross-platform CI is not implemented yet.
@@ -385,8 +385,7 @@ On multi-monitor macOS setups, the tray/status item is controlled by the system 
 
 ## Next Engineering Steps
 
-1. Improve macOS window return behavior, especially hidden-window restore through Command+Tab and surprising always-on-top moments.
-2. Make the menu bar focus counter update reliably without click refresh.
-3. Add a clearer correction workflow if split + update is not enough after the next dogfood day.
-4. Add capture-to-Work-Item-event promotion if captures often become review notes rather than follow-up tasks.
-5. Decide whether Activity Zone totals should also produce filtered top-line numbers such as work-only focus and recovery time.
+1. Verify the new macOS window return and native menu bar status refresh in the next dogfood day.
+2. Add a clearer correction workflow if split + update is not enough after the next dogfood day.
+3. Add capture-to-Work-Item-event promotion if captures often become review notes rather than follow-up tasks.
+4. Decide whether Activity Zone totals should also produce filtered top-line numbers such as work-only focus and recovery time.

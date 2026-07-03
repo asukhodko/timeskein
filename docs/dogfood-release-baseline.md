@@ -57,9 +57,9 @@ These were accepted limitations for the dogfood baseline, not blockers:
   a Work Item Event yet.
 - Activity zones are Work Item-level only. Reports show zone totals, but the
   top-line `Total focus` still counts every tracked block.
-- The macOS borderless window can stay visually on top in awkward moments and
-  cannot be restored through Command+Tab after being hidden.
-- The menu bar focus counter can lag until the status item is clicked.
+- macOS window restore and menu bar status refresh were known baseline
+  limitations; both have been fixed in code after acceptance and need the next
+  dogfood day for real-use confirmation.
 - The Work Item list shows today/total time spent per item when available.
 
 ## Next Slice
@@ -77,7 +77,6 @@ Post-dogfood correction and first review enrichment are now partly implemented:
 
 Remaining entry and review polish:
 
-- make hidden-window restore and status-bar updates less surprising;
 - add capture-to-Work-Item-event promotion if captures often become review notes.
 - decide whether top-line report totals should include filtered numbers such as
   work-only focus and recovery time.

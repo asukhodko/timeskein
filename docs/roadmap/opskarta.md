@@ -30,7 +30,7 @@ flowchart LR
 
     recovered_baseline["Recovered<br/>baseline<br/>100%<br/>веха 2026-06-30"]
     class recovered_baseline exec_done
-    app_entry_ux["App<br/>entry UX<br/>~70%<br/>веха 2026-07-03"]
+    app_entry_ux["App<br/>entry UX<br/>90%<br/>веха 2026-07-03"]
     class app_entry_ux exec_mgmt_yellow
     style app_entry_ux stroke:#111827,stroke-width:3px
     focus_session_core["Focus<br/>Session core<br/>85%<br/>веха 2026-07-01"]
@@ -73,8 +73,8 @@ gantt
     section App entry UX
     ✅ Make the app window movable  :done, ts_ux_entry_window_drag,    2026-06-30, 1d
     ✅ Add clear hide and show behavior  :done, ts_ux_entry_hide_toggle,    2026-07-01, 1d
-    🔄 Wire tray menu actions  :active, ts_ux_entry_tray_actions,    2026-07-02, 1d
-    Document macOS multi-monitor status item limits  :ts_ux_entry_monitor_policy,    2026-07-03, 1d
+    ✅ Wire tray menu actions  :done, ts_ux_entry_tray_actions,    2026-07-02, 1d
+    ✅ Document macOS multi-monitor status item limits  :done, ts_ux_entry_monitor_policy,    2026-07-03, 1d
     🔄 Reduce the path from intent to tracked work  :active, ts_ux_entry_fast_track_flow,    2026-07-03, 1d
     section Focus Session core
     🔄 Add FocusSession and SessionEvent persistence  :active, ts_focus_core_model_migrations,    2026-06-30, 2d
@@ -116,6 +116,8 @@ gantt
 <!-- GENERATED:START -->
 - Make the app window movable [done] (1 focus-blocks) {100%}
 - Add clear hide and show behavior [done] (1 focus-blocks) {100%}
+- Wire tray menu actions [done] (1 focus-blocks) {100%}
+- Document macOS multi-monitor status item limits [done] (1 focus-blocks) {100%}
 - Add contracts and Local API for focus sessions [done] (3 focus-blocks) {100%}
 - Build focus timer UI with overflow [done] (3 focus-blocks) {100%}
 - Restore running focus session after app restart [done] (2 focus-blocks) {100%}
@@ -134,8 +136,7 @@ gantt
 - Rebuild macOS app for regular personal use [done] (1 focus-blocks) {100%}
 - Write dogfood release notes and known limitations [done] (1 focus-blocks) {100%}
 - Session replacement dogfood baseline [done] {100%}
-- App entry UX [in_progress] (6 focus-blocks) {85% cov:83%}
-- Wire tray menu actions [in_progress] (1 focus-blocks) {75%}
+- App entry UX [in_progress] (6 focus-blocks) {92%}
 - Reduce the path from intent to tracked work [in_progress] (2 focus-blocks) {75%}
 - Focus Session core [in_progress] (17 focus-blocks) {85%}
 - Add FocusSession and SessionEvent persistence [in_progress] (3 focus-blocks) {70%}
@@ -146,8 +147,7 @@ gantt
 - Export dogfood day data as Markdown [in_progress] (2 focus-blocks) {97%}
 - Dogfood hardening [in_progress] (8 focus-blocks) {99% cov:75%}
 - Add smoke checks for focus-session flows [in_progress] (2 focus-blocks) {99%}
-- Fix first dogfood friction [in_progress] (2 focus-blocks) {97%}
-- Document macOS multi-monitor status item limits [planned] (1 focus-blocks)
+- Fix first dogfood friction [in_progress] (2 focus-blocks) {99%}
 <!-- GENERATED:END -->
 
 ## Deferred directions

@@ -193,7 +193,7 @@ The third real dogfood day on 2026-07-03 closed the Capture Inbox release-candid
 - two captures resolved, one converted to a Work Item, one left open as visible follow-up
 - no API errors, copy failures, capture failures, duplicate-title groups, or active-state split brain
 
-Remaining friction is tracked as post-baseline work. Post-factum focus correction and Work Item title/basic-field editing are implemented; Command+Tab restore, menu bar counter refresh, and today/total time columns are still open.
+Remaining friction is tracked as post-baseline work. Post-factum focus correction, Work Item title/basic-field editing, today/total time columns, macOS window restore, and native menu bar status refresh are implemented. The next dogfood day should verify the macOS entry fixes in real use.
 
 For the stricter daily-use gate, use [Dogfood Release Candidate](dogfood-release-candidate.md). The day protocol explains how to run the test; the release-candidate gate decides whether the current baseline is good enough to replace Session.
 

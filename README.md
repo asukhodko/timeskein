@@ -284,7 +284,7 @@ Focus Session controls:
 - Open gap warning when no focus block is running and the time since the last stopped block is significant
 - Day totals count the part of each focus block that overlaps the selected local day
 - Markdown dogfood report from the Today panel or CLI, with focus data, Work Item totals, Activity Zone totals, Work Item notes and timestamped events for touched items, significant gaps, Capture Activity, open captures, review prompts, and draft warning while a focus block or Work Item is active
-- macOS menu bar item shows the active focus duration as a short `12m Focus` status while a block is running
+- macOS menu bar item shows the active focus duration as a short `12m Focus` status while a block is running, and today's total when no block is active
 - Work item states: active, waiting, blocked, done, someday, unknown
 - Work Item activity zones: work, coordination, recovery, idle, personal
 - Work Item list shows last touched time plus today/total tracked time when available
@@ -305,8 +305,7 @@ Focus Session controls:
 - **Work Item Events are basic** - timestamped events can be appended and reported, but they cannot be edited, deleted, or promoted from captures yet
 - **Work Item notes remain mutable descriptions** - timestamped observations should use Work Item Events instead
 - **Activity zones are Work Item-level only** - reports show zone totals, but the top-line `Total focus` still sums every tracked interval
-- **macOS Command+Tab does not restore a hidden borderless window yet** - use the menu bar item or global shortcut
-- **The menu bar focus counter can lag until the item is clicked** - this is known dogfood friction
+- **macOS window restore and menu bar counter are newly fixed** - the packaged app now avoids always-on-top/task-switcher hiding, handles macOS reopen, and updates the menu bar title from the native shell; verify this in the next dogfood day
 - **macOS packaging produces `.app` only** - DMG packaging is deferred
 - **Windows packaging deferred** - current recovery baseline targets browser and macOS first
 - **Automated e2e tests are not implemented yet** - current validation is manual smoke plus build/type checks

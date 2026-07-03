@@ -72,7 +72,10 @@ export default function FocusPanel({ selectedItem }: FocusPanelProps) {
     [current, sessions, now]
   )
   const reportIsDraft = current?.state === 'active' || activeWorkItems.length > 0
-  const trayStatusTitle = useMemo(() => buildTrayStatusTitle(current), [current])
+  const trayStatusTitle = useMemo(
+    () => buildTrayStatusTitle(current, now, activeSecondsTotal),
+    [current, now, activeSecondsTotal]
+  )
   const todayMarkdown = useMemo(
     () => buildTodayMarkdown(sessions, activeSecondsTotal, now, inventoryItems, workItemEvents),
     [sessions, activeSecondsTotal, now, inventoryItems, workItemEvents]
@@ -1145,18 +1148,33 @@ function sessionCrossesWindow(session: FocusSessionView, from: Date, to: Date, n
   return startedAt < from.getTime() || stoppedAt > to.getTime()
 }
 
-function buildTrayStatusTitle(session?: FocusSessionView) {
+function buildTrayStatusTitle(session: FocusSessionView | undefined, now: Date, activeSecondsTotal = 0) {
   if (!session || session.state !== 'active') {
-    return undefined
+    return activeSecondsTotal > 0 ? `${formatTrayDuration(activeSecondsTotal)} Today` : undefined
   }
 
-  const minutes = Math.floor(session.active_seconds / 60)
-  const overMinutes = Math.floor(session.over_target_seconds / 60)
-  if (overMinutes > 0) {
-    return `${minutes}m Focus +${overMinutes}m`
+  const elapsedSeconds = Math.max(
+    session.active_seconds,
+    Math.floor((now.getTime() - new Date(session.started_at).getTime()) / 1000)
+  )
+  const overTargetSeconds = Math.max(0, elapsedSeconds - session.target_seconds)
+  const elapsed = formatTrayDuration(elapsedSeconds)
+  if (overTargetSeconds > 0) {
+    return `${elapsed} Focus +${formatTrayDuration(overTargetSeconds)}`
   }
 
-  return `${minutes}m Focus`
+  return `${elapsed} Focus`
+}
+
+function formatTrayDuration(totalSeconds: number) {
+  const minutes = Math.max(Math.floor(totalSeconds / 60), 0)
+  if (minutes < 60) {
+    return `${minutes}m`
+  }
+
+  const hours = Math.floor(minutes / 60)
+  const rest = minutes % 60
+  return rest === 0 ? `${hours}h` : `${hours}h${rest}m`
 }
 
 function ActiveFocusSession({

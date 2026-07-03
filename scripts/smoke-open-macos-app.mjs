@@ -2,7 +2,7 @@
 
 import { execFile, spawn } from "node:child_process";
 import { existsSync } from "node:fs";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { promisify } from "node:util";
@@ -13,6 +13,8 @@ const appBinary = join(
   repoRoot,
   "target/release/bundle/macos/Timeskein.app/Contents/MacOS/timeskein-desktop"
 );
+const tauriConfigPath = join(repoRoot, "apps/desktop/src-tauri/tauri.conf.json");
+const tauriMainPath = join(repoRoot, "apps/desktop/src-tauri/src/main.rs");
 
 if (process.platform !== "darwin") {
   console.log(JSON.stringify({ ok: true, skipped: "macOS only" }, null, 2));
@@ -22,6 +24,8 @@ if (process.platform !== "darwin") {
 if (!existsSync(appBinary)) {
   throw new Error(`Packaged app binary not found: ${appBinary}`);
 }
+
+await assertMacosWindowPolicy();
 
 const homeDir = await mkdtemp(join(tmpdir(), "timeskein-open-smoke-"));
 let child;
@@ -129,4 +133,22 @@ function assert(condition, message) {
   if (!condition) {
     throw new Error(message);
   }
+}
+
+async function assertMacosWindowPolicy() {
+  const config = JSON.parse(await readFile(tauriConfigPath, "utf8"));
+  const mainWindow = config.app?.windows?.[0];
+  assert(mainWindow, "tauri.conf.json does not define a main window");
+  assert(mainWindow.alwaysOnTop === false, "main window must not be always-on-top for dogfood use");
+  assert(mainWindow.skipTaskbar === false, "main window must be restorable through normal macOS app switching");
+
+  const mainSource = await readFile(tauriMainPath, "utf8");
+  assert(
+    mainSource.includes("RunEvent::Reopen"),
+    "Tauri main.rs must handle macOS Reopen so hidden windows can be restored"
+  );
+  assert(
+    mainSource.includes("start_tray_status_updater"),
+    "Tauri main.rs must run the native tray status updater"
+  );
 }

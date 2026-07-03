@@ -97,7 +97,7 @@ x:
         mgmt:
           health: green
           owner: a.sukhodko
-          sync_note: Dogfood days produced usable focus data, gaps, Work Item totals, Work Item notes, Capture Activity, and app telemetry without Session.
+          sync_note: Dogfood days produced usable focus data without Session; stopped blocks can now be corrected or split before copying the final report.
       capture-inbox:
         title: Capture Inbox
         scope_nodes:
@@ -115,7 +115,7 @@ x:
         mgmt:
           health: green
           owner: a.sukhodko
-          sync_note: macOS Session replacement dogfood baseline accepted on 2026-07-03; next slice is post-factum correction and entry polish.
+          sync_note: macOS Session replacement dogfood baseline accepted on 2026-07-03; post-factum correction is implemented, with entry/window polish remaining.
       future-directions:
         title: Future directions
         scope_nodes:

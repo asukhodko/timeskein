@@ -327,6 +327,33 @@ function handleMethod(
       return successResponse(requestId, { success: true });
     }
 
+    case "work_item.update": {
+      const id = params.id as string;
+      if (!id) {
+        return errorResponse(requestId, "validation_error", "Work item ID is required");
+      }
+
+      const title = typeof params.title === "string" ? params.title.trim() : undefined;
+      if (params.title !== undefined && !title) {
+        return errorResponse(requestId, "validation_error", "Title cannot be empty");
+      }
+
+      const duplicate = title ? store.findWorkItemByTitle(title) : undefined;
+      if (duplicate && duplicate.id !== id) {
+        return errorResponse(requestId, "validation_error", "A work item with this title already exists");
+      }
+
+      const item = store.updateWorkItem(id, {
+        title,
+        type: params.type as "task" | "project" | "question" | null | undefined,
+        note: params.note as string | null | undefined,
+      });
+      if (!item) {
+        return errorResponse(requestId, "not_found", "Work item not found");
+      }
+      return successResponse(requestId, item);
+    }
+
     case "work_item.toggle_pin": {
       const id = params.id as string;
       if (!id) {
@@ -384,6 +411,45 @@ function handleMethod(
       }
 
       return successResponse(requestId, session);
+    }
+
+    case "focus.update": {
+      const id = params.id as string;
+      if (!id) {
+        return errorResponse(requestId, "validation_error", "Focus session ID is required");
+      }
+
+      const session = store.updateFocusSession(id, {
+        title: typeof params.title === "string" ? params.title.trim() : undefined,
+        work_item_id: params.work_item_id as string | null | undefined,
+        target_seconds: params.target_seconds as number | undefined,
+        note: params.note as string | null | undefined,
+        started_at: params.started_at as string | undefined,
+        stopped_at: params.stopped_at as string | undefined,
+      });
+      if (!session) {
+        return errorResponse(requestId, "not_found", "Focus session not found");
+      }
+      return successResponse(requestId, session);
+    }
+
+    case "focus.split": {
+      const id = params.id as string;
+      const splitAt = params.split_at as string;
+      if (!id || !splitAt) {
+        return errorResponse(requestId, "validation_error", "Focus session ID and split_at are required");
+      }
+
+      const result = store.splitFocusSession(id, {
+        split_at: splitAt,
+        right_title: typeof params.right_title === "string" ? params.right_title.trim() : undefined,
+        right_work_item_id: params.right_work_item_id as string | null | undefined,
+        right_note: params.right_note as string | null | undefined,
+      });
+      if (!result) {
+        return errorResponse(requestId, "validation_error", "Focus session cannot be split");
+      }
+      return successResponse(requestId, result);
     }
 
     case "focus.list": {
@@ -553,8 +619,8 @@ app.listen(PORT, () => {
   console.log("  agent.ping, agent.status, agent.version");
   console.log("  inventory.list, inventory.get");
   console.log("  capture.create, capture.list, capture.resolve, capture.convert_to_work_item");
-  console.log("  work_item.create, work_item.touch, work_item.set_state, work_item.set_note, work_item.toggle_pin, work_item.delete");
-  console.log("  focus.current, focus.start, focus.stop, focus.list");
+  console.log("  work_item.create, work_item.touch, work_item.set_state, work_item.set_note, work_item.update, work_item.toggle_pin, work_item.delete");
+  console.log("  focus.current, focus.start, focus.stop, focus.update, focus.split, focus.list");
   console.log("  ref.add, ref.remove, ref.open, ref.check_conflict");
   console.log("  settings.get, settings.set, settings.get_denylist, settings.add_to_denylist, settings.remove_from_denylist");
 });

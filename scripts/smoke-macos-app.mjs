@@ -275,6 +275,8 @@ try {
     "inventory still contains an active work item after deleting active item"
   );
 
+  await runCorrectionSmoke(port);
+
   const restartTitle = `Packaged smoke restart ${new Date().toISOString()}`;
   const restartStarted = await rpc(port, "focus.start", {
     title: restartTitle,
@@ -398,6 +400,60 @@ async function rpc(port, method, params = {}) {
   }
 
   return data.result;
+}
+
+async function runCorrectionSmoke(port) {
+  const title = `Packaged correction ${new Date().toISOString()}`;
+  const started = await rpc(port, "focus.start", {
+    title,
+    target_seconds: 60,
+  });
+  await new Promise((resolve) => setTimeout(resolve, 1100));
+
+  const stopped = await rpc(port, "focus.stop", {
+    note: "packaged correction original note",
+  });
+  const end = new Date(stopped.stopped_at);
+  const start = new Date(end.getTime() - 60_000);
+  const splitAt = new Date(start.getTime() + 30_000);
+  const correctedTitle = `${title} corrected`;
+  const updated = await rpc(port, "focus.update", {
+    id: stopped.id,
+    title: correctedTitle,
+    started_at: start.toISOString(),
+    stopped_at: end.toISOString(),
+    note: "packaged correction note",
+  });
+
+  assert(updated.id === started.id, "focus.update returned a different session");
+  assert(updated.work_item_title === correctedTitle, "focus.update did not reassign work item");
+  assert(updated.active_seconds >= 59, "focus.update did not update duration");
+
+  const rightTitle = `${title} right`;
+  const split = await rpc(port, "focus.split", {
+    id: updated.id,
+    split_at: splitAt.toISOString(),
+    right_title: rightTitle,
+    right_note: "packaged right note",
+  });
+
+  assert(split.left.id === updated.id, "focus.split did not keep the original left id");
+  assert(split.right.id !== split.left.id, "focus.split did not create a right block");
+  assert(split.right.work_item_title === rightTitle, "focus.split did not assign right title");
+
+  const editedRightTitle = `${rightTitle} edited`;
+  const editedItem = await rpc(port, "work_item.update", {
+    id: split.right.work_item_id,
+    title: editedRightTitle,
+    type: "project",
+    note: "packaged edited item note",
+  });
+  assert(editedItem.title === editedRightTitle, "work_item.update did not update title");
+  assert(editedItem.type === "project", "work_item.update did not update type");
+
+  const day = await rpc(port, "focus.list", todayWindow());
+  const rightFound = day.sessions.find((session) => session.id === split.right.id);
+  assert(rightFound?.work_item_title === editedRightTitle, "focus.list did not reflect edited item title");
 }
 
 async function waitForPortFile(path, timeoutMs) {

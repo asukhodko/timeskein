@@ -30,6 +30,10 @@ try {
     ...process.env,
     TIMESKEIN_API_URL: apiUrl,
   });
+  await run("node", ["scripts/smoke-corrections-api.mjs"], {
+    ...process.env,
+    TIMESKEIN_API_URL: apiUrl,
+  });
   await run("node", ["scripts/smoke-capture-api.mjs"], {
     ...process.env,
     TIMESKEIN_API_URL: apiUrl,

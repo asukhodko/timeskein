@@ -190,7 +190,7 @@ The third real dogfood day on 2026-07-03 closed the Capture Inbox release-candid
 - two captures resolved, one converted to a Work Item, one left open as visible follow-up
 - no API errors, copy failures, capture failures, duplicate-title groups, or active-state split brain
 
-Remaining friction is tracked as post-baseline work, especially post-factum focus correction, Work Item title editing, Command+Tab restore, menu bar counter refresh, and today/total time columns.
+Remaining friction is tracked as post-baseline work. Post-factum focus correction and Work Item title/basic-field editing are implemented; Command+Tab restore, menu bar counter refresh, and today/total time columns are still open.
 
 For the stricter daily-use gate, use [Dogfood Release Candidate](dogfood-release-candidate.md). The day protocol explains how to run the test; the release-candidate gate decides whether the current baseline is good enough to replace Session.
 
@@ -370,11 +370,9 @@ The dogfood day fails if any of these happens often enough to break trust:
 ## Known Limits for This Trial
 
 - There is no pause/resume/cancel model yet. Stop and start again instead.
-- Stopped focus blocks cannot be edited, split, moved, or reassigned after the fact yet.
+- Stopped focus blocks can be edited or split from the Today list. The correction workflow is basic: there is no drag timeline or bulk edit yet.
 - Capture Inbox is minimal. It can create, resolve, and convert captures, but cannot edit/delete captures or append them as timestamped Work Item notes yet.
 - There are no activity zones yet. A Work Item named `Break` still contributes to total focus.
-- Stop notes cannot be edited after the block is stopped.
-- Work Item titles cannot be edited yet.
 - Work Item notes are a single mutable field, not timestamped observations.
 - There is no automatic active-window detection.
 - There is no synchronization between devices.

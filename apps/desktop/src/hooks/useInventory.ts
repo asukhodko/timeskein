@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { inventoryApi, workItemApi, refApi } from '../api/client'
-import type { WorkItemState } from '@timeskein/contracts'
+import type { WorkItemState, WorkItemUpdateParams } from '@timeskein/contracts'
 
 // Query keys
 export const queryKeys = {
@@ -61,6 +61,18 @@ export function useSetWorkItemNote() {
     mutationFn: ({ id, note }: { id: string; note: string }) => workItemApi.setNote(id, note),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.inventory })
+    },
+  })
+}
+
+export function useUpdateWorkItem() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (params: WorkItemUpdateParams) => workItemApi.update(params),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.inventory })
+      queryClient.invalidateQueries({ queryKey: ['focus'] })
     },
   })
 }

@@ -350,6 +350,14 @@ export interface WorkItemDeleteResponse {
   stopped_focus_session_id?: string;
 }
 
+// work_item.update parameters
+export interface WorkItemUpdateParams {
+  id: string;
+  title?: string;
+  type?: WorkItemType;
+  note?: string | null;
+}
+
 // focus.start parameters
 export interface FocusStartParams {
   title: string;
@@ -363,6 +371,31 @@ export interface FocusStopParams {
   id?: string;
   note?: string;
   telemetry_action_id?: string;
+}
+
+// focus.update parameters
+export interface FocusUpdateParams {
+  id: string;
+  title?: string;
+  work_item_id?: string | null;
+  target_seconds?: number;
+  note?: string | null;
+  started_at?: string;  // ISO 8601
+  stopped_at?: string;  // ISO 8601
+}
+
+// focus.split parameters
+export interface FocusSplitParams {
+  id: string;
+  split_at: string;  // ISO 8601
+  right_title?: string;
+  right_work_item_id?: string | null;
+  right_note?: string | null;
+}
+
+export interface FocusSplitResponse {
+  left: FocusSessionView;
+  right: FocusSessionView;
 }
 
 // focus.list parameters

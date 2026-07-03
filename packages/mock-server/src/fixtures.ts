@@ -523,6 +523,34 @@ export class MockDataStore {
     return true;
   }
 
+  updateWorkItem(
+    id: string,
+    params: { title?: string; type?: "task" | "project" | "question" | null; note?: string | null }
+  ): WorkItemView | undefined {
+    const item = this.workItems.get(id);
+    if (!item) return undefined;
+
+    const now = new Date().toISOString();
+    if (params.title !== undefined) {
+      item.title = params.title.trim();
+      for (const session of this.focusSessions.values()) {
+        if (session.work_item_id === item.id) {
+          session.work_item_title = item.title;
+        }
+      }
+    }
+    if (params.type !== undefined) {
+      item.type = params.type || undefined;
+    }
+    if (params.note !== undefined) {
+      item.note = params.note?.trim() || undefined;
+    }
+    item.updated_at = now;
+    item.last_seen_at = now;
+    this.workItems.set(id, item);
+    return item;
+  }
+
   toggleWorkItemPin(id: string): boolean {
     const item = this.workItems.get(id);
     if (!item) return false;
@@ -744,6 +772,106 @@ export class MockDataStore {
     return this.withLiveTiming(session);
   }
 
+  updateFocusSession(
+    id: string,
+    params: {
+      title?: string;
+      work_item_id?: string | null;
+      target_seconds?: number;
+      note?: string | null;
+      started_at?: string;
+      stopped_at?: string;
+    }
+  ): FocusSessionView | undefined {
+    const session = this.focusSessions.get(id);
+    if (!session || session.state === "active") return undefined;
+
+    const assignment = this.resolveFocusAssignment({
+      title: params.title,
+      work_item_id: params.work_item_id,
+      fallbackTitle: session.title,
+      fallbackWorkItemId: session.work_item_id,
+      fallbackWorkItemTitle: session.work_item_title,
+    });
+    session.title = assignment.title;
+    session.work_item_id = assignment.workItemId;
+    session.work_item_title = assignment.workItemTitle;
+
+    if (params.target_seconds !== undefined) {
+      session.target_seconds = Math.max(params.target_seconds, 60);
+    }
+    if (params.note !== undefined) {
+      session.note = params.note?.trim() || undefined;
+    }
+    if (params.started_at) {
+      session.started_at = params.started_at;
+    }
+    if (params.stopped_at) {
+      session.stopped_at = params.stopped_at;
+    }
+
+    if (!session.stopped_at || new Date(session.stopped_at).getTime() <= new Date(session.started_at).getTime()) {
+      return undefined;
+    }
+
+    session.updated_at = new Date().toISOString();
+    this.focusSessions.set(session.id, session);
+    return this.withLiveTiming(session);
+  }
+
+  splitFocusSession(
+    id: string,
+    params: {
+      split_at: string;
+      right_title?: string;
+      right_work_item_id?: string | null;
+      right_note?: string | null;
+    }
+  ): { left: FocusSessionView; right: FocusSessionView } | undefined {
+    const left = this.focusSessions.get(id);
+    if (!left || left.state === "active" || !left.stopped_at) return undefined;
+
+    const splitAt = new Date(params.split_at).getTime();
+    const startedAt = new Date(left.started_at).getTime();
+    const stoppedAt = new Date(left.stopped_at).getTime();
+    if (splitAt <= startedAt || splitAt >= stoppedAt) return undefined;
+
+    const assignment = this.resolveFocusAssignment({
+      title: params.right_title,
+      work_item_id: params.right_work_item_id,
+      fallbackTitle: left.title,
+      fallbackWorkItemId: left.work_item_id,
+      fallbackWorkItemTitle: left.work_item_title,
+    });
+    const now = new Date().toISOString();
+    const oldStoppedAt = left.stopped_at;
+
+    left.stopped_at = params.split_at;
+    left.updated_at = now;
+    this.focusSessions.set(left.id, left);
+
+    const right: FocusSessionView = {
+      id: uuidv4(),
+      title: assignment.title,
+      work_item_id: assignment.workItemId,
+      work_item_title: assignment.workItemTitle,
+      state: "stopped",
+      target_seconds: left.target_seconds,
+      active_seconds: 0,
+      over_target_seconds: 0,
+      note: params.right_note?.trim() || undefined,
+      started_at: params.split_at,
+      stopped_at: oldStoppedAt,
+      updated_at: now,
+    };
+    this.focusSessions.set(right.id, right);
+
+    return {
+      left: this.withLiveTiming(left),
+      right: this.withLiveTiming(right),
+    };
+  }
+
   listFocusSessions(from?: string, to?: string): FocusSessionView[] {
     const fromTime = from ? new Date(from).getTime() : Number.NEGATIVE_INFINITY;
     const toTime = to ? new Date(to).getTime() : Number.POSITIVE_INFINITY;
@@ -789,6 +917,38 @@ export class MockDataStore {
       ...session,
       active_seconds: activeSeconds,
       over_target_seconds: Math.max(activeSeconds - session.target_seconds, 0),
+    };
+  }
+
+  private resolveFocusAssignment(params: {
+    title?: string;
+    work_item_id?: string | null;
+    fallbackTitle: string;
+    fallbackWorkItemId?: string;
+    fallbackWorkItemTitle?: string;
+  }): { title: string; workItemId?: string; workItemTitle?: string } {
+    if (params.work_item_id !== undefined) {
+      if (params.work_item_id === null) {
+        const title = params.title?.trim() || params.fallbackTitle;
+        return { title };
+      }
+
+      const item = this.workItems.get(params.work_item_id);
+      if (item) {
+        return { title: item.title, workItemId: item.id, workItemTitle: item.title };
+      }
+    }
+
+    const title = params.title?.trim();
+    if (title) {
+      const item = this.findWorkItemByTitle(title) || this.createWorkItem(title, "task", "unknown");
+      return { title: item.title, workItemId: item.id, workItemTitle: item.title };
+    }
+
+    return {
+      title: params.fallbackTitle,
+      workItemId: params.fallbackWorkItemId,
+      workItemTitle: params.fallbackWorkItemTitle,
     };
   }
 }

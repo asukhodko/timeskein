@@ -11,6 +11,7 @@ import { useCaptureActivity, useOpenCaptures } from '../hooks/useCaptures'
 import { appEventApi, logAppEvent, shellApi } from '../api/client'
 import { formatClockTime, formatDuration, truncate } from '../utils/formatTime'
 import CaptureInbox from './CaptureInbox'
+import FocusCorrectionDialog from './FocusCorrectionDialog'
 
 interface FocusPanelProps {
   selectedItem?: WorkItemView
@@ -25,6 +26,7 @@ export default function FocusPanel({ selectedItem }: FocusPanelProps) {
   const [copyDayState, setCopyDayState] = useState<'idle' | 'copied' | 'failed'>('idle')
   const [copyReportState, setCopyReportState] = useState<'idle' | 'copied' | 'failed'>('idle')
   const [manualCopy, setManualCopy] = useState<{ label: string; text: string } | null>(null)
+  const [correctingSession, setCorrectingSession] = useState<FocusSessionView | null>(null)
   const titleInputRef = useRef<HTMLInputElement>(null)
   const manualCopyRef = useRef<HTMLTextAreaElement>(null)
 
@@ -501,11 +503,23 @@ export default function FocusPanel({ selectedItem }: FocusPanelProps) {
           <div className="grid max-h-72 gap-1.5 overflow-auto pr-1">
             {openGap && <OpenGapRow gap={openGap} />}
             {sessionsWithGaps.map(({ session, gapBefore }) => (
-              <FocusSessionRow key={session.id} session={session} gapBefore={gapBefore} />
+              <FocusSessionRow
+                key={session.id}
+                session={session}
+                gapBefore={gapBefore}
+                onCorrect={() => setCorrectingSession(session)}
+              />
             ))}
           </div>
         )}
       </div>
+
+      {correctingSession && (
+        <FocusCorrectionDialog
+          session={correctingSession}
+          onClose={() => setCorrectingSession(null)}
+        />
+      )}
     </section>
   )
 }
@@ -1073,6 +1087,7 @@ function ActiveFocusSession({
 function FocusSessionRow({
   session,
   gapBefore,
+  onCorrect,
 }: {
   session: FocusSessionView
   gapBefore?: {
@@ -1080,6 +1095,7 @@ function FocusSessionRow({
     to: string
     seconds: number
   }
+  onCorrect: () => void
 }) {
   const range = `${formatClockTime(session.started_at)}-${formatClockTime(session.stopped_at)}`
   const stateClass = session.state === 'active' ? 'text-emerald-300' : 'text-gray-500'
@@ -1092,7 +1108,7 @@ function FocusSessionRow({
 
   return (
     <div className="rounded bg-gray-900/60 px-2 py-1 text-xs">
-      <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2">
+      <div className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-2">
         <span className="font-mono tabular-nums text-gray-400">{formatDuration(session.active_seconds)}</span>
         <span className="flex min-w-0 items-center gap-2">
           <span className="min-w-0 truncate text-gray-200">{title}</span>
@@ -1103,6 +1119,14 @@ function FocusSessionRow({
           )}
         </span>
         <span className={stateClass}>{range}</span>
+        <button
+          type="button"
+          onClick={onCorrect}
+          disabled={session.state === 'active'}
+          className="rounded border border-gray-700 px-1.5 py-0.5 text-[10px] text-gray-400 hover:border-gray-500 hover:text-gray-200 disabled:cursor-not-allowed disabled:border-gray-800 disabled:text-gray-700"
+        >
+          Edit
+        </button>
       </div>
       {detailTitle && (
         <div className="mt-0.5 truncate pl-[3.25rem] text-[11px] text-gray-500">{detailTitle}</div>

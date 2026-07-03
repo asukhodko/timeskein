@@ -9,7 +9,7 @@ A desktop application for quickly tracking focus sessions and work items with re
 | Component | Status | Notes |
 |-----------|--------|-------|
 | Frontend (React + Tailwind) | Working | Runs in browser via Vite |
-| Focus Session | Working baseline | Start, live timer, manual stop, day list, total active time |
+| Focus Session | Working baseline | Start, live timer, manual stop, post-factum correction, day list, total active time |
 | Capture Inbox | Working baseline | Quick incoming-event capture without interrupting the active focus block |
 | Dogfood Telemetry | Working baseline | Local app-event journal and CLI metrics for tracking UX friction |
 | Mock Server | Working | Full API implementation for development |
@@ -18,7 +18,7 @@ A desktop application for quickly tracking focus sessions and work items with re
 
 **What works now:** Focus Session tracking, Capture Inbox, and Work Item inventory in browser mock mode and in the macOS `.app` with an embedded Rust agent.
 
-**Current focus:** The macOS dogfood release baseline was accepted on 2026-07-03 after three real tracked days, including one day with Capture Inbox used during active focus. The next slice is post-dogfood correction and entry polish. Windows packaging is deferred.
+**Current focus:** The macOS dogfood release baseline was accepted on 2026-07-03 after three real tracked days, including one day with Capture Inbox used during active focus. Post-factum focus correction is now implemented; the next slice is entry/window polish and richer day review. Windows packaging is deferred.
 
 See [Current Implementation](docs/current-implementation.md) for the exact state of what runs today.
 Use [Dogfood Day Protocol](docs/dogfood-day.md) when testing Timeskein as a Session replacement for a real workday.
@@ -198,6 +198,7 @@ With the mock server running:
 ```bash
 pnpm mock-server
 pnpm smoke:focus-api
+pnpm smoke:corrections-api
 pnpm smoke:capture-api
 ```
 
@@ -205,6 +206,7 @@ Against a running Rust agent or desktop app:
 
 ```bash
 TIMESKEIN_API_URL=http://127.0.0.1:<port>/api pnpm smoke:focus-api
+TIMESKEIN_API_URL=http://127.0.0.1:<port>/api pnpm smoke:corrections-api
 TIMESKEIN_API_URL=http://127.0.0.1:<port>/api pnpm smoke:capture-api
 ```
 
@@ -222,7 +224,8 @@ All shortcuts work regardless of keyboard layout (Russian, etc.):
 | `S` or `1-6` | Change state menu |
 | `N` | Edit note |
 | `R` | Refs panel (add/remove/open) |
-| `Enter` | Open primary ref in browser |
+| `Enter` | Open primary ref in browser, or edit the selected item when it has no refs |
+| `E` | Edit selected Work Item |
 | `Shift+Delete` | Delete item (with confirmation) |
 | `C` or `Alt+N` | Create new item |
 | `Esc` | Close dialogs; hide the macOS window when no dialog is open |
@@ -238,6 +241,7 @@ Focus Session controls:
 | `Start Item` / `Switch Item` | Start or continue focus on the selected Work Item |
 | Double-click Work Item | Start or switch focus to that Work Item |
 | Stop note + `Enter` or `Stop` | Stop the active focus session and optionally save a note |
+| Today row `Edit` | Correct a stopped focus block or split it into two blocks |
 
 **State shortcuts (in State menu):**
 1. Active, 2. Blocked, 3. Waiting, 4. Someday, 5. Unknown, 6. Done
@@ -251,8 +255,9 @@ Focus Session controls:
 
 ## Key Features (MVP)
 
-- Manual work item management (create/touch/note/state/pin/refs/delete)
+- Manual work item management (create/edit/touch/note/state/pin/refs/delete)
 - Manual focus sessions with 25-minute target and overflow tracking
+- Post-factum correction for stopped focus blocks: edit time/note/Work Item or split the block
 - Capture Inbox for incoming events that should be handled later without interrupting the current focus block
 - Running focus session restored from SQLite after frontend/app restart
 - Focus sessions are linked to Work Items; typed titles reuse existing Work Items instead of creating duplicates
@@ -275,8 +280,7 @@ Focus Session controls:
 
 - **Browser mode uses mock data** - SQLite persistence is available in the macOS app, not in browser dev mode
 - **Focus Session has no pause/resume/cancel yet** - the current baseline is start/stop only
-- **Post-factum focus correction is not implemented** - stopped focus blocks cannot yet be edited, split, moved, or reassigned after the fact
-- **Work Item title editing is not implemented** - current editing is limited to note, refs, state, pinning, touch, and delete
+- **Post-factum correction is basic** - stopped focus blocks can be edited and split, but there is not yet a drag timeline or multi-step correction wizard
 - **Capture Inbox is minimal** - proven in one full dogfood day, but capture edit/delete and append-as-timestamped-note are not implemented yet
 - **Work Item notes are not timestamped** - they appear in day reports for touched items, but they are still one mutable description field
 - **Activity zones are not implemented** - breaks tracked as Work Items still count into total focus

@@ -175,6 +175,7 @@ async fn dispatch_method(
         "work_item.touch" => handle_work_item_touch(state, params, request_id).await,
         "work_item.set_state" => handle_work_item_set_state(state, params, request_id).await,
         "work_item.set_note" => handle_work_item_set_note(state, params, request_id).await,
+        "work_item.update" => handle_work_item_update(state, params, request_id).await,
         "work_item.toggle_pin" => handle_work_item_toggle_pin(state, params, request_id).await,
         "work_item.delete" => handle_work_item_delete(state, params, request_id).await,
 
@@ -182,6 +183,8 @@ async fn dispatch_method(
         "focus.current" => handle_focus_current(state, params, request_id).await,
         "focus.start" => handle_focus_start(state, params, request_id).await,
         "focus.stop" => handle_focus_stop(state, params, request_id).await,
+        "focus.update" => handle_focus_update(state, params, request_id).await,
+        "focus.split" => handle_focus_split(state, params, request_id).await,
         "focus.list" => handle_focus_list(state, params, request_id).await,
 
         // Ref methods

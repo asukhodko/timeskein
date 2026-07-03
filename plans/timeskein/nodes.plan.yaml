@@ -270,6 +270,18 @@ nodes:
     x:
       ops:
         attention_class: current
+  ts.day_review.corrections:
+    title: Post-factum focus correction
+    kind: task
+    parent: ts.day_review
+    status: done
+    effort: 3
+    deps:
+      - id: ts.day_review.export
+    notes: Stopped focus blocks can be edited, reassigned to a Work Item by title, split at a timestamp, and corrected through the Today list. Work Item title/type/note editing is implemented with duplicate-title protection. Markdown reports use the corrected SQLite rows, so evening review can fix tracking mistakes before copying the final day picture.
+    x:
+      ops:
+        attention_class: current
   ts.day_review.app_telemetry:
     title: Add local app-event telemetry for dogfood analysis
     kind: task
@@ -357,7 +369,7 @@ nodes:
     effort: 2
     deps:
       - id: ts.day_review.analysis_gate
-    notes: dogfood:preflight covers script syntax, contracts build, desktop typecheck, Markdown export smoke, dogfood start/status/ready/rc-check/reset/stop-active/open-app smoke, packaged macOS build, embedded agent smoke, focus switching, capture API, Capture Inbox telemetry, stale lock/port recovery, app_events constraint migration, and restart/restore. Browser UI smoke is still manual.
+    notes: dogfood:preflight covers script syntax, contracts build, desktop typecheck, Markdown export smoke, dogfood start/status/ready/rc-check/reset/stop-active/open-app smoke, packaged macOS build, embedded agent smoke, focus switching, post-factum correction API, Work Item editing, capture API, Capture Inbox telemetry, stale lock/port recovery, app_events constraint migration, and restart/restore. Browser UI smoke is still manual.
     x:
       ops:
         attention_class: current
@@ -369,7 +381,7 @@ nodes:
     effort: 2
     deps:
       - id: ts.focus_core.dogfood_gate
-    notes: Fixed typing C/С opening Create, creating a new active Work Item, ambiguous last-seen timestamps, and added the first Capture Inbox baseline. Second dogfood day confirmed Session is no longer needed for core tracking, but showed remaining friction; Command+Tab restore, stale menu-bar counter, Work Item editing, split resizing, and time-spent columns are still open.
+    notes: Fixed typing C/С opening Create, creating a new active Work Item, ambiguous last-seen timestamps, and added the first Capture Inbox baseline. Post-baseline work added Work Item title/basic-field editing and focus-block correction. Remaining friction includes Command+Tab restore, stale menu-bar counter, split resizing, and time-spent columns.
     x:
       ops:
         attention_class: current

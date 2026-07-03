@@ -2,7 +2,7 @@
 
 ## Status
 
-Last updated: 2026-07-02.
+Last updated: 2026-07-03.
 
 This document describes what the repository actually runs today. Target architecture and future plans remain in RFCs and roadmap documents.
 
@@ -94,6 +94,7 @@ pnpm typecheck
 cargo check -p timeskein-agent
 cargo check -p timeskein-desktop
 pnpm smoke:focus-api
+pnpm smoke:corrections-api
 pnpm smoke:capture-api
 pnpm smoke:mock-api
 pnpm --filter @timeskein/desktop build
@@ -120,6 +121,7 @@ Runtime smoke on macOS:
 - `inventory.list` returns an empty list against the real SQLite-backed agent
 - `focus.start`, `focus.stop`, `focus.list`, and Work Item focus switching work against the real SQLite-backed agent
 - `pnpm smoke:macos-app` launches the packaged `.app` binary with a temporary home directory and verifies embedded-agent `agent.status`, `inventory.list`, focus start/stop/list, title reuse, focus switching, active Work Item deletion, and active focus restoration after app restart
+- `pnpm smoke:macos-app` also verifies post-factum focus correction: stopped block update, split, Work Item reassignment, Work Item edit, and day-list reflection
 - `pnpm smoke:macos-app` also verifies Capture Inbox create/resolve/convert while ensuring capture actions do not interrupt the active focus session
 - `pnpm smoke:macos-app` also verifies startup normalization of legacy active Work Items, orphan active focus sessions, stale `agent.lock` / `agent.port` recovery, and migration of older `app_events` kind constraints
 - `pnpm smoke:export-focus-day` verifies fallback Markdown export, including Work Item notes for touched items, against a temporary SQLite database
@@ -159,8 +161,9 @@ Runtime smoke in browser/mock mode:
 - mock server starts on localhost
 - `focus.start`, `focus.stop`, `focus.list`, and Work Item focus switching work against the mock API
 - `pnpm smoke:focus-api` verifies the same flow and refuses to run over an existing active focus session
+- `pnpm smoke:corrections-api` verifies focus.update, focus.split, Work Item edit, duplicate-title rejection, and corrected day-list data
 - `pnpm smoke:capture-api` verifies Capture Inbox create/list/resolve/convert without interrupting focus
-- `pnpm smoke:mock-api` starts an isolated mock server, runs `smoke:focus-api` and `smoke:capture-api`, and stops it
+- `pnpm smoke:mock-api` starts an isolated mock server, runs `smoke:focus-api`, `smoke:corrections-api`, and `smoke:capture-api`, and stops it
 - mock API also exposes `app_event.log`, `app_event.list`, and `app_event.summary`
 - manual browser UI smoke was checked on 2026-06-30: start by typed title, switch by typed title, stop with note, Today list, totals, and `Copy Report` Markdown with both Work Items
 
@@ -187,6 +190,7 @@ Third real dogfood day and release baseline:
 - Capture Inbox was used in real active-focus situations: four captures were created during active focus, two were resolved, one was converted to a Work Item, and one remained open as visible follow-up
 - The saved report had no API errors, copy failures, focus start/stop failures, Capture Inbox failures, duplicate-title groups, or active-state split brain
 - This day accepted the macOS dogfood release baseline: Timeskein is good enough to replace Session for daily personal use, with known limitations documented in `dogfood-release-baseline.md`
+- The first post-baseline slice added correction of stopped focus blocks and Work Item title/basic-field editing, so wrong Work Item assignments can be fixed before copying the final report.
 
 ## Implemented Features
 
@@ -198,6 +202,7 @@ Third real dogfood day and release baseline:
 - Press `Space` with an empty focus input to start or switch to the selected Work Item
 - Double-click a Work Item to start or switch focus to it
 - Stop the active focus block by pressing `Enter` in the stop-note field or by clicking `Stop`
+- Correct a stopped focus block from the Today list: edit start/end/note/Work Item or split it into two blocks
 - Switch directly to another focus title from the active focus panel
 - Set a Work Item to `active` to switch focus to it
 - Move the active Work Item to another state to stop the linked focus block
@@ -210,6 +215,7 @@ Third real dogfood day and release baseline:
 - Today's focus blocks with total active time, entrance count, stop notes, and significant gap ranges of 20+ minutes
 - Day views include focus blocks that overlap the selected local day; duration totals are clipped to the selected day window
 - Today and Markdown export show an `Open Gap` when no focus block is running and the interval after the last stopped block is at least 20 minutes
+- Markdown reports use the corrected focus-session rows, so post-factum edits are reflected in copied day data
 - Today's focus picture can be copied as Markdown from the focus panel, including per-Work-Item totals and significant gaps
 - Today's focus picture can also be exported from SQLite with `pnpm export:focus-day`
 - Evening dogfood report can be copied from the focus panel, shown as selected Markdown if clipboard access fails, or generated with `pnpm dogfood:report`
@@ -224,6 +230,7 @@ Third real dogfood day and release baseline:
 - Manual Work Item inventory UI
 - Search
 - Create Work Item
+- Edit Work Item title, type, and note
 - Create Work Item directly in `active` starts or switches the focus timer instead of leaving split active state
 - Touch
 - State changes
@@ -254,11 +261,13 @@ The first Focus Session baseline is intentionally small. It stores manual contac
 - start time, stop time, updated time
 - optional stop note
 
-The Rust agent stores focus sessions in SQLite. Partial unique indexes enforce at most one active focus session and at most one active Work Item. Work Item `active` is treated as the UI marker for the currently timed item: switching it stops the old focus block and starts a new linked block, while stopping a linked focus block clears `active` from Work Items. On startup, the agent normalizes old active Work Item rows and stops an active focus session if its linked Work Item is missing or deleted. Starting focus from typed text first searches for an existing Work Item with the same normalized title; if none exists, it creates one. The mock server exposes the same `focus.current`, `focus.start`, `focus.stop`, and `focus.list` RPC methods for browser development.
+The Rust agent stores focus sessions in SQLite. Partial unique indexes enforce at most one active focus session and at most one active Work Item. Work Item `active` is treated as the UI marker for the currently timed item: switching it stops the old focus block and starts a new linked block, while stopping a linked focus block clears `active` from Work Items. On startup, the agent normalizes old active Work Item rows and stops an active focus session if its linked Work Item is missing or deleted. Starting focus from typed text first searches for an existing Work Item with the same normalized title; if none exists, it creates one.
+
+Post-factum correction is implemented for stopped focus sessions. `focus.update` edits the block title/Work Item, start, stop, target, and note. `focus.split` cuts one stopped block into left/right blocks at a timestamp; the right side can be assigned to another Work Item by title. This covers common tracking mistakes by splitting around the wrong interval and updating the resulting block. The mock server exposes the same focus correction methods for browser development.
 
 ## Dogfood Findings
 
-The 2026-07-01, 2026-07-02, and 2026-07-03 dogfood days showed that the core timer loop works, and that Capture Inbox can preserve incoming events without switching away from the current focus. The next useful product slice is post-factum correction and entry polish.
+The 2026-07-01, 2026-07-02, and 2026-07-03 dogfood days showed that the core timer loop works, and that Capture Inbox can preserve incoming events without switching away from the current focus. The first post-baseline slice added post-factum correction; the next useful product slice is entry/window polish and richer day review.
 
 High-signal findings:
 
@@ -269,6 +278,7 @@ High-signal findings:
 - Work Item notes are currently a single mutable description, not a timestamped activity log.
 - Capture Inbox worked in real use on 2026-07-03: incoming events were captured during active focus, then resolved or converted later.
 - Work Item notes matter for review and now appear in day reports for touched items; they are still not timestamped.
+- Wrong Work Item assignment happened during dogfood; stopped blocks can now be corrected and split after the fact.
 - Command+Tab does not restore a hidden borderless Timeskein window yet.
 - The menu bar focus counter can lag until the status item is clicked.
 
@@ -334,9 +344,7 @@ On multi-monitor macOS setups, the tray/status item is controlled by the system 
 - Focus Session does not implement pause, resume, or cancel yet.
 - Focus Session has a compact day list and Markdown copy, but not a full reporting/JSON/CSV export view yet.
 - App-event telemetry has CLI/report output, but no in-app inspection screen yet.
-- Focus blocks cannot be edited, split, moved, or reassigned after the fact yet.
-- Work Item title editing is not implemented yet; current Work Item editing is limited to notes, refs, state, pinning, touch, and delete.
-- Stop notes cannot be edited after a block is stopped.
+- Post-factum correction is intentionally basic: stopped blocks can be edited and split, but there is no drag timeline, bulk edit, or dedicated correction wizard yet.
 - Capture Inbox is minimal: no edit/delete UI yet, no append-to-Work-Item-note action yet, and no separate capture history screen beyond the open list and dogfood report.
 - Work Item notes are included in day reports for touched items, but they are not timestamped and do not appear as a separate timeline.
 - Command+Tab does not restore the hidden borderless macOS window yet.
@@ -352,10 +360,9 @@ On multi-monitor macOS setups, the tray/status item is controlled by the system 
 
 ## Next Engineering Steps
 
-1. Add post-factum focus correction: edit, split, move, or reassign stopped focus blocks.
-2. Add Work Item title/basic-field editing.
-3. Improve macOS window return behavior, especially hidden-window restore through Command+Tab and surprising always-on-top moments.
-4. Make the menu bar focus counter update reliably without click refresh.
-5. Show today/total time spent per Work Item in the list.
-6. Add timestamped Work Item notes or events if captures and stop notes are not enough for review.
-7. Add activity zones if break/idle tracking corrupts total focus data.
+1. Improve macOS window return behavior, especially hidden-window restore through Command+Tab and surprising always-on-top moments.
+2. Make the menu bar focus counter update reliably without click refresh.
+3. Show today/total time spent per Work Item in the list.
+4. Add a clearer correction workflow if split + update is not enough after the next dogfood day.
+5. Add timestamped Work Item notes or events if captures and stop notes are not enough for review.
+6. Add activity zones if break/idle tracking corrupts total focus data.

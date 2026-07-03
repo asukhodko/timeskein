@@ -27,6 +27,7 @@
     "export:app-events": "node scripts/export-app-events.mjs",
     "mock-server": "pnpm --filter @timeskein/mock-server start",
     "smoke:focus-api": "node scripts/smoke-focus-api.mjs",
+    "smoke:corrections-api": "node scripts/smoke-corrections-api.mjs",
     "smoke:capture-api": "node scripts/smoke-capture-api.mjs",
     "smoke:mock-api": "node scripts/smoke-mock-api.mjs",
     "smoke:macos-app": "node scripts/smoke-macos-app.mjs",

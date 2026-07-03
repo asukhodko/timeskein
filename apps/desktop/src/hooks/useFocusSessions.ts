@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { focusApi } from '../api/client'
 import { queryKeys } from './useInventory'
+import type { FocusSplitParams, FocusUpdateParams } from '@timeskein/contracts'
 
 export const focusQueryKeys = {
   current: ['focus', 'current'] as const,
@@ -55,6 +56,32 @@ export function useStopFocusSession() {
 
   return useMutation({
     mutationFn: (params?: { id?: string; note?: string; telemetry_action_id?: string }) => focusApi.stop(params),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: focusQueryKeys.current })
+      queryClient.invalidateQueries({ queryKey: focusQueryKeys.today })
+      queryClient.invalidateQueries({ queryKey: queryKeys.inventory })
+    },
+  })
+}
+
+export function useUpdateFocusSession() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (params: FocusUpdateParams) => focusApi.update(params),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: focusQueryKeys.current })
+      queryClient.invalidateQueries({ queryKey: focusQueryKeys.today })
+      queryClient.invalidateQueries({ queryKey: queryKeys.inventory })
+    },
+  })
+}
+
+export function useSplitFocusSession() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (params: FocusSplitParams) => focusApi.split(params),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: focusQueryKeys.current })
       queryClient.invalidateQueries({ queryKey: focusQueryKeys.today })

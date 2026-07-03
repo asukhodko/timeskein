@@ -44,7 +44,7 @@ Capture Inbox failure or data-loss risk.
 
 ## Known Limitations
 
-These are accepted limitations for the dogfood baseline, not blockers:
+These were accepted limitations for the dogfood baseline, not blockers:
 
 - Focus blocks cannot be edited, split, moved, or reassigned after the fact.
   When a timer is left on the wrong Work Item, the report preserves total focus
@@ -64,10 +64,16 @@ These are accepted limitations for the dogfood baseline, not blockers:
 
 ## Next Slice
 
-The next useful engineering slice is post-dogfood correction and entry polish:
+Post-dogfood correction was the next useful engineering slice and is now partly
+implemented:
 
-- edit/split/reassign stopped focus blocks;
-- edit Work Item titles and basic fields;
+- stopped focus blocks can be edited, split, and reassigned by Work Item title;
+- Work Item titles and basic fields can be edited with duplicate-title
+  protection;
+- copied reports use the corrected focus-session rows.
+
+Remaining entry and review polish:
+
 - make hidden-window restore and status-bar updates less surprising;
 - show today/total time in the Work Item list;
 - add timestamped notes or events if stop notes and captures are not enough.

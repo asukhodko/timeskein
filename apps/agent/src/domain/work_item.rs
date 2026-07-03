@@ -223,6 +223,7 @@ pub enum WorkItemEventKind {
     RefAttached,
     RefRemoved,
     OpenedRef,
+    Updated,
     Deleted,
 }
 
@@ -238,6 +239,7 @@ impl WorkItemEventKind {
             Self::RefAttached => "ref_attached",
             Self::RefRemoved => "ref_removed",
             Self::OpenedRef => "opened_ref",
+            Self::Updated => "updated",
             Self::Deleted => "deleted",
         }
     }

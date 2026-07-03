@@ -35,7 +35,7 @@ flowchart LR
     style app_entry_ux stroke:#111827,stroke-width:3px
     focus_session_core["Focus<br/>Session core<br/>85%<br/>веха 2026-07-01"]
     class focus_session_core exec_done
-    day_review_export["Day review<br/>and export<br/>85%<br/>веха 2026-07-01"]
+    day_review_export["Day review<br/>and export<br/>90%<br/>веха 2026-07-01"]
     class day_review_export exec_done
     capture_inbox["Capture<br/>Inbox<br/>100%<br/>окно 2026-07-07..2026-07-08"]
     class capture_inbox exec_done
@@ -89,6 +89,7 @@ gantt
     🔄 Show focus blocks on a daily timeline  :active, ts_day_review_timeline,    2026-07-02, 2d
     🔄 Compute totals, gaps, and entry count  :active, ts_day_review_totals_gaps,    2026-07-06, 1d
     🔄 Export dogfood day data as Markdown  :active, ts_day_review_export,    2026-07-07, 1d
+    ✅ Post-factum focus correction  :done, ts_day_review_corrections,    2026-07-03, 1d
     ✅ Add local app-event telemetry for dogfood analysis  :done, ts_day_review_app_telemetry,    2026-07-08, 1d
     ✅ End-of-day analysis can use Timeskein data  :milestone, done, ts_day_review_analysis_gate,    2026-07-01, 0d
     section Capture Inbox
@@ -120,6 +121,7 @@ gantt
 - Bind focus sessions to Work Items or free intentions [done] (2 focus-blocks) {100%}
 - Capture a note at the end of a focus session [done] (1 focus-blocks) {100%}
 - First real Focus Session dogfood [done] {100%}
+- Post-factum focus correction [done] (3 focus-blocks) {100%}
 - Add local app-event telemetry for dogfood analysis [done] (2 focus-blocks) {100%}
 - End-of-day analysis can use Timeskein data [done] {100%}
 - Capture Inbox [done] (9 focus-blocks) {100%}
@@ -136,7 +138,7 @@ gantt
 - Focus Session core [in_progress] (17 focus-blocks) {85%}
 - Add FocusSession and SessionEvent persistence [in_progress] (3 focus-blocks) {70%}
 - Implement start, pause, resume, stop, cancel [in_progress] (3 focus-blocks) {45%}
-- Day review and export [in_progress] (9 focus-blocks) {85%}
+- Day review and export [in_progress] (12 focus-blocks) {89%}
 - Show focus blocks on a daily timeline [in_progress] (3 focus-blocks) {65%}
 - Compute totals, gaps, and entry count [in_progress] (2 focus-blocks) {90%}
 - Export dogfood day data as Markdown [in_progress] (2 focus-blocks) {97%}

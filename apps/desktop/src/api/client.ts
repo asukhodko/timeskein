@@ -4,6 +4,7 @@ import {
   type ApiResponse,
   type InventoryListResponse,
   type WorkItemView,
+  type WorkItemUpdateParams,
   type WorkItemCreateResponse,
   type WorkItemDeleteResponse,
   type AgentStatus,
@@ -12,6 +13,9 @@ import {
   type FocusCurrentResponse,
   type FocusListResponse,
   type FocusSessionView,
+  type FocusSplitParams,
+  type FocusSplitResponse,
+  type FocusUpdateParams,
   type CaptureConvertResponse,
   type CaptureListResponse,
   type CaptureState,
@@ -69,8 +73,8 @@ const getApiUrl = async (): Promise<string> => {
 }
 
 // Make an RPC call
-async function rpc<T>(method: string, params?: Record<string, unknown>): Promise<T> {
-  const request: ApiRequest = {
+async function rpc<T>(method: string, params?: object): Promise<T> {
+  const request: ApiRequest<object> = {
     version: API_VERSION,
     request_id: generateUuid(),
     method,
@@ -119,6 +123,8 @@ export const inventoryApi = {
 export const workItemApi = {
   create: (params: { title: string; type?: string; state?: string; note?: string }) =>
     rpc<WorkItemCreateResponse>('work_item.create', params),
+  update: (params: WorkItemUpdateParams) =>
+    rpc<WorkItemView>('work_item.update', params),
   touch: (id: string) => rpc<{ success: boolean }>('work_item.touch', { id }),
   setState: (id: string, state: string) =>
     rpc<{ success: boolean }>('work_item.set_state', { id, state }),
@@ -138,6 +144,10 @@ export const focusApi = {
     rpc<FocusSessionView>('focus.start', params),
   stop: (params?: { id?: string; note?: string; telemetry_action_id?: string }) =>
     rpc<FocusSessionView>('focus.stop', params),
+  update: (params: FocusUpdateParams) =>
+    rpc<FocusSessionView>('focus.update', params),
+  split: (params: FocusSplitParams) =>
+    rpc<FocusSplitResponse>('focus.split', params),
 }
 
 export const appEventApi = {

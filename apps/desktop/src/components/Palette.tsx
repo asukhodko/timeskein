@@ -18,6 +18,7 @@ import CreateDialog from './CreateDialog'
 import FocusPanel from './FocusPanel'
 import StateMenu from './StateMenu'
 import NoteEditor from './NoteEditor'
+import WorkItemEditor from './WorkItemEditor'
 import RefsPanel from './RefsPanel'
 import ConfirmDialog from './ConfirmDialog'
 import type { WorkItemState } from '@timeskein/contracts'
@@ -29,6 +30,7 @@ export default function Palette() {
   const [showCreate, setShowCreate] = useState(false)
   const [showStateMenu, setShowStateMenu] = useState(false)
   const [showNoteEditor, setShowNoteEditor] = useState(false)
+  const [showWorkItemEditor, setShowWorkItemEditor] = useState(false)
   const [showRefsPanel, setShowRefsPanel] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
@@ -150,6 +152,8 @@ export default function Palette() {
       if (primaryRef.kind === 'url') {
         window.open(primaryRef.value, '_blank')
       }
+    } else if (selectedItem) {
+      setShowWorkItemEditor(true)
     }
   }
 
@@ -170,7 +174,7 @@ export default function Palette() {
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       // Ignore if any modal is open
-      if (showCreate || showStateMenu || showNoteEditor || showRefsPanel || showDeleteConfirm) return
+      if (showCreate || showStateMenu || showNoteEditor || showWorkItemEditor || showRefsPanel || showDeleteConfirm) return
 
       // Ignore item shortcuts while typing in a field.
       const isInput = isEditableElement(e.target)
@@ -204,6 +208,8 @@ export default function Palette() {
             if (primaryRef.kind === 'url') {
               window.open(primaryRef.value, '_blank')
             }
+          } else if (selectedItem) {
+            setShowWorkItemEditor(true)
           }
           break
         case 'Space':
@@ -218,6 +224,10 @@ export default function Palette() {
           e.preventDefault()
           if (selectedItem) setShowNoteEditor(true)
           break
+        case 'KeyE':
+          e.preventDefault()
+          if (selectedItem) setShowWorkItemEditor(true)
+          break
         case 'KeyR':
           e.preventDefault()
           if (selectedItem) setShowRefsPanel(true)
@@ -230,7 +240,7 @@ export default function Palette() {
           break
       }
     },
-    [items, selectedIndex, selectedItem, showCreate, showStateMenu, showNoteEditor, showRefsPanel, showDeleteConfirm, handleFocusSelected]
+    [items, selectedIndex, selectedItem, showCreate, showStateMenu, showNoteEditor, showWorkItemEditor, showRefsPanel, showDeleteConfirm, handleFocusSelected]
   )
 
   useEffect(() => {
@@ -360,6 +370,9 @@ export default function Palette() {
           <button onClick={handleOpenPrimaryRef} className="flex items-center gap-1 hover:text-gray-300 transition-colors" title="Open primary ref">
             <kbd className="px-1 bg-gray-700 rounded">Enter</kbd><span>open</span>
           </button>
+          <button onClick={() => selectedItem && setShowWorkItemEditor(true)} className="flex items-center gap-1 hover:text-gray-300 transition-colors" title="Edit work item">
+            <kbd className="px-1 bg-gray-700 rounded">E</kbd><span>edit</span>
+          </button>
           <button onClick={handleFocusSelected} className="flex items-center gap-1 hover:text-emerald-300 transition-colors" title="Start or switch focus to selected item">
             <kbd className="px-1 bg-gray-700 rounded">Space</kbd><span>focus</span>
           </button>
@@ -428,6 +441,14 @@ export default function Palette() {
           currentNote={selectedItem.note || null}
           onSave={handleNoteSave}
           onClose={() => setShowNoteEditor(false)}
+        />
+      )}
+
+      {/* Work Item Editor */}
+      {showWorkItemEditor && selectedItem && (
+        <WorkItemEditor
+          item={selectedItem}
+          onClose={() => setShowWorkItemEditor(false)}
         />
       )}
 

@@ -1,5 +1,6 @@
 //! Work item API handlers
 
+use chrono::Utc;
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use uuid::Uuid;
@@ -7,7 +8,7 @@ use uuid::Uuid;
 use crate::api::handlers::RpcResponse;
 use crate::domain::{
     AppEvent, AppEventKind, AppEventSource, FocusSession, WorkItem, WorkItemEvent,
-    WorkItemEventKind, WorkItemState, WorkItemType,
+    WorkItemEventKind, WorkItemState, WorkItemType, WorkItemView,
 };
 use crate::AppState;
 
@@ -282,6 +283,150 @@ pub async fn handle_work_item_set_note(
         .ok();
 
     Ok(serde_json::json!({ "success": true }))
+}
+
+/// Handle work_item.update
+pub async fn handle_work_item_update(
+    state: &Arc<RwLock<AppState>>,
+    params: serde_json::Value,
+    request_id: &str,
+) -> Result<serde_json::Value, RpcResponse> {
+    let id = get_work_item_id(&params, request_id)?;
+
+    let requested_title = if params.get("title").is_some() {
+        Some(
+            params
+                .get("title")
+                .and_then(|v| v.as_str())
+                .map(str::trim)
+                .filter(|s| !s.is_empty())
+                .ok_or_else(|| {
+                    RpcResponse::error(
+                        request_id.to_string(),
+                        "validation_error",
+                        "Title cannot be empty",
+                    )
+                })?
+                .to_string(),
+        )
+    } else {
+        None
+    };
+
+    let requested_type = if let Some(value) = params.get("type") {
+        if value.is_null() {
+            Some(None)
+        } else {
+            Some(
+                value
+                    .as_str()
+                    .and_then(WorkItemType::from_str)
+                    .ok_or_else(|| {
+                        RpcResponse::error(
+                            request_id.to_string(),
+                            "validation_error",
+                            "Valid work item type is required",
+                        )
+                    })
+                    .map(Some)?,
+            )
+        }
+    } else {
+        None
+    };
+
+    let requested_note = if let Some(value) = params.get("note") {
+        if value.is_null() {
+            Some(None)
+        } else {
+            Some(
+                value
+                    .as_str()
+                    .map(str::trim)
+                    .map(|note| {
+                        if note.is_empty() {
+                            None
+                        } else {
+                            Some(note.to_string())
+                        }
+                    })
+                    .ok_or_else(|| {
+                        RpcResponse::error(
+                            request_id.to_string(),
+                            "validation_error",
+                            "Note must be a string or null",
+                        )
+                    })?,
+            )
+        }
+    } else {
+        None
+    };
+
+    let state = state.write().await;
+
+    let mut item = state
+        .db
+        .get_work_item(id)
+        .await
+        .map_err(|e| RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string()))?
+        .ok_or_else(|| {
+            RpcResponse::error(request_id.to_string(), "not_found", "Work item not found")
+        })?;
+
+    if let Some(title) = requested_title {
+        if title != item.title {
+            if let Some(existing) = state
+                .db
+                .find_work_item_by_title(&title)
+                .await
+                .map_err(|e| {
+                    RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
+                })?
+            {
+                if existing.id != id {
+                    return Err(RpcResponse::error(
+                        request_id.to_string(),
+                        "validation_error",
+                        "A work item with this title already exists",
+                    ));
+                }
+            }
+        }
+
+        item.title = title;
+    }
+
+    if let Some(item_type) = requested_type {
+        item.item_type = item_type;
+    }
+
+    if let Some(note) = requested_note {
+        item.note = note;
+    }
+
+    let now = Utc::now();
+    item.updated_at = now;
+    item.last_seen_at = Some(now);
+
+    state.db.update_work_item(&item).await.map_err(|e| {
+        RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
+    })?;
+
+    state
+        .db
+        .log_event(&WorkItemEvent::new(id, WorkItemEventKind::Updated, None))
+        .await
+        .ok();
+
+    let refs = state
+        .db
+        .get_refs_for_work_item(item.id)
+        .await
+        .unwrap_or_default();
+    let view = WorkItemView::from_work_item(&item, refs);
+
+    Ok(serde_json::to_value(view).unwrap())
 }
 
 /// Handle work_item.toggle_pin

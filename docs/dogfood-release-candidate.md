@@ -82,7 +82,7 @@ milestone can be marked done. `dogfood:rc-check:save` writes
 Both saved files can contain personal or internal work context and are ignored by git.
 The RC evidence summary also checks the post-baseline review data: work focus vs
 non-work tracked time, Activity Zone coverage, Work Item notes/events, Capture
-Inbox coverage, and window/show-hide telemetry.
+Inbox coverage, focus correction telemetry, and window/show-hide telemetry.
 
 The final evidence must include:
 
@@ -92,6 +92,7 @@ The final evidence must include:
 - Day Events for review context that is not owned by one Work Item;
 - Work Item notes for touched items;
 - Activity Zone totals;
+- focus correction evidence when tracking mistakes were fixed or consciously not needed;
 - timestamped Work Item Events, if they were needed to avoid memory reconstruction;
 - Capture Activity for created, resolved, and converted captures;
 - significant gaps and open gap, if any;

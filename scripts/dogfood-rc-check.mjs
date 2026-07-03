@@ -127,6 +127,7 @@ async function loadEvidence(path, from, to, now) {
   const workItemNoteCount = workItemTotals.filter((item) => item.note?.trim()).length;
   const workItemEventsDuringActiveFocus = workItemEvents.filter((event) => event.focus_session_id).length;
   const dayEventsDuringActiveFocus = dayEvents.filter((event) => event.focus_session_id).length;
+  const dayEventsWithZone = dayEvents.filter((event) => event.activity_zone).length;
   const telemetry = summarizeEvents(events);
 
   return {
@@ -141,6 +142,7 @@ async function loadEvidence(path, from, to, now) {
     workItemEventsDuringActiveFocus,
     dayEvents,
     dayEventsDuringActiveFocus,
+    dayEventsWithZone,
     events,
     totalFocusSeconds,
     workFocusSeconds,
@@ -408,6 +410,14 @@ function assessEvidence(evidence, minFocusSeconds) {
     reviewItems.push("No Day Events, Work Item notes, or timestamped Work Item Events found. If the report needs memory reconstruction, add context before treating it as final.");
   }
 
+  if (evidence.dayEvents.length > 0 && evidence.dayEventsWithZone === 0) {
+    reviewItems.push("Day Events exist, but none have an Activity Zone. Confirm buffers, recovery, idle, coordination, and personal notes are classified before the final verdict.");
+  }
+
+  if (evidence.workItemEvents.length === 0 && evidence.sessions.length > 0) {
+    reviewItems.push("No timestamped Work Item Events found. If any task-specific detail mattered, add or promote an event before relying on memory.");
+  }
+
   if (evidence.openCaptures.length > 0) {
     reviewItems.push(`${evidence.openCaptures.length} open capture(s) remain. Resolve, convert, or explicitly accept them as follow-up.`);
   }
@@ -442,6 +452,14 @@ function assessEvidence(evidence, minFocusSeconds) {
 
   if (evidence.telemetry.captureFailures > 0) {
     reviewItems.push(`${evidence.telemetry.captureFailures} Capture Inbox failure event(s) found. Check whether interruption capture stayed trustworthy.`);
+  }
+
+  if (evidence.telemetry.correctionFailures > 0) {
+    reviewItems.push(`${evidence.telemetry.correctionFailures} focus correction failure event(s) found. Check whether tracking errors were still fixable before the final report.`);
+  }
+
+  if (evidence.telemetry.corrections === 0 && evidence.sessions.length > 0) {
+    reviewItems.push("No focus correction telemetry found. If no correction was needed, explicitly accept that; otherwise test add/edit/split correction before closing the goal.");
   }
 
   if (evidence.gaps.length > 0) {
@@ -487,6 +505,7 @@ function buildRcReport(date, path, evidence, assessment, minFocusSeconds) {
     `- Work Items in report: ${evidence.workItemTotals.length}`,
     `- Work Item notes in report: ${evidence.workItemNoteCount}`,
     `- Day Events: ${evidence.dayEvents.length}`,
+    `- Day Events with Activity Zone: ${evidence.dayEventsWithZone}`,
     `- Day Events during active focus: ${evidence.dayEventsDuringActiveFocus}`,
     `- Work Item Events: ${evidence.workItemEvents.length}`,
     `- Work Item Events during active focus: ${evidence.workItemEventsDuringActiveFocus}`,
@@ -500,6 +519,7 @@ function buildRcReport(date, path, evidence, assessment, minFocusSeconds) {
     `- Copy failures/manual fallbacks: ${evidence.telemetry.copyFailures}/${evidence.telemetry.manualCopyFallbacks}`,
     `- Start/stop failures: ${evidence.telemetry.startFailures}/${evidence.telemetry.stopFailures}`,
     `- Capture failures: ${evidence.telemetry.captureFailures}`,
+    `- Corrections requested/applied/failed: ${evidence.telemetry.correctionRequests}/${evidence.telemetry.corrections}/${evidence.telemetry.correctionFailures}`,
     `- Window shown/hidden: ${evidence.telemetry.windowShown}/${evidence.telemetry.windowHidden}`,
     `- Window drag starts: ${evidence.telemetry.windowDragStarted}`,
     `- Duplicate Work Item title groups: ${evidence.duplicateTitles.length}`,
@@ -568,6 +588,7 @@ function buildRcReport(date, path, evidence, assessment, minFocusSeconds) {
     "- Timeskein was the primary tracker for the full day: yes/no",
     "- Activity Zones separated work from coordination/recovery/idle/personal well enough: yes/no",
     "- Day Events, Work Item Events, or notes reduced memory reconstruction: yes/no",
+    "- Tracking mistakes could be corrected before the final report: yes/no",
     "- Capture Inbox preserved focus instead of becoming another pile: yes/no",
     "- Report is enough without memory reconstruction: yes/no",
     "- Remaining limitations are acceptable for daily use: yes/no",
@@ -733,6 +754,9 @@ function summarizeEvents(events) {
     manualCopyFallbacks: count("manual_copy_fallback_shown"),
     startFailures: count("focus_start_failed"),
     stopFailures: count("focus_stop_failed"),
+    correctionRequests: count("focus_correction_requested"),
+    corrections: count("focus_corrected"),
+    correctionFailures: count("focus_correction_failed"),
     windowShown: count("window_shown"),
     windowHidden: count("window_hidden"),
     windowDragStarted: count("window_drag_started"),

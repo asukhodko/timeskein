@@ -45,7 +45,9 @@ try {
       ('e3', '2026-06-30T06:00:01Z', 'ui', 'focus_started', '{"action_id":"a1"}'),
       ('e4', '2026-06-30T09:00:00Z', 'ui', 'window_shown', '{"control":"shortcut"}'),
       ('e5', '2026-06-30T09:05:00Z', 'ui', 'window_hidden', '{"control":"esc"}'),
-      ('e6', '2026-06-30T10:00:00Z', 'ui', 'report_copied', '{"report_kind":"dogfood"}');
+      ('e6', '2026-06-30T10:00:00Z', 'ui', 'report_copied', '{"report_kind":"dogfood"}'),
+      ('e7', '2026-06-30T10:05:00Z', 'ui', 'focus_correction_requested', '{"action_id":"k1","control":"edit_block"}'),
+      ('e8', '2026-06-30T10:05:01Z', 'ui', 'focus_corrected', '{"action_id":"k1","control":"edit_block"}');
   `);
 
   const good = await runRcCheck(goodDb);
@@ -56,8 +58,10 @@ try {
   assert(good.stdout.includes("Non-work tracked: 1:30:00"), "good day non-work tracked is missing");
   assert(good.stdout.includes("Activity Zones in report: 2"), "good day zone count is missing");
   assert(good.stdout.includes("Day Events: 1"), "good day Day Events count is missing");
+  assert(good.stdout.includes("Day Events with Activity Zone: 1"), "good day zoned Day Events count is missing");
   assert(good.stdout.includes("Day Events during active focus: 1"), "good day active-focus Day Events count is missing");
   assert(good.stdout.includes("Work Item Events: 1"), "good day Work Item Events count is missing");
+  assert(good.stdout.includes("Corrections requested/applied/failed: 1/1/0"), "good day correction telemetry is missing");
   assert(good.stdout.includes("Window shown/hidden: 1/1"), "good day window telemetry is missing");
   assert(good.stdout.includes("## By Activity Zone"), "good day zone section is missing");
   assert(good.stdout.includes("## Day Events"), "good day Day Events section is missing");
@@ -105,7 +109,7 @@ try {
   await copyDb(goodDb, captureFailureDb);
   await runSql(captureFailureDb, `
     INSERT INTO app_events (id, ts, source, kind, payload)
-    VALUES ('e7', '2026-06-30T10:30:00Z', 'ui', 'capture_create_failed', '{"action_id":"c1","error_code":"validation_error"}');
+    VALUES ('e9', '2026-06-30T10:30:00Z', 'ui', 'capture_create_failed', '{"action_id":"c1","error_code":"validation_error"}');
   `);
   const captureFailure = await runRcCheck(captureFailureDb);
   assert(captureFailure.code === 0, "capture failure should be a review item, not a hard blocker");

@@ -70,7 +70,7 @@ impl Database {
 
         let app_events_sql = include_str!("../../migrations/003_app_events.sql");
         sqlx::raw_sql(app_events_sql).execute(&self.pool).await?;
-        self.ensure_app_events_capture_kinds().await?;
+        self.ensure_app_events_current_kinds().await?;
 
         let captures_sql = include_str!("../../migrations/004_captures.sql");
         sqlx::raw_sql(captures_sql).execute(&self.pool).await?;
@@ -170,7 +170,7 @@ impl Database {
         Ok(())
     }
 
-    async fn ensure_app_events_capture_kinds(&self) -> Result<()> {
+    async fn ensure_app_events_current_kinds(&self) -> Result<()> {
         let table_sql: Option<String> = sqlx::query_scalar(
             "SELECT sql FROM sqlite_master WHERE type='table' AND name='app_events'",
         )
@@ -179,12 +179,12 @@ impl Database {
 
         if table_sql
             .as_deref()
-            .is_some_and(|sql| sql.contains("capture_delete_requested"))
+            .is_some_and(|sql| sql.contains("focus_correction_requested"))
         {
             return Ok(());
         }
 
-        info!("Migrating app_events kind constraint for Capture Inbox telemetry...");
+        info!("Migrating app_events kind constraint for current telemetry...");
 
         sqlx::raw_sql(
             "

@@ -161,6 +161,9 @@ export type AppEventKind =
   | "focus_stop_requested"
   | "focus_stopped"
   | "focus_stop_failed"
+  | "focus_correction_requested"
+  | "focus_corrected"
+  | "focus_correction_failed"
   | "report_copy_requested"
   | "report_copied"
   | "report_copy_failed"
@@ -201,6 +204,9 @@ export interface AppEventSummary {
   stop_requests: number;
   start_failures: number;
   stop_failures: number;
+  correction_requests: number;
+  corrections: number;
+  correction_failures: number;
   api_errors: number;
   copy_failures: number;
   manual_copy_fallbacks: number;

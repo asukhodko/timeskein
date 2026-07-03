@@ -34,7 +34,10 @@ try {
       ('e14', '2026-06-30T06:56:01Z', 'ui', 'capture_updated', NULL, 's1', '{"action_id":"c3","control":"edit_button","had_focus_link":true}'),
       ('e15', '2026-06-30T06:57:00Z', 'ui', 'capture_delete_requested', NULL, 's1', '{"action_id":"c4","control":"delete_button","had_focus_link":true}'),
       ('e16', '2026-06-30T06:57:01Z', 'ui', 'capture_deleted', NULL, 's1', '{"action_id":"c4","control":"delete_button","had_focus_link":true}'),
-      ('e17', '2026-06-30T06:58:00Z', 'ui', 'capture_convert_failed', NULL, 's1', '{"action_id":"c5","control":"make_item_button","error_code":"not_found"}');
+      ('e17', '2026-06-30T06:58:00Z', 'ui', 'capture_convert_failed', NULL, 's1', '{"action_id":"c5","control":"make_item_button","error_code":"not_found"}'),
+      ('e18', '2026-06-30T07:10:00Z', 'ui', 'focus_correction_requested', 'w1', 's1', '{"action_id":"k1","control":"edit_block"}'),
+      ('e19', '2026-06-30T07:10:01Z', 'ui', 'focus_corrected', 'w1', 's1', '{"action_id":"k1","control":"edit_block"}'),
+      ('e20', '2026-06-30T07:11:00Z', 'ui', 'focus_correction_failed', 'w1', 's1', '{"action_id":"k2","control":"split_block","error_code":"validation_error"}');
   `);
 
   const { stdout: metricsStdout } = await execFileAsync(
@@ -43,12 +46,13 @@ try {
     { cwd: repoRoot }
   );
   assert(metricsStdout.includes("## App Telemetry"), "metrics did not include App Telemetry header");
-  assert(metricsStdout.includes("Total events: 17"), "metrics did not count events");
+  assert(metricsStdout.includes("Total events: 20"), "metrics did not count events");
   assert(metricsStdout.includes("Start requests: 1"), "metrics did not count start requests");
   assert(metricsStdout.includes("Manual copy fallbacks: 1"), "metrics did not count manual copy fallbacks");
   assert(metricsStdout.includes("Capture created/resolved/converted: 1/1/0"), "metrics did not count capture outcomes");
   assert(metricsStdout.includes("Capture updated/deleted: 1/1"), "metrics did not count capture cleanup");
   assert(metricsStdout.includes("Capture failures create/resolve/update/delete/convert: 0/0/0/0/1"), "metrics did not count capture failures");
+  assert(metricsStdout.includes("Corrections requested/applied/failed: 1/1/1"), "metrics did not count corrections");
   assert(metricsStdout.includes("Stale runtime recoveries: 1"), "metrics did not count stale recoveries");
   assert(metricsStdout.includes("Average start latency: 1000ms"), "metrics did not calculate start latency");
 
@@ -60,6 +64,7 @@ try {
   assert(exportStdout.includes("# Timeskein app events"), "event export did not include title");
   assert(exportStdout.includes("focus_start_requested"), "event export did not include start request");
   assert(exportStdout.includes("capture_created"), "event export did not include capture event");
+  assert(exportStdout.includes("focus_corrected"), "event export did not include correction event");
   assert(exportStdout.includes("manual_copy_fallback_shown"), "event export did not include copy fallback");
 
   console.log(JSON.stringify({ ok: true, db_path: dbPath }, null, 2));

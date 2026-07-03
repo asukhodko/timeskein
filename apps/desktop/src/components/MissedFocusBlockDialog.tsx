@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import type { ActivityZone } from '@timeskein/contracts'
 import { useCreateStoppedFocusSession } from '../hooks/useFocusSessions'
+import { logAppEvent } from '../api/client'
 
 const activityZones: ActivityZone[] = ['work', 'coordination', 'recovery', 'idle', 'personal']
 
@@ -28,6 +29,15 @@ export default function MissedFocusBlockDialog({
     event.preventDefault()
     const trimmedTitle = title.trim()
     if (!trimmedTitle || !startedAt || !stoppedAt || createMutation.isPending) return
+    const actionId = createTelemetryActionId()
+
+    void logAppEvent({
+      kind: 'focus_correction_requested',
+      payload: {
+        action_id: actionId,
+        control: 'add_missed_block',
+      },
+    })
 
     createMutation.mutate(
       {
@@ -38,7 +48,27 @@ export default function MissedFocusBlockDialog({
         note: note.trim() || null,
       },
       {
-        onSuccess: onClose,
+        onSuccess: (session) => {
+          void logAppEvent({
+            kind: 'focus_corrected',
+            focus_session_id: session.id,
+            payload: {
+              action_id: actionId,
+              control: 'add_missed_block',
+            },
+          })
+          onClose()
+        },
+        onError: (error) => {
+          void logAppEvent({
+            kind: 'focus_correction_failed',
+            payload: {
+              action_id: actionId,
+              control: 'add_missed_block',
+              error_code: error instanceof Error ? 'client_error' : 'unknown',
+            },
+          })
+        },
       }
     )
   }
@@ -177,4 +207,8 @@ function formatZoneLabel(zone: ActivityZone) {
     personal: 'Personal',
   }
   return labels[zone]
+}
+
+function createTelemetryActionId() {
+  return globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`
 }

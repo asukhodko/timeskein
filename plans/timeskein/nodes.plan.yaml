@@ -338,7 +338,7 @@ nodes:
     effort: 2
     deps:
       - id: ts.day_review.export
-    notes: SQLite app_events, Local API, UI/agent/script logging, metrics export, dogfood report section, and smoke coverage are implemented. Capture Inbox create/resolve/convert actions are included in telemetry, including failure counters. Payloads must stay technical and must not store raw titles, notes, URLs, or typed text.
+    notes: SQLite app_events, Local API, UI/agent/script logging, metrics export, dogfood report section, and smoke coverage are implemented. Capture Inbox create/resolve/convert actions and post-factum focus corrections are included in telemetry, including failure counters. Payloads must stay technical and must not store raw titles, notes, URLs, or typed text.
     x:
       ops:
         attention_class: current

@@ -1584,6 +1584,7 @@ function formatAppTelemetryMarkdown(summary: AppEventSummary) {
     `Capture created/resolved/converted: ${summary.capture_created}/${summary.capture_resolved}/${summary.capture_converted}`,
     `Capture updated/deleted: ${summary.capture_updated}/${summary.capture_deleted}`,
     `Capture failures create/resolve/update/delete/convert: ${summary.capture_create_failures}/${summary.capture_resolve_failures}/${summary.capture_update_failures}/${summary.capture_delete_failures}/${summary.capture_convert_failures}`,
+    `Corrections requested/applied/failed: ${summary.correction_requests}/${summary.corrections}/${summary.correction_failures}`,
     `API errors: ${summary.api_errors}`,
     `Already-active start attempts: ${summary.already_active_start_attempts}`,
     `Stale runtime recoveries: ${summary.stale_runtime_recoveries}`,

@@ -3,6 +3,7 @@ import type { FormEvent } from 'react'
 import type { ActivityZone, FocusSessionView } from '@timeskein/contracts'
 import { useSplitFocusSession, useUpdateFocusSession } from '../hooks/useFocusSessions'
 import { formatClockTime } from '../utils/formatTime'
+import { logAppEvent } from '../api/client'
 
 const activityZones: ActivityZone[] = ['work', 'coordination', 'recovery', 'idle', 'personal']
 
@@ -28,6 +29,16 @@ export default function FocusCorrectionDialog({ session, onClose }: FocusCorrect
     event.preventDefault()
     const trimmedTitle = title.trim()
     if (!trimmedTitle || !startedAt || !stoppedAt || updateMutation.isPending) return
+    const actionId = createTelemetryActionId()
+
+    void logAppEvent({
+      kind: 'focus_correction_requested',
+      focus_session_id: session.id,
+      payload: {
+        action_id: actionId,
+        control: 'edit_block',
+      },
+    })
 
     updateMutation.mutate(
       {
@@ -39,7 +50,28 @@ export default function FocusCorrectionDialog({ session, onClose }: FocusCorrect
         note: note.trim() || null,
       },
       {
-        onSuccess: onClose,
+        onSuccess: () => {
+          void logAppEvent({
+            kind: 'focus_corrected',
+            focus_session_id: session.id,
+            payload: {
+              action_id: actionId,
+              control: 'edit_block',
+            },
+          })
+          onClose()
+        },
+        onError: (error) => {
+          void logAppEvent({
+            kind: 'focus_correction_failed',
+            focus_session_id: session.id,
+            payload: {
+              action_id: actionId,
+              control: 'edit_block',
+              error_code: error instanceof Error ? 'client_error' : 'unknown',
+            },
+          })
+        },
       }
     )
   }
@@ -48,6 +80,16 @@ export default function FocusCorrectionDialog({ session, onClose }: FocusCorrect
     if (!splitAt || splitMutation.isPending) return
 
     const trimmedRightTitle = rightTitle.trim()
+    const actionId = createTelemetryActionId()
+    void logAppEvent({
+      kind: 'focus_correction_requested',
+      focus_session_id: session.id,
+      payload: {
+        action_id: actionId,
+        control: 'split_block',
+      },
+    })
+
     splitMutation.mutate(
       {
         id: session.id,
@@ -56,7 +98,28 @@ export default function FocusCorrectionDialog({ session, onClose }: FocusCorrect
         right_note: rightNote.trim() || undefined,
       },
       {
-        onSuccess: onClose,
+        onSuccess: () => {
+          void logAppEvent({
+            kind: 'focus_corrected',
+            focus_session_id: session.id,
+            payload: {
+              action_id: actionId,
+              control: 'split_block',
+            },
+          })
+          onClose()
+        },
+        onError: (error) => {
+          void logAppEvent({
+            kind: 'focus_correction_failed',
+            focus_session_id: session.id,
+            payload: {
+              action_id: actionId,
+              control: 'split_block',
+              error_code: error instanceof Error ? 'client_error' : 'unknown',
+            },
+          })
+        },
       }
     )
   }
@@ -236,4 +299,8 @@ function formatZoneLabel(zone: ActivityZone) {
     personal: 'Personal',
   }
   return labels[zone]
+}
+
+function createTelemetryActionId() {
+  return globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`
 }

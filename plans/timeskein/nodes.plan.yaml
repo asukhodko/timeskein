@@ -298,8 +298,8 @@ nodes:
     title: Capture Inbox
     kind: phase
     parent: ts
-    status: in_progress
-    notes: Let incoming events be captured without interrupting the current focus block, then processed later into resolution, note, or Work Item. Minimal create/list/resolve/convert baseline is implemented and needs real dogfood.
+    status: done
+    notes: Let incoming events be captured without interrupting the current focus block, then processed later into resolution, note, or Work Item. Minimal create/list/resolve/convert baseline is implemented and was proven during the 2026-07-03 dogfood day.
     x:
       ops:
         attention_class: current
@@ -331,11 +331,11 @@ nodes:
     title: Review and promote captured events
     kind: task
     parent: ts.capture
-    status: in_progress
+    status: done
     effort: 3
     deps:
       - id: ts.capture.quick_ui
-    notes: Open captures can be resolved or converted to a Work Item, and dogfood reports now show all captures created during the selected day, including resolved and converted items. RC evidence also counts captures linked to an active focus session. Append-as-timestamped-note, edit/delete, and a fuller history view remain future work. The 2026-07-02 dogfood day created no captures, so the workflow still needs real interruption testing.
+    notes: Open captures can be resolved or converted to a Work Item, and dogfood reports show all captures created during the selected day, including resolved and converted items. The 2026-07-03 dogfood day created four captures during active focus, with two resolved, one converted, one intentionally left visible as follow-up, and zero capture failures. Append-as-timestamped-note, edit/delete, and a fuller history view remain future work.
     x:
       ops:
         attention_class: current
@@ -400,12 +400,12 @@ nodes:
     title: Write dogfood release notes and known limitations
     kind: task
     parent: ts.hardening
-    status: planned
+    status: done
     effort: 1
     deps:
       - id: ts.hardening.package_app
       - id: ts.hardening.backup_reset
-    notes: Dogfood Release Candidate doc defines the pass/fail gate. dogfood:rc-check turns the saved SQLite day into hard blockers, review items, and manual verdict prompts; dogfood:rc-check:save preserves that evidence as a local ignored Markdown artifact. The next update should record the Capture Inbox verdict from a real day.
+    notes: "Dogfood Release Candidate doc defines the pass/fail gate. Dogfood Release Baseline records the accepted 2026-07-03 verdict and known limitations: post-factum focus correction, Work Item title editing, stop-note editing, Capture Inbox edit/delete, window restore, menu bar counter refresh, activity zones, and today/total Work Item time."
     x:
       ops:
         attention_class: current
@@ -413,11 +413,11 @@ nodes:
     title: Session replacement dogfood baseline
     kind: milestone
     parent: ts.hardening
-    status: planned
+    status: done
     milestone: true
     deps:
       - id: ts.hardening.release_notes
-    notes: Core timer replacement is proven by the 2026-07-02 dogfood day without Session. The milestone is still held open until Capture Inbox is tested in real work and remaining known limits are accepted.
+    notes: Accepted on 2026-07-03. Three dogfood days proved the macOS manual tracking baseline; the third day used Capture Inbox during active focus four times and had zero API/copy/capture/start-stop failures, zero duplicate titles, and no active-state split brain. Remaining limitations are documented and moved to post-baseline work.
     x:
       ops:
         attention_class: current
@@ -488,12 +488,12 @@ nodes:
       ops:
         attention_class: future
   ts.future.active_window:
-    title: Active-window and automation experiments
+    title: Activity Evidence Layer experiments
     kind: epic
     parent: ts.future
     status: deferred
     effort: 8
-    notes: Explore only after the manual timer data is useful. Future sources include active apps, browser tabs and URLs, messenger channels/chats, screenshots or screen chunks, and AI-assisted interpretation of activity, all behind explicit opt-in privacy controls.
+    notes: Explore only after the manual timer and post-factum correction loop is reliable. Future sources include active apps, browser tabs and URLs, messenger channels/chats, screenshots or screen chunks, and AI-assisted interpretation of activity, all behind explicit opt-in privacy controls.
     x:
       ops:
         attention_class: future

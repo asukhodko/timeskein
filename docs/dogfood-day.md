@@ -144,7 +144,7 @@ Check the basics before starting work:
 
 ## Readiness Audit
 
-Current status: first one-day trial passed on 2026-07-01. Timeskein is usable for continued dogfooding, but not yet polished for daily default use.
+Current status: the macOS dogfood release baseline was accepted on 2026-07-03. Timeskein is usable as the primary daily personal focus tracker, with known limitations documented in [Dogfood Release Baseline](dogfood-release-baseline.md).
 
 | Requirement | Evidence before dogfood | Dogfood check |
 | --- | --- | --- |
@@ -180,8 +180,17 @@ The second real dogfood day on 2026-07-02 showed that the core timer loop was en
 - two significant gaps and one open gap
 - no API errors, copy failures, duplicate-title groups, or active-state split brain in the saved report
 
-The remaining release-candidate gap is Capture Inbox: no captures were created during that day, so the interruption-preservation workflow still needs a real check.
-For the next release-candidate attempt, at least one real incoming event should be captured while a focus block is still active; `dogfood:rc-check` reports this as `Captures during active focus`.
+The third real dogfood day on 2026-07-03 closed the Capture Inbox release-candidate gap:
+
+- 5:47:04 active focus
+- 11 entrances
+- eight Work Items in the day report
+- two significant gaps
+- four captures created during active focus
+- two captures resolved, one converted to a Work Item, one left open as visible follow-up
+- no API errors, copy failures, capture failures, duplicate-title groups, or active-state split brain
+
+Remaining friction is tracked as post-baseline work, especially post-factum focus correction, Work Item title editing, Command+Tab restore, menu bar counter refresh, and today/total time columns.
 
 For the stricter daily-use gate, use [Dogfood Release Candidate](dogfood-release-candidate.md). The day protocol explains how to run the test; the release-candidate gate decides whether the current baseline is good enough to replace Session.
 
@@ -361,9 +370,11 @@ The dogfood day fails if any of these happens often enough to break trust:
 ## Known Limits for This Trial
 
 - There is no pause/resume/cancel model yet. Stop and start again instead.
+- Stopped focus blocks cannot be edited, split, moved, or reassigned after the fact yet.
 - Capture Inbox is minimal. It can create, resolve, and convert captures, but cannot edit/delete captures or append them as timestamped Work Item notes yet.
 - There are no activity zones yet. A Work Item named `Break` still contributes to total focus.
 - Stop notes cannot be edited after the block is stopped.
+- Work Item titles cannot be edited yet.
 - Work Item notes are a single mutable field, not timestamped observations.
 - There is no automatic active-window detection.
 - There is no synchronization between devices.

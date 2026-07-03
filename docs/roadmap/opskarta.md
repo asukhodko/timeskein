@@ -4,10 +4,10 @@ This is the current machine-checkable roadmap for Timeskein. The source files li
 `plans/timeskein/*.plan.yaml` and use the vendored opskarta v3 tools in
 `tools/opskarta`.
 
-The first real dogfood day on 2026-07-01 proved that Timeskein can replace the
-useful part of Session for one workday. The near-term focus now stays narrow:
-dogfood the new Capture Inbox, stabilize the post-dogfood baseline, and avoid
-widening scope to sync, Evidence Mode, or new platforms.
+The macOS dogfood release baseline was accepted on 2026-07-03 after three real
+tracked workdays. The near-term focus now stays narrow: improve post-factum
+correction and entry polish before widening scope to sync, Evidence Mode,
+automation, or new platforms.
 
 ## Executive view
 
@@ -37,10 +37,10 @@ flowchart LR
     class focus_session_core exec_done
     day_review_export["Day review<br/>and export<br/>85%<br/>веха 2026-07-01"]
     class day_review_export exec_done
-    capture_inbox["Capture<br/>Inbox<br/>90%<br/>окно 2026-07-07..2026-07-08"]
-    class capture_inbox exec_mgmt_yellow
-    dogfood_hardening["Dogfood<br/>hardening<br/>~95%<br/>веха 2026-07-06"]
-    class dogfood_hardening exec_mgmt_neutral
+    capture_inbox["Capture<br/>Inbox<br/>100%<br/>окно 2026-07-07..2026-07-08"]
+    class capture_inbox exec_done
+    dogfood_hardening["Dogfood<br/>hardening<br/>~100%<br/>веха 2026-07-06"]
+    class dogfood_hardening exec_done
     future_directions["Future<br/>directions<br/>n/a"]
     class future_directions exec_mgmt_neutral
 
@@ -94,14 +94,14 @@ gantt
     section Capture Inbox
     ✅ Add captured-event model and Local API  :done, ts_capture_model_api,    2026-07-01, 2d
     ✅ Add fast capture control  :done, ts_capture_quick_ui,    2026-07-03, 2d
-    🔄 Review and promote captured events  :active, ts_capture_review_flow,    2026-07-07, 2d
+    ✅ Review and promote captured events  :done, ts_capture_review_flow,    2026-07-07, 2d
     section Dogfood hardening
     🔄 Add smoke checks for focus-session flows  :active, ts_hardening_smoke,    2026-07-02, 1d
     🔄 Fix first dogfood friction  :active, ts_hardening_post_dogfood_friction,    2026-07-01, 1d
     ✅ Add local data backup and reset path  :done, ts_hardening_backup_reset,    2026-07-02, 1d
     ✅ Rebuild macOS app for regular personal use  :done, ts_hardening_package_app,    2026-07-03, 1d
-    Write dogfood release notes and known limitations  :ts_hardening_release_notes,    2026-07-06, 1d
-    Session replacement dogfood baseline  :milestone, ts_hardening_dogfood_release,    2026-07-06, 0d
+    ✅ Write dogfood release notes and known limitations  :done, ts_hardening_release_notes,    2026-07-06, 1d
+    ✅ Session replacement dogfood baseline  :milestone, done, ts_hardening_dogfood_release,    2026-07-06, 0d
 ```
 
 ## Current work list
@@ -122,10 +122,14 @@ gantt
 - First real Focus Session dogfood [done] {100%}
 - Add local app-event telemetry for dogfood analysis [done] (2 focus-blocks) {100%}
 - End-of-day analysis can use Timeskein data [done] {100%}
+- Capture Inbox [done] (9 focus-blocks) {100%}
 - Add captured-event model and Local API [done] (3 focus-blocks) {100%}
 - Add fast capture control [done] (3 focus-blocks) {100%}
+- Review and promote captured events [done] (3 focus-blocks) {100%}
 - Add local data backup and reset path [done] (2 focus-blocks)
 - Rebuild macOS app for regular personal use [done] (1 focus-blocks) {100%}
+- Write dogfood release notes and known limitations [done] (1 focus-blocks) {100%}
+- Session replacement dogfood baseline [done] {100%}
 - App entry UX [in_progress] (6 focus-blocks) {85% cov:83%}
 - Wire tray menu actions [in_progress] (1 focus-blocks) {75%}
 - Reduce the path from intent to tracked work [in_progress] (2 focus-blocks) {75%}
@@ -136,14 +140,10 @@ gantt
 - Show focus blocks on a daily timeline [in_progress] (3 focus-blocks) {65%}
 - Compute totals, gaps, and entry count [in_progress] (2 focus-blocks) {90%}
 - Export dogfood day data as Markdown [in_progress] (2 focus-blocks) {97%}
-- Capture Inbox [in_progress] (9 focus-blocks) {88%}
-- Review and promote captured events [in_progress] (3 focus-blocks) {65%}
-- Dogfood hardening [in_progress] (8 focus-blocks) {93% cov:75%}
+- Dogfood hardening [in_progress] (8 focus-blocks) {97% cov:75%}
 - Add smoke checks for focus-session flows [in_progress] (2 focus-blocks) {97%}
 - Fix first dogfood friction [in_progress] (2 focus-blocks) {95%}
 - Document macOS multi-monitor status item limits [planned] (1 focus-blocks)
-- Write dogfood release notes and known limitations [planned] (1 focus-blocks) {75%}
-- Session replacement dogfood baseline [planned]
 <!-- GENERATED:END -->
 
 ## Deferred directions
@@ -154,7 +154,7 @@ gantt
 /usr/bin/env PYTHONPATH=../../tools/opskarta python3 -m specs.v3.tools.cli render list ../../plans/timeskein/main.plan.yaml ../../plans/timeskein/nodes.plan.yaml ../../plans/timeskein/schedule.plan.yaml ../../plans/timeskein/execution.plan.yaml ../../plans/timeskein/views.plan.yaml --view backlog
 -->
 <!-- GENERATED:START -->
-- Active-window and automation experiments [deferred] (8 focus-blocks)
+- Activity Evidence Layer experiments [deferred] (8 focus-blocks)
 - Android client path [deferred] (8 focus-blocks)
 - Complete broader Manual Inventory UX [deferred] (8 focus-blocks)
 - Evidence Mode [deferred] (20 focus-blocks)

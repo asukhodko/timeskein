@@ -180,6 +180,14 @@ Second real dogfood day:
 - The report now includes Work Item notes for touched items, because those notes became important review context during the second day
 - Capture Inbox was visible but not used; release-candidate status therefore remains open until incoming-event capture is tested in real work
 
+Third real dogfood day and release baseline:
+
+- 2026-07-03 was tracked through Timeskein without Session in parallel
+- Result: 5:47:04 active focus, 11 entrances, eight Work Items, two significant gaps
+- Capture Inbox was used in real active-focus situations: four captures were created during active focus, two were resolved, one was converted to a Work Item, and one remained open as visible follow-up
+- The saved report had no API errors, copy failures, focus start/stop failures, Capture Inbox failures, duplicate-title groups, or active-state split brain
+- This day accepted the macOS dogfood release baseline: Timeskein is good enough to replace Session for daily personal use, with known limitations documented in `dogfood-release-baseline.md`
+
 ## Implemented Features
 
 - Focus Session panel
@@ -326,10 +334,15 @@ On multi-monitor macOS setups, the tray/status item is controlled by the system 
 - Focus Session does not implement pause, resume, or cancel yet.
 - Focus Session has a compact day list and Markdown copy, but not a full reporting/JSON/CSV export view yet.
 - App-event telemetry has CLI/report output, but no in-app inspection screen yet.
+- Focus blocks cannot be edited, split, moved, or reassigned after the fact yet.
+- Work Item title editing is not implemented yet; current Work Item editing is limited to notes, refs, state, pinning, touch, and delete.
+- Stop notes cannot be edited after a block is stopped.
 - Capture Inbox is minimal: no edit/delete UI yet, no append-to-Work-Item-note action yet, and no separate capture history screen beyond the open list and dogfood report.
 - Work Item notes are included in day reports for touched items, but they are not timestamped and do not appear as a separate timeline.
 - Command+Tab does not restore the hidden borderless macOS window yet.
+- The borderless macOS window can remain visually on top in awkward moments.
 - The menu bar focus counter can lag until the status item is clicked.
+- The Work Item list does not show today/total time spent per item yet.
 - Activity zones are not implemented, so breaks tracked as Work Items still count into total focus.
 - Automated e2e tests are not implemented yet.
 - Cross-platform CI is not implemented yet.
@@ -339,10 +352,10 @@ On multi-monitor macOS setups, the tray/status item is controlled by the system 
 
 ## Next Engineering Steps
 
-1. Run the Dogfood Release Candidate gate during the next real workday, with Capture Inbox used for at least one incoming event while a focus block is active and Session not used in parallel.
-2. Fix only blockers proven by that day before expanding scope.
-3. Add timestamped Work Item notes or events if captured interruptions and stop notes are not enough for review.
-4. Add activity zones if break/idle tracking corrupts total focus data.
-5. Reduce raw UI/agent duplication in the telemetry report if it slows review.
-6. Decide whether pause/resume/cancel are needed before regular use.
-7. Improve agent lifecycle diagnostics and user-visible error states.
+1. Add post-factum focus correction: edit, split, move, or reassign stopped focus blocks.
+2. Add Work Item title/basic-field editing.
+3. Improve macOS window return behavior, especially hidden-window restore through Command+Tab and surprising always-on-top moments.
+4. Make the menu bar focus counter update reliably without click refresh.
+5. Show today/total time spent per Work Item in the list.
+6. Add timestamped Work Item notes or events if captures and stop notes are not enough for review.
+7. Add activity zones if break/idle tracking corrupts total focus data.

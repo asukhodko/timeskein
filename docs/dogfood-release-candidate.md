@@ -8,6 +8,10 @@ produce a useful workday report. The release-candidate gate is stricter: it must
 prove that the current baseline, including Capture Inbox, can survive another
 real workday without falling back to Session.
 
+Current result: passed for the macOS dogfood baseline on 2026-07-03. The
+accepted verdict and remaining limitations are recorded in
+[Dogfood Release Baseline](dogfood-release-baseline.md).
+
 ## Scope
 
 In scope:
@@ -127,3 +131,23 @@ When the RC fails, fix only the blockers shown by the day evidence and run
 another dogfood day. Do not expand the scope to future platforms, sync,
 automation, or health-data integrations before the Session replacement baseline
 is trustworthy.
+
+## Accepted Baseline
+
+The 2026-07-03 release-candidate day passed the gate for daily personal use:
+
+- Timeskein was the primary tracker for the full day.
+- Session was not used as a parallel source of truth.
+- The report contained 5:47:04 focus, 11 entrances, eight Work Items, two
+  significant gaps, Work Item notes, Capture Activity, open captures, and app
+  telemetry.
+- Capture Inbox was used during active focus four times.
+- Capture activity had 0 create/resolve/convert failures.
+- The day had 0 API errors, 0 copy failures, 0 start/stop failures, 0 duplicate
+  normalized Work Item titles, and no active-state split brain.
+
+The day also exposed limitations: one focus block was left on the wrong Work
+Item for part of a meeting, one capture remained open, and several window/list
+polish issues remain. These are accepted as baseline limitations rather than
+release blockers because the report surfaced them clearly and the core tracking
+data remained recoverable enough for review.

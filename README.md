@@ -18,11 +18,12 @@ A desktop application for quickly tracking focus sessions and work items with re
 
 **What works now:** Focus Session tracking, Capture Inbox, and Work Item inventory in browser mock mode and in the macOS `.app` with an embedded Rust agent.
 
-**Current focus:** Continued macOS dogfooding after real tracked days on 2026-07-01 and 2026-07-02. The core timer loop is good enough to replace Session for personal use, but the release-candidate gate still needs a real Capture Inbox check. Windows packaging is deferred.
+**Current focus:** The macOS dogfood release baseline was accepted on 2026-07-03 after three real tracked days, including one day with Capture Inbox used during active focus. The next slice is post-dogfood correction and entry polish. Windows packaging is deferred.
 
 See [Current Implementation](docs/current-implementation.md) for the exact state of what runs today.
 Use [Dogfood Day Protocol](docs/dogfood-day.md) when testing Timeskein as a Session replacement for a real workday.
 Use [Dogfood Release Candidate](docs/dogfood-release-candidate.md) as the gate for deciding whether the current macOS baseline is good enough to replace Session in daily use.
+See [Dogfood Release Baseline](docs/dogfood-release-baseline.md) for the accepted 2026-07-03 verdict and known limitations.
 
 The current execution roadmap is maintained as an opskarta v3 plan set:
 [Timeskein opskarta roadmap](docs/roadmap/opskarta.md).
@@ -250,7 +251,7 @@ Focus Session controls:
 
 ## Key Features (MVP)
 
-- Manual work item management (create/touch/edit/delete)
+- Manual work item management (create/touch/note/state/pin/refs/delete)
 - Manual focus sessions with 25-minute target and overflow tracking
 - Capture Inbox for incoming events that should be handled later without interrupting the current focus block
 - Running focus session restored from SQLite after frontend/app restart
@@ -274,7 +275,9 @@ Focus Session controls:
 
 - **Browser mode uses mock data** - SQLite persistence is available in the macOS app, not in browser dev mode
 - **Focus Session has no pause/resume/cancel yet** - the current baseline is start/stop only
-- **Capture Inbox has not yet been proven in a full dogfood day** - the UI and API work, but the next release-candidate day must create at least one capture during an active focus block
+- **Post-factum focus correction is not implemented** - stopped focus blocks cannot yet be edited, split, moved, or reassigned after the fact
+- **Work Item title editing is not implemented** - current editing is limited to note, refs, state, pinning, touch, and delete
+- **Capture Inbox is minimal** - proven in one full dogfood day, but capture edit/delete and append-as-timestamped-note are not implemented yet
 - **Work Item notes are not timestamped** - they appear in day reports for touched items, but they are still one mutable description field
 - **Activity zones are not implemented** - breaks tracked as Work Items still count into total focus
 - **macOS Command+Tab does not restore a hidden borderless window yet** - use the menu bar item or global shortcut

@@ -35,12 +35,13 @@ The system answers questions like:
 2. **[Current Implementation](current-implementation.md)** - What runs today
 3. **[Dogfood Day Protocol](dogfood-day.md)** - How to run one real Session replacement day
 4. **[Dogfood Release Candidate](dogfood-release-candidate.md)** - Gate for deciding whether Timeskein can replace Session in daily use
-5. **[Glossary](glossary.md)** - Definitions of all terms used
-6. **[Architecture Decision Records](adr/README.md)** - Key architectural choices
-7. **[Technical Specifications (RFC)](rfc/README.md)** - Detailed technical designs
-8. **[MVP User Stories](mvp/README.md)** - Features and acceptance criteria
-9. **[opskarta Roadmap](roadmap/opskarta.md)** - Current machine-checkable execution plan
-10. **[Roadmap Archive](roadmap/README.md)** - Older roadmap documents and related links
+5. **[Dogfood Release Baseline](dogfood-release-baseline.md)** - Accepted 2026-07-03 dogfood baseline and known limitations
+6. **[Glossary](glossary.md)** - Definitions of all terms used
+7. **[Architecture Decision Records](adr/README.md)** - Key architectural choices
+8. **[Technical Specifications (RFC)](rfc/README.md)** - Detailed technical designs
+9. **[MVP User Stories](mvp/README.md)** - Features and acceptance criteria
+10. **[opskarta Roadmap](roadmap/opskarta.md)** - Current machine-checkable execution plan
+11. **[Roadmap Archive](roadmap/README.md)** - Older roadmap documents and related links
 
 ---
 
@@ -56,6 +57,7 @@ All documentation below is the **source of truth** for the project.
 | [current-implementation.md](current-implementation.md) | Current repository/runtime state |
 | [dogfood-day.md](dogfood-day.md) | Protocol for replacing Session during one real workday, including Capture Inbox and local app telemetry checks |
 | [dogfood-release-candidate.md](dogfood-release-candidate.md) | Release-candidate gate for daily Session replacement |
+| [dogfood-release-baseline.md](dogfood-release-baseline.md) | Accepted 2026-07-03 baseline for daily macOS use and known limitations |
 | [glossary.md](glossary.md) | Definitions of all terms and entities |
 
 ### Architecture Decision Records (ADR)

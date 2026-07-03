@@ -79,12 +79,13 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
       sessions,
       activeFocus: current,
       activeWorkItems,
+      workItems: inventoryItems,
       openCaptures,
       captureActivity,
       workItemEvents,
       openGap,
     }),
-    [sessions, current, activeWorkItems, openCaptures, captureActivity, workItemEvents, openGap]
+    [sessions, current, activeWorkItems, inventoryItems, openCaptures, captureActivity, workItemEvents, openGap]
   )
   const reportIsDraft = current?.state === 'active' || activeWorkItems.length > 0
   const trayStatusTitle = useMemo(
@@ -834,6 +835,7 @@ function buildDayReviewItems({
   sessions,
   activeFocus,
   activeWorkItems,
+  workItems,
   openCaptures,
   captureActivity,
   workItemEvents,
@@ -842,6 +844,7 @@ function buildDayReviewItems({
   sessions: FocusSessionView[]
   activeFocus?: FocusSessionView
   activeWorkItems: WorkItemView[]
+  workItems: WorkItemView[]
   openCaptures: CaptureView[]
   captureActivity: CaptureView[]
   workItemEvents: WorkItemEventView[]
@@ -849,6 +852,11 @@ function buildDayReviewItems({
 }): DayReviewItem[] {
   const items: DayReviewItem[] = []
   const gaps = gapsBetweenSessions(sessions).filter((gap) => gap.seconds >= SIGNIFICANT_GAP_SECONDS)
+  const zoneTotals = aggregateActivityZoneTotals(sessions)
+  const activeSecondsTotal = sessions.reduce((sum, session) => sum + session.active_seconds, 0)
+  const nonWorkSeconds = Math.max(activeSecondsTotal - getZoneActiveSeconds(zoneTotals, 'work'), 0)
+  const touchedWorkItemIds = new Set(sessions.map((session) => session.work_item_id).filter(Boolean))
+  const touchedWorkItemNoteCount = workItems.filter((item) => touchedWorkItemIds.has(item.id) && item.note?.trim()).length
 
   if (activeFocus) {
     items.push({
@@ -890,6 +898,22 @@ function buildDayReviewItems({
     })
   }
 
+  if (sessions.length > 0 && zoneTotals.length <= 1) {
+    items.push({
+      level: 'review',
+      title: 'Review Activity Zone coverage',
+      detail: 'Only one zone appears in the report',
+    })
+  }
+
+  if (sessions.length > 0 && nonWorkSeconds === 0) {
+    items.push({
+      level: 'review',
+      title: 'Confirm non-work tracked time',
+      detail: 'Breaks, recovery, coordination, and personal blocks may be missing',
+    })
+  }
+
   if (sessions.length > 0 && captureActivity.length === 0) {
     items.push({
       level: 'review',
@@ -906,11 +930,11 @@ function buildDayReviewItems({
     })
   }
 
-  if (sessions.length > 0 && workItemEvents.length === 0) {
+  if (sessions.length > 0 && workItemEvents.length === 0 && touchedWorkItemNoteCount === 0) {
     items.push({
       level: 'review',
-      title: 'No timestamped Work Item events',
-      detail: 'Add event notes if the report still needs memory reconstruction',
+      title: 'No Work Item notes or timestamped events',
+      detail: 'Add context if the report still needs memory reconstruction',
     })
   }
 

@@ -64,6 +64,18 @@ try {
     stdout.includes("No timestamped Work Item events") === false,
     "report review checklist missed existing timestamped Work Item event"
   );
+  assert(
+    stdout.includes("Review Activity Zone coverage") === false,
+    "report review checklist should not flag zone coverage when two zones are present"
+  );
+  assert(
+    stdout.includes("Confirm non-work tracked time") === false,
+    "report review checklist should not flag non-work time when coordination is present"
+  );
+  assert(
+    stdout.includes("No Work Item notes or timestamped events") === false,
+    "report review checklist should not flag missing context when notes/events are present"
+  );
   assert(stdout.includes("## Open Captures"), "report did not include open captures section");
   assert(stdout.includes("Reply to incoming thread after focus"), "report did not include open capture text");
   assert(stdout.includes("## Capture Activity"), "report did not include Capture Activity section");
@@ -91,6 +103,31 @@ try {
   assert(stdout.includes("## Gaps >= 20:00"), "report did not include significant gaps");
   assert(stdout.includes("### Entry Cost"), "report did not include entry cost prompts");
   assert(stdout.includes("Enough data to discuss the day: yes/no"), "report did not include verdict prompts");
+
+  await runSql(`
+    DELETE FROM work_item_events;
+    UPDATE work_items SET note = NULL, activity_zone = 'work';
+    UPDATE focus_sessions SET activity_zone = 'work';
+  `);
+
+  const { stdout: thinEvidenceStdout } = await execFileAsync(
+    "node",
+    [join(repoRoot, "scripts/dogfood-report.mjs"), "--db", dbPath, "--date", "2026-06-30"],
+    { cwd: repoRoot }
+  );
+
+  assert(
+    thinEvidenceStdout.includes("Review Activity Zone coverage"),
+    "report review checklist did not flag single-zone evidence"
+  );
+  assert(
+    thinEvidenceStdout.includes("Confirm non-work tracked time"),
+    "report review checklist did not flag zero non-work time"
+  );
+  assert(
+    thinEvidenceStdout.includes("No Work Item notes or timestamped events"),
+    "report review checklist did not flag missing Work Item context"
+  );
 
   await runSql(`
     INSERT INTO work_items (id, title, type, state, pinned, created_at, updated_at, last_seen_at)

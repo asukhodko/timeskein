@@ -372,6 +372,22 @@ function buildReviewChecklistItems({
     });
   }
 
+  if (focusMarkdown.includes("| Time | Duration | Zone | Work Item | Note |") && countActivityZoneRows(focusMarkdown) <= 1) {
+    items.push({
+      level: "review",
+      title: "Review Activity Zone coverage",
+      detail: "Only one zone appears in the report",
+    });
+  }
+
+  if (focusMarkdown.includes("Non-work tracked: 0:00")) {
+    items.push({
+      level: "review",
+      title: "Confirm non-work tracked time",
+      detail: "Breaks, recovery, coordination, and personal blocks may be missing",
+    });
+  }
+
   if (focusMarkdown.includes("| Time | Duration | Zone | Work Item | Note |") && captureActivity.length === 0) {
     items.push({
       level: "review",
@@ -388,11 +404,15 @@ function buildReviewChecklistItems({
     });
   }
 
-  if (focusMarkdown.includes("| Time | Duration | Zone | Work Item | Note |") && !focusMarkdown.includes("## Work Item Events")) {
+  if (
+    focusMarkdown.includes("| Time | Duration | Zone | Work Item | Note |") &&
+    !focusMarkdown.includes("## Work Item Events") &&
+    !focusMarkdown.includes("## Work Item Notes")
+  ) {
     items.push({
       level: "review",
-      title: "No timestamped Work Item events",
-      detail: "Add event notes if the report still needs memory reconstruction",
+      title: "No Work Item notes or timestamped events",
+      detail: "Add context if the report still needs memory reconstruction",
     });
   }
 
@@ -405,6 +425,27 @@ function buildReviewChecklistItems({
   }
 
   return items;
+}
+
+function countActivityZoneRows(markdown) {
+  const section = extractMarkdownSection(markdown, "## By Activity Zone");
+  if (!section) return 0;
+
+  return section
+    .split("\n")
+    .filter((line) => line.startsWith("| "))
+    .filter((line) => !line.includes("---"))
+    .filter((line) => !line.includes("Duration") || !line.includes("Zone"))
+    .length;
+}
+
+function extractMarkdownSection(markdown, title) {
+  const start = markdown.indexOf(title);
+  if (start < 0) return "";
+
+  const rest = markdown.slice(start + title.length);
+  const nextSection = rest.search(/\n## /);
+  return nextSection >= 0 ? rest.slice(0, nextSection) : rest;
 }
 
 function formatReviewChecklistMarkdown(items) {

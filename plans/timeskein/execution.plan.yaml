@@ -168,9 +168,9 @@ execution:
       progress: 1.0
       actual_start: "2026-07-03"
       actual_finish: "2026-07-03"
-      updated_at: "2026-07-03T23:28:00+03:00"
+      updated_at: "2026-07-04T00:30:00+03:00"
       confidence: 0.8
-      note: Added a Today review panel and UI/CLI dogfood report Review Checklist. It surfaces active focus/Work Item blockers, open captures, significant gaps, open gap, capture coverage, and timestamped-event coverage before final report copy. The next dogfood day should verify whether these checks match real evening cleanup needs.
+      note: Added a Today review panel and UI/CLI dogfood report Review Checklist. It surfaces active focus/Work Item blockers, open captures, significant gaps, open gap, Activity Zone coverage, non-work tracking, capture coverage, and Work Item context coverage before final report copy. The next dogfood day should verify whether these checks match real evening cleanup needs.
     ts.day_review.analysis_gate:
       progress: 1.0
       actual_start: "2026-07-01"

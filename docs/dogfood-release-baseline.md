@@ -87,8 +87,8 @@ Post-dogfood correction and first review enrichment are now partly implemented:
 - User-authored Work Item Events can be edited or deleted before the final day
   report.
 - Today and copied reports include an automatic Review Checklist for active-state
-  blockers, open captures, significant gaps, open gaps, capture coverage, and
-  timestamped-event coverage.
+  blockers, open captures, significant gaps, open gaps, Activity Zone coverage,
+  non-work tracking, capture coverage, and Work Item context coverage.
 - Work Items can be viewed through `Recent`, `Today`, `Pinned`, and `All` modes,
   while search remains the path to older matching items.
 - The Today/Work Item split can be resized and reset locally.

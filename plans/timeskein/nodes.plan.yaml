@@ -314,7 +314,7 @@ nodes:
     effort: 1
     deps:
       - id: ts.day_review.work_item_events
-    notes: Day Events can be appended from the focus panel for buffers, recovery notes, tracking corrections, and day-level review context. They can be listed, edited, deleted, linked to the active focus session, assigned an Activity Zone, exported in UI/CLI Markdown reports, and counted by the RC evidence checker.
+    notes: Day Events can be appended from the focus panel for buffers, recovery notes, tracking corrections, and day-level review context. They can be listed, edited, re-zoned, deleted, linked to the active focus session, assigned an Activity Zone, exported in UI/CLI Markdown reports, and counted by the RC evidence checker. Significant gaps and the current open gap have Explain shortcuts that prepare a re-zonable Day Event with the gap range and duration.
     x:
       ops:
         attention_class: current
@@ -445,7 +445,7 @@ nodes:
     effort: 2
     deps:
       - id: ts.focus_core.dogfood_gate
-    notes: Fixed typing C/С opening Create, creating a new active Work Item, ambiguous last-seen timestamps, and added the first Capture Inbox baseline. Post-baseline work added Work Item title/basic-field editing, focus-block correction including add-missed-block, per-block Activity Zone snapshots/overrides, Work Item today/total time, Work Item list modes for accumulated multi-day inventories, a resizable Today/Work Item split, timestamped Day Events with gap/open-gap Explain shortcuts, timestamped Work Item Events, capture-to-event promotion, capture edit/delete for open items, Command+Tab/Dock restore, non-always-on-top window policy, native menu-bar status refresh, and separate Total tracked / Work focus / Non-work tracked report totals. Remaining friction is mostly richer correction/review UI.
+    notes: Fixed typing C/С opening Create, creating a new active Work Item, ambiguous last-seen timestamps, and added the first Capture Inbox baseline. Post-baseline work added Work Item title/basic-field editing, focus-block correction including add-missed-block, per-block Activity Zone snapshots/overrides, Work Item today/total time, Work Item list modes for accumulated multi-day inventories, a resizable Today/Work Item split, timestamped Day Events with explicit zones and gap/open-gap Explain shortcuts, timestamped Work Item Events, capture-to-event promotion, capture edit/delete for open items, Command+Tab/Dock restore, non-always-on-top window policy, native menu-bar status refresh, and separate Total tracked / Work focus / Non-work tracked report totals. Remaining friction is mostly richer correction/review UI.
     x:
       ops:
         attention_class: current

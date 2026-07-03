@@ -92,6 +92,13 @@ const updated = await rpc("day_event.update", {
 assert(updated.text === "Smoke day event edited", "day_event.update did not update text");
 assert(updated.activity_zone === "coordination", "day_event.update did not update zone");
 
+const clearedZone = await rpc("day_event.update", {
+  id: linked.id,
+  text: "Smoke day event zone cleared",
+  activity_zone: null,
+});
+assert(clearedZone.activity_zone === undefined, "day_event.update did not clear zone");
+
 const deleted = await rpc("day_event.delete", {
   id: free.id,
 });

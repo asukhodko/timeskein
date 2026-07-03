@@ -354,7 +354,7 @@ The current API surface is:
 - `day_event.delete` to remove a user-authored day note;
 - `day_event.list` to list day notes by time window.
 
-The focus panel has a compact `Add day note...` input. Adding, editing, or deleting a Day Event must not stop or switch the active timer. UI/CLI Markdown exports and the RC checker include a `Day Events` section.
+The focus panel has a compact `Add day note...` input with an optional Activity Zone selector. Adding, editing, re-zoning, or deleting a Day Event must not stop or switch the active timer. Significant gaps and the current open gap have an `Explain` shortcut that prepares a Day Event with the gap range and duration. UI/CLI Markdown exports and the RC checker include a `Day Events` section.
 
 ## App Event Telemetry
 

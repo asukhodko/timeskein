@@ -21,6 +21,7 @@ interface FocusPanelProps {
 }
 
 const SIGNIFICANT_GAP_SECONDS = 20 * 60
+const ACTIVITY_ZONES: ActivityZone[] = ['work', 'coordination', 'recovery', 'idle', 'personal']
 
 export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }: FocusPanelProps) {
   const [title, setTitle] = useState('')
@@ -32,6 +33,7 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
   const [correctingSession, setCorrectingSession] = useState<FocusSessionView | null>(null)
   const [addingMissedBlock, setAddingMissedBlock] = useState(false)
   const [dayEventText, setDayEventText] = useState('')
+  const [dayEventZone, setDayEventZone] = useState<ActivityZone | ''>('')
   const titleInputRef = useRef<HTMLInputElement>(null)
   const dayEventInputRef = useRef<HTMLInputElement>(null)
   const manualCopyRef = useRef<HTMLTextAreaElement>(null)
@@ -436,18 +438,20 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
       {
         text: trimmed,
         focus_session_id: current?.id,
-        activity_zone: current?.activity_zone ?? selectedItem?.activity_zone,
+        activity_zone: dayEventZone || current?.activity_zone || selectedItem?.activity_zone,
       },
       {
         onSuccess: () => {
           setDayEventText('')
+          setDayEventZone('')
         },
       }
     )
   }
 
-  const stageDayEvent = (text: string) => {
+  const stageDayEvent = (text: string, activityZone: ActivityZone | '' = '') => {
     setDayEventText(text)
+    setDayEventZone(activityZone)
     window.requestAnimationFrame(() => {
       const input = dayEventInputRef.current
       input?.focus()
@@ -457,7 +461,8 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
 
   const stageGapDayEvent = (gap: Gap, label = 'Gap') => {
     stageDayEvent(
-      `${label} ${formatClockTime(gap.from)}-${formatClockTime(gap.to)} (${formatDuration(gap.seconds)}): `
+      `${label} ${formatClockTime(gap.from)}-${formatClockTime(gap.to)} (${formatDuration(gap.seconds)}): `,
+      'recovery'
     )
   }
 
@@ -533,6 +538,19 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
             placeholder="Add day note..."
             className="min-w-0 flex-1 rounded border border-gray-800 bg-gray-950 px-2 py-1.5 text-xs text-gray-100 placeholder-gray-600 focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600"
           />
+          <select
+            value={dayEventZone}
+            onChange={(event) => setDayEventZone(event.target.value as ActivityZone | '')}
+            className="w-32 rounded border border-gray-800 bg-gray-950 px-2 py-1.5 text-xs text-gray-200 focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600"
+            title="Day event zone"
+          >
+            <option value="">Context</option>
+            {ACTIVITY_ZONES.map((zone) => (
+              <option key={zone} value={zone}>
+                {formatActivityZoneLabel(zone)}
+              </option>
+            ))}
+          </select>
           <button
             type="button"
             onClick={addDayEvent}
@@ -1136,6 +1154,7 @@ function DayEventsPanel({
 }) {
   const [editingEventId, setEditingEventId] = useState<string | null>(null)
   const [editingText, setEditingText] = useState('')
+  const [editingZone, setEditingZone] = useState<ActivityZone | ''>('')
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
   const updateEventMutation = useUpdateDayEvent()
   const deleteEventMutation = useDeleteDayEvent()
@@ -1146,6 +1165,7 @@ function DayEventsPanel({
   const startEditing = (event: DayEventView) => {
     setEditingEventId(event.id)
     setEditingText(event.text)
+    setEditingZone(event.activity_zone ?? '')
     setDeleteConfirmId(null)
   }
 
@@ -1154,11 +1174,12 @@ function DayEventsPanel({
     if (!editingEventId || !trimmed || updateEventMutation.isPending) return
 
     updateEventMutation.mutate(
-      { id: editingEventId, text: trimmed },
+      { id: editingEventId, text: trimmed, activity_zone: editingZone || null },
       {
         onSuccess: () => {
           setEditingEventId(null)
           setEditingText('')
+          setEditingZone('')
         },
       }
     )
@@ -1173,6 +1194,7 @@ function DayEventsPanel({
         if (editingEventId === eventId) {
           setEditingEventId(null)
           setEditingText('')
+          setEditingZone('')
         }
       },
     })
@@ -1195,6 +1217,10 @@ function DayEventsPanel({
                 <span className="font-mono text-gray-500">{formatClockTime(event.ts)}</span>
                 <span className="min-w-0 truncate">
                   <span>{truncate(event.text, 90)}</span>
+                  <span className="text-gray-500"> · </span>
+                  <span className="text-gray-500">
+                    {event.activity_zone ? formatActivityZoneLabel(event.activity_zone) : 'No zone'}
+                  </span>
                   <span className="text-gray-500"> · </span>
                   <span className="text-gray-500">{truncate(formatDayEventDuring(event, sessionsById), 40)}</span>
                 </span>
@@ -1238,12 +1264,25 @@ function DayEventsPanel({
                     rows={2}
                     className="w-full resize-none rounded border border-gray-700 bg-gray-950 px-2 py-1 text-xs text-gray-100 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
                   />
+                  <select
+                    value={editingZone}
+                    onChange={(event) => setEditingZone(event.target.value as ActivityZone | '')}
+                    className="w-full rounded border border-gray-700 bg-gray-950 px-2 py-1 text-xs text-gray-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                  >
+                    <option value="">No zone</option>
+                    {ACTIVITY_ZONES.map((zone) => (
+                      <option key={zone} value={zone}>
+                        {formatActivityZoneLabel(zone)}
+                      </option>
+                    ))}
+                  </select>
                   <div className="flex justify-end gap-1">
                     <button
                       type="button"
                       onClick={() => {
                         setEditingEventId(null)
                         setEditingText('')
+                        setEditingZone('')
                       }}
                       className="rounded px-2 py-0.5 text-[11px] text-gray-400 hover:bg-gray-800 hover:text-gray-200"
                     >

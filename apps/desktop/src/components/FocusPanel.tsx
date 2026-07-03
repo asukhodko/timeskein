@@ -34,6 +34,7 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
   const [addingMissedBlock, setAddingMissedBlock] = useState(false)
   const [dayEventText, setDayEventText] = useState('')
   const [dayEventZone, setDayEventZone] = useState<ActivityZone | ''>('')
+  const [appEventSummary, setAppEventSummary] = useState<AppEventSummary | null>(null)
   const titleInputRef = useRef<HTMLInputElement>(null)
   const dayEventInputRef = useRef<HTMLInputElement>(null)
   const manualCopyRef = useRef<HTMLTextAreaElement>(null)
@@ -98,8 +99,9 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
       workItemEvents,
       dayEvents,
       openGap,
+      appTelemetry: appEventSummary,
     }),
-    [sessions, current, activeWorkItems, inventoryItems, openCaptures, captureActivity, workItemEvents, dayEvents, openGap]
+    [sessions, current, activeWorkItems, inventoryItems, openCaptures, captureActivity, workItemEvents, dayEvents, openGap, appEventSummary]
   )
   const reportIsDraft = current?.state === 'active' || activeWorkItems.length > 0
   const trayStatusTitle = useMemo(
@@ -179,6 +181,32 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
       manualCopyRef.current?.select()
     })
   }, [manualCopy])
+
+  useEffect(() => {
+    let cancelled = false
+
+    const refreshSummary = () => {
+      appEventApi.summary(dayWindow)
+        .then((summary) => {
+          if (!cancelled) {
+            setAppEventSummary(summary)
+          }
+        })
+        .catch(() => {
+          if (!cancelled) {
+            setAppEventSummary(null)
+          }
+        })
+    }
+
+    refreshSummary()
+    const timer = window.setInterval(refreshSummary, 15000)
+
+    return () => {
+      cancelled = true
+      window.clearInterval(timer)
+    }
+  }, [dayWindow])
 
   const startTypedSession = () => {
     const trimmed = title.trim()
@@ -385,13 +413,26 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
       },
     })
 
+    const freshAppEventSummary = await loadAppEventSummary(now)
+    const reportReviewItems = buildDayReviewItems({
+      sessions,
+      activeFocus: current,
+      activeWorkItems,
+      workItems: inventoryItems,
+      openCaptures,
+      captureActivity,
+      workItemEvents,
+      dayEvents,
+      openGap,
+      appTelemetry: freshAppEventSummary,
+    })
     const reportMarkdown = await buildDogfoodReportMarkdown(
       todayMarkdown,
       current,
       activeWorkItems,
       openCaptures,
       captureActivity,
-      reviewItems,
+      reportReviewItems,
       sessions,
       inventoryItems,
       now
@@ -950,6 +991,7 @@ function buildDayReviewItems({
   workItemEvents,
   dayEvents,
   openGap,
+  appTelemetry,
 }: {
   sessions: FocusSessionView[]
   activeFocus?: FocusSessionView
@@ -960,6 +1002,7 @@ function buildDayReviewItems({
   workItemEvents: WorkItemEventView[]
   dayEvents: DayEventView[]
   openGap?: Gap
+  appTelemetry?: AppEventSummary | null
 }): DayReviewItem[] {
   const items: DayReviewItem[] = []
   const gaps = gapsBetweenSessions(sessions).filter((gap) => gap.seconds >= SIGNIFICANT_GAP_SECONDS)
@@ -1047,6 +1090,22 @@ function buildDayReviewItems({
       title: 'No day or Work Item notes/events',
       detail: 'Add context if the report still needs memory reconstruction',
     })
+  }
+
+  if (sessions.length > 0 && appTelemetry) {
+    if (appTelemetry.correction_failures > 0) {
+      items.push({
+        level: 'review',
+        title: 'Review failed focus corrections',
+        detail: `${appTelemetry.correction_failures} failure${appTelemetry.correction_failures === 1 ? '' : 's'}`,
+      })
+    } else if (appTelemetry.corrections === 0) {
+      items.push({
+        level: 'review',
+        title: 'Confirm tracking accuracy or test correction',
+        detail: 'No focus corrections applied today',
+      })
+    }
   }
 
   if (sessions.length === 0) {
@@ -1566,6 +1625,19 @@ async function buildAppTelemetryMarkdown(now: Date) {
       '',
       'Telemetry unavailable in UI report. Run `pnpm dogfood:metrics` after the day.',
     ].join('\n')
+  }
+}
+
+async function loadAppEventSummary(now: Date) {
+  try {
+    const dayStart = startOfLocalDay(now)
+    const dayEnd = nextLocalDay(dayStart)
+    return await appEventApi.summary({
+      from: dayStart.toISOString(),
+      to: dayEnd.toISOString(),
+    })
+  } catch {
+    return null
   }
 }
 

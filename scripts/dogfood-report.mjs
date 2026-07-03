@@ -272,13 +272,16 @@ function buildDogfoodReport(
     lines.push(formatCaptureActivityMarkdown(captureActivity).trim(), "");
   }
 
-  lines.push(formatReviewChecklistMarkdown(buildReviewChecklistItems({
+  const reviewItems = buildReviewChecklistItems({
     activeFocus,
     activeWorkItems,
     openCaptures,
     captureActivity,
     focusMarkdown,
-  })).trim(), "");
+    telemetryMarkdown,
+  });
+
+  lines.push(formatReviewChecklistMarkdown(reviewItems).trim(), "");
 
   lines.push(
     "## Focus Data",
@@ -329,6 +332,7 @@ function buildReviewChecklistItems({
   openCaptures,
   captureActivity,
   focusMarkdown,
+  telemetryMarkdown = "",
 }) {
   const items = [];
 
@@ -417,6 +421,23 @@ function buildReviewChecklistItems({
     });
   }
 
+  const correctionTelemetry = parseCorrectionTelemetry(telemetryMarkdown);
+  if (focusMarkdown.includes("| Time | Duration | Zone | Work Item | Note |") && correctionTelemetry) {
+    if (correctionTelemetry.failures > 0) {
+      items.push({
+        level: "review",
+        title: "Review failed focus corrections",
+        detail: `${correctionTelemetry.failures} failure${correctionTelemetry.failures === 1 ? "" : "s"}`,
+      });
+    } else if (correctionTelemetry.applied === 0) {
+      items.push({
+        level: "review",
+        title: "Confirm tracking accuracy or test correction",
+        detail: "No focus corrections applied today",
+      });
+    }
+  }
+
   if (items.length === 0) {
     items.push({
       level: "ok",
@@ -426,6 +447,17 @@ function buildReviewChecklistItems({
   }
 
   return items;
+}
+
+function parseCorrectionTelemetry(markdown) {
+  const match = markdown.match(/Corrections requested\/applied\/failed:\s*(\d+)\/(\d+)\/(\d+)/);
+  if (!match) return undefined;
+
+  return {
+    requested: Number(match[1]),
+    applied: Number(match[2]),
+    failures: Number(match[3]),
+  };
 }
 
 function countActivityZoneRows(markdown) {

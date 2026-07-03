@@ -352,7 +352,7 @@ nodes:
       - id: ts.day_review.export
       - id: ts.day_review.work_item_events
       - id: ts.day_review.day_events
-    notes: Today and dogfood reports show a Review Checklist for active-state blockers, open captures, significant gaps, open gaps, Activity Zone coverage, non-work tracking, capture coverage, Day Events, and Work Item context coverage. The checklist is meant to make evening cleanup explicit before copying the final report.
+    notes: Today and dogfood reports show a Review Checklist for active-state blockers, open captures, significant gaps, open gaps, Activity Zone coverage, non-work tracking, capture coverage, Day Events, Work Item context coverage, and focus-correction evidence. The checklist is meant to make evening cleanup explicit before copying the final report.
     x:
       ops:
         attention_class: current

@@ -14,6 +14,7 @@ const dbPath = join(tempDir, "timeskein.db");
 try {
   await runSqlFile(join(repoRoot, "apps/agent/migrations/001_initial.sql"));
   await runSqlFile(join(repoRoot, "apps/agent/migrations/002_focus_sessions.sql"));
+  await runSqlFile(join(repoRoot, "apps/agent/migrations/003_app_events.sql"));
   await runSqlFile(join(repoRoot, "apps/agent/migrations/005_activity_zones.sql"));
   await runSqlFile(join(repoRoot, "apps/agent/migrations/004_captures.sql"));
   await runSqlFile(join(repoRoot, "apps/agent/migrations/008_day_events.sql"));
@@ -42,6 +43,11 @@ try {
     INSERT INTO day_events (id, ts, kind, text, focus_session_id, activity_zone, updated_at)
     VALUES
       ('de1', '2026-06-30T06:20:00Z', 'note_added', 'buffer before meeting felt expensive', 's1', 'work', '2026-06-30T06:20:00Z');
+
+    INSERT INTO app_events (id, ts, source, kind, focus_session_id, payload)
+    VALUES
+      ('ae1', '2026-06-30T07:50:00Z', 'ui', 'focus_correction_requested', 's1', '{"action_id":"k1","control":"edit_block"}'),
+      ('ae2', '2026-06-30T07:50:01Z', 'ui', 'focus_corrected', 's1', '{"action_id":"k1","control":"edit_block"}');
 
     UPDATE work_items SET activity_zone = 'coordination' WHERE id = 'w2';
     UPDATE focus_sessions SET activity_zone = 'coordination' WHERE work_item_id = 'w2';
@@ -81,6 +87,10 @@ try {
     stdout.includes("No day or Work Item notes/events") === false,
     "report review checklist should not flag missing context when notes/events are present"
   );
+  assert(
+    stdout.includes("Confirm tracking accuracy or test correction") === false,
+    "report review checklist should not flag correction coverage when a correction was applied"
+  );
   assert(stdout.includes("## Open Captures"), "report did not include open captures section");
   assert(stdout.includes("Reply to incoming thread after focus"), "report did not include open capture text");
   assert(stdout.includes("## Capture Activity"), "report did not include Capture Activity section");
@@ -117,6 +127,7 @@ try {
   await runSql(`
     DELETE FROM work_item_events;
     DELETE FROM day_events;
+    DELETE FROM app_events;
     UPDATE work_items SET note = NULL, activity_zone = 'work';
     UPDATE focus_sessions SET activity_zone = 'work';
   `);
@@ -138,6 +149,10 @@ try {
   assert(
     thinEvidenceStdout.includes("No day or Work Item notes/events"),
     "report review checklist did not flag missing day/Work Item context"
+  );
+  assert(
+    thinEvidenceStdout.includes("Confirm tracking accuracy or test correction"),
+    "report review checklist did not flag missing correction evidence"
   );
 
   await runSql(`

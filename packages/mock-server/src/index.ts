@@ -238,6 +238,27 @@ function handleMethod(
       });
     }
 
+    case "capture.append_to_work_item_event": {
+      const id = params.id as string;
+      if (!id) {
+        return errorResponse(requestId, "validation_error", "Capture ID is required");
+      }
+
+      const result = store.appendCaptureToWorkItemEvent(id, params.work_item_id as string | undefined);
+      if (!result.capture) {
+        return errorResponse(requestId, "not_found", "Capture not found");
+      }
+      if (!result.event || !result.workItemId) {
+        return errorResponse(requestId, "validation_error", "Capture cannot be appended without a Work Item");
+      }
+
+      return successResponse(requestId, {
+        capture: result.capture,
+        event: result.event,
+        work_item_id: result.workItemId,
+      });
+    }
+
     // Inventory methods
     case "inventory.list": {
       const search = params.filter && typeof params.filter === "object"

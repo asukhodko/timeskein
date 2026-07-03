@@ -50,6 +50,27 @@ try {
     id: capture.id,
   });
   assert(resolvedCapture.state === "resolved", "capture.resolve did not resolve capture");
+  const eventCapture = await rpc(port, "capture.create", {
+    text: `Packaged smoke event capture ${new Date().toISOString()}`,
+  });
+  const appendedCapture = await rpc(port, "capture.append_to_work_item_event", {
+    id: eventCapture.id,
+  });
+  assert(
+    appendedCapture.work_item_id === started.work_item_id,
+    "capture.append_to_work_item_event did not infer the active Work Item"
+  );
+  assert(
+    appendedCapture.event.text === eventCapture.text,
+    "capture.append_to_work_item_event did not create a Work Item event from capture text"
+  );
+  const eventsAfterAppend = await rpc(port, "work_item.events", {
+    id: started.work_item_id,
+  });
+  assert(
+    eventsAfterAppend.events.some((event) => event.id === appendedCapture.event.id),
+    "capture-created Work Item event is absent from packaged app event list"
+  );
   await new Promise((resolve) => setTimeout(resolve, 1100));
   const stopped = await rpc(port, "focus.stop", {
     note: "packaged app smoke done",

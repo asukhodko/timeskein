@@ -158,7 +158,7 @@ Current status: the macOS dogfood release baseline was accepted on 2026-07-03. T
 | Today block list and totals | `focus.list` and UI show block duration, time range, stop note, work focus, total tracked time, zones, and entrances | The list matches remembered work blocks |
 | Post-factum correction | `cargo test -p timeskein-agent`, `pnpm smoke:corrections-api`, and `pnpm smoke:macos-app` verify update, split, reassignment, Work Item edit, and corrected day-list data | Wrong Work Item assignments can be fixed before copying the final report |
 | Significant gaps | UI and Markdown show gap ranges of 20+ minutes | Long breaks and lost intervals are visible enough |
-| Capture Inbox | `pnpm smoke:capture-api`, `pnpm smoke:mock-api`, and `pnpm smoke:macos-app` verify capture create/list/resolve/convert without interrupting focus | Incoming events can be remembered without switching away from the current block |
+| Capture Inbox | `pnpm smoke:capture-api`, `pnpm smoke:mock-api`, and `pnpm smoke:macos-app` verify capture create/list/resolve/convert/append-event without interrupting focus | Incoming events can be remembered without switching away from the current block |
 | Markdown export | `Copy Report` exports timeline, `By Work Item`, Work Item Events, gaps, Capture Activity, open captures, app telemetry, and review prompts; `Copy MD` exports the raw day picture; failed clipboard writes show selected Markdown; `pnpm smoke:export-focus-day` and `pnpm smoke:dogfood-report` verify SQLite fallbacks | Copied note is enough for evening analysis |
 | App friction telemetry | `app_events` stores local technical events, `pnpm smoke:app-events` verifies metrics/export, and `pnpm dogfood:report` includes `App Telemetry` | Start/switch/stop/copy/API/window friction is visible without relying only on memory |
 | macOS app with embedded agent and SQLite | `pnpm smoke:macos-app` verifies app launch, SQLite health, focus flow, stale lock/port recovery, and active focus restore after app restart | The real app survives normal workday use |
@@ -374,7 +374,7 @@ The dogfood day fails if any of these happens often enough to break trust:
 
 - There is no pause/resume/cancel model yet. Stop and start again instead.
 - Stopped focus blocks can be edited or split from the Today list. The correction workflow is basic: there is no drag timeline or bulk edit yet.
-- Capture Inbox is minimal. It can create, resolve, and convert captures, but cannot edit/delete captures or append them as Work Item Events yet.
+- Capture Inbox is minimal. It can create, resolve, convert captures, and append them as Work Item Events, but cannot edit/delete captures yet.
 - Activity Zones are Work Item-level only. A Work Item named `Break` should be assigned to `recovery` or `idle`; it still contributes to `Total tracked`, but not to `Work focus`.
 - Work Item notes are a single mutable field; timestamped observations are separate Work Item Events.
 - There is no automatic active-window detection.

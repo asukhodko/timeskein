@@ -165,6 +165,9 @@ async fn dispatch_method(
         "capture.convert_to_work_item" => {
             handle_capture_convert_to_work_item(state, params, request_id).await
         }
+        "capture.append_to_work_item_event" => {
+            handle_capture_append_to_work_item_event(state, params, request_id).await
+        }
 
         // Inventory methods
         "inventory.list" => handle_inventory_list(state, params, request_id).await,

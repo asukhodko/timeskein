@@ -262,6 +262,35 @@ export class MockDataStore {
     };
   }
 
+  appendCaptureToWorkItemEvent(id: string, workItemId?: string): { capture?: CaptureView; event?: WorkItemEventView; workItemId?: string } {
+    const capture = this.captures.get(id);
+    if (!capture) return {};
+    if (capture.state !== "open") return { capture };
+
+    const targetWorkItemId = workItemId ?? this.focusSessions.get(capture.focus_session_id ?? "")?.work_item_id;
+    if (!targetWorkItemId) return { capture };
+
+    const event = this.addWorkItemEvent({
+      id: targetWorkItemId,
+      text: capture.text,
+      focus_session_id: capture.focus_session_id,
+    });
+    if (!event) return { capture };
+
+    const now = new Date().toISOString();
+    capture.state = "converted";
+    capture.work_item_id = targetWorkItemId;
+    capture.updated_at = now;
+    capture.converted_at = now;
+    this.captures.set(id, capture);
+
+    return {
+      capture,
+      event,
+      workItemId: targetWorkItemId,
+    };
+  }
+
   // Agent methods
   getUptime(): number {
     return Math.floor((Date.now() - this.startTime) / 1000);

@@ -53,8 +53,8 @@ These were accepted limitations for the dogfood baseline, not blockers:
 - Stop notes cannot be edited after the block is stopped.
 - Work Item notes are mutable descriptions; timestamped observations are stored
   separately as Work Item Events.
-- Capture Inbox cannot edit or delete captures, and cannot append a capture as
-  a Work Item Event yet.
+- Capture Inbox cannot edit or delete captures yet. Since baseline acceptance,
+  captures can be appended as Work Item Events.
 - Activity zones are Work Item-level only. Reports now separate `Total tracked`,
   `Work focus`, non-work tracked time, and per-zone totals, but there is no
   per-session zone override yet.
@@ -75,10 +75,11 @@ Post-dogfood correction and first review enrichment are now partly implemented:
   copied reports include Activity Zone totals.
 - Timestamped Work Item Events can be appended from the note editor and appear
   in UI/CLI day reports.
+- Captures can be appended as timestamped Work Item Events.
 
 Remaining entry and review polish:
 
-- add capture-to-Work-Item-event promotion if captures often become review notes.
+- verify capture-to-Work-Item-event promotion during the next dogfood day.
 - decide whether per-session zone overrides are needed after the next dogfood day.
 
 Activity evidence from apps, browser tabs, messenger channels, screenshots, or

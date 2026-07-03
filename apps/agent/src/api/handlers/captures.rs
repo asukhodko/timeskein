@@ -6,7 +6,10 @@ use tokio::sync::RwLock;
 use uuid::Uuid;
 
 use crate::api::handlers::RpcResponse;
-use crate::domain::{ActivityZone, Capture, CaptureState, WorkItem, WorkItemState, WorkItemType};
+use crate::domain::{
+    ActivityZone, Capture, CaptureState, WorkItem, WorkItemEvent, WorkItemEventKind,
+    WorkItemEventView, WorkItemState, WorkItemType,
+};
 use crate::AppState;
 
 pub async fn handle_capture_create(
@@ -157,6 +160,71 @@ pub async fn handle_capture_convert_to_work_item(
     }))
 }
 
+pub async fn handle_capture_append_to_work_item_event(
+    state: &Arc<RwLock<AppState>>,
+    params: serde_json::Value,
+    request_id: &str,
+) -> Result<serde_json::Value, RpcResponse> {
+    let id = get_capture_id(&params, request_id)?;
+    let requested_work_item_id = parse_optional_uuid(params.get("work_item_id"), request_id)?;
+
+    let state = state.write().await;
+    let mut capture = get_existing_capture(&state, id, request_id).await?;
+    if capture.state != CaptureState::Open {
+        return Err(RpcResponse::error(
+            request_id.to_string(),
+            "validation_error",
+            "Capture is already processed",
+        ));
+    }
+
+    let work_item_id = if let Some(work_item_id) = requested_work_item_id {
+        work_item_id
+    } else {
+        infer_capture_work_item_id(&state, &capture, request_id).await?
+    };
+
+    let mut item = state
+        .db
+        .get_work_item(work_item_id)
+        .await
+        .map_err(|error| {
+            RpcResponse::error(request_id.to_string(), "internal_error", &error.to_string())
+        })?
+        .ok_or_else(|| {
+            RpcResponse::error(request_id.to_string(), "not_found", "Work item not found")
+        })?;
+
+    item.touch();
+    state.db.update_work_item(&item).await.map_err(|error| {
+        RpcResponse::error(request_id.to_string(), "internal_error", &error.to_string())
+    })?;
+
+    let mut payload = serde_json::json!({
+        "text": capture.text.clone(),
+        "source_capture_id": capture.id.to_string(),
+    });
+    if let Some(focus_session_id) = capture.focus_session_id {
+        payload["focus_session_id"] = serde_json::Value::String(focus_session_id.to_string());
+    }
+
+    let event = WorkItemEvent::new(work_item_id, WorkItemEventKind::NoteAdded, Some(payload));
+    state.db.log_event(&event).await.map_err(|error| {
+        RpcResponse::error(request_id.to_string(), "internal_error", &error.to_string())
+    })?;
+
+    capture.convert_to_work_item(work_item_id);
+    state.db.update_capture(&capture).await.map_err(|error| {
+        RpcResponse::error(request_id.to_string(), "internal_error", &error.to_string())
+    })?;
+
+    Ok(serde_json::json!({
+        "capture": crate::domain::CaptureView::from(capture),
+        "event": WorkItemEventView::from_event(event),
+        "work_item_id": work_item_id.to_string(),
+    }))
+}
+
 async fn get_existing_capture(
     state: &AppState,
     id: Uuid,
@@ -170,6 +238,43 @@ async fn get_existing_capture(
             RpcResponse::error(request_id.to_string(), "internal_error", &error.to_string())
         })?
         .ok_or_else(|| RpcResponse::error(request_id.to_string(), "not_found", "Capture not found"))
+}
+
+async fn infer_capture_work_item_id(
+    state: &AppState,
+    capture: &Capture,
+    request_id: &str,
+) -> Result<Uuid, RpcResponse> {
+    let focus_session_id = capture.focus_session_id.ok_or_else(|| {
+        RpcResponse::error(
+            request_id.to_string(),
+            "validation_error",
+            "Capture is not linked to a focus session; provide work_item_id",
+        )
+    })?;
+
+    let (session, _, _) = state
+        .db
+        .get_focus_session(focus_session_id)
+        .await
+        .map_err(|error| {
+            RpcResponse::error(request_id.to_string(), "internal_error", &error.to_string())
+        })?
+        .ok_or_else(|| {
+            RpcResponse::error(
+                request_id.to_string(),
+                "not_found",
+                "Focus session not found",
+            )
+        })?;
+
+    session.work_item_id.ok_or_else(|| {
+        RpcResponse::error(
+            request_id.to_string(),
+            "validation_error",
+            "Linked focus session has no Work Item; provide work_item_id",
+        )
+    })
 }
 
 fn get_capture_id(params: &serde_json::Value, request_id: &str) -> Result<Uuid, RpcResponse> {

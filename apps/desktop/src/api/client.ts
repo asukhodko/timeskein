@@ -23,6 +23,7 @@ import {
   type FocusSplitResponse,
   type FocusUpdateParams,
   type CaptureConvertResponse,
+  type CaptureAppendEventResponse,
   type CaptureListResponse,
   type CaptureState,
   type CaptureView,
@@ -180,6 +181,8 @@ export const captureApi = {
   resolve: (id: string) => rpc<CaptureView>('capture.resolve', { id }),
   convertToWorkItem: (params: { id: string; title?: string }) =>
     rpc<CaptureConvertResponse>('capture.convert_to_work_item', params),
+  appendToWorkItemEvent: (params: { id: string; work_item_id?: string }) =>
+    rpc<CaptureAppendEventResponse>('capture.append_to_work_item_event', params),
 }
 
 export async function logAppEvent(params: {

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { CaptureView } from '@timeskein/contracts'
 import {
+  useAppendCaptureToWorkItemEvent,
   useConvertCaptureToWorkItem,
   useCreateCapture,
   useOpenCaptures,
@@ -11,14 +12,16 @@ import { formatClockTime, truncate } from '../utils/formatTime'
 
 interface CaptureInboxProps {
   focusSessionId?: string
+  targetWorkItemId?: string
 }
 
-export default function CaptureInbox({ focusSessionId }: CaptureInboxProps) {
+export default function CaptureInbox({ focusSessionId, targetWorkItemId }: CaptureInboxProps) {
   const [text, setText] = useState('')
   const capturesQuery = useOpenCaptures()
   const createMutation = useCreateCapture()
   const resolveMutation = useResolveCapture()
   const convertMutation = useConvertCaptureToWorkItem()
+  const appendEventMutation = useAppendCaptureToWorkItemEvent()
 
   const captures = capturesQuery.data?.captures ?? []
   const trimmed = text.trim()
@@ -196,7 +199,53 @@ export default function CaptureInbox({ focusSessionId }: CaptureInboxProps) {
                     },
                   })
                 }}
-                busy={resolveMutation.isPending || convertMutation.isPending}
+                onAppendEvent={() => {
+                  const actionId = createTelemetryActionId()
+                  void logAppEvent({
+                    source: 'ui',
+                    kind: 'capture_convert_requested',
+                    work_item_id: targetWorkItemId,
+                    focus_session_id: capture.focus_session_id,
+                    payload: {
+                      action_id: actionId,
+                      control: 'append_event_button',
+                      had_focus_link: Boolean(capture.focus_session_id),
+                      has_target_work_item: Boolean(targetWorkItemId),
+                    },
+                  })
+                  appendEventMutation.mutate(
+                    { id: capture.id, work_item_id: targetWorkItemId },
+                    {
+                      onSuccess: (result) => {
+                        void logAppEvent({
+                          source: 'ui',
+                          kind: 'capture_converted',
+                          work_item_id: result.work_item_id,
+                          focus_session_id: result.capture.focus_session_id,
+                          payload: {
+                            action_id: actionId,
+                            control: 'append_event_button',
+                            had_focus_link: Boolean(result.capture.focus_session_id),
+                          },
+                        })
+                      },
+                      onError: (error) => {
+                        void logAppEvent({
+                          source: 'ui',
+                          kind: 'capture_convert_failed',
+                          work_item_id: targetWorkItemId,
+                          focus_session_id: capture.focus_session_id,
+                          payload: {
+                            action_id: actionId,
+                            control: 'append_event_button',
+                            error_code: error instanceof Error && 'code' in error ? String(error.code) : 'unknown',
+                          },
+                        })
+                      },
+                    }
+                  )
+                }}
+                busy={resolveMutation.isPending || convertMutation.isPending || appendEventMutation.isPending}
               />
             ))}
           </div>
@@ -214,11 +263,13 @@ function CaptureRow({
   capture,
   onResolve,
   onConvert,
+  onAppendEvent,
   busy,
 }: {
   capture: CaptureView
   onResolve: () => void
   onConvert: () => void
+  onAppendEvent: () => void
   busy: boolean
 }) {
   return (
@@ -234,6 +285,14 @@ function CaptureRow({
         className="shrink-0 rounded border border-blue-800 px-1.5 py-0.5 text-[11px] text-blue-200 hover:border-blue-500 disabled:cursor-not-allowed disabled:border-gray-800 disabled:text-gray-600"
       >
         Make Item
+      </button>
+      <button
+        type="button"
+        onClick={onAppendEvent}
+        disabled={busy}
+        className="shrink-0 rounded border border-emerald-800 px-1.5 py-0.5 text-[11px] text-emerald-200 hover:border-emerald-500 disabled:cursor-not-allowed disabled:border-gray-800 disabled:text-gray-600"
+      >
+        Event
       </button>
       <button
         type="button"

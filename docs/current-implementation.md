@@ -232,6 +232,7 @@ Third real dogfood day and release baseline:
 - Captures link to the active focus session when one exists
 - Open captures are visible in the focus panel
 - Captures can be resolved as done or converted into Work Items
+- Captures can be appended as timestamped Work Item Events, using the linked focus session's Work Item or the currently selected Work Item as the target
 - The dogfood report shows Capture Activity for captures created during the day, including captures that were already resolved or converted
 - Open captures appear separately in the UI and CLI dogfood report for evening review
 - Manual Work Item inventory UI
@@ -321,7 +322,7 @@ The current API surface is:
 - `work_item.add_event` to append an event to a Work Item, optionally linked to the active focus session;
 - `work_item.events` to list events by Work Item and/or time window.
 
-The note editor can append a timestamped event without replacing the Work Item description. The focus panel shows the latest Work Item Events for the day, and UI/CLI Markdown exports include a `Work Item Events` section.
+The note editor can append a timestamped event without replacing the Work Item description. Capture Inbox can also append a capture as a Work Item Event, preserving the capture text and focus-session link. The focus panel shows the latest Work Item Events for the day, and UI/CLI Markdown exports include a `Work Item Events` section.
 
 ## App Event Telemetry
 
@@ -372,8 +373,8 @@ On multi-monitor macOS setups, the tray/status item is controlled by the system 
 - Focus Session has a compact day list and Markdown copy, but not a full reporting/JSON/CSV export view yet.
 - App-event telemetry has CLI/report output, but no in-app inspection screen yet.
 - Post-factum correction is intentionally basic: stopped blocks can be edited and split, but there is no drag timeline, bulk edit, or dedicated correction wizard yet.
-- Capture Inbox is minimal: no edit/delete UI yet, no append-to-Work-Item-event action yet, and no separate capture history screen beyond the open list and dogfood report.
-- Work Item Events are append-only and report-visible, but they cannot be edited, deleted, or created directly from Capture Inbox yet.
+- Capture Inbox is minimal: no edit/delete UI yet, and no separate capture history screen beyond the open list and dogfood report.
+- Work Item Events are append-only and report-visible, but they cannot be edited or deleted yet.
 - Work Item notes are included in day reports for touched items, but they remain mutable descriptions rather than dated observations.
 - macOS window restore and menu bar status refresh were newly fixed after the third dogfood day, but still need one real dogfood pass before being considered fully proven.
 - Activity Zones are Work Item-level only; there is no per-session zone override yet.
@@ -387,5 +388,5 @@ On multi-monitor macOS setups, the tray/status item is controlled by the system 
 
 1. Verify the new macOS window return and native menu bar status refresh in the next dogfood day.
 2. Add a clearer correction workflow if split + update is not enough after the next dogfood day.
-3. Add capture-to-Work-Item-event promotion if captures often become review notes rather than follow-up tasks.
+3. Verify capture-to-Work-Item-event promotion in the next dogfood day.
 4. Decide whether per-session zone overrides are needed after the next dogfood day.

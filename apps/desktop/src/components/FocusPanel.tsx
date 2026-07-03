@@ -457,7 +457,7 @@ export default function FocusPanel({ selectedItem }: FocusPanelProps) {
           )}
         </div>
 
-        <CaptureInbox focusSessionId={current?.id} />
+        <CaptureInbox focusSessionId={current?.id} targetWorkItemId={current?.work_item_id ?? selectedItem?.id} />
 
         {workItemEvents.length > 0 && (
           <WorkItemEventsPanel

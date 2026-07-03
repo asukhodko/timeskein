@@ -277,6 +277,7 @@ Focus Session controls:
 - Post-factum correction for stopped focus blocks: edit time/note/Work Item or split the block
 - Capture Inbox for incoming events that should be handled later without interrupting the current focus block
 - Timestamped Work Item Events for append-only observations during the day
+- Open captures can be resolved, converted to Work Items, or appended as timestamped Work Item Events
 - Running focus session restored from SQLite after frontend/app restart
 - Focus sessions are linked to Work Items; typed titles reuse existing Work Items instead of creating duplicates
 - Setting a Work Item to `active` starts or switches the linked focus session; stopping it clears `active`
@@ -301,8 +302,8 @@ Focus Session controls:
 - **Browser mode uses mock data** - SQLite persistence is available in the macOS app, not in browser dev mode
 - **Focus Session has no pause/resume/cancel yet** - the current baseline is start/stop only
 - **Post-factum correction is basic** - stopped focus blocks can be edited and split, but there is not yet a drag timeline or multi-step correction wizard
-- **Capture Inbox is minimal** - proven in one full dogfood day, but capture edit/delete and append-as-Work-Item-event are not implemented yet
-- **Work Item Events are basic** - timestamped events can be appended and reported, but they cannot be edited, deleted, or promoted from captures yet
+- **Capture Inbox is minimal** - proven in one full dogfood day, but capture edit/delete and a fuller capture history screen are not implemented yet
+- **Work Item Events are basic** - timestamped events can be appended, promoted from captures, and reported, but they cannot be edited or deleted yet
 - **Work Item notes remain mutable descriptions** - timestamped observations should use Work Item Events instead
 - **Activity zones are Work Item-level only** - reports separate `Total tracked`, `Work focus`, and non-work zones, but there is no per-session zone override yet
 - **macOS window restore and menu bar counter are newly fixed** - the packaged app now avoids always-on-top/task-switcher hiding, handles macOS reopen, and updates the menu bar title from the native shell; verify this in the next dogfood day

@@ -59,3 +59,18 @@ export function useConvertCaptureToWorkItem() {
     },
   })
 }
+
+export function useAppendCaptureToWorkItemEvent() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (params: { id: string; work_item_id?: string }) =>
+      captureApi.appendToWorkItemEvent(params),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: captureQueryKeys.open })
+      queryClient.invalidateQueries({ queryKey: captureQueryKeys.activity })
+      queryClient.invalidateQueries({ queryKey: queryKeys.inventory })
+      queryClient.invalidateQueries({ queryKey: ['workItemEvents'] })
+    },
+  })
+}

@@ -4,9 +4,10 @@ use chrono::{Duration, Utc};
 use serde_json::json;
 use tempfile::tempdir;
 use timeskein_agent::api::{
-    handle_focus_list, handle_focus_split, handle_focus_start, handle_focus_stop,
-    handle_focus_update, handle_inventory_list, handle_work_item_add_event,
-    handle_work_item_events, handle_work_item_update,
+    handle_capture_append_to_work_item_event, handle_capture_create, handle_focus_list,
+    handle_focus_split, handle_focus_start, handle_focus_stop, handle_focus_update,
+    handle_inventory_list, handle_work_item_add_event, handle_work_item_events,
+    handle_work_item_update,
 };
 use timeskein_agent::{db::Database, AppState};
 use tokio::sync::RwLock;
@@ -93,6 +94,97 @@ async fn focus_start_switch_and_active_work_item_stay_coherent() {
         active_items[0]["id"].as_str(),
         switched["work_item_id"].as_str()
     );
+}
+
+#[tokio::test]
+async fn capture_can_be_appended_to_linked_work_item_event_without_interrupting_focus() {
+    let state = test_state().await;
+
+    let started = handle_focus_start(
+        &state,
+        json!({
+            "title": "Capture Event Focus",
+            "target_seconds": 60,
+        }),
+        "start",
+    )
+    .await
+    .expect("start");
+    let session_id = started["id"].as_str().expect("session id").to_string();
+    let work_item_id = started["work_item_id"]
+        .as_str()
+        .expect("work item id")
+        .to_string();
+
+    let capture = handle_capture_create(
+        &state,
+        json!({
+            "text": "remember this as an event",
+        }),
+        "capture",
+    )
+    .await
+    .expect("capture");
+    let capture_id = capture["id"].as_str().expect("capture id").to_string();
+
+    assert_eq!(capture["state"].as_str(), Some("open"));
+    assert_eq!(
+        capture["focus_session_id"].as_str(),
+        Some(session_id.as_str())
+    );
+
+    let appended = handle_capture_append_to_work_item_event(
+        &state,
+        json!({
+            "id": capture_id,
+        }),
+        "append",
+    )
+    .await
+    .expect("append");
+
+    assert_eq!(
+        appended["work_item_id"].as_str(),
+        Some(work_item_id.as_str())
+    );
+    assert_eq!(appended["capture"]["state"].as_str(), Some("converted"));
+    assert_eq!(
+        appended["event"]["text"].as_str(),
+        Some("remember this as an event")
+    );
+    assert_eq!(
+        appended["event"]["focus_session_id"].as_str(),
+        Some(session_id.as_str())
+    );
+
+    let listed_events = handle_work_item_events(
+        &state,
+        json!({
+            "id": work_item_id,
+            "from": (Utc::now() - Duration::minutes(1)).to_rfc3339(),
+            "to": (Utc::now() + Duration::minutes(1)).to_rfc3339(),
+        }),
+        "list-events",
+    )
+    .await
+    .expect("list events");
+    let events = listed_events["events"].as_array().expect("events");
+    assert!(events.iter().any(|event| {
+        event["kind"].as_str() == Some("note_added")
+            && event["text"].as_str() == Some("remember this as an event")
+    }));
+
+    let inventory = handle_inventory_list(&state, json!({}), "inventory")
+        .await
+        .expect("inventory");
+    let active_items = inventory["items"]
+        .as_array()
+        .expect("items")
+        .iter()
+        .filter(|item| item["state"].as_str() == Some("active"))
+        .collect::<Vec<_>>();
+    assert_eq!(active_items.len(), 1);
+    assert_eq!(active_items[0]["id"].as_str(), Some(work_item_id.as_str()));
 }
 
 #[tokio::test]

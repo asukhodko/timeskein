@@ -278,7 +278,7 @@ nodes:
     effort: 2
     deps:
       - id: ts.day_review.export
-    notes: Work Item Events can be appended from the note editor, linked to the active focus session when applicable, listed through Local API, shown in the focus panel, and exported in UI/CLI Markdown reports. Edit/delete and capture-to-event promotion remain future work.
+    notes: Work Item Events can be appended from the note editor or promoted from Capture Inbox, linked to the active focus session when applicable, listed through Local API, shown in the focus panel, and exported in UI/CLI Markdown reports. Event edit/delete remain future work.
     x:
       ops:
         attention_class: current
@@ -359,7 +359,7 @@ nodes:
     effort: 3
     deps:
       - id: ts.capture.quick_ui
-    notes: Open captures can be resolved or converted to a Work Item, and dogfood reports show all captures created during the selected day, including resolved and converted items. The 2026-07-03 dogfood day created four captures during active focus, with two resolved, one converted, one intentionally left visible as follow-up, and zero capture failures. Append-as-Work-Item-event, edit/delete, and a fuller history view remain future work.
+    notes: Open captures can be resolved, converted to a Work Item, or appended as timestamped Work Item Events. Dogfood reports show all captures created during the selected day, including resolved and converted items, and promoted captures also appear in Work Item Events. The 2026-07-03 dogfood day created four captures during active focus, with two resolved, one converted, one intentionally left visible as follow-up, and zero capture failures. Capture edit/delete and a fuller history view remain future work.
     x:
       ops:
         attention_class: current
@@ -393,7 +393,7 @@ nodes:
     effort: 2
     deps:
       - id: ts.focus_core.dogfood_gate
-    notes: Fixed typing C/С opening Create, creating a new active Work Item, ambiguous last-seen timestamps, and added the first Capture Inbox baseline. Post-baseline work added Work Item title/basic-field editing, focus-block correction, Activity Zones, Work Item today/total time, timestamped Work Item Events, Command+Tab/Dock restore, non-always-on-top window policy, native menu-bar status refresh, and separate Total tracked / Work focus / Non-work tracked report totals. Remaining friction includes split resizing and capture-to-event promotion.
+    notes: Fixed typing C/С opening Create, creating a new active Work Item, ambiguous last-seen timestamps, and added the first Capture Inbox baseline. Post-baseline work added Work Item title/basic-field editing, focus-block correction, Activity Zones, Work Item today/total time, timestamped Work Item Events, capture-to-event promotion, Command+Tab/Dock restore, non-always-on-top window policy, native menu-bar status refresh, and separate Total tracked / Work focus / Non-work tracked report totals. Remaining friction includes split resizing and capture edit/delete.
     x:
       ops:
         attention_class: current
@@ -429,7 +429,7 @@ nodes:
     deps:
       - id: ts.hardening.package_app
       - id: ts.hardening.backup_reset
-    notes: "Dogfood Release Candidate doc defines the pass/fail gate. Dogfood Release Baseline records the accepted 2026-07-03 verdict and known limitations. Since acceptance, post-factum focus correction, Work Item title/type/Activity Zone editing, separate Total tracked / Work focus / Non-work tracked report totals, Activity Zone report totals, today/total Work Item time, timestamped Work Item Events, window restore, and native menu bar counter refresh are implemented. Remaining limitations include stop-note editing, Capture Inbox edit/delete, and capture-to-event promotion."
+    notes: "Dogfood Release Candidate doc defines the pass/fail gate. Dogfood Release Baseline records the accepted 2026-07-03 verdict and known limitations. Since acceptance, post-factum focus correction, Work Item title/type/Activity Zone editing, separate Total tracked / Work focus / Non-work tracked report totals, Activity Zone report totals, today/total Work Item time, timestamped Work Item Events, capture-to-event promotion, window restore, and native menu bar counter refresh are implemented. Remaining limitations include stop-note editing and Capture Inbox edit/delete."
     x:
       ops:
         attention_class: current

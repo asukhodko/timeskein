@@ -280,6 +280,12 @@ export interface CaptureConvertResponse {
   reused: boolean;
 }
 
+export interface CaptureAppendEventResponse {
+  capture: CaptureView;
+  event: WorkItemEventView;
+  work_item_id: string;
+}
+
 /**
  * Standard error codes
  */

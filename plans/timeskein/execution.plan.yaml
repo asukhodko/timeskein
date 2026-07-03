@@ -133,9 +133,9 @@ execution:
       progress: 1.0
       actual_start: "2026-07-03"
       actual_finish: "2026-07-03"
-      updated_at: "2026-07-03T21:20:00+03:00"
       confidence: 0.85
-      note: Implemented work_item.add_event and work_item.events in the Rust agent and mock API, added the note-editor append flow, showed latest day events in the focus panel, and included Work Item Events in UI/CLI Markdown reports plus smoke coverage. Event edit/delete and capture-to-event promotion remain future work.
+      updated_at: "2026-07-03T22:10:00+03:00"
+      note: Implemented work_item.add_event and work_item.events in the Rust agent and mock API, added the note-editor append flow, Capture Inbox promotion to Work Item Events, showed latest day events in the focus panel, and included Work Item Events in UI/CLI Markdown reports plus smoke coverage. Event edit/delete remain future work.
     ts.day_review.corrections:
       progress: 1.0
       actual_start: "2026-07-03"
@@ -175,9 +175,9 @@ execution:
       progress: 1.0
       actual_start: "2026-07-01"
       actual_finish: "2026-07-03"
-      updated_at: "2026-07-03T18:20:00+03:00"
       confidence: 0.9
-      note: Open captures can be resolved or converted to Work Items, and dogfood reports show Capture Activity plus separate open captures. The 2026-07-03 dogfood day created four captures during active focus, with two resolved, one converted, one left open as visible follow-up, and zero capture failures. Edit/delete and append-as-Work-Item-event remain future work.
+      updated_at: "2026-07-03T22:10:00+03:00"
+      note: Open captures can be resolved, converted to Work Items, or appended as Work Item Events, and dogfood reports show Capture Activity plus separate open captures. Promoted captures also appear in Work Item Events. The 2026-07-03 dogfood day created four captures during active focus, with two resolved, one converted, one left open as visible follow-up, and zero capture failures. Capture edit/delete remains future work.
     ts.hardening.smoke:
       progress: 0.99
       actual_start: "2026-06-30"
@@ -194,9 +194,9 @@ execution:
     ts.hardening.post_dogfood_friction:
       progress: 0.995
       actual_start: "2026-07-01"
-      updated_at: "2026-07-03T21:46:00+03:00"
       confidence: 0.85
-      note: Fixed C/С shortcut capture while typing, active Work Item creation, visible create errors, ambiguous last-seen labels, Work Item notes in reports, minimal Capture Inbox, Work Item basic editing, post-factum focus-block correction, Activity Zone totals, Work Item today/total list metrics, timestamped Work Item Events, Command+Tab/Dock restore, non-always-on-top window policy, native menu-bar status refresh, and separate Total tracked / Work focus / Non-work tracked report totals. Remaining friction is mostly capture-to-event promotion and review-flow polish.
+      updated_at: "2026-07-03T22:10:00+03:00"
+      note: Fixed C/С shortcut capture while typing, active Work Item creation, visible create errors, ambiguous last-seen labels, Work Item notes in reports, minimal Capture Inbox, Work Item basic editing, post-factum focus-block correction, Activity Zone totals, Work Item today/total list metrics, timestamped Work Item Events, capture-to-event promotion, Command+Tab/Dock restore, non-always-on-top window policy, native menu-bar status refresh, and separate Total tracked / Work focus / Non-work tracked report totals. Remaining friction is mostly capture edit/delete and review-flow polish.
     ts.hardening.package_app:
       progress: 1.0
       actual_start: "2026-06-30"

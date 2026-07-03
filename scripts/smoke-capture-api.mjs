@@ -74,6 +74,28 @@ const resolved = await rpc("capture.resolve", {
 });
 assert(resolved.state === "resolved", "capture.resolve did not resolve capture");
 
+const eventCandidate = await rpc("capture.create", {
+  text: `Smoke event ${new Date().toISOString()}`,
+});
+const appended = await rpc("capture.append_to_work_item_event", {
+  id: eventCandidate.id,
+});
+
+assert(appended.work_item_id === focus.work_item_id, "capture event was not attached to active Work Item");
+assert(appended.capture.state === "converted", "capture event did not mark capture as converted");
+assert(appended.capture.work_item_id === focus.work_item_id, "capture event did not link capture to Work Item");
+assert(appended.event.kind === "note_added", "capture event did not create a note_added Work Item event");
+assert(appended.event.text === eventCandidate.text, "capture event did not preserve capture text");
+assert(appended.event.focus_session_id === focus.id, "capture event did not preserve focus-session link");
+
+const events = await rpc("work_item.events", {
+  id: focus.work_item_id,
+});
+assert(
+  events.events.some((event) => event.id === appended.event.id),
+  "capture-created Work Item event is absent from work_item.events"
+);
+
 const convertCandidate = await rpc("capture.create", {
   text: `Smoke convert ${new Date().toISOString()}`,
 });

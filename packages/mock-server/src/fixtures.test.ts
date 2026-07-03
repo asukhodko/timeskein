@@ -46,6 +46,16 @@ test("capture inbox does not interrupt active focus", async () => {
   const converted = store.convertCaptureToWorkItem(capture.id);
   assert.equal(converted.capture?.state, "converted");
   assert.equal(store.getActiveFocusSession()?.id, focus.id);
+
+  const eventCapture = store.createCapture({
+    text: "this belongs to the current focus",
+  });
+  const appended = store.appendCaptureToWorkItemEvent(eventCapture.id);
+  assert.equal(appended.capture?.state, "converted");
+  assert.equal(appended.workItemId, focus.work_item_id);
+  assert.equal(appended.event?.text, eventCapture.text);
+  assert.equal(appended.event?.focus_session_id, focus.id);
+  assert.equal(store.getActiveFocusSession()?.id, focus.id);
 });
 
 test("focus correction update, split and work item edit are reflected in day data", async () => {

@@ -507,6 +507,23 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
     )
   }
 
+  const handleReviewAction = async (action: DayReviewAction) => {
+    if (action !== 'accept_tracking_accuracy') return
+
+    const actionId = createTelemetryActionId()
+    await logAppEvent({
+      source: 'ui',
+      kind: 'focus_correction_reviewed',
+      payload: {
+        action_id: actionId,
+        control: 'review_checklist',
+      },
+    })
+
+    const summary = await loadAppEventSummary(now)
+    setAppEventSummary(summary)
+  }
+
   const mutationError = startMutation.error || stopMutation.error || addDayEventMutation.error
 
   return (
@@ -602,7 +619,7 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
           </button>
         </div>
 
-        <DayReviewPanel items={reviewItems} />
+        <DayReviewPanel items={reviewItems} onAction={handleReviewAction} />
 
         {dayEvents.length > 0 && (
           <DayEventsPanel events={dayEvents} sessions={sessions} />
@@ -979,7 +996,10 @@ type DayReviewItem = {
   level: 'blocker' | 'review' | 'ok'
   title: string
   detail?: string
+  action?: DayReviewAction
 }
+
+type DayReviewAction = 'accept_tracking_accuracy'
 
 function buildDayReviewItems({
   sessions,
@@ -1099,11 +1119,12 @@ function buildDayReviewItems({
         title: 'Review failed focus corrections',
         detail: `${appTelemetry.correction_failures} failure${appTelemetry.correction_failures === 1 ? '' : 's'}`,
       })
-    } else if (appTelemetry.corrections === 0) {
+    } else if (appTelemetry.corrections === 0 && appTelemetry.correction_reviews === 0) {
       items.push({
         level: 'review',
         title: 'Confirm tracking accuracy or test correction',
         detail: 'No focus corrections applied today',
+        action: 'accept_tracking_accuracy',
       })
     }
   }
@@ -1127,7 +1148,13 @@ function buildDayReviewItems({
   return items
 }
 
-function DayReviewPanel({ items }: { items: DayReviewItem[] }) {
+function DayReviewPanel({
+  items,
+  onAction,
+}: {
+  items: DayReviewItem[]
+  onAction?: (action: DayReviewAction) => void
+}) {
   const blockers = items.filter((item) => item.level === 'blocker').length
   const reviews = items.filter((item) => item.level === 'review').length
   const statusClass = blockers > 0
@@ -1146,12 +1173,21 @@ function DayReviewPanel({ items }: { items: DayReviewItem[] }) {
       </div>
       <div className="grid gap-1">
         {items.map((item) => (
-          <div key={`${item.level}:${item.title}:${item.detail ?? ''}`} className="grid grid-cols-[auto_minmax(0,1fr)] gap-2">
+          <div key={`${item.level}:${item.title}:${item.detail ?? ''}`} className="grid grid-cols-[auto_minmax(0,1fr)_auto] gap-2">
             <span className={reviewItemDotClass(item.level)} />
             <span className="min-w-0 text-gray-300">
               <span className="font-medium text-gray-200">{item.title}</span>
               {item.detail && <span className="text-gray-500"> · {truncate(item.detail, 100)}</span>}
             </span>
+            {item.action && (
+              <button
+                type="button"
+                onClick={() => onAction?.(item.action!)}
+                className="rounded border border-amber-800 px-1.5 py-0.5 text-[11px] font-medium text-amber-100 hover:border-amber-500"
+              >
+                Accept
+              </button>
+            )}
           </div>
         ))}
       </div>
@@ -1656,7 +1692,7 @@ function formatAppTelemetryMarkdown(summary: AppEventSummary) {
     `Capture created/resolved/converted: ${summary.capture_created}/${summary.capture_resolved}/${summary.capture_converted}`,
     `Capture updated/deleted: ${summary.capture_updated}/${summary.capture_deleted}`,
     `Capture failures create/resolve/update/delete/convert: ${summary.capture_create_failures}/${summary.capture_resolve_failures}/${summary.capture_update_failures}/${summary.capture_delete_failures}/${summary.capture_convert_failures}`,
-    `Corrections requested/applied/failed: ${summary.correction_requests}/${summary.corrections}/${summary.correction_failures}`,
+    `Corrections requested/applied/reviewed/failed: ${summary.correction_requests}/${summary.corrections}/${summary.correction_reviews}/${summary.correction_failures}`,
     `API errors: ${summary.api_errors}`,
     `Already-active start attempts: ${summary.already_active_start_attempts}`,
     `Stale runtime recoveries: ${summary.stale_runtime_recoveries}`,

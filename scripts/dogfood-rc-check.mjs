@@ -458,8 +458,8 @@ function assessEvidence(evidence, minFocusSeconds) {
     reviewItems.push(`${evidence.telemetry.correctionFailures} focus correction failure event(s) found. Check whether tracking errors were still fixable before the final report.`);
   }
 
-  if (evidence.telemetry.corrections === 0 && evidence.sessions.length > 0) {
-    reviewItems.push("No focus correction telemetry found. If no correction was needed, explicitly accept that; otherwise test add/edit/split correction before closing the goal.");
+  if (evidence.telemetry.corrections === 0 && evidence.telemetry.correctionReviews === 0 && evidence.sessions.length > 0) {
+    reviewItems.push("No focus correction or correction-review telemetry found. If no correction was needed, explicitly accept that; otherwise test add/edit/split correction before closing the goal.");
   }
 
   if (evidence.gaps.length > 0) {
@@ -519,7 +519,7 @@ function buildRcReport(date, path, evidence, assessment, minFocusSeconds) {
     `- Copy failures/manual fallbacks: ${evidence.telemetry.copyFailures}/${evidence.telemetry.manualCopyFallbacks}`,
     `- Start/stop failures: ${evidence.telemetry.startFailures}/${evidence.telemetry.stopFailures}`,
     `- Capture failures: ${evidence.telemetry.captureFailures}`,
-    `- Corrections requested/applied/failed: ${evidence.telemetry.correctionRequests}/${evidence.telemetry.corrections}/${evidence.telemetry.correctionFailures}`,
+    `- Corrections requested/applied/reviewed/failed: ${evidence.telemetry.correctionRequests}/${evidence.telemetry.corrections}/${evidence.telemetry.correctionReviews}/${evidence.telemetry.correctionFailures}`,
     `- Window shown/hidden: ${evidence.telemetry.windowShown}/${evidence.telemetry.windowHidden}`,
     `- Window drag starts: ${evidence.telemetry.windowDragStarted}`,
     `- Duplicate Work Item title groups: ${evidence.duplicateTitles.length}`,
@@ -756,6 +756,7 @@ function summarizeEvents(events) {
     stopFailures: count("focus_stop_failed"),
     correctionRequests: count("focus_correction_requested"),
     corrections: count("focus_corrected"),
+    correctionReviews: count("focus_correction_reviewed"),
     correctionFailures: count("focus_correction_failed"),
     windowShown: count("window_shown"),
     windowHidden: count("window_hidden"),

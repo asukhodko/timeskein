@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS app_events (
         'focus_stop_failed',
         'focus_correction_requested',
         'focus_corrected',
+        'focus_correction_reviewed',
         'focus_correction_failed',
         'report_copy_requested',
         'report_copied',

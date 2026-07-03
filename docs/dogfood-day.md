@@ -310,7 +310,7 @@ Use `Copy MD` only when the raw day picture is enough.
 If Today or the report shows `Open Gap`, there was a significant interval after the last stopped block with no active focus block. Treat it as either a real break or a lost-tracking interval during review.
 If the report shows `Open Captures`, edit, delete, resolve, or convert them before considering the day fully reviewed.
 If Today or the report shows `Review Checklist`, use it as the minimal evening queue: active-state blockers must be cleared, review items should be classified or consciously accepted before treating the report as final.
-The checklist also flags weak day evidence, such as all blocks landing in one Activity Zone, zero non-work tracked time, no Work Item notes/events for context, or no focus correction applied during a day where tracking accuracy should be confirmed.
+The checklist also flags weak day evidence, such as all blocks landing in one Activity Zone, zero non-work tracked time, no Work Item notes/events for context, or no focus correction evidence. If the timeline is already accurate, use `Accept` on the tracking-accuracy review item so the report records that the correction pass was consciously done.
 If a focus block is still active, or a Work Item is still marked active, the UI labels the report as `Copy Draft` and the Markdown includes a warning. The CLI report uses the same draft warning. Stop the active block or clear the active Work Item before using the report as the final day artifact.
 If clipboard access is denied, Timeskein shows a selected text box with the Markdown. Copy it manually from there.
 

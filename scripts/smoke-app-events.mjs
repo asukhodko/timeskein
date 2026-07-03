@@ -37,7 +37,8 @@ try {
       ('e17', '2026-06-30T06:58:00Z', 'ui', 'capture_convert_failed', NULL, 's1', '{"action_id":"c5","control":"make_item_button","error_code":"not_found"}'),
       ('e18', '2026-06-30T07:10:00Z', 'ui', 'focus_correction_requested', 'w1', 's1', '{"action_id":"k1","control":"edit_block"}'),
       ('e19', '2026-06-30T07:10:01Z', 'ui', 'focus_corrected', 'w1', 's1', '{"action_id":"k1","control":"edit_block"}'),
-      ('e20', '2026-06-30T07:11:00Z', 'ui', 'focus_correction_failed', 'w1', 's1', '{"action_id":"k2","control":"split_block","error_code":"validation_error"}');
+      ('e20', '2026-06-30T07:11:00Z', 'ui', 'focus_correction_failed', 'w1', 's1', '{"action_id":"k2","control":"split_block","error_code":"validation_error"}'),
+      ('e21', '2026-06-30T07:12:00Z', 'ui', 'focus_correction_reviewed', NULL, NULL, '{"action_id":"k3","control":"review_checklist"}');
   `);
 
   const { stdout: metricsStdout } = await execFileAsync(
@@ -46,13 +47,13 @@ try {
     { cwd: repoRoot }
   );
   assert(metricsStdout.includes("## App Telemetry"), "metrics did not include App Telemetry header");
-  assert(metricsStdout.includes("Total events: 20"), "metrics did not count events");
+  assert(metricsStdout.includes("Total events: 21"), "metrics did not count events");
   assert(metricsStdout.includes("Start requests: 1"), "metrics did not count start requests");
   assert(metricsStdout.includes("Manual copy fallbacks: 1"), "metrics did not count manual copy fallbacks");
   assert(metricsStdout.includes("Capture created/resolved/converted: 1/1/0"), "metrics did not count capture outcomes");
   assert(metricsStdout.includes("Capture updated/deleted: 1/1"), "metrics did not count capture cleanup");
   assert(metricsStdout.includes("Capture failures create/resolve/update/delete/convert: 0/0/0/0/1"), "metrics did not count capture failures");
-  assert(metricsStdout.includes("Corrections requested/applied/failed: 1/1/1"), "metrics did not count corrections");
+  assert(metricsStdout.includes("Corrections requested/applied/reviewed/failed: 1/1/1/1"), "metrics did not count corrections");
   assert(metricsStdout.includes("Stale runtime recoveries: 1"), "metrics did not count stale recoveries");
   assert(metricsStdout.includes("Average start latency: 1000ms"), "metrics did not calculate start latency");
 

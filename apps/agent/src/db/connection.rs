@@ -179,7 +179,7 @@ impl Database {
 
         if table_sql
             .as_deref()
-            .is_some_and(|sql| sql.contains("focus_correction_requested"))
+            .is_some_and(|sql| sql.contains("focus_correction_reviewed"))
         {
             return Ok(());
         }

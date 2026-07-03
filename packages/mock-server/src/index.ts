@@ -70,6 +70,7 @@ const APP_EVENT_KINDS = new Set<string>([
   "focus_stop_failed",
   "focus_correction_requested",
   "focus_corrected",
+  "focus_correction_reviewed",
   "focus_correction_failed",
   "report_copy_requested",
   "report_copied",

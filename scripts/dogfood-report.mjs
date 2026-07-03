@@ -429,7 +429,7 @@ function buildReviewChecklistItems({
         title: "Review failed focus corrections",
         detail: `${correctionTelemetry.failures} failure${correctionTelemetry.failures === 1 ? "" : "s"}`,
       });
-    } else if (correctionTelemetry.applied === 0) {
+    } else if (correctionTelemetry.applied === 0 && correctionTelemetry.reviewed === 0) {
       items.push({
         level: "review",
         title: "Confirm tracking accuracy or test correction",
@@ -450,13 +450,14 @@ function buildReviewChecklistItems({
 }
 
 function parseCorrectionTelemetry(markdown) {
-  const match = markdown.match(/Corrections requested\/applied\/failed:\s*(\d+)\/(\d+)\/(\d+)/);
+  const match = markdown.match(/Corrections requested\/applied\/reviewed\/failed:\s*(\d+)\/(\d+)\/(\d+)\/(\d+)/);
   if (!match) return undefined;
 
   return {
     requested: Number(match[1]),
     applied: Number(match[2]),
-    failures: Number(match[3]),
+    reviewed: Number(match[3]),
+    failures: Number(match[4]),
   };
 }
 

@@ -61,7 +61,7 @@ try {
   assert(good.stdout.includes("Day Events with Activity Zone: 1"), "good day zoned Day Events count is missing");
   assert(good.stdout.includes("Day Events during active focus: 1"), "good day active-focus Day Events count is missing");
   assert(good.stdout.includes("Work Item Events: 1"), "good day Work Item Events count is missing");
-  assert(good.stdout.includes("Corrections requested/applied/failed: 1/1/0"), "good day correction telemetry is missing");
+  assert(good.stdout.includes("Corrections requested/applied/reviewed/failed: 1/1/0/0"), "good day correction telemetry is missing");
   assert(good.stdout.includes("Window shown/hidden: 1/1"), "good day window telemetry is missing");
   assert(good.stdout.includes("## By Activity Zone"), "good day zone section is missing");
   assert(good.stdout.includes("## Day Events"), "good day Day Events section is missing");
@@ -79,6 +79,24 @@ try {
   const savedMarkdown = await readFile(savedPath, "utf8");
   assert(savedMarkdown.includes("# Timeskein dogfood RC check - 2026-06-30"), "saved RC check title is missing");
   assert(savedMarkdown.includes("Manual RC Verdict"), "saved RC check manual verdict is missing");
+
+  const reviewedOnlyDb = join(tempDir, "reviewed-only.db");
+  await copyDb(goodDb, reviewedOnlyDb);
+  await runSql(reviewedOnlyDb, `
+    DELETE FROM app_events WHERE kind IN ('focus_correction_requested', 'focus_corrected');
+    INSERT INTO app_events (id, ts, source, kind, payload)
+    VALUES ('e9', '2026-06-30T10:06:00Z', 'ui', 'focus_correction_reviewed', '{"action_id":"k2","control":"review_checklist"}');
+  `);
+  const reviewedOnly = await runRcCheck(reviewedOnlyDb);
+  assert(reviewedOnly.code === 0, "accepted correction review should not block");
+  assert(
+    reviewedOnly.stdout.includes("Corrections requested/applied/reviewed/failed: 0/0/1/0"),
+    "accepted correction review telemetry is missing"
+  );
+  assert(
+    reviewedOnly.stdout.includes("No focus correction or correction-review telemetry found") === false,
+    "accepted correction review should clear missing-correction review item"
+  );
 
   const openCaptureDb = join(tempDir, "open-capture.db");
   await copyDb(goodDb, openCaptureDb);

@@ -156,6 +156,22 @@ try {
   );
 
   await runSql(`
+    INSERT INTO app_events (id, ts, source, kind, payload)
+    VALUES ('ae3', '2026-06-30T07:55:00Z', 'ui', 'focus_correction_reviewed', '{"action_id":"k2","control":"review_checklist"}');
+  `);
+
+  const { stdout: reviewedCorrectionStdout } = await execFileAsync(
+    "node",
+    [join(repoRoot, "scripts/dogfood-report.mjs"), "--db", dbPath, "--date", "2026-06-30"],
+    { cwd: repoRoot }
+  );
+
+  assert(
+    reviewedCorrectionStdout.includes("Confirm tracking accuracy or test correction") === false,
+    "report review checklist should not flag correction evidence after explicit review"
+  );
+
+  await runSql(`
     INSERT INTO work_items (id, title, type, state, pinned, created_at, updated_at, last_seen_at)
     VALUES ('w3', 'Stuck Active Item', 'task', 'active', 0, '2026-06-30T08:00:00Z', '2026-06-30T08:00:00Z', '2026-06-30T08:00:00Z');
 

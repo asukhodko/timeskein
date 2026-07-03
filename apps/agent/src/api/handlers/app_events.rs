@@ -185,6 +185,7 @@ fn build_summary(events: Vec<AppEvent>) -> serde_json::Value {
         "stop_failures": count(&by_kind, "focus_stop_failed"),
         "correction_requests": count(&by_kind, "focus_correction_requested"),
         "corrections": count(&by_kind, "focus_corrected"),
+        "correction_reviews": count(&by_kind, "focus_correction_reviewed"),
         "correction_failures": count(&by_kind, "focus_correction_failed"),
         "api_errors": count(&by_kind, "api_error"),
         "copy_failures": count(&by_kind, "report_copy_failed"),

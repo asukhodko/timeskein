@@ -424,6 +424,7 @@ export class MockDataStore {
       stop_failures: count("focus_stop_failed"),
       correction_requests: count("focus_correction_requested"),
       corrections: count("focus_corrected"),
+      correction_reviews: count("focus_correction_reviewed"),
       correction_failures: count("focus_correction_failed"),
       api_errors: count("api_error"),
       copy_failures: count("report_copy_failed"),

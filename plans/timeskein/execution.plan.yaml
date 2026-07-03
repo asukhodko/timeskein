@@ -164,11 +164,11 @@ execution:
       confidence: 0.9
       note: Open captures can be resolved or converted to Work Items, and dogfood reports show Capture Activity plus separate open captures. The 2026-07-03 dogfood day created four captures during active focus, with two resolved, one converted, one left open as visible follow-up, and zero capture failures. Edit/delete and append-as-timestamped-note remain future work.
     ts.hardening.smoke:
-      progress: 0.97
+      progress: 0.99
       actual_start: "2026-06-30"
-      updated_at: "2026-07-03T19:00:00+03:00"
+      updated_at: "2026-07-03T20:05:00+03:00"
       confidence: 0.9
-      note: Added smoke:capture-api, smoke:corrections-api, packaged-app capture and correction checks, Capture Inbox telemetry checks, older app_events constraint migration coverage, and dogfood:rc-check smoke coverage for release-candidate evidence. Browser UI smoke is still manual.
+      note: "Added pnpm test as a fast regression suite: contracts build, TypeScript typecheck, Rust agent integration tests against temporary SQLite, mock-store unit tests, mock API smoke, and key SQLite/report smoke. dogfood:preflight also runs cargo test and mock-store tests before the macOS packaged-app smoke. Browser UI smoke is still manual."
     ts.hardening.release_notes:
       progress: 1.0
       actual_start: "2026-07-01"

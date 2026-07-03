@@ -44,7 +44,8 @@
     "smoke:app-events": "node scripts/smoke-app-events.mjs",
     "typecheck": "pnpm -r typecheck",
     "lint": "pnpm -r lint",
-    "test": "pnpm -r test"
+    "test": "node scripts/test-suite.mjs",
+    "test:full": "pnpm dogfood:preflight"
   },
   "devDependencies": {
     "typescript": "^5.7.3"

@@ -193,6 +193,21 @@ python3 -m specs.v3.tools.cli render gantt ../../plans/timeskein/*.plan.yaml --v
 
 ### Focus Session API Smoke
 
+Fast local test suite:
+
+```bash
+pnpm test
+```
+
+This runs contracts build, TypeScript typecheck, Rust agent tests, mock-store
+tests, mock API smoke, and key SQLite/report smoke checks.
+
+Full dogfood preflight, including macOS `.app` build and packaged-app smoke:
+
+```bash
+pnpm test:full
+```
+
 With the mock server running:
 
 ```bash

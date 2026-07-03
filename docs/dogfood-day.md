@@ -148,12 +148,14 @@ Current status: the macOS dogfood release baseline was accepted on 2026-07-03. T
 
 | Requirement | Evidence before dogfood | Dogfood check |
 | --- | --- | --- |
+| Fast automated regression suite | `pnpm test` runs contracts build, TypeScript typecheck, Rust agent tests, mock-store tests, mock API smoke, and key SQLite/report smoke checks | The local baseline is green before the day starts |
 | Fast start by title | `pnpm smoke:focus-api` and `pnpm smoke:macos-app` verify `focus.start` creates or reuses a Work Item | Starting a block feels cheap enough during real work |
 | No duplicate Work Items by title | Smoke checks `focus.start` and `work_item.create` title reuse | No duplicate Work Items appear from normal typing |
 | One active timer and one active Work Item | Smoke checks switching by title, by Work Item state, deleting the active Work Item, SQLite single-active guards, and startup normalization | No visible split brain while switching tasks |
 | Stop and later continue same Work Item | Smoke checks repeat `focus.start` with the same title | Continuing yesterday/today items is discoverable |
 | Show, hide, move window | Implemented in macOS shell and header drag | Window behavior does not irritate during the day |
 | Today block list and totals | `focus.list` and UI show block duration, time range, stop note, total focus, entrances | The list matches remembered work blocks |
+| Post-factum correction | `cargo test -p timeskein-agent`, `pnpm smoke:corrections-api`, and `pnpm smoke:macos-app` verify update, split, reassignment, Work Item edit, and corrected day-list data | Wrong Work Item assignments can be fixed before copying the final report |
 | Significant gaps | UI and Markdown show gap ranges of 20+ minutes | Long breaks and lost intervals are visible enough |
 | Capture Inbox | `pnpm smoke:capture-api`, `pnpm smoke:mock-api`, and `pnpm smoke:macos-app` verify capture create/list/resolve/convert without interrupting focus | Incoming events can be remembered without switching away from the current block |
 | Markdown export | `Copy Report` exports timeline, `By Work Item`, gaps, Capture Activity, open captures, app telemetry, and review prompts; `Copy MD` exports the raw day picture; failed clipboard writes show selected Markdown; `pnpm smoke:export-focus-day` and `pnpm smoke:dogfood-report` verify SQLite fallbacks | Copied note is enough for evening analysis |

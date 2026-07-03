@@ -91,8 +91,11 @@ CI=true pnpm install --frozen-lockfile
 pnpm --filter @timeskein/contracts build
 pnpm --filter @timeskein/desktop build:frontend
 pnpm typecheck
+cargo test -p timeskein-agent
 cargo check -p timeskein-agent
 cargo check -p timeskein-desktop
+pnpm --filter @timeskein/mock-server test
+pnpm test
 pnpm smoke:focus-api
 pnpm smoke:corrections-api
 pnpm smoke:capture-api
@@ -159,6 +162,9 @@ Dogfood launch helper:
 Runtime smoke in browser/mock mode:
 
 - mock server starts on localhost
+- `pnpm test` runs the fast local suite: contracts build, TypeScript typecheck, Rust agent tests, mock-store tests, mock API smoke, and key SQLite/report smoke checks
+- `cargo test -p timeskein-agent` includes handler-level integration tests against a temporary SQLite database for focus start/switch coherence and post-factum correction
+- `pnpm --filter @timeskein/mock-server test` covers mock-store invariants for one-active focus, Capture Inbox non-interruption, and correction update/split/edit reflection
 - `focus.start`, `focus.stop`, `focus.list`, and Work Item focus switching work against the mock API
 - `pnpm smoke:focus-api` verifies the same flow and refuses to run over an existing active focus session
 - `pnpm smoke:corrections-api` verifies focus.update, focus.split, Work Item edit, duplicate-title rejection, and corrected day-list data

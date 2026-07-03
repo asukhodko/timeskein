@@ -96,6 +96,15 @@ impl Database {
 
         Ok(())
     }
+
+    pub async fn delete_capture(&self, id: Uuid) -> Result<bool> {
+        let result = sqlx::query("DELETE FROM captures WHERE id = ?1")
+            .bind(id.to_string())
+            .execute(self.pool())
+            .await?;
+
+        Ok(result.rows_affected() > 0)
+    }
 }
 
 fn capture_from_row(row: &sqlx::sqlite::SqliteRow) -> Result<Capture> {

@@ -162,6 +162,8 @@ async fn dispatch_method(
         "capture.create" => handle_capture_create(state, params, request_id).await,
         "capture.list" => handle_capture_list(state, params, request_id).await,
         "capture.resolve" => handle_capture_resolve(state, params, request_id).await,
+        "capture.update" => handle_capture_update(state, params, request_id).await,
+        "capture.delete" => handle_capture_delete(state, params, request_id).await,
         "capture.convert_to_work_item" => {
             handle_capture_convert_to_work_item(state, params, request_id).await
         }

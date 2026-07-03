@@ -125,7 +125,7 @@ Runtime smoke on macOS:
 - `focus.start`, `focus.stop`, `focus.list`, and Work Item focus switching work against the real SQLite-backed agent
 - `pnpm smoke:macos-app` launches the packaged `.app` binary with a temporary home directory and verifies embedded-agent `agent.status`, `inventory.list`, focus start/stop/list, title reuse, focus switching, active Work Item deletion, and active focus restoration after app restart
 - `pnpm smoke:macos-app` also verifies post-factum focus correction: stopped block update, split, Work Item reassignment, Work Item edit, and day-list reflection
-- `pnpm smoke:macos-app` also verifies Capture Inbox create/resolve/convert while ensuring capture actions do not interrupt the active focus session
+- `pnpm smoke:macos-app` also verifies Capture Inbox create/update/delete/resolve/convert/append-event while ensuring capture actions do not interrupt the active focus session
 - `pnpm smoke:macos-app` also verifies startup normalization of legacy active Work Items, orphan active focus sessions, stale `agent.lock` / `agent.port` recovery, and migration of older `app_events` kind constraints
 - `pnpm smoke:export-focus-day` verifies fallback Markdown export, including Work Item notes and timestamped Work Item Events for touched items, against a temporary SQLite database
 - `pnpm smoke:app-events` verifies the local app-event migration, metrics summary, and Markdown export against a temporary SQLite database
@@ -164,11 +164,11 @@ Runtime smoke in browser/mock mode:
 - mock server starts on localhost
 - `pnpm test` runs the fast local suite: contracts build, TypeScript typecheck, Rust agent tests, mock-store tests, mock API smoke, and key SQLite/report smoke checks
 - `cargo test -p timeskein-agent` includes handler-level integration tests against a temporary SQLite database for focus start/switch coherence and post-factum correction
-- `pnpm --filter @timeskein/mock-server test` covers mock-store invariants for one-active focus, Capture Inbox non-interruption, and correction update/split/edit reflection
+- `pnpm --filter @timeskein/mock-server test` covers mock-store invariants for one-active focus, Capture Inbox non-interruption and cleanup, and correction update/split/edit reflection
 - `focus.start`, `focus.stop`, `focus.list`, and Work Item focus switching work against the mock API
 - `pnpm smoke:focus-api` verifies the same flow and refuses to run over an existing active focus session
 - `pnpm smoke:corrections-api` verifies focus.update, focus.split, Work Item edit, duplicate-title rejection, and corrected day-list data
-- `pnpm smoke:capture-api` verifies Capture Inbox create/list/resolve/convert without interrupting focus
+- `pnpm smoke:capture-api` verifies Capture Inbox create/list/update/delete/resolve/convert/append-event without interrupting focus
 - `pnpm smoke:mock-api` starts an isolated mock server, runs `smoke:focus-api`, `smoke:corrections-api`, and `smoke:capture-api`, and stops it
 - mock API also exposes `app_event.log`, `app_event.list`, and `app_event.summary`
 - manual browser UI smoke was checked on 2026-06-30: start by typed title, switch by typed title, stop with note, Today list, totals, and `Copy Report` Markdown with both Work Items
@@ -231,7 +231,7 @@ Third real dogfood day and release baseline:
 - Capture Inbox for incoming events that should not interrupt the current focus block
 - Captures link to the active focus session when one exists
 - Open captures are visible in the focus panel
-- Captures can be resolved as done or converted into Work Items
+- Open captures can be edited, deleted, resolved as done, or converted into Work Items
 - Captures can be appended as timestamped Work Item Events, using the linked focus session's Work Item or the currently selected Work Item as the target
 - The dogfood report shows Capture Activity for captures created during the day, including captures that were already resolved or converted
 - Open captures appear separately in the UI and CLI dogfood report for evening review
@@ -260,7 +260,7 @@ Third real dogfood day and release baseline:
 - Destructive confirmation dialogs focus `Cancel` by default and do not confirm on `Enter`
 - Focus input is refocused when the window becomes visible and no block is active
 - SQLite storage through the embedded Rust agent
-- Local app-event telemetry for dogfood analysis: app start, agent start/reuse/recovery, show/hide/drag, focus start/switch/stop, Capture Inbox create/resolve/convert, report copy, manual copy fallback, and API errors
+- Local app-event telemetry for dogfood analysis: app start, agent start/reuse/recovery, show/hide/drag, focus start/switch/stop, Capture Inbox create/update/delete/resolve/convert, report copy, manual copy fallback, and API errors
 - Mock server for browser development
 
 ## Focus Session Data
@@ -307,7 +307,7 @@ The current baseline stores:
 - optional link to a Work Item after conversion;
 - created, updated, resolved, and converted timestamps.
 
-Capture is intentionally separate from focus sessions. Creating, resolving, or converting a capture must not stop or switch the active timer. Converting a capture creates or reuses a Work Item by normalized title, but does not start focus on that Work Item. The dogfood report includes a `Capture Activity` table for all captures created during the selected day, with state, focus context, and outcome. The RC checker also counts how many captures were linked to an active focus session, because that is the real evidence for interruption handling during focus.
+Capture is intentionally separate from focus sessions. Creating, editing, deleting, resolving, or converting a capture must not stop or switch the active timer. Open captures can be edited or deleted during review; processed captures stay as day history. Converting a capture creates or reuses a Work Item by normalized title, but does not start focus on that Work Item. The dogfood report includes a `Capture Activity` table for all captures created during the selected day, with state, focus context, and outcome. The RC checker also counts how many captures were linked to an active focus session, because that is the real evidence for interruption handling during focus.
 
 ## Work Item Events
 
@@ -334,7 +334,7 @@ Tracked event groups:
 - app and embedded-agent startup, reuse, and stale runtime recovery;
 - window show, hide, and drag start;
 - focus start, switch, stop requests and outcomes;
-- Capture Inbox create, resolve, convert requests and outcomes;
+- Capture Inbox create, update, delete, resolve, convert requests and outcomes;
 - report copy attempts, clipboard failures, and manual copy fallback;
 - Local API errors.
 
@@ -373,7 +373,7 @@ On multi-monitor macOS setups, the tray/status item is controlled by the system 
 - Focus Session has a compact day list and Markdown copy, but not a full reporting/JSON/CSV export view yet.
 - App-event telemetry has CLI/report output, but no in-app inspection screen yet.
 - Post-factum correction is intentionally basic: stopped blocks can be edited and split, but there is no drag timeline, bulk edit, or dedicated correction wizard yet.
-- Capture Inbox is minimal: no edit/delete UI yet, and no separate capture history screen beyond the open list and dogfood report.
+- Capture Inbox is still compact: open captures can be edited or deleted, but there is no separate capture history screen beyond the open list and dogfood report.
 - Work Item Events are append-only and report-visible, but they cannot be edited or deleted yet.
 - Work Item notes are included in day reports for touched items, but they remain mutable descriptions rather than dated observations.
 - macOS window restore and menu bar status refresh were newly fixed after the third dogfood day, but still need one real dogfood pass before being considered fully proven.

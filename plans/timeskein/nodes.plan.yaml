@@ -359,7 +359,7 @@ nodes:
     effort: 3
     deps:
       - id: ts.capture.quick_ui
-    notes: Open captures can be resolved, converted to a Work Item, or appended as timestamped Work Item Events. Dogfood reports show all captures created during the selected day, including resolved and converted items, and promoted captures also appear in Work Item Events. The 2026-07-03 dogfood day created four captures during active focus, with two resolved, one converted, one intentionally left visible as follow-up, and zero capture failures. Capture edit/delete and a fuller history view remain future work.
+    notes: Open captures can be edited, deleted, resolved, converted to a Work Item, or appended as timestamped Work Item Events. Dogfood reports show all captures created during the selected day, including resolved and converted items, and promoted captures also appear in Work Item Events. The 2026-07-03 dogfood day created four captures during active focus, with two resolved, one converted, one intentionally left visible as follow-up, and zero capture failures. A fuller capture history view remains future work.
     x:
       ops:
         attention_class: current
@@ -393,7 +393,7 @@ nodes:
     effort: 2
     deps:
       - id: ts.focus_core.dogfood_gate
-    notes: Fixed typing C/С opening Create, creating a new active Work Item, ambiguous last-seen timestamps, and added the first Capture Inbox baseline. Post-baseline work added Work Item title/basic-field editing, focus-block correction, Activity Zones, Work Item today/total time, timestamped Work Item Events, capture-to-event promotion, Command+Tab/Dock restore, non-always-on-top window policy, native menu-bar status refresh, and separate Total tracked / Work focus / Non-work tracked report totals. Remaining friction includes split resizing and capture edit/delete.
+    notes: Fixed typing C/С opening Create, creating a new active Work Item, ambiguous last-seen timestamps, and added the first Capture Inbox baseline. Post-baseline work added Work Item title/basic-field editing, focus-block correction, Activity Zones, Work Item today/total time, timestamped Work Item Events, capture-to-event promotion, capture edit/delete for open items, Command+Tab/Dock restore, non-always-on-top window policy, native menu-bar status refresh, and separate Total tracked / Work focus / Non-work tracked report totals. Remaining friction includes split resizing and review-flow polish.
     x:
       ops:
         attention_class: current
@@ -429,7 +429,7 @@ nodes:
     deps:
       - id: ts.hardening.package_app
       - id: ts.hardening.backup_reset
-    notes: "Dogfood Release Candidate doc defines the pass/fail gate. Dogfood Release Baseline records the accepted 2026-07-03 verdict and known limitations. Since acceptance, post-factum focus correction, Work Item title/type/Activity Zone editing, separate Total tracked / Work focus / Non-work tracked report totals, Activity Zone report totals, today/total Work Item time, timestamped Work Item Events, capture-to-event promotion, window restore, and native menu bar counter refresh are implemented. Remaining limitations include stop-note editing and Capture Inbox edit/delete."
+    notes: "Dogfood Release Candidate doc defines the pass/fail gate. Dogfood Release Baseline records the accepted 2026-07-03 verdict and known limitations. Since acceptance, post-factum focus correction, Work Item title/type/Activity Zone editing, separate Total tracked / Work focus / Non-work tracked report totals, Activity Zone report totals, today/total Work Item time, timestamped Work Item Events, capture-to-event promotion, capture edit/delete for open items, window restore, and native menu bar counter refresh are implemented. Remaining limitations include richer correction/review UI and Work Item Event edit/delete."
     x:
       ops:
         attention_class: current

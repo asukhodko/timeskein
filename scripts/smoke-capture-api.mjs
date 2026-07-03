@@ -69,10 +69,46 @@ assert(
   "capture.list did not include the open capture"
 );
 
+const editable = await rpc("capture.create", {
+  text: `Smoke editable ${new Date().toISOString()}`,
+});
+const updated = await rpc("capture.update", {
+  id: editable.id,
+  text: `Smoke edited ${new Date().toISOString()}`,
+});
+assert(updated.state === "open", "capture.update changed capture state");
+assert(updated.text.startsWith("Smoke edited"), "capture.update did not update text");
+
+const deletable = await rpc("capture.create", {
+  text: `Smoke delete ${new Date().toISOString()}`,
+});
+const deleted = await rpc("capture.delete", {
+  id: deletable.id,
+});
+assert(deleted.success === true, "capture.delete did not report success");
+const openAfterDelete = await rpc("capture.list", {
+  state: ["open"],
+});
+assert(
+  !openAfterDelete.captures.some((item) => item.id === deletable.id),
+  "capture.delete did not remove open capture"
+);
+
 const resolved = await rpc("capture.resolve", {
   id: capture.id,
 });
 assert(resolved.state === "resolved", "capture.resolve did not resolve capture");
+
+let updateProcessedFailed = false;
+try {
+  await rpc("capture.update", {
+    id: capture.id,
+    text: "should not update processed capture",
+  });
+} catch {
+  updateProcessedFailed = true;
+}
+assert(updateProcessedFailed, "capture.update allowed editing a processed capture");
 
 const eventCandidate = await rpc("capture.create", {
   text: `Smoke event ${new Date().toISOString()}`,
@@ -132,6 +168,7 @@ console.log(
       ok: true,
       api_url: apiUrl,
       capture_id: capture.id,
+      updated_capture_id: updated.id,
       converted_work_item_id: converted.work_item_id,
     },
     null,

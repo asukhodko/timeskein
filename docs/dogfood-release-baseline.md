@@ -50,11 +50,12 @@ These were accepted limitations for the dogfood baseline, not blockers:
   but there is no drag timeline, bulk edit, or dedicated correction workflow yet.
 - Work Item editing covers title, type, Activity Zone, and note; refs, state,
   pinning, touch, and delete remain separate actions.
-- Stop notes cannot be edited after the block is stopped.
+- Stop notes can be edited through the basic focus-block correction dialog, but
+  there is no dedicated quick-edit flow yet.
 - Work Item notes are mutable descriptions; timestamped observations are stored
   separately as Work Item Events.
-- Capture Inbox cannot edit or delete captures yet. Since baseline acceptance,
-  captures can be appended as Work Item Events.
+- Capture Inbox can edit/delete open captures and append captures as Work Item
+  Events. A fuller capture history screen is not implemented yet.
 - Activity zones are Work Item-level only. Reports now separate `Total tracked`,
   `Work focus`, non-work tracked time, and per-zone totals, but there is no
   per-session zone override yet.
@@ -76,6 +77,7 @@ Post-dogfood correction and first review enrichment are now partly implemented:
 - Timestamped Work Item Events can be appended from the note editor and appear
   in UI/CLI day reports.
 - Captures can be appended as timestamped Work Item Events.
+- Open captures can be edited or deleted before the final day report.
 
 Remaining entry and review polish:
 

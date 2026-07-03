@@ -46,6 +46,29 @@ try {
     currentAfterCapture.session?.id === started.id,
     "capture.create interrupted the active focus session"
   );
+  const editableCapture = await rpc(port, "capture.create", {
+    text: `Packaged smoke editable capture ${new Date().toISOString()}`,
+  });
+  const updatedCapture = await rpc(port, "capture.update", {
+    id: editableCapture.id,
+    text: `Packaged smoke edited capture ${new Date().toISOString()}`,
+  });
+  assert(updatedCapture.state === "open", "capture.update changed open capture state");
+  assert(updatedCapture.text.startsWith("Packaged smoke edited"), "capture.update did not update text");
+  const deletableCapture = await rpc(port, "capture.create", {
+    text: `Packaged smoke deletable capture ${new Date().toISOString()}`,
+  });
+  const deletedCapture = await rpc(port, "capture.delete", {
+    id: deletableCapture.id,
+  });
+  assert(deletedCapture.success === true, "capture.delete did not report success");
+  const openCapturesAfterDelete = await rpc(port, "capture.list", {
+    state: ["open"],
+  });
+  assert(
+    !openCapturesAfterDelete.captures.some((item) => item.id === deletableCapture.id),
+    "capture.delete did not remove open capture in packaged app"
+  );
   const resolvedCapture = await rpc(port, "capture.resolve", {
     id: capture.id,
   });

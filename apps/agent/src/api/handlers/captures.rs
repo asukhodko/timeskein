@@ -98,6 +98,7 @@ pub async fn handle_capture_resolve(
     let id = get_capture_id(&params, request_id)?;
     let state = state.write().await;
     let mut capture = get_existing_capture(&state, id, request_id).await?;
+    ensure_open_capture(&capture, request_id)?;
 
     capture.resolve();
     state.db.update_capture(&capture).await.map_err(|error| {
@@ -105,6 +106,58 @@ pub async fn handle_capture_resolve(
     })?;
 
     Ok(serde_json::to_value(crate::domain::CaptureView::from(capture)).unwrap())
+}
+
+pub async fn handle_capture_update(
+    state: &Arc<RwLock<AppState>>,
+    params: serde_json::Value,
+    request_id: &str,
+) -> Result<serde_json::Value, RpcResponse> {
+    let id = get_capture_id(&params, request_id)?;
+    let text = params
+        .get("text")
+        .and_then(|value| value.as_str())
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .ok_or_else(|| {
+            RpcResponse::error(
+                request_id.to_string(),
+                "validation_error",
+                "Capture text is required",
+            )
+        })?;
+
+    let state = state.write().await;
+    let mut capture = get_existing_capture(&state, id, request_id).await?;
+    ensure_open_capture(&capture, request_id)?;
+
+    capture.update_text(text.to_string());
+    state.db.update_capture(&capture).await.map_err(|error| {
+        RpcResponse::error(request_id.to_string(), "internal_error", &error.to_string())
+    })?;
+
+    Ok(serde_json::to_value(crate::domain::CaptureView::from(capture)).unwrap())
+}
+
+pub async fn handle_capture_delete(
+    state: &Arc<RwLock<AppState>>,
+    params: serde_json::Value,
+    request_id: &str,
+) -> Result<serde_json::Value, RpcResponse> {
+    let id = get_capture_id(&params, request_id)?;
+
+    let state = state.write().await;
+    let capture = get_existing_capture(&state, id, request_id).await?;
+    ensure_open_capture(&capture, request_id)?;
+
+    let deleted = state.db.delete_capture(id).await.map_err(|error| {
+        RpcResponse::error(request_id.to_string(), "internal_error", &error.to_string())
+    })?;
+
+    Ok(serde_json::json!({
+        "success": deleted,
+        "id": id.to_string(),
+    }))
 }
 
 pub async fn handle_capture_convert_to_work_item(
@@ -121,6 +174,7 @@ pub async fn handle_capture_convert_to_work_item(
 
     let state = state.write().await;
     let mut capture = get_existing_capture(&state, id, request_id).await?;
+    ensure_open_capture(&capture, request_id)?;
     let title = title_override.unwrap_or(capture.text.as_str()).to_string();
 
     let mut reused = false;
@@ -170,13 +224,7 @@ pub async fn handle_capture_append_to_work_item_event(
 
     let state = state.write().await;
     let mut capture = get_existing_capture(&state, id, request_id).await?;
-    if capture.state != CaptureState::Open {
-        return Err(RpcResponse::error(
-            request_id.to_string(),
-            "validation_error",
-            "Capture is already processed",
-        ));
-    }
+    ensure_open_capture(&capture, request_id)?;
 
     let work_item_id = if let Some(work_item_id) = requested_work_item_id {
         work_item_id
@@ -223,6 +271,18 @@ pub async fn handle_capture_append_to_work_item_event(
         "event": WorkItemEventView::from_event(event),
         "work_item_id": work_item_id.to_string(),
     }))
+}
+
+fn ensure_open_capture(capture: &Capture, request_id: &str) -> Result<(), RpcResponse> {
+    if capture.state == CaptureState::Open {
+        return Ok(());
+    }
+
+    Err(RpcResponse::error(
+        request_id.to_string(),
+        "validation_error",
+        "Capture is already processed",
+    ))
 }
 
 async fn get_existing_capture(

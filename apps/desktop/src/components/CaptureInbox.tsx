@@ -4,8 +4,10 @@ import {
   useAppendCaptureToWorkItemEvent,
   useConvertCaptureToWorkItem,
   useCreateCapture,
+  useDeleteCapture,
   useOpenCaptures,
   useResolveCapture,
+  useUpdateCapture,
 } from '../hooks/useCaptures'
 import { logAppEvent } from '../api/client'
 import { formatClockTime, truncate } from '../utils/formatTime'
@@ -20,6 +22,8 @@ export default function CaptureInbox({ focusSessionId, targetWorkItemId }: Captu
   const capturesQuery = useOpenCaptures()
   const createMutation = useCreateCapture()
   const resolveMutation = useResolveCapture()
+  const updateMutation = useUpdateCapture()
+  const deleteMutation = useDeleteCapture()
   const convertMutation = useConvertCaptureToWorkItem()
   const appendEventMutation = useAppendCaptureToWorkItemEvent()
 
@@ -104,6 +108,12 @@ export default function CaptureInbox({ focusSessionId, targetWorkItemId }: Captu
         </div>
       )}
 
+      {(updateMutation.error || deleteMutation.error) && (
+        <div className="text-[11px] text-red-300">
+          {formatMutationError(updateMutation.error || deleteMutation.error, 'Capture cleanup failed')}
+        </div>
+      )}
+
       {captures.length > 0 && (
         <div className="grid gap-1">
           <div className="text-[11px] font-medium uppercase text-gray-500">
@@ -114,6 +124,93 @@ export default function CaptureInbox({ focusSessionId, targetWorkItemId }: Captu
               <CaptureRow
                 key={capture.id}
                 capture={capture}
+                onUpdate={(nextText) => {
+                  const actionId = createTelemetryActionId()
+                  void logAppEvent({
+                    source: 'ui',
+                    kind: 'capture_update_requested',
+                    work_item_id: capture.work_item_id,
+                    focus_session_id: capture.focus_session_id,
+                    payload: {
+                      action_id: actionId,
+                      control: 'edit_button',
+                      had_focus_link: Boolean(capture.focus_session_id),
+                    },
+                  })
+                  updateMutation.mutate(
+                    { id: capture.id, text: nextText },
+                    {
+                      onSuccess: (updated) => {
+                        void logAppEvent({
+                          source: 'ui',
+                          kind: 'capture_updated',
+                          work_item_id: updated.work_item_id,
+                          focus_session_id: updated.focus_session_id,
+                          payload: {
+                            action_id: actionId,
+                            control: 'edit_button',
+                            had_focus_link: Boolean(updated.focus_session_id),
+                          },
+                        })
+                      },
+                      onError: (error) => {
+                        void logAppEvent({
+                          source: 'ui',
+                          kind: 'capture_update_failed',
+                          work_item_id: capture.work_item_id,
+                          focus_session_id: capture.focus_session_id,
+                          payload: {
+                            action_id: actionId,
+                            control: 'edit_button',
+                            error_code: error instanceof Error && 'code' in error ? String(error.code) : 'unknown',
+                          },
+                        })
+                      },
+                    }
+                  )
+                }}
+                onDelete={() => {
+                  const actionId = createTelemetryActionId()
+                  void logAppEvent({
+                    source: 'ui',
+                    kind: 'capture_delete_requested',
+                    work_item_id: capture.work_item_id,
+                    focus_session_id: capture.focus_session_id,
+                    payload: {
+                      action_id: actionId,
+                      control: 'delete_button',
+                      had_focus_link: Boolean(capture.focus_session_id),
+                    },
+                  })
+                  deleteMutation.mutate(capture.id, {
+                    onSuccess: () => {
+                      void logAppEvent({
+                        source: 'ui',
+                        kind: 'capture_deleted',
+                        work_item_id: capture.work_item_id,
+                        focus_session_id: capture.focus_session_id,
+                        payload: {
+                          action_id: actionId,
+                          control: 'delete_button',
+                          had_focus_link: Boolean(capture.focus_session_id),
+                        },
+                      })
+                    },
+                    onError: (error) => {
+                      void logAppEvent({
+                        source: 'ui',
+                        kind: 'capture_delete_failed',
+                        work_item_id: capture.work_item_id,
+                        focus_session_id: capture.focus_session_id,
+                        payload: {
+                          action_id: actionId,
+                          control: 'delete_button',
+                          error_code: error instanceof Error && 'code' in error ? String(error.code) : 'unknown',
+                        },
+                      })
+                    },
+                  })
+                }}
                 onResolve={() => {
                   const actionId = createTelemetryActionId()
                   void logAppEvent({
@@ -245,7 +342,13 @@ export default function CaptureInbox({ focusSessionId, targetWorkItemId }: Captu
                     }
                   )
                 }}
-                busy={resolveMutation.isPending || convertMutation.isPending || appendEventMutation.isPending}
+                busy={
+                  resolveMutation.isPending ||
+                  updateMutation.isPending ||
+                  deleteMutation.isPending ||
+                  convertMutation.isPending ||
+                  appendEventMutation.isPending
+                }
               />
             ))}
           </div>
@@ -259,25 +362,106 @@ function createTelemetryActionId() {
   return globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`
 }
 
+function formatMutationError(error: unknown, fallback: string) {
+  return error instanceof Error ? error.message : fallback
+}
+
 function CaptureRow({
   capture,
+  onUpdate,
+  onDelete,
   onResolve,
   onConvert,
   onAppendEvent,
   busy,
 }: {
   capture: CaptureView
+  onUpdate: (text: string) => void
+  onDelete: () => void
   onResolve: () => void
   onConvert: () => void
   onAppendEvent: () => void
   busy: boolean
 }) {
+  const [isEditing, setIsEditing] = useState(false)
+  const [draft, setDraft] = useState(capture.text)
+  const trimmedDraft = draft.trim()
+
+  if (isEditing) {
+    return (
+      <form
+        className="grid gap-1 rounded border border-amber-900 bg-gray-950/70 px-2 py-1.5"
+        onSubmit={(event) => {
+          event.preventDefault()
+          if (!trimmedDraft || busy) return
+          onUpdate(trimmedDraft)
+          setIsEditing(false)
+        }}
+      >
+        <input
+          autoFocus
+          value={draft}
+          onChange={(event) => setDraft(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Escape') {
+              event.preventDefault()
+              setDraft(capture.text)
+              setIsEditing(false)
+            }
+          }}
+          className="min-w-0 rounded border border-gray-700 bg-gray-900 px-2 py-1 text-xs text-gray-100 focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
+        />
+        <div className="flex items-center justify-between gap-2">
+          <div className="text-[11px] text-gray-500">{formatClockTime(capture.created_at)}</div>
+          <div className="flex gap-1">
+            <button
+              type="button"
+              onClick={() => {
+                setDraft(capture.text)
+                setIsEditing(false)
+              }}
+              className="rounded border border-gray-700 px-1.5 py-0.5 text-[11px] text-gray-300 hover:border-gray-500"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={!trimmedDraft || busy}
+              className="rounded border border-amber-700 px-1.5 py-0.5 text-[11px] font-semibold text-amber-100 hover:border-amber-500 disabled:cursor-not-allowed disabled:border-gray-800 disabled:text-gray-600"
+            >
+              Save
+            </button>
+          </div>
+        </div>
+      </form>
+    )
+  }
+
   return (
     <div className="flex items-center gap-2 rounded border border-gray-800 bg-gray-950/70 px-2 py-1.5">
       <div className="min-w-0 flex-1">
         <div className="truncate text-xs text-gray-200">{truncate(capture.text, 100)}</div>
         <div className="text-[11px] text-gray-500">{formatClockTime(capture.created_at)}</div>
       </div>
+      <button
+        type="button"
+        onClick={() => {
+          setDraft(capture.text)
+          setIsEditing(true)
+        }}
+        disabled={busy}
+        className="shrink-0 rounded border border-amber-800 px-1.5 py-0.5 text-[11px] text-amber-200 hover:border-amber-500 disabled:cursor-not-allowed disabled:border-gray-800 disabled:text-gray-600"
+      >
+        Edit
+      </button>
+      <button
+        type="button"
+        onClick={onDelete}
+        disabled={busy}
+        className="shrink-0 rounded border border-red-900 px-1.5 py-0.5 text-[11px] text-red-200 hover:border-red-600 disabled:cursor-not-allowed disabled:border-gray-800 disabled:text-gray-600"
+      >
+        Del
+      </button>
       <button
         type="button"
         onClick={onConvert}

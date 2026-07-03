@@ -230,6 +230,7 @@ export class MockDataStore {
   resolveCapture(id: string): CaptureView | undefined {
     const capture = this.captures.get(id);
     if (!capture) return undefined;
+    if (capture.state !== "open") return undefined;
 
     const now = new Date().toISOString();
     capture.state = "resolved";
@@ -240,9 +241,30 @@ export class MockDataStore {
     return capture;
   }
 
+  updateCapture(id: string, text: string): CaptureView | undefined {
+    const capture = this.captures.get(id);
+    if (!capture) return undefined;
+    if (capture.state !== "open") return undefined;
+
+    capture.text = text.trim();
+    capture.updated_at = new Date().toISOString();
+    this.captures.set(id, capture);
+
+    return capture;
+  }
+
+  deleteCapture(id: string): boolean | undefined {
+    const capture = this.captures.get(id);
+    if (!capture) return undefined;
+    if (capture.state !== "open") return false;
+
+    return this.captures.delete(id);
+  }
+
   convertCaptureToWorkItem(id: string, title?: string): { capture?: CaptureView; workItemId?: string; reused?: boolean } {
     const capture = this.captures.get(id);
     if (!capture) return {};
+    if (capture.state !== "open") return { capture };
 
     const itemTitle = title?.trim() || capture.text;
     const existing = this.findWorkItemByTitle(itemTitle);
@@ -406,6 +428,12 @@ export class MockDataStore {
       capture_resolve_requests: count("capture_resolve_requested"),
       capture_resolved: count("capture_resolved"),
       capture_resolve_failures: count("capture_resolve_failed"),
+      capture_update_requests: count("capture_update_requested"),
+      capture_updated: count("capture_updated"),
+      capture_update_failures: count("capture_update_failed"),
+      capture_delete_requests: count("capture_delete_requested"),
+      capture_deleted: count("capture_deleted"),
+      capture_delete_failures: count("capture_delete_failed"),
       capture_convert_requests: count("capture_convert_requested"),
       capture_converted: count("capture_converted"),
       capture_convert_failures: count("capture_convert_failed"),

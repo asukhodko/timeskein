@@ -159,6 +159,12 @@ export type AppEventKind =
   | "capture_resolve_requested"
   | "capture_resolved"
   | "capture_resolve_failed"
+  | "capture_update_requested"
+  | "capture_updated"
+  | "capture_update_failed"
+  | "capture_delete_requested"
+  | "capture_deleted"
+  | "capture_delete_failed"
   | "capture_convert_requested"
   | "capture_converted"
   | "capture_convert_failed"
@@ -192,6 +198,12 @@ export interface AppEventSummary {
   capture_resolve_requests: number;
   capture_resolved: number;
   capture_resolve_failures: number;
+  capture_update_requests: number;
+  capture_updated: number;
+  capture_update_failures: number;
+  capture_delete_requests: number;
+  capture_deleted: number;
+  capture_delete_failures: number;
   capture_convert_requests: number;
   capture_converted: number;
   capture_convert_failures: number;
@@ -284,6 +296,11 @@ export interface CaptureAppendEventResponse {
   capture: CaptureView;
   event: WorkItemEventView;
   work_item_id: string;
+}
+
+export interface CaptureDeleteResponse {
+  success: boolean;
+  id: string;
 }
 
 /**

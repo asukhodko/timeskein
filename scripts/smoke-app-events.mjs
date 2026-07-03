@@ -30,7 +30,11 @@ try {
       ('e10', '2026-06-30T06:50:01Z', 'ui', 'capture_created', NULL, 's1', '{"action_id":"c1","control":"capture_input","has_active_focus":true}'),
       ('e11', '2026-06-30T06:55:00Z', 'ui', 'capture_resolve_requested', NULL, 's1', '{"action_id":"c2","control":"done_button","had_focus_link":true}'),
       ('e12', '2026-06-30T06:55:01Z', 'ui', 'capture_resolved', NULL, 's1', '{"action_id":"c2","control":"done_button","had_focus_link":true}'),
-      ('e13', '2026-06-30T06:58:00Z', 'ui', 'capture_convert_failed', NULL, 's1', '{"action_id":"c3","control":"make_item_button","error_code":"not_found"}');
+      ('e13', '2026-06-30T06:56:00Z', 'ui', 'capture_update_requested', NULL, 's1', '{"action_id":"c3","control":"edit_button","had_focus_link":true}'),
+      ('e14', '2026-06-30T06:56:01Z', 'ui', 'capture_updated', NULL, 's1', '{"action_id":"c3","control":"edit_button","had_focus_link":true}'),
+      ('e15', '2026-06-30T06:57:00Z', 'ui', 'capture_delete_requested', NULL, 's1', '{"action_id":"c4","control":"delete_button","had_focus_link":true}'),
+      ('e16', '2026-06-30T06:57:01Z', 'ui', 'capture_deleted', NULL, 's1', '{"action_id":"c4","control":"delete_button","had_focus_link":true}'),
+      ('e17', '2026-06-30T06:58:00Z', 'ui', 'capture_convert_failed', NULL, 's1', '{"action_id":"c5","control":"make_item_button","error_code":"not_found"}');
   `);
 
   const { stdout: metricsStdout } = await execFileAsync(
@@ -39,11 +43,12 @@ try {
     { cwd: repoRoot }
   );
   assert(metricsStdout.includes("## App Telemetry"), "metrics did not include App Telemetry header");
-  assert(metricsStdout.includes("Total events: 13"), "metrics did not count events");
+  assert(metricsStdout.includes("Total events: 17"), "metrics did not count events");
   assert(metricsStdout.includes("Start requests: 1"), "metrics did not count start requests");
   assert(metricsStdout.includes("Manual copy fallbacks: 1"), "metrics did not count manual copy fallbacks");
   assert(metricsStdout.includes("Capture created/resolved/converted: 1/1/0"), "metrics did not count capture outcomes");
-  assert(metricsStdout.includes("Capture failures create/resolve/convert: 0/0/1"), "metrics did not count capture failures");
+  assert(metricsStdout.includes("Capture updated/deleted: 1/1"), "metrics did not count capture cleanup");
+  assert(metricsStdout.includes("Capture failures create/resolve/update/delete/convert: 0/0/0/0/1"), "metrics did not count capture failures");
   assert(metricsStdout.includes("Stale runtime recoveries: 1"), "metrics did not count stale recoveries");
   assert(metricsStdout.includes("Average start latency: 1000ms"), "metrics did not calculate start latency");
 

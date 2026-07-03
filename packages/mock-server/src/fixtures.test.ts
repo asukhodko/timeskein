@@ -43,6 +43,10 @@ test("capture inbox does not interrupt active focus", async () => {
   assert.equal(capture.focus_session_id, focus.id);
   assert.equal(store.getActiveFocusSession()?.id, focus.id);
 
+  const edited = store.updateCapture(capture.id, "remember this after cleanup");
+  assert.equal(edited?.text, "remember this after cleanup");
+  assert.equal(store.getActiveFocusSession()?.id, focus.id);
+
   const converted = store.convertCaptureToWorkItem(capture.id);
   assert.equal(converted.capture?.state, "converted");
   assert.equal(store.getActiveFocusSession()?.id, focus.id);
@@ -56,6 +60,13 @@ test("capture inbox does not interrupt active focus", async () => {
   assert.equal(appended.event?.text, eventCapture.text);
   assert.equal(appended.event?.focus_session_id, focus.id);
   assert.equal(store.getActiveFocusSession()?.id, focus.id);
+
+  const deleteCapture = store.createCapture({
+    text: "delete this later",
+  });
+  assert.equal(store.deleteCapture(deleteCapture.id), true);
+  assert.equal(store.listCaptures(["open"]).some((item) => item.id === deleteCapture.id), false);
+  assert.equal(store.deleteCapture(capture.id), false);
 });
 
 test("focus correction update, split and work item edit are reflected in day data", async () => {

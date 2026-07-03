@@ -143,7 +143,7 @@ impl Database {
 
         if table_sql
             .as_deref()
-            .is_some_and(|sql| sql.contains("capture_create_requested"))
+            .is_some_and(|sql| sql.contains("capture_delete_requested"))
         {
             return Ok(());
         }

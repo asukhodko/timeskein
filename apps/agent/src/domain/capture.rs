@@ -68,6 +68,11 @@ impl Capture {
         self.resolved_at = Some(now);
     }
 
+    pub fn update_text(&mut self, text: String) {
+        self.text = text.trim().to_string();
+        self.updated_at = Utc::now();
+    }
+
     pub fn convert_to_work_item(&mut self, work_item_id: Uuid) {
         let now = Utc::now();
         self.state = CaptureState::Converted;

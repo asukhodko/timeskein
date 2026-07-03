@@ -47,6 +47,30 @@ export function useResolveCapture() {
   })
 }
 
+export function useUpdateCapture() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (params: { id: string; text: string }) => captureApi.update(params),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: captureQueryKeys.open })
+      queryClient.invalidateQueries({ queryKey: captureQueryKeys.activity })
+    },
+  })
+}
+
+export function useDeleteCapture() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (id: string) => captureApi.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: captureQueryKeys.open })
+      queryClient.invalidateQueries({ queryKey: captureQueryKeys.activity })
+    },
+  })
+}
+
 export function useConvertCaptureToWorkItem() {
   const queryClient = useQueryClient()
 

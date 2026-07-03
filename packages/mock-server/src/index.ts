@@ -214,10 +214,48 @@ function handleMethod(
 
       const capture = store.resolveCapture(id);
       if (!capture) {
-        return errorResponse(requestId, "not_found", "Capture not found");
+        return errorResponse(requestId, "not_found", "Open capture not found");
       }
 
       return successResponse(requestId, capture);
+    }
+
+    case "capture.update": {
+      const id = params.id as string;
+      const text = params.text as string;
+      if (!id) {
+        return errorResponse(requestId, "validation_error", "Capture ID is required");
+      }
+      if (!text || text.trim() === "") {
+        return errorResponse(requestId, "validation_error", "Capture text is required");
+      }
+
+      const capture = store.updateCapture(id, text);
+      if (!capture) {
+        return errorResponse(requestId, "not_found", "Open capture not found");
+      }
+
+      return successResponse(requestId, capture);
+    }
+
+    case "capture.delete": {
+      const id = params.id as string;
+      if (!id) {
+        return errorResponse(requestId, "validation_error", "Capture ID is required");
+      }
+
+      const deleted = store.deleteCapture(id);
+      if (deleted === undefined) {
+        return errorResponse(requestId, "not_found", "Capture not found");
+      }
+      if (!deleted) {
+        return errorResponse(requestId, "validation_error", "Capture is already processed");
+      }
+
+      return successResponse(requestId, {
+        success: true,
+        id,
+      });
     }
 
     case "capture.convert_to_work_item": {
@@ -227,8 +265,11 @@ function handleMethod(
       }
 
       const result = store.convertCaptureToWorkItem(id, params.title as string | undefined);
-      if (!result.capture || !result.workItemId) {
+      if (!result.capture) {
         return errorResponse(requestId, "not_found", "Capture not found");
+      }
+      if (!result.workItemId) {
+        return errorResponse(requestId, "validation_error", "Capture is already processed");
       }
 
       return successResponse(requestId, {
@@ -679,7 +720,7 @@ app.listen(PORT, () => {
   console.log("Available methods:");
   console.log("  agent.ping, agent.status, agent.version");
   console.log("  inventory.list, inventory.get");
-  console.log("  capture.create, capture.list, capture.resolve, capture.convert_to_work_item");
+  console.log("  capture.create, capture.list, capture.resolve, capture.update, capture.delete, capture.convert_to_work_item");
   console.log("  work_item.create, work_item.touch, work_item.set_state, work_item.set_note, work_item.update, work_item.toggle_pin, work_item.delete");
   console.log("  focus.current, focus.start, focus.stop, focus.update, focus.split, focus.list");
   console.log("  ref.add, ref.remove, ref.open, ref.check_conflict");

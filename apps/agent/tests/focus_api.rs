@@ -4,10 +4,10 @@ use chrono::{Duration, Utc};
 use serde_json::json;
 use tempfile::tempdir;
 use timeskein_agent::api::{
-    handle_capture_append_to_work_item_event, handle_capture_create, handle_focus_list,
-    handle_focus_split, handle_focus_start, handle_focus_stop, handle_focus_update,
-    handle_inventory_list, handle_work_item_add_event, handle_work_item_events,
-    handle_work_item_update,
+    handle_capture_append_to_work_item_event, handle_capture_create, handle_capture_delete,
+    handle_capture_update, handle_focus_list, handle_focus_split, handle_focus_start,
+    handle_focus_stop, handle_focus_update, handle_inventory_list, handle_work_item_add_event,
+    handle_work_item_events, handle_work_item_update,
 };
 use timeskein_agent::{db::Database, AppState};
 use tokio::sync::RwLock;
@@ -185,6 +185,103 @@ async fn capture_can_be_appended_to_linked_work_item_event_without_interrupting_
         .collect::<Vec<_>>();
     assert_eq!(active_items.len(), 1);
     assert_eq!(active_items[0]["id"].as_str(), Some(work_item_id.as_str()));
+}
+
+#[tokio::test]
+async fn open_capture_can_be_updated_or_deleted_without_interrupting_focus() {
+    let state = test_state().await;
+
+    let started = handle_focus_start(
+        &state,
+        json!({
+            "title": "Capture Cleanup Focus",
+            "target_seconds": 60,
+        }),
+        "start",
+    )
+    .await
+    .expect("start");
+    let session_id = started["id"].as_str().expect("session id").to_string();
+
+    let capture = handle_capture_create(
+        &state,
+        json!({
+            "text": "rough reminder",
+        }),
+        "capture",
+    )
+    .await
+    .expect("capture");
+    let capture_id = capture["id"].as_str().expect("capture id").to_string();
+
+    let updated = handle_capture_update(
+        &state,
+        json!({
+            "id": capture_id,
+            "text": "polished reminder",
+        }),
+        "update-capture",
+    )
+    .await
+    .expect("update capture");
+
+    assert_eq!(updated["text"].as_str(), Some("polished reminder"));
+    assert_eq!(updated["state"].as_str(), Some("open"));
+
+    let current = timeskein_agent::api::handle_focus_current(&state, json!({}), "current")
+        .await
+        .expect("current focus");
+    assert_eq!(current["session"]["id"].as_str(), Some(session_id.as_str()));
+
+    handle_capture_delete(
+        &state,
+        json!({
+            "id": updated["id"].as_str().expect("updated capture id"),
+        }),
+        "delete-capture",
+    )
+    .await
+    .expect("delete capture");
+
+    let current_after_delete =
+        timeskein_agent::api::handle_focus_current(&state, json!({}), "current-after-delete")
+            .await
+            .expect("current after delete");
+    assert_eq!(
+        current_after_delete["session"]["id"].as_str(),
+        Some(session_id.as_str())
+    );
+
+    let resolved = handle_capture_create(
+        &state,
+        json!({
+            "text": "processed reminder",
+        }),
+        "processed-capture",
+    )
+    .await
+    .expect("processed capture");
+    let resolved_id = resolved["id"].as_str().expect("resolved id").to_string();
+    timeskein_agent::api::handle_capture_resolve(
+        &state,
+        json!({
+            "id": resolved_id,
+        }),
+        "resolve-capture",
+    )
+    .await
+    .expect("resolve capture");
+
+    let blocked_update = handle_capture_update(
+        &state,
+        json!({
+            "id": resolved["id"].as_str().expect("capture id"),
+            "text": "should not update",
+        }),
+        "blocked-update",
+    )
+    .await;
+    assert!(blocked_update.is_err());
 }
 
 #[tokio::test]

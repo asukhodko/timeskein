@@ -24,6 +24,7 @@ import {
   type FocusUpdateParams,
   type CaptureConvertResponse,
   type CaptureAppendEventResponse,
+  type CaptureDeleteResponse,
   type CaptureListResponse,
   type CaptureState,
   type CaptureView,
@@ -179,6 +180,9 @@ export const captureApi = {
   list: (params?: { state?: CaptureState[] }) =>
     rpc<CaptureListResponse>('capture.list', params),
   resolve: (id: string) => rpc<CaptureView>('capture.resolve', { id }),
+  update: (params: { id: string; text: string }) =>
+    rpc<CaptureView>('capture.update', params),
+  delete: (id: string) => rpc<CaptureDeleteResponse>('capture.delete', { id }),
   convertToWorkItem: (params: { id: string; title?: string }) =>
     rpc<CaptureConvertResponse>('capture.convert_to_work_item', params),
   appendToWorkItemEvent: (params: { id: string; work_item_id?: string }) =>

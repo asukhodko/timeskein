@@ -94,6 +94,55 @@ try {
     eventsAfterAppend.events.some((event) => event.id === appendedCapture.event.id),
     "capture-created Work Item event is absent from packaged app event list"
   );
+  const dayEvent = await rpc(port, "day_event.add", {
+    text: "packaged day event linked to focus",
+    focus_session_id: started.id,
+    activity_zone: "work",
+  });
+  assert(dayEvent.kind === "note_added", "day_event.add did not create note_added event");
+  assert(dayEvent.focus_session_id === started.id, "day_event.add did not link to packaged focus");
+  assert(dayEvent.activity_zone === "work", "day_event.add did not preserve packaged activity zone");
+
+  const freeDayEvent = await rpc(port, "day_event.add", {
+    text: "packaged free day event",
+    activity_zone: "recovery",
+  });
+  assert(!freeDayEvent.focus_session_id, "free packaged day event should not be linked to focus");
+
+  const currentAfterDayEvent = await rpc(port, "focus.current");
+  assert(
+    currentAfterDayEvent.session?.id === started.id,
+    "day_event.add interrupted packaged active focus"
+  );
+
+  const dayEvents = await rpc(port, "day_event.list", todayWindow());
+  assert(
+    dayEvents.events.some((event) => event.id === dayEvent.id),
+    "day_event.list did not include packaged linked day event"
+  );
+  assert(
+    dayEvents.events.some((event) => event.id === freeDayEvent.id),
+    "day_event.list did not include packaged free day event"
+  );
+
+  const updatedDayEvent = await rpc(port, "day_event.update", {
+    id: dayEvent.id,
+    text: "packaged edited day event",
+    activity_zone: "coordination",
+  });
+  assert(updatedDayEvent.text === "packaged edited day event", "day_event.update did not edit text");
+  assert(updatedDayEvent.activity_zone === "coordination", "day_event.update did not edit zone");
+
+  const deletedDayEvent = await rpc(port, "day_event.delete", {
+    id: freeDayEvent.id,
+  });
+  assert(deletedDayEvent.success === true, "day_event.delete did not report success");
+
+  const dayEventsAfterDelete = await rpc(port, "day_event.list", todayWindow());
+  assert(
+    dayEventsAfterDelete.events.every((event) => event.id !== freeDayEvent.id),
+    "day_event.delete left packaged event visible"
+  );
   await new Promise((resolve) => setTimeout(resolve, 1100));
   const stopped = await rpc(port, "focus.stop", {
     note: "packaged app smoke done",

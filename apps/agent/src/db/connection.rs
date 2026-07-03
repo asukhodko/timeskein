@@ -75,6 +75,9 @@ impl Database {
         let captures_sql = include_str!("../../migrations/004_captures.sql");
         sqlx::raw_sql(captures_sql).execute(&self.pool).await?;
 
+        let day_events_sql = include_str!("../../migrations/008_day_events.sql");
+        sqlx::raw_sql(day_events_sql).execute(&self.pool).await?;
+
         self.ensure_work_item_activity_zones().await?;
         self.ensure_work_item_note_events().await?;
         self.ensure_focus_session_activity_zones().await?;

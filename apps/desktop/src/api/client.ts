@@ -11,6 +11,12 @@ import {
   type WorkItemEventsResponse,
   type WorkItemUpdateEventParams,
   type WorkItemUpdateParams,
+  type DayEventAddParams,
+  type DayEventDeleteResponse,
+  type DayEventListParams,
+  type DayEventListResponse,
+  type DayEventUpdateParams,
+  type DayEventView,
   type WorkItemCreateParams,
   type WorkItemCreateResponse,
   type WorkItemDeleteEventResponse,
@@ -153,6 +159,17 @@ export const workItemApi = {
     rpc<{ success: boolean; pinned: boolean }>('work_item.toggle_pin', { id }),
   delete: (id: string, mode?: 'soft' | 'hard') =>
     rpc<WorkItemDeleteResponse>('work_item.delete', { id, mode }),
+}
+
+export const dayEventApi = {
+  add: (params: DayEventAddParams) =>
+    rpc<DayEventView>('day_event.add', params),
+  list: (params?: DayEventListParams) =>
+    rpc<DayEventListResponse>('day_event.list', params),
+  update: (params: DayEventUpdateParams) =>
+    rpc<DayEventView>('day_event.update', params),
+  delete: (id: string) =>
+    rpc<DayEventDeleteResponse>('day_event.delete', { id }),
 }
 
 // Focus Session API

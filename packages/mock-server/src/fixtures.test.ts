@@ -69,6 +69,45 @@ test("capture inbox does not interrupt active focus", async () => {
   assert.equal(store.deleteCapture(capture.id), false);
 });
 
+test("day events do not interrupt active focus and can be cleaned up", async () => {
+  const store = new MockDataStore();
+  const focus = store.startFocusSession({
+    title: "Mock Day Event Focus",
+    target_seconds: 60,
+  });
+  const linked = store.addDayEvent({
+    text: "buffer before meeting felt expensive",
+    focus_session_id: focus.id,
+    activity_zone: "work",
+  });
+  const free = store.addDayEvent({
+    text: "recovery was not enough",
+    activity_zone: "recovery",
+  });
+
+  assert.equal(linked?.focus_session_id, focus.id);
+  assert.equal(linked?.activity_zone, "work");
+  assert.equal(free?.focus_session_id, undefined);
+  assert.equal(free?.activity_zone, "recovery");
+  assert.equal(store.getActiveFocusSession()?.id, focus.id);
+
+  const events = store.listDayEvents({
+    from: new Date(Date.now() - 60_000).toISOString(),
+    to: new Date(Date.now() + 60_000).toISOString(),
+  });
+  assert.equal(events.length, 2);
+
+  const updated = store.updateDayEvent(linked!.id, {
+    text: "edited day event",
+    activity_zone: "coordination",
+  });
+  assert.equal(updated?.text, "edited day event");
+  assert.equal(updated?.activity_zone, "coordination");
+
+  assert.equal(store.deleteDayEvent(free!.id), true);
+  assert.equal(store.listDayEvents().length, 1);
+});
+
 test("focus correction update, split and work item edit are reflected in day data", async () => {
   const store = new MockDataStore();
   const started = store.startFocusSession({

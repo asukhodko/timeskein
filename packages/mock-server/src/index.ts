@@ -85,6 +85,7 @@ const APP_EVENT_KINDS = new Set<string>([
 ]);
 
 const APP_EVENT_SOURCES = new Set<string>(["ui", "agent", "script", "system"]);
+const ACTIVITY_ZONES = new Set<string>(["work", "coordination", "recovery", "idle", "personal"]);
 
 function isAppEventKind(value: unknown): value is AppEventKind {
   return typeof value === "string" && APP_EVENT_KINDS.has(value);
@@ -92,6 +93,10 @@ function isAppEventKind(value: unknown): value is AppEventKind {
 
 function isAppEventSource(value: unknown): value is AppEventSource {
   return typeof value === "string" && APP_EVENT_SOURCES.has(value);
+}
+
+function isActivityZone(value: unknown): value is ActivityZone {
+  return typeof value === "string" && ACTIVITY_ZONES.has(value);
 }
 
 // -----------------------------------------------------------------------------
@@ -298,6 +303,83 @@ function handleMethod(
         event: result.event,
         work_item_id: result.workItemId,
       });
+    }
+
+    case "day_event.add": {
+      const text = params.text as string;
+      if (!text || text.trim() === "") {
+        return errorResponse(requestId, "validation_error", "Day event text is required");
+      }
+
+      const focusSessionId = params.focus_session_id as string | undefined;
+      if (focusSessionId && !store.hasFocusSession(focusSessionId)) {
+        return errorResponse(requestId, "not_found", "Focus session not found");
+      }
+
+      const activityZone = params.activity_zone;
+      if (activityZone !== undefined && !isActivityZone(activityZone)) {
+        return errorResponse(requestId, "validation_error", "Valid activity zone is required");
+      }
+
+      const event = store.addDayEvent({
+        text,
+        focus_session_id: focusSessionId,
+        activity_zone: activityZone,
+      });
+      if (!event) {
+        return errorResponse(requestId, "validation_error", "Day event cannot be created");
+      }
+      return successResponse(requestId, event);
+    }
+
+    case "day_event.list": {
+      const events = store.listDayEvents({
+        from: params.from as string | undefined,
+        to: params.to as string | undefined,
+      });
+      return successResponse(requestId, {
+        events,
+        total: events.length,
+        updated_at: new Date().toISOString(),
+      });
+    }
+
+    case "day_event.update": {
+      const id = params.id as string;
+      const text = params.text as string;
+      if (!id) {
+        return errorResponse(requestId, "validation_error", "Day event ID is required");
+      }
+      if (!text || text.trim() === "") {
+        return errorResponse(requestId, "validation_error", "Day event text is required");
+      }
+
+      const activityZone = params.activity_zone;
+      if (activityZone !== undefined && activityZone !== null && !isActivityZone(activityZone)) {
+        return errorResponse(requestId, "validation_error", "Valid activity zone is required");
+      }
+
+      const event = store.updateDayEvent(id, {
+        text,
+        activity_zone: activityZone as ActivityZone | null | undefined,
+      });
+      if (!event) {
+        return errorResponse(requestId, "not_found", "Day event not found");
+      }
+      return successResponse(requestId, event);
+    }
+
+    case "day_event.delete": {
+      const id = params.id as string;
+      if (!id) {
+        return errorResponse(requestId, "validation_error", "Day event ID is required");
+      }
+
+      if (!store.deleteDayEvent(id)) {
+        return errorResponse(requestId, "not_found", "Day event not found");
+      }
+
+      return successResponse(requestId, { success: true, id });
     }
 
     // Inventory methods
@@ -779,6 +861,7 @@ app.listen(PORT, () => {
   console.log("  agent.ping, agent.status, agent.version");
   console.log("  inventory.list, inventory.get");
   console.log("  capture.create, capture.list, capture.resolve, capture.update, capture.delete, capture.convert_to_work_item");
+  console.log("  day_event.add, day_event.list, day_event.update, day_event.delete");
   console.log("  work_item.create, work_item.touch, work_item.set_state, work_item.set_note, work_item.update, work_item.toggle_pin, work_item.delete");
   console.log("  focus.current, focus.start, focus.stop, focus.update, focus.create_stopped, focus.split, focus.list");
   console.log("  ref.add, ref.remove, ref.open, ref.check_conflict");

@@ -14,6 +14,7 @@ A desktop application for quickly tracking focus sessions and work items with re
 | Capture Inbox | Working baseline | Quick incoming-event capture without interrupting the active focus block |
 | Work Item List | Working baseline | `Recent`, `Today`, `Pinned`, and `All` modes keep a multi-day inventory navigable |
 | Work Item Events | Working baseline | Timestamped notes linked to Work Items and optionally to focus blocks |
+| Day Events | Working baseline | Timestamped day-level notes for buffers, recovery, tracking corrections, and review context |
 | Dogfood Telemetry | Working baseline | Local app-event journal and CLI metrics for tracking UX friction |
 | Mock Server | Working | Full API implementation for development |
 | Rust Agent | Working | SQLite-backed Local API, embedded in macOS app |
@@ -146,7 +147,7 @@ At the end of the day, export the analysis note:
 pnpm dogfood:finish:save
 ```
 
-This writes `timeskein-dogfood-report-YYYY-MM-DD.md` in the current directory. The report includes focus blocks, Work Item totals, Activity Zone totals, Work Item notes and timestamped Work Item Events for items touched that day, Capture Activity for the day, open Capture Inbox entries, and local app telemetry: starts, switches, stops, Capture Inbox actions, API errors, show/hide events, copy failures, and likely friction points.
+This writes `timeskein-dogfood-report-YYYY-MM-DD.md` in the current directory. The report includes focus blocks, Work Item totals, Activity Zone totals, Day Events, Work Item notes and timestamped Work Item Events for items touched that day, Capture Activity for the day, open Capture Inbox entries, and local app telemetry: starts, switches, stops, Capture Inbox actions, API errors, show/hide events, copy failures, and likely friction points.
 Saved dogfood reports and RC checks can contain personal or internal work context, so they are ignored by git.
 To print the report to stdout instead:
 
@@ -178,7 +179,7 @@ The RC check exits with code 1 for hard blockers such as active state, duplicate
 The app stores SQLite data in `timeskein.db` and writes the current embedded-agent port to `agent.port`.
 On startup the macOS app checks an existing `agent.port` with `agent.status`; if the recorded agent is gone, stale `agent.lock` / `agent.port` files are removed and a fresh embedded agent is started.
 
-The local SQLite database also stores `captures`, the small inbox for incoming events, and `app_events`, an append-only technical event journal used for dogfood analysis. Telemetry payloads are intentionally limited to safe technical metadata; raw Work Item titles, notes, URLs, search text, and free-form user text are not written to telemetry payloads.
+The local SQLite database also stores `captures`, the small inbox for incoming events, `day_events`, timestamped day-level notes for evening review, and `app_events`, an append-only technical event journal used for dogfood analysis. Telemetry payloads are intentionally limited to safe technical metadata; raw Work Item titles, notes, URLs, search text, and free-form user text are not written to telemetry payloads.
 
 ### Roadmap Tools
 
@@ -219,6 +220,7 @@ pnpm mock-server
 pnpm smoke:focus-api
 pnpm smoke:corrections-api
 pnpm smoke:capture-api
+pnpm smoke:day-events-api
 ```
 
 Against a running Rust agent or desktop app:
@@ -227,6 +229,7 @@ Against a running Rust agent or desktop app:
 TIMESKEIN_API_URL=http://127.0.0.1:<port>/api pnpm smoke:focus-api
 TIMESKEIN_API_URL=http://127.0.0.1:<port>/api pnpm smoke:corrections-api
 TIMESKEIN_API_URL=http://127.0.0.1:<port>/api pnpm smoke:capture-api
+TIMESKEIN_API_URL=http://127.0.0.1:<port>/api pnpm smoke:day-events-api
 ```
 
 The smoke refuses to run if there is already an active focus session.
@@ -281,6 +284,7 @@ Focus Session controls:
 - Post-factum correction for stopped focus blocks: add a missed block, edit time/note/Work Item/Activity Zone, or split a block
 - Capture Inbox for incoming events that should be handled later without interrupting the current focus block
 - Timestamped Work Item Events for observations during the day, with edit/delete cleanup for user-authored notes
+- Timestamped Day Events for review context that belongs to the day rather than to one Work Item
 - Open captures can be edited, deleted, resolved, converted to Work Items, or appended as timestamped Work Item Events
 - Running focus session restored from SQLite after frontend/app restart
 - Focus sessions are linked to Work Items; typed titles reuse existing Work Items instead of creating duplicates
@@ -289,7 +293,7 @@ Focus Session controls:
 - Open gap warning when no focus block is running and the time since the last stopped block is significant
 - Day totals count the part of each focus block that overlaps the selected local day
 - Review checklist in Today and copied dogfood reports: active-state blockers, open captures, significant gaps, open gap, Activity Zone coverage, non-work tracking, capture coverage, and Work Item context coverage
-- Markdown dogfood report from the Today panel or CLI, with focus data, Work Item totals, Activity Zone totals, Work Item notes and timestamped events for touched items, significant gaps, Capture Activity, open captures, review checklist/prompts, and draft warning while a focus block or Work Item is active
+- Markdown dogfood report from the Today panel or CLI, with focus data, Work Item totals, Activity Zone totals, Day Events, Work Item notes and timestamped events for touched items, significant gaps, Capture Activity, open captures, review checklist/prompts, and draft warning while a focus block or Work Item is active
 - macOS menu bar item shows the active focus duration as a short `12m Focus` status while a block is running, and today's total when no block is active
 - Work item states: active, waiting, blocked, done, someday, unknown
 - Work Item activity zones: work, coordination, recovery, idle, personal; focus blocks keep their own zone snapshot for report correction
@@ -311,6 +315,7 @@ Focus Session controls:
 - **Post-factum correction is basic** - stopped focus blocks can be added, edited, and split, but there is not yet a drag timeline or multi-step correction wizard
 - **Capture Inbox is still compact** - proven in one full dogfood day, with edit/delete for open captures; a fuller capture history screen is not implemented yet
 - **Work Item Events are basic** - user-authored `note_added` events can be appended, promoted from captures, edited, deleted, and reported; generated system events are not exposed as an editable history yet
+- **Day Events are basic** - user-authored day-level notes can be added, edited, deleted, and reported; there is no separate day journal screen yet
 - **Work Item notes remain mutable descriptions** - timestamped observations should use Work Item Events instead
 - **Activity zone correction is basic** - new focus blocks snapshot the Work Item zone and stopped blocks can be corrected, but there is no bulk zone editor yet
 - **macOS window restore and menu bar counter are newly fixed** - the packaged app now avoids always-on-top/task-switcher hiding, handles macOS reopen, and updates the menu bar title from the native shell; verify this in the next dogfood day

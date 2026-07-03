@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import type { ActivityZone, AppEventSummary, CaptureView, FocusSessionView, WorkItemEventView, WorkItemView } from '@timeskein/contracts'
+import type { ActivityZone, AppEventSummary, CaptureView, DayEventView, FocusSessionView, WorkItemEventView, WorkItemView } from '@timeskein/contracts'
 import {
   useCurrentFocusSession,
   useStartFocusSession,
@@ -8,6 +8,7 @@ import {
 } from '../hooks/useFocusSessions'
 import { useDeleteWorkItemEvent, useInventory, useUpdateWorkItemEvent, useWorkItemEvents } from '../hooks/useInventory'
 import { useCaptureActivity, useOpenCaptures } from '../hooks/useCaptures'
+import { useAddDayEvent, useDayEvents, useDeleteDayEvent, useUpdateDayEvent } from '../hooks/useDayEvents'
 import { appEventApi, logAppEvent, shellApi } from '../api/client'
 import { formatClockTime, formatDuration, truncate } from '../utils/formatTime'
 import CaptureInbox from './CaptureInbox'
@@ -30,6 +31,7 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
   const [manualCopy, setManualCopy] = useState<{ label: string; text: string } | null>(null)
   const [correctingSession, setCorrectingSession] = useState<FocusSessionView | null>(null)
   const [addingMissedBlock, setAddingMissedBlock] = useState(false)
+  const [dayEventText, setDayEventText] = useState('')
   const titleInputRef = useRef<HTMLInputElement>(null)
   const manualCopyRef = useRef<HTMLTextAreaElement>(null)
   const localDayKey = formatLocalDate(now)
@@ -46,10 +48,12 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
   const todayQuery = useTodayFocusSessions()
   const inventoryQuery = useInventory()
   const workItemEventsQuery = useWorkItemEvents(dayWindow)
+  const dayEventsQuery = useDayEvents(dayWindow)
   const capturesQuery = useOpenCaptures()
   const captureActivityQuery = useCaptureActivity()
   const startMutation = useStartFocusSession()
   const stopMutation = useStopFocusSession()
+  const addDayEventMutation = useAddDayEvent()
 
   const current = currentQuery.data?.session
   const currentId = current?.id
@@ -71,6 +75,10 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
     () => noteEventsOnly(workItemEventsQuery.data?.events ?? []),
     [workItemEventsQuery.data?.events]
   )
+  const dayEvents = useMemo(
+    () => noteDayEventsOnly(dayEventsQuery.data?.events ?? []),
+    [dayEventsQuery.data?.events]
+  )
   const sessionsWithGaps = useMemo(() => withGaps([...sessions].reverse()), [sessions])
   const openGap = useMemo(
     () => (current ? undefined : openGapAfterLastSession(sessions, now)),
@@ -85,9 +93,10 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
       openCaptures,
       captureActivity,
       workItemEvents,
+      dayEvents,
       openGap,
     }),
-    [sessions, current, activeWorkItems, inventoryItems, openCaptures, captureActivity, workItemEvents, openGap]
+    [sessions, current, activeWorkItems, inventoryItems, openCaptures, captureActivity, workItemEvents, dayEvents, openGap]
   )
   const reportIsDraft = current?.state === 'active' || activeWorkItems.length > 0
   const trayStatusTitle = useMemo(
@@ -95,8 +104,8 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
     [current, now, activeSecondsTotal]
   )
   const todayMarkdown = useMemo(
-    () => buildTodayMarkdown(sessions, activeSecondsTotal, now, inventoryItems, workItemEvents),
-    [sessions, activeSecondsTotal, now, inventoryItems, workItemEvents]
+    () => buildTodayMarkdown(sessions, activeSecondsTotal, now, inventoryItems, workItemEvents, dayEvents),
+    [sessions, activeSecondsTotal, now, inventoryItems, workItemEvents, dayEvents]
   )
   const focusTitleInput = ({ force = false } = {}) => {
     window.requestAnimationFrame(() => {
@@ -418,7 +427,25 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
     window.setTimeout(() => setCopyReportState('idle'), 1600)
   }
 
-  const mutationError = startMutation.error || stopMutation.error
+  const addDayEvent = () => {
+    const trimmed = dayEventText.trim()
+    if (!trimmed || addDayEventMutation.isPending) return
+
+    addDayEventMutation.mutate(
+      {
+        text: trimmed,
+        focus_session_id: current?.id,
+        activity_zone: current?.activity_zone ?? selectedItem?.activity_zone,
+      },
+      {
+        onSuccess: () => {
+          setDayEventText('')
+        },
+      }
+    )
+  }
+
+  const mutationError = startMutation.error || stopMutation.error || addDayEventMutation.error
 
   return (
     <section className="border-b border-gray-700 bg-gray-950/45">
@@ -476,7 +503,34 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
 
         <CaptureInbox focusSessionId={current?.id} targetWorkItemId={current?.work_item_id ?? selectedItem?.id} />
 
+        <div className="flex items-center gap-2 rounded-md border border-gray-800 bg-gray-900/40 px-3 py-2">
+          <input
+            value={dayEventText}
+            onChange={(event) => setDayEventText(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') {
+                event.preventDefault()
+                addDayEvent()
+              }
+            }}
+            placeholder="Add day note..."
+            className="min-w-0 flex-1 rounded border border-gray-800 bg-gray-950 px-2 py-1.5 text-xs text-gray-100 placeholder-gray-600 focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600"
+          />
+          <button
+            type="button"
+            onClick={addDayEvent}
+            disabled={!dayEventText.trim() || addDayEventMutation.isPending}
+            className="rounded border border-emerald-800 px-2 py-1.5 text-xs font-medium text-emerald-200 hover:border-emerald-500 hover:text-emerald-100 disabled:cursor-not-allowed disabled:border-gray-800 disabled:text-gray-600"
+          >
+            Note
+          </button>
+        </div>
+
         <DayReviewPanel items={reviewItems} />
+
+        {dayEvents.length > 0 && (
+          <DayEventsPanel events={dayEvents} sessions={sessions} />
+        )}
 
         {workItemEvents.length > 0 && (
           <WorkItemEventsPanel
@@ -628,7 +682,8 @@ function buildTodayMarkdown(
   activeSecondsTotal: number,
   now: Date,
   workItems: WorkItemView[] = [],
-  workItemEvents: WorkItemEventView[] = []
+  workItemEvents: WorkItemEventView[] = [],
+  dayEvents: DayEventView[] = []
 ) {
   const dayStart = startOfLocalDay(now)
   const dayEnd = nextLocalDay(dayStart)
@@ -700,6 +755,7 @@ function buildTodayMarkdown(
   }
 
   appendWorkItemNotes(lines, workItemTotals)
+  appendDayEvents(lines, dayEvents, sessionsOldestFirst)
   appendWorkItemEvents(lines, workItemEvents, sessionsOldestFirst, workItems)
 
   const gaps = gapsBetweenSessions(sessionsOldestFirst).filter(
@@ -856,6 +912,7 @@ function buildDayReviewItems({
   openCaptures,
   captureActivity,
   workItemEvents,
+  dayEvents,
   openGap,
 }: {
   sessions: FocusSessionView[]
@@ -865,6 +922,7 @@ function buildDayReviewItems({
   openCaptures: CaptureView[]
   captureActivity: CaptureView[]
   workItemEvents: WorkItemEventView[]
+  dayEvents: DayEventView[]
   openGap?: Gap
 }): DayReviewItem[] {
   const items: DayReviewItem[] = []
@@ -947,10 +1005,10 @@ function buildDayReviewItems({
     })
   }
 
-  if (sessions.length > 0 && workItemEvents.length === 0 && touchedWorkItemNoteCount === 0) {
+  if (sessions.length > 0 && dayEvents.length === 0 && workItemEvents.length === 0 && touchedWorkItemNoteCount === 0) {
     items.push({
       level: 'review',
-      title: 'No Work Item notes or timestamped events',
+      title: 'No day or Work Item notes/events',
       detail: 'Add context if the report still needs memory reconstruction',
     })
   }
@@ -1043,6 +1101,179 @@ function noteEventsOnly(events: WorkItemEventView[]) {
   return events
     .filter((event) => event.kind === 'note_added' && event.text?.trim())
     .sort((left, right) => new Date(left.ts).getTime() - new Date(right.ts).getTime())
+}
+
+function noteDayEventsOnly(events: DayEventView[]) {
+  return events
+    .filter((event) => event.kind === 'note_added' && event.text?.trim())
+    .sort((left, right) => new Date(left.ts).getTime() - new Date(right.ts).getTime())
+}
+
+function DayEventsPanel({
+  events,
+  sessions,
+}: {
+  events: DayEventView[]
+  sessions: FocusSessionView[]
+}) {
+  const [editingEventId, setEditingEventId] = useState<string | null>(null)
+  const [editingText, setEditingText] = useState('')
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
+  const updateEventMutation = useUpdateDayEvent()
+  const deleteEventMutation = useDeleteDayEvent()
+  const ordered = [...events].sort((left, right) => new Date(right.ts).getTime() - new Date(left.ts).getTime())
+  const sessionsById = new Map(sessions.map((session) => [session.id, session]))
+  const mutationError = updateEventMutation.error || deleteEventMutation.error
+
+  const startEditing = (event: DayEventView) => {
+    setEditingEventId(event.id)
+    setEditingText(event.text)
+    setDeleteConfirmId(null)
+  }
+
+  const saveEditing = () => {
+    const trimmed = editingText.trim()
+    if (!editingEventId || !trimmed || updateEventMutation.isPending) return
+
+    updateEventMutation.mutate(
+      { id: editingEventId, text: trimmed },
+      {
+        onSuccess: () => {
+          setEditingEventId(null)
+          setEditingText('')
+        },
+      }
+    )
+  }
+
+  const deleteEvent = (eventId: string) => {
+    if (deleteEventMutation.isPending) return
+
+    deleteEventMutation.mutate(eventId, {
+      onSuccess: () => {
+        setDeleteConfirmId(null)
+        if (editingEventId === eventId) {
+          setEditingEventId(null)
+          setEditingText('')
+        }
+      },
+    })
+  }
+
+  return (
+    <div className="grid gap-1 rounded-md border border-gray-800 bg-gray-900/50 px-3 py-2 text-xs">
+      <div className="flex items-center justify-between text-gray-400">
+        <span className="font-medium text-gray-300">Day Events</span>
+        <span>{events.length}</span>
+      </div>
+      <div className="grid max-h-28 gap-1 overflow-auto pr-1">
+        {ordered.map((event) => {
+          const isEditing = editingEventId === event.id
+          const isDeleteConfirming = deleteConfirmId === event.id
+
+          return (
+            <div key={event.id} className="grid gap-1 rounded border border-gray-800/80 bg-gray-950/30 px-2 py-1 text-gray-300">
+              <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-2">
+                <span className="font-mono text-gray-500">{formatClockTime(event.ts)}</span>
+                <span className="min-w-0 truncate">
+                  <span>{truncate(event.text, 90)}</span>
+                  <span className="text-gray-500"> · </span>
+                  <span className="text-gray-500">{truncate(formatDayEventDuring(event, sessionsById), 40)}</span>
+                </span>
+                <span className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => startEditing(event)}
+                    className="rounded border border-gray-700 px-1.5 py-0.5 text-[11px] text-gray-300 hover:border-gray-500 hover:text-gray-100"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDeleteConfirmId(isDeleteConfirming ? null : event.id)
+                      setEditingEventId(null)
+                    }}
+                    className="rounded border border-red-900/80 px-1.5 py-0.5 text-[11px] text-red-200 hover:border-red-600"
+                  >
+                    Del
+                  </button>
+                </span>
+              </div>
+
+              {isEditing && (
+                <div className="grid gap-1">
+                  <textarea
+                    value={editingText}
+                    onChange={(event) => setEditingText(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+                        event.preventDefault()
+                        saveEditing()
+                      }
+                      if (event.key === 'Escape') {
+                        event.preventDefault()
+                        setEditingEventId(null)
+                        setEditingText('')
+                      }
+                    }}
+                    rows={2}
+                    className="w-full resize-none rounded border border-gray-700 bg-gray-950 px-2 py-1 text-xs text-gray-100 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                  />
+                  <div className="flex justify-end gap-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditingEventId(null)
+                        setEditingText('')
+                      }}
+                      className="rounded px-2 py-0.5 text-[11px] text-gray-400 hover:bg-gray-800 hover:text-gray-200"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={saveEditing}
+                      disabled={!editingText.trim() || updateEventMutation.isPending}
+                      className="rounded bg-emerald-700 px-2 py-0.5 text-[11px] font-medium text-white hover:bg-emerald-600 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-500"
+                    >
+                      Save
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {isDeleteConfirming && (
+                <div className="flex items-center justify-end gap-1 text-[11px] text-red-200">
+                  <span>Delete this day event?</span>
+                  <button
+                    type="button"
+                    onClick={() => setDeleteConfirmId(null)}
+                    className="rounded border border-gray-700 px-1.5 py-0.5 text-gray-300 hover:border-gray-500"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => deleteEvent(event.id)}
+                    disabled={deleteEventMutation.isPending}
+                    className="rounded border border-red-700 px-1.5 py-0.5 text-red-100 hover:border-red-500 disabled:cursor-not-allowed disabled:border-gray-700 disabled:text-gray-500"
+                  >
+                    Delete
+                  </button>
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+      {mutationError && (
+        <div className="text-[11px] text-red-300">
+          {mutationError instanceof Error ? mutationError.message : 'Day event update failed'}
+        </div>
+      )}
+    </div>
+  )
 }
 
 function WorkItemEventsPanel({
@@ -1389,6 +1620,25 @@ function appendWorkItemNotes(
   }
 }
 
+function appendDayEvents(
+  lines: string[],
+  events: DayEventView[],
+  sessions: FocusSessionView[]
+) {
+  const noteEvents = noteDayEventsOnly(events)
+  if (noteEvents.length === 0) {
+    return
+  }
+
+  const sessionsById = new Map(sessions.map((session) => [session.id, session]))
+  lines.push('', '## Day Events', '', '| Time | Zone | During | Event |', '| --- | --- | --- | --- |')
+  for (const event of noteEvents) {
+    lines.push(
+      `| ${escapeMarkdownTable(formatClockTime(event.ts))} | ${escapeMarkdownTable(event.activity_zone ? formatActivityZoneLabel(event.activity_zone) : '')} | ${escapeMarkdownTable(formatDayEventDuring(event, sessionsById))} | ${escapeMarkdownTable(event.text)} |`
+    )
+  }
+}
+
 function appendWorkItemEvents(
   lines: string[],
   events: WorkItemEventView[],
@@ -1408,6 +1658,15 @@ function appendWorkItemEvents(
       `| ${escapeMarkdownTable(formatClockTime(event.ts))} | ${escapeMarkdownTable(formatEventWorkItemTitle(event, workItemsById, sessionsById))} | ${escapeMarkdownTable(formatEventDuring(event, sessionsById))} | ${escapeMarkdownTable(event.text ?? '')} |`
     )
   }
+}
+
+function formatDayEventDuring(event: DayEventView, sessionsById: Map<string, FocusSessionView>) {
+  if (!event.focus_session_id) {
+    return 'day'
+  }
+
+  const session = sessionsById.get(event.focus_session_id)
+  return session?.work_item_title ?? session?.title ?? 'linked focus block'
 }
 
 function formatEventWorkItemTitle(

@@ -290,7 +290,7 @@ nodes:
     effort: 2
     deps:
       - id: ts.day_review.totals_gaps
-    notes: Today can copy the raw day picture or a dogfood report with review prompts, and shows selected Markdown if clipboard access fails. UI and CLI reports are marked as draft when a focus session or Work Item is still active. SQLite fallback export, CLI dogfood report, and dogfood:finish end-of-day gate are implemented; finish refuses active focus sessions, stuck active Work Items, and empty days. Reports now include Total tracked, Work focus, Non-work tracked, per-focus-block Activity Zone totals, Work Item notes, Work Item Events, and Capture Activity for created, resolved, and converted captures. JSON/CSV export remains future work.
+    notes: Today can copy the raw day picture or a dogfood report with review prompts, and shows selected Markdown if clipboard access fails. UI and CLI reports are marked as draft when a focus session or Work Item is still active. SQLite fallback export, CLI dogfood report, and dogfood:finish end-of-day gate are implemented; finish refuses active focus sessions, stuck active Work Items, and empty days. Reports now include Total tracked, Work focus, Non-work tracked, per-focus-block Activity Zone totals, Day Events, Work Item notes, Work Item Events, and Capture Activity for created, resolved, and converted captures. JSON/CSV export remains future work.
     x:
       ops:
         attention_class: current
@@ -303,6 +303,18 @@ nodes:
     deps:
       - id: ts.day_review.export
     notes: Work Item Events can be appended from the note editor or promoted from Capture Inbox, linked to the active focus session when applicable, listed through Local API, shown in the focus panel, edited/deleted for user-authored note_added events, and exported in UI/CLI Markdown reports. Generated system events remain internal history.
+    x:
+      ops:
+        attention_class: current
+  ts.day_review.day_events:
+    title: Timestamped Day Events
+    kind: task
+    parent: ts.day_review
+    status: done
+    effort: 1
+    deps:
+      - id: ts.day_review.work_item_events
+    notes: Day Events can be appended from the focus panel for buffers, recovery notes, tracking corrections, and day-level review context. They can be listed, edited, deleted, linked to the active focus session, assigned an Activity Zone, exported in UI/CLI Markdown reports, and counted by the RC evidence checker.
     x:
       ops:
         attention_class: current
@@ -339,7 +351,8 @@ nodes:
     deps:
       - id: ts.day_review.export
       - id: ts.day_review.work_item_events
-    notes: Today and dogfood reports show a Review Checklist for active-state blockers, open captures, significant gaps, open gaps, Activity Zone coverage, non-work tracking, capture coverage, and Work Item context coverage. The checklist is meant to make evening cleanup explicit before copying the final report.
+      - id: ts.day_review.day_events
+    notes: Today and dogfood reports show a Review Checklist for active-state blockers, open captures, significant gaps, open gaps, Activity Zone coverage, non-work tracking, capture coverage, Day Events, and Work Item context coverage. The checklist is meant to make evening cleanup explicit before copying the final report.
     x:
       ops:
         attention_class: current
@@ -352,7 +365,7 @@ nodes:
     deps:
       - id: ts.day_review.app_telemetry
       - id: ts.day_review.review_checklist
-    notes: The RC evidence check summarizes focus totals, Activity Zones, Work Item notes/events, Capture Inbox coverage, window telemetry, and product-friction counters so the next dogfood day can be judged against report usefulness rather than memory reconstruction.
+    notes: The RC evidence check summarizes focus totals, Activity Zones, Day Events, Work Item notes/events, Capture Inbox coverage, window telemetry, and product-friction counters so the next dogfood day can be judged against report usefulness rather than memory reconstruction.
     x:
       ops:
         attention_class: current
@@ -420,7 +433,7 @@ nodes:
     effort: 2
     deps:
       - id: ts.day_review.analysis_gate
-    notes: "pnpm test now covers contracts build, TypeScript typecheck, Rust agent integration tests with temporary SQLite, mock-store unit tests, Work Item list mode tests, mock API smoke, and key SQLite/report smoke. dogfood:preflight adds script syntax checks, Work Item list mode tests, packaged macOS build, embedded-agent smoke, focus switching, post-factum correction API, Work Item editing, capture API, Capture Inbox telemetry, stale lock/port recovery, app_events constraint migration, restart/restore, and dogfood start/status/ready/rc-check/reset/stop-active/open-app smoke. Browser UI smoke is still manual."
+    notes: "pnpm test now covers contracts build, TypeScript typecheck, Rust agent integration tests with temporary SQLite, mock-store unit tests, Work Item list mode tests, mock API smoke, Day Events API smoke, and key SQLite/report smoke. dogfood:preflight adds script syntax checks, Work Item list mode tests, packaged macOS build, embedded-agent smoke, focus switching, post-factum correction API, Work Item editing, capture API, Day Events API, Capture Inbox telemetry, stale lock/port recovery, app_events constraint migration, restart/restore, and dogfood start/status/ready/rc-check/reset/stop-active/open-app smoke. Browser UI smoke is still manual."
     x:
       ops:
         attention_class: current
@@ -432,7 +445,7 @@ nodes:
     effort: 2
     deps:
       - id: ts.focus_core.dogfood_gate
-    notes: Fixed typing C/С opening Create, creating a new active Work Item, ambiguous last-seen timestamps, and added the first Capture Inbox baseline. Post-baseline work added Work Item title/basic-field editing, focus-block correction including add-missed-block, per-block Activity Zone snapshots/overrides, Work Item today/total time, Work Item list modes for accumulated multi-day inventories, a resizable Today/Work Item split, timestamped Work Item Events, capture-to-event promotion, capture edit/delete for open items, Command+Tab/Dock restore, non-always-on-top window policy, native menu-bar status refresh, and separate Total tracked / Work focus / Non-work tracked report totals. Remaining friction is mostly richer correction/review UI.
+    notes: Fixed typing C/С opening Create, creating a new active Work Item, ambiguous last-seen timestamps, and added the first Capture Inbox baseline. Post-baseline work added Work Item title/basic-field editing, focus-block correction including add-missed-block, per-block Activity Zone snapshots/overrides, Work Item today/total time, Work Item list modes for accumulated multi-day inventories, a resizable Today/Work Item split, timestamped Day Events, timestamped Work Item Events, capture-to-event promotion, capture edit/delete for open items, Command+Tab/Dock restore, non-always-on-top window policy, native menu-bar status refresh, and separate Total tracked / Work focus / Non-work tracked report totals. Remaining friction is mostly richer correction/review UI.
     x:
       ops:
         attention_class: current
@@ -468,7 +481,7 @@ nodes:
     deps:
       - id: ts.hardening.package_app
       - id: ts.hardening.backup_reset
-    notes: "Dogfood Release Candidate doc defines the pass/fail gate. Dogfood Release Baseline records the accepted 2026-07-03 verdict and known limitations. Since acceptance, post-factum focus correction including add-missed-block, per-block Activity Zone correction, Work Item title/type/Activity Zone editing, separate Total tracked / Work focus / Non-work tracked report totals, Activity Zone report totals, today/total Work Item time, timestamped Work Item Events with user-authored event edit/delete, capture-to-event promotion, capture edit/delete for open items, window restore, and native menu bar counter refresh are implemented. Remaining limitations include richer correction/review UI."
+    notes: "Dogfood Release Candidate doc defines the pass/fail gate. Dogfood Release Baseline records the accepted 2026-07-03 verdict and known limitations. Since acceptance, post-factum focus correction including add-missed-block, per-block Activity Zone correction, Work Item title/type/Activity Zone editing, separate Total tracked / Work focus / Non-work tracked report totals, Activity Zone report totals, today/total Work Item time, timestamped Day Events, timestamped Work Item Events with user-authored event edit/delete, capture-to-event promotion, capture edit/delete for open items, window restore, and native menu bar counter refresh are implemented. Remaining limitations include richer correction/review UI."
     x:
       ops:
         attention_class: current

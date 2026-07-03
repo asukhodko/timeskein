@@ -22,6 +22,7 @@ During the day:
 - start a block by typing a Work Item title and pressing `Enter`;
 - switch by typing the next title into `Switch to...` and pressing `Enter`;
 - capture incoming distractions in `Capture interruption...` without stopping the current block;
+- add day-level review notes in `Add day note...` when the observation is about the day, a gap, a buffer, or recovery rather than one Work Item;
 - stop with optional note by pressing `Enter` in the stop-note field;
 - watch the short `12m Focus` counter in the macOS menu bar while a block is running;
 - hide/show the app from the menu bar item, global shortcut, or `Esc` when no dialog is open.
@@ -46,6 +47,7 @@ Timeskein is ready for regular use when it can capture a workday without side tr
 - what focus blocks happened;
 - which Work Item each block belonged to;
 - which Work Item descriptions were relevant to the day;
+- which timestamped day-level observations were recorded;
 - which timestamped Work Item observations were recorded during the day;
 - how long each block lasted;
 - where the meaningful gaps were;
@@ -160,7 +162,7 @@ Current status: the macOS dogfood release baseline was accepted on 2026-07-03. T
 | Post-factum correction | `cargo test -p timeskein-agent`, `pnpm smoke:corrections-api`, and `pnpm smoke:macos-app` verify missed-block creation, update, split, reassignment, Work Item edit, and corrected day-list data | Wrong or missing Work Item intervals can be fixed before copying the final report |
 | Significant gaps | UI and Markdown show gap ranges of 20+ minutes | Long breaks and lost intervals are visible enough |
 | Capture Inbox | `pnpm smoke:capture-api`, `pnpm smoke:mock-api`, and `pnpm smoke:macos-app` verify capture create/list/update/delete/resolve/convert/append-event without interrupting focus | Incoming events can be remembered and cleaned up without switching away from the current block |
-| Markdown export | `Copy Report` exports timeline, `By Work Item`, Activity Zone totals, Work Item Events, gaps, Capture Activity, open captures, Review Checklist, app telemetry, and review prompts; `Copy MD` exports the raw day picture; failed clipboard writes show selected Markdown; `pnpm smoke:export-focus-day` and `pnpm smoke:dogfood-report` verify SQLite fallbacks | Copied note is enough for evening analysis |
+| Markdown export | `Copy Report` exports timeline, `By Work Item`, Activity Zone totals, Day Events, Work Item Events, gaps, Capture Activity, open captures, Review Checklist, app telemetry, and review prompts; `Copy MD` exports the raw day picture; failed clipboard writes show selected Markdown; `pnpm smoke:export-focus-day` and `pnpm smoke:dogfood-report` verify SQLite fallbacks | Copied note is enough for evening analysis |
 | App friction telemetry | `app_events` stores local technical events, `pnpm smoke:app-events` verifies metrics/export, and `pnpm dogfood:report` includes `App Telemetry` | Start/switch/stop/copy/API/window friction is visible without relying only on memory |
 | macOS app with embedded agent and SQLite | `pnpm smoke:macos-app` verifies app launch, SQLite health, focus flow, stale lock/port recovery, and active focus restore after app restart | The real app survives normal workday use |
 
@@ -307,6 +309,7 @@ pnpm dogfood:finish > timeskein-dogfood-report.md
 
 `dogfood:finish` refuses to produce a final report while a focus block or Work Item is still active, or when there are no focus blocks for the selected date.
 The focus-day export includes a `Work Item Notes` section for touched Work Items that have a non-empty note. This is for current Work Item context. Use timestamped Work Item Events for observations tied to a concrete moment in the day; those appear separately in `Work Item Events`. If a timestamped event was written with a typo or in the wrong form, edit or delete it from the Work Item Events panel before copying the final report.
+Use `Add day note...` for observations that explain the day but do not belong to one Work Item: buffer before a heavy meeting, recovery debt, tracking correction reminders, or why a gap happened. These notes appear in `Day Events` and can be edited or deleted before copying the final report.
 The dogfood report also includes `Capture Activity` for every capture created during the selected day, including captures that were already resolved or converted. `Open Captures` remains a separate action list for unresolved inbox entries.
 For the release-candidate verdict, inspect whether `Capture Activity` rows were created during a real focus block. A capture made after stopping all work proves the inbox can store text, but it does not prove interruption handling during focus.
 
@@ -364,6 +367,7 @@ The dogfood day succeeds if the copied Markdown is enough to discuss:
 
 - where active work time went;
 - which Work Items moved;
+- which day-level events explain buffers, recovery, gaps, or tracking corrections;
 - when the day fragmented;
 - where entry cost or switching cost appeared;
 - where Timeskein itself created start, switch, stop, copy, or window-management friction;
@@ -385,7 +389,7 @@ The dogfood day fails if any of these happens often enough to break trust:
 - Stopped focus blocks can be edited, re-zoned, reassigned, or split from the Today list. The correction workflow is basic: there is no drag timeline or bulk edit yet.
 - Capture Inbox is compact. It can create, edit/delete open captures, resolve, convert captures, and append them as Work Item Events, but it has no separate capture history screen yet.
 - Activity Zones are copied from the Work Item into each focus block. A Work Item named `Break` should default to `recovery` or `idle`; an individual stopped block can still be corrected later. Non-work zones contribute to `Total tracked`, but not to `Work focus`.
-- Work Item notes are a single mutable field; timestamped observations are separate Work Item Events. User-authored Work Item Events can be edited or deleted, while generated system history is not exposed as an editable log.
+- Work Item notes are a single mutable field; timestamped observations are separate Work Item Events. Day-level observations are separate Day Events. User-authored Day Events and Work Item Events can be edited or deleted, while generated system history is not exposed as an editable log.
 - There is no automatic active-window detection.
 - There is no synchronization between devices.
 - Browser development mode uses mock data; the real dogfood trial should use the macOS app.

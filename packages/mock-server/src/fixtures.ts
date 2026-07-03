@@ -12,6 +12,7 @@ import type {
   AppEventView,
   ActivityZone,
   WorkItemEventView,
+  DayEventView,
 } from "@timeskein/contracts";
 import { v4 as uuidv4 } from "uuid";
 
@@ -174,6 +175,7 @@ export class MockDataStore {
   private captures: Map<string, CaptureView>;
   private appEvents: Map<string, AppEventView>;
   private workItemEvents: Map<string, WorkItemEventView>;
+  private dayEvents: Map<string, DayEventView>;
   private startTime: number;
 
   constructor() {
@@ -184,6 +186,7 @@ export class MockDataStore {
     this.captures = new Map();
     this.appEvents = new Map();
     this.workItemEvents = new Map();
+    this.dayEvents = new Map();
     this.startTime = Date.now();
 
     // Initialize with mock data
@@ -679,6 +682,61 @@ export class MockDataStore {
         return eventTime >= fromTime && eventTime < toTime;
       })
       .sort((left, right) => new Date(left.ts).getTime() - new Date(right.ts).getTime());
+  }
+
+  addDayEvent(params: { text: string; focus_session_id?: string; activity_zone?: ActivityZone }): DayEventView | undefined {
+    const text = params.text.trim();
+    if (!text) return undefined;
+    if (params.focus_session_id && !this.focusSessions.has(params.focus_session_id)) return undefined;
+
+    const now = new Date().toISOString();
+    const event: DayEventView = {
+      id: uuidv4(),
+      ts: now,
+      kind: "note_added",
+      text,
+      focus_session_id: params.focus_session_id,
+      activity_zone: params.activity_zone,
+      updated_at: now,
+    };
+
+    this.dayEvents.set(event.id, event);
+    return event;
+  }
+
+  updateDayEvent(id: string, params: { text: string; activity_zone?: ActivityZone | null }): DayEventView | undefined {
+    const event = this.dayEvents.get(id);
+    const text = params.text.trim();
+    if (!event || !text) return undefined;
+
+    const updated: DayEventView = {
+      ...event,
+      text,
+      activity_zone: params.activity_zone === undefined ? event.activity_zone : params.activity_zone ?? undefined,
+      updated_at: new Date().toISOString(),
+    };
+    this.dayEvents.set(id, updated);
+    return updated;
+  }
+
+  deleteDayEvent(id: string): boolean {
+    return this.dayEvents.delete(id);
+  }
+
+  listDayEvents(params: { from?: string; to?: string } = {}): DayEventView[] {
+    const fromTime = params.from ? new Date(params.from).getTime() : Number.NEGATIVE_INFINITY;
+    const toTime = params.to ? new Date(params.to).getTime() : Number.POSITIVE_INFINITY;
+
+    return Array.from(this.dayEvents.values())
+      .filter((event) => {
+        const eventTime = new Date(event.ts).getTime();
+        return eventTime >= fromTime && eventTime < toTime;
+      })
+      .sort((left, right) => new Date(left.ts).getTime() - new Date(right.ts).getTime());
+  }
+
+  hasFocusSession(id: string): boolean {
+    return this.focusSessions.has(id);
   }
 
   updateWorkItem(

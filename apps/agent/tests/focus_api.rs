@@ -5,7 +5,8 @@ use serde_json::json;
 use tempfile::tempdir;
 use timeskein_agent::api::{
     handle_capture_append_to_work_item_event, handle_capture_create, handle_capture_delete,
-    handle_capture_update, handle_focus_create_stopped, handle_focus_list, handle_focus_split,
+    handle_capture_update, handle_day_event_add, handle_day_event_delete, handle_day_event_list,
+    handle_day_event_update, handle_focus_create_stopped, handle_focus_list, handle_focus_split,
     handle_focus_start, handle_focus_stop, handle_focus_update, handle_inventory_list,
     handle_work_item_add_event, handle_work_item_delete_event, handle_work_item_events,
     handle_work_item_update, handle_work_item_update_event,
@@ -283,6 +284,118 @@ async fn open_capture_can_be_updated_or_deleted_without_interrupting_focus() {
     )
     .await;
     assert!(blocked_update.is_err());
+}
+
+#[tokio::test]
+async fn day_event_can_be_added_edited_and_deleted_without_interrupting_focus() {
+    let state = test_state().await;
+
+    let started = handle_focus_start(
+        &state,
+        json!({
+            "title": "Day Event Focus",
+            "target_seconds": 60,
+        }),
+        "start",
+    )
+    .await
+    .expect("start");
+    let session_id = started["id"].as_str().expect("session id").to_string();
+
+    let linked_event = handle_day_event_add(
+        &state,
+        json!({
+            "text": "buffer before meeting felt expensive",
+            "focus_session_id": session_id,
+            "activity_zone": "work",
+        }),
+        "add-day-event",
+    )
+    .await
+    .expect("add day event");
+
+    assert_eq!(linked_event["kind"].as_str(), Some("note_added"));
+    assert_eq!(
+        linked_event["text"].as_str(),
+        Some("buffer before meeting felt expensive")
+    );
+    assert_eq!(
+        linked_event["focus_session_id"].as_str(),
+        Some(session_id.as_str())
+    );
+    assert_eq!(linked_event["activity_zone"].as_str(), Some("work"));
+
+    let current = timeskein_agent::api::handle_focus_current(&state, json!({}), "current")
+        .await
+        .expect("current focus");
+    assert_eq!(current["session"]["id"].as_str(), Some(session_id.as_str()));
+
+    let free_event = handle_day_event_add(
+        &state,
+        json!({
+            "text": "recovery was not enough",
+            "activity_zone": "recovery",
+        }),
+        "add-free-day-event",
+    )
+    .await
+    .expect("add free day event");
+    assert_eq!(free_event["activity_zone"].as_str(), Some("recovery"));
+    assert!(free_event.get("focus_session_id").is_none());
+
+    let listed = handle_day_event_list(
+        &state,
+        json!({
+            "from": (Utc::now() - Duration::minutes(1)).to_rfc3339(),
+            "to": (Utc::now() + Duration::minutes(1)).to_rfc3339(),
+        }),
+        "list-day-events",
+    )
+    .await
+    .expect("list day events");
+    let events = listed["events"].as_array().expect("events");
+    assert_eq!(events.len(), 2);
+
+    let linked_id = linked_event["id"].as_str().expect("linked event id");
+    let updated = handle_day_event_update(
+        &state,
+        json!({
+            "id": linked_id,
+            "text": "edited day event",
+            "activity_zone": "coordination",
+        }),
+        "update-day-event",
+    )
+    .await
+    .expect("update day event");
+    assert_eq!(updated["text"].as_str(), Some("edited day event"));
+    assert_eq!(updated["activity_zone"].as_str(), Some("coordination"));
+
+    let free_id = free_event["id"].as_str().expect("free event id");
+    let deleted = handle_day_event_delete(
+        &state,
+        json!({
+            "id": free_id,
+        }),
+        "delete-day-event",
+    )
+    .await
+    .expect("delete day event");
+    assert_eq!(deleted["success"].as_bool(), Some(true));
+
+    let listed_after_delete = handle_day_event_list(
+        &state,
+        json!({
+            "from": (Utc::now() - Duration::minutes(1)).to_rfc3339(),
+            "to": (Utc::now() + Duration::minutes(1)).to_rfc3339(),
+        }),
+        "list-day-events-after-delete",
+    )
+    .await
+    .expect("list day events after delete");
+    let events_after_delete = listed_after_delete["events"].as_array().expect("events");
+    assert_eq!(events_after_delete.len(), 1);
+    assert_eq!(events_after_delete[0]["id"].as_str(), Some(linked_id));
 }
 
 #[tokio::test]

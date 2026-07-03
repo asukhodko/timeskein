@@ -3,6 +3,7 @@
 mod agent;
 mod app_events;
 mod captures;
+mod day_events;
 mod focus_sessions;
 mod inventory;
 mod refs;
@@ -21,6 +22,7 @@ use crate::AppState;
 pub use agent::*;
 pub use app_events::*;
 pub use captures::*;
+pub use day_events::*;
 pub use focus_sessions::*;
 pub use inventory::*;
 pub use refs::*;
@@ -170,6 +172,12 @@ async fn dispatch_method(
         "capture.append_to_work_item_event" => {
             handle_capture_append_to_work_item_event(state, params, request_id).await
         }
+
+        // Day event methods
+        "day_event.add" => handle_day_event_add(state, params, request_id).await,
+        "day_event.list" => handle_day_event_list(state, params, request_id).await,
+        "day_event.update" => handle_day_event_update(state, params, request_id).await,
+        "day_event.delete" => handle_day_event_delete(state, params, request_id).await,
 
         // Inventory methods
         "inventory.list" => handle_inventory_list(state, params, request_id).await,

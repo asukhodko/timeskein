@@ -76,6 +76,18 @@ export interface WorkItemEventView {
   payload?: Record<string, unknown>;
 }
 
+export type DayEventKind = "note_added";
+
+export interface DayEventView {
+  id: string;
+  ts: string;  // ISO 8601
+  kind: DayEventKind;
+  text: string;
+  focus_session_id?: string;
+  activity_zone?: ActivityZone;
+  updated_at: string;  // ISO 8601
+}
+
 // -----------------------------------------------------------------------------
 // Focus Session Types
 // -----------------------------------------------------------------------------
@@ -444,6 +456,34 @@ export interface WorkItemEventsParams {
 
 export interface WorkItemEventsResponse {
   events: WorkItemEventView[];
+  total: number;
+  updated_at: string;
+}
+
+export interface DayEventAddParams {
+  text: string;
+  focus_session_id?: string;
+  activity_zone?: ActivityZone;
+}
+
+export interface DayEventListParams {
+  from?: string;  // ISO 8601
+  to?: string;  // ISO 8601
+}
+
+export interface DayEventUpdateParams {
+  id: string;
+  text: string;
+  activity_zone?: ActivityZone | null;
+}
+
+export interface DayEventDeleteResponse {
+  success: boolean;
+  id: string;
+}
+
+export interface DayEventListResponse {
+  events: DayEventView[];
   total: number;
   updated_at: string;
 }

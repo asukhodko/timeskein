@@ -35,6 +35,9 @@ try {
     INSERT INTO work_item_events (id, ts, work_item_id, kind, payload)
     VALUES ('we1', '2026-06-30T07:30:00Z', 'w1', 'note_added', '{"text":"Found the next concrete step","focus_session_id":"s1"}');
 
+    INSERT INTO day_events (id, ts, kind, text, focus_session_id, activity_zone, updated_at)
+    VALUES ('de1', '2026-06-30T07:45:00Z', 'note_added', 'Meeting buffer was costly', 's1', 'work', '2026-06-30T07:45:00Z');
+
     INSERT INTO app_events (id, ts, source, kind, payload)
     VALUES
       ('e1', '2026-06-30T06:00:00Z', 'ui', 'app_started', NULL),
@@ -52,9 +55,13 @@ try {
   assert(good.stdout.includes("Work focus: 2:00:00"), "good day work focus is missing");
   assert(good.stdout.includes("Non-work tracked: 1:30:00"), "good day non-work tracked is missing");
   assert(good.stdout.includes("Activity Zones in report: 2"), "good day zone count is missing");
+  assert(good.stdout.includes("Day Events: 1"), "good day Day Events count is missing");
+  assert(good.stdout.includes("Day Events during active focus: 1"), "good day active-focus Day Events count is missing");
   assert(good.stdout.includes("Work Item Events: 1"), "good day Work Item Events count is missing");
   assert(good.stdout.includes("Window shown/hidden: 1/1"), "good day window telemetry is missing");
   assert(good.stdout.includes("## By Activity Zone"), "good day zone section is missing");
+  assert(good.stdout.includes("## Day Events"), "good day Day Events section is missing");
+  assert(good.stdout.includes("Meeting buffer was costly"), "good day Day Event text is missing");
   assert(good.stdout.includes("## Work Item Events"), "good day Work Item Events section is missing");
   assert(good.stdout.includes("Captures created today: 1"), "good day capture count is missing");
   assert(good.stdout.includes("Captures during active focus: 1"), "good day active-focus capture count is missing");
@@ -158,6 +165,7 @@ async function migrate(path) {
   await runSqlFile(path, join(repoRoot, "apps/agent/migrations/004_captures.sql"));
   await runSqlFile(path, join(repoRoot, "apps/agent/migrations/005_activity_zones.sql"));
   await runSqlFile(path, join(repoRoot, "apps/agent/migrations/006_work_item_note_events.sql"));
+  await runSqlFile(path, join(repoRoot, "apps/agent/migrations/008_day_events.sql"));
 }
 
 async function runRcCheck(path, extraArgs = []) {

@@ -19,6 +19,7 @@ const steps = [
   ["node", ["--check", "scripts/smoke-focus-api.mjs"]],
   ["node", ["--check", "scripts/smoke-corrections-api.mjs"]],
   ["node", ["--check", "scripts/smoke-capture-api.mjs"]],
+  ["node", ["--check", "scripts/smoke-day-events-api.mjs"]],
   ["node", ["--check", "scripts/smoke-mock-api.mjs"]],
   ["node", ["--check", "scripts/smoke-export-focus-day.mjs"]],
   ["node", ["--check", "scripts/smoke-app-events.mjs"]],

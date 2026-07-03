@@ -27,8 +27,9 @@ to.setDate(to.getDate() + 1);
 const sessions = await loadSessions(dbPath, from, to, now);
 const activeSecondsTotal = sessions.reduce((sum, session) => sum + session.active_seconds, 0);
 const workItemEvents = await loadWorkItemEvents(dbPath, from, to);
+const dayEvents = await loadDayEvents(dbPath, from, to);
 
-process.stdout.write(buildDayMarkdown(sessions, activeSecondsTotal, from, now, workItemEvents));
+process.stdout.write(buildDayMarkdown(sessions, activeSecondsTotal, from, now, workItemEvents, dayEvents));
 
 function parseArgs(args) {
   const result = {};
@@ -133,6 +134,10 @@ async function loadSessions(path, from, to, now) {
 }
 
 async function loadWorkItemEvents(path, from, to) {
+  if (!(await tableExists(path, "work_item_events"))) {
+    return [];
+  }
+
   const query = `
     SELECT
       e.id,
@@ -172,6 +177,54 @@ async function loadWorkItemEvents(path, from, to) {
     .filter((event) => event.text);
 }
 
+async function loadDayEvents(path, from, to) {
+  if (!(await tableExists(path, "day_events"))) {
+    return [];
+  }
+
+  const query = `
+    SELECT
+      id,
+      ts,
+      kind,
+      text,
+      focus_session_id,
+      activity_zone,
+      updated_at
+    FROM day_events
+    WHERE kind = 'note_added'
+      AND datetime(ts) >= datetime(${sqlString(from.toISOString())})
+      AND datetime(ts) < datetime(${sqlString(to.toISOString())})
+    ORDER BY datetime(ts) ASC
+  `;
+
+  const { stdout } = await execFileAsync("sqlite3", sqliteReadArgs(path, query), {
+    maxBuffer: 10 * 1024 * 1024,
+  });
+  const rows = stdout.trim() ? JSON.parse(stdout) : [];
+
+  return rows
+    .map((row) => ({
+      id: row.id,
+      ts: row.ts,
+      kind: row.kind,
+      text: typeof row.text === "string" ? row.text.trim() : "",
+      focus_session_id: row.focus_session_id ?? undefined,
+      activity_zone: row.activity_zone ?? undefined,
+      updated_at: row.updated_at,
+    }))
+    .filter((event) => event.text);
+}
+
+async function tableExists(path, tableName) {
+  const query = `SELECT COUNT(*) AS count FROM sqlite_master WHERE type = 'table' AND name = ${sqlString(tableName)}`;
+  const { stdout } = await execFileAsync("sqlite3", sqliteReadArgs(path, query), {
+    maxBuffer: 1024 * 1024,
+  });
+  const rows = stdout.trim() ? JSON.parse(stdout) : [];
+  return (rows[0]?.count ?? 0) > 0;
+}
+
 function parseJsonPayload(value) {
   if (!value) return undefined;
 
@@ -199,7 +252,7 @@ function sqlString(value) {
   return `'${value.replaceAll("'", "''")}'`;
 }
 
-function buildDayMarkdown(sessionsOldestFirst, activeSecondsTotal, day, now, workItemEvents = []) {
+function buildDayMarkdown(sessionsOldestFirst, activeSecondsTotal, day, now, workItemEvents = [], dayEvents = []) {
   const dayStart = startOfLocalDay(day);
   const dayEnd = nextLocalDay(dayStart);
   const zoneTotals = aggregateActivityZoneTotals(sessionsOldestFirst);
@@ -256,6 +309,7 @@ function buildDayMarkdown(sessionsOldestFirst, activeSecondsTotal, day, now, wor
   }
 
   appendWorkItemNotes(lines, workItemTotals);
+  appendDayEvents(lines, dayEvents, sessionsOldestFirst);
   appendWorkItemEvents(lines, workItemEvents, sessionsOldestFirst);
 
   if (zoneTotals.length > 0) {
@@ -374,6 +428,20 @@ function appendWorkItemNotes(lines, workItemTotals) {
   }
 }
 
+function appendDayEvents(lines, events, sessions) {
+  if (events.length === 0) {
+    return;
+  }
+
+  const sessionsById = new Map(sessions.map((session) => [session.id, session]));
+  lines.push("", "## Day Events", "", "| Time | Zone | During | Event |", "| --- | --- | --- | --- |");
+  for (const event of events) {
+    lines.push(
+      `| ${escapeMarkdownTable(formatClockTime(event.ts))} | ${escapeMarkdownTable(event.activity_zone ? formatActivityZoneLabel(event.activity_zone) : "")} | ${escapeMarkdownTable(formatDayEventDuring(event, sessionsById))} | ${escapeMarkdownTable(event.text)} |`
+    );
+  }
+}
+
 function appendWorkItemEvents(lines, events, sessions) {
   if (events.length === 0) {
     return;
@@ -386,6 +454,13 @@ function appendWorkItemEvents(lines, events, sessions) {
       `| ${escapeMarkdownTable(formatClockTime(event.ts))} | ${escapeMarkdownTable(formatEventWorkItemTitle(event, sessionsById))} | ${escapeMarkdownTable(formatEventDuring(event, sessionsById))} | ${escapeMarkdownTable(event.text)} |`
     );
   }
+}
+
+function formatDayEventDuring(event, sessionsById) {
+  if (!event.focus_session_id) return "day";
+
+  const session = sessionsById.get(event.focus_session_id);
+  return session?.work_item_title ?? session?.title ?? "linked focus block";
 }
 
 function formatEventWorkItemTitle(event, sessionsById) {

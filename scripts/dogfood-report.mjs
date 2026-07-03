@@ -406,12 +406,13 @@ function buildReviewChecklistItems({
 
   if (
     focusMarkdown.includes("| Time | Duration | Zone | Work Item | Note |") &&
+    !focusMarkdown.includes("## Day Events") &&
     !focusMarkdown.includes("## Work Item Events") &&
     !focusMarkdown.includes("## Work Item Notes")
   ) {
     items.push({
       level: "review",
-      title: "No Work Item notes or timestamped events",
+      title: "No day or Work Item notes/events",
       detail: "Add context if the report still needs memory reconstruction",
     });
   }

@@ -16,6 +16,7 @@ try {
   await runSqlFile(join(repoRoot, "apps/agent/migrations/002_focus_sessions.sql"));
   await runSqlFile(join(repoRoot, "apps/agent/migrations/005_activity_zones.sql"));
   await runSqlFile(join(repoRoot, "apps/agent/migrations/004_captures.sql"));
+  await runSqlFile(join(repoRoot, "apps/agent/migrations/008_day_events.sql"));
   await runSql(`
     INSERT INTO work_items (id, title, type, state, pinned, note, created_at, updated_at, last_seen_at)
     VALUES
@@ -37,6 +38,10 @@ try {
     INSERT INTO work_item_events (id, ts, work_item_id, kind, payload)
     VALUES
       ('e1', '2026-06-30T06:12:00Z', 'w1', 'note_added', '{"text":"implementation checkpoint","focus_session_id":"s1"}');
+
+    INSERT INTO day_events (id, ts, kind, text, focus_session_id, activity_zone, updated_at)
+    VALUES
+      ('de1', '2026-06-30T06:20:00Z', 'note_added', 'buffer before meeting felt expensive', 's1', 'work', '2026-06-30T06:20:00Z');
 
     UPDATE work_items SET activity_zone = 'coordination' WHERE id = 'w2';
     UPDATE focus_sessions SET activity_zone = 'coordination' WHERE work_item_id = 'w2';
@@ -73,7 +78,7 @@ try {
     "report review checklist should not flag non-work time when coordination is present"
   );
   assert(
-    stdout.includes("No Work Item notes or timestamped events") === false,
+    stdout.includes("No day or Work Item notes/events") === false,
     "report review checklist should not flag missing context when notes/events are present"
   );
   assert(stdout.includes("## Open Captures"), "report did not include open captures section");
@@ -100,12 +105,18 @@ try {
     stdout.includes("| Deep Work | Deep Work | implementation checkpoint |"),
     "report did not include timestamped Work Item event"
   );
+  assert(stdout.includes("## Day Events"), "report did not include Day Events section");
+  assert(
+    stdout.includes("| Work | Deep Work | buffer before meeting felt expensive |"),
+    "report did not include day event"
+  );
   assert(stdout.includes("## Gaps >= 20:00"), "report did not include significant gaps");
   assert(stdout.includes("### Entry Cost"), "report did not include entry cost prompts");
   assert(stdout.includes("Enough data to discuss the day: yes/no"), "report did not include verdict prompts");
 
   await runSql(`
     DELETE FROM work_item_events;
+    DELETE FROM day_events;
     UPDATE work_items SET note = NULL, activity_zone = 'work';
     UPDATE focus_sessions SET activity_zone = 'work';
   `);
@@ -125,8 +136,8 @@ try {
     "report review checklist did not flag zero non-work time"
   );
   assert(
-    thinEvidenceStdout.includes("No Work Item notes or timestamped events"),
-    "report review checklist did not flag missing Work Item context"
+    thinEvidenceStdout.includes("No day or Work Item notes/events"),
+    "report review checklist did not flag missing day/Work Item context"
   );
 
   await runSql(`

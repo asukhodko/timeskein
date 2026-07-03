@@ -35,7 +35,7 @@ flowchart LR
     style app_entry_ux stroke:#111827,stroke-width:3px
     focus_session_core["Focus<br/>Session core<br/>85%<br/>веха 2026-07-01"]
     class focus_session_core exec_done
-    day_review_export["Day review<br/>and export<br/>90%<br/>веха 2026-07-01"]
+    day_review_export["Day review<br/>and export<br/>~95%<br/>веха 2026-07-01"]
     class day_review_export exec_done
     capture_inbox["Capture<br/>Inbox<br/>100%<br/>окно 2026-07-07..2026-07-08"]
     class capture_inbox exec_done
@@ -129,6 +129,7 @@ gantt
 - Capture a note at the end of a focus session [done] (1 focus-blocks) {100%}
 - First real Focus Session dogfood [done] {100%}
 - Timestamped Work Item Events [done] (2 focus-blocks) {100%}
+- Timestamped Day Events [done] (1 focus-blocks)
 - Post-factum focus correction [done] (3 focus-blocks) {100%}
 - Add local app-event telemetry for dogfood analysis [done] (2 focus-blocks) {100%}
 - Show automatic evening review checklist [done] (1 focus-blocks) {100%}
@@ -146,7 +147,7 @@ gantt
 - Focus Session core [in_progress] (17 focus-blocks) {85%}
 - Add FocusSession and SessionEvent persistence [in_progress] (3 focus-blocks) {70%}
 - Implement start, pause, resume, stop, cancel [in_progress] (3 focus-blocks) {45%}
-- Day review and export [in_progress] (15 focus-blocks) {92%}
+- Day review and export [in_progress] (16 focus-blocks) {92% cov:94%}
 - Show focus blocks on a daily timeline [in_progress] (3 focus-blocks) {65%}
 - Compute totals, gaps, and entry count [in_progress] (2 focus-blocks) {98%}
 - Export dogfood day data as Markdown [in_progress] (2 focus-blocks) {98%}

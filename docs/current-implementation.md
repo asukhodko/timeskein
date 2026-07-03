@@ -99,6 +99,7 @@ pnpm test
 pnpm smoke:focus-api
 pnpm smoke:corrections-api
 pnpm smoke:capture-api
+pnpm smoke:day-events-api
 pnpm smoke:mock-api
 pnpm --filter @timeskein/desktop build
 pnpm smoke:macos-app
@@ -127,14 +128,15 @@ Runtime smoke on macOS:
 - `pnpm smoke:macos-app` also verifies post-factum focus correction: missed stopped block creation, stopped block update, split, Work Item reassignment, Work Item edit, and day-list reflection
 - `pnpm smoke:macos-app` also verifies Capture Inbox create/update/delete/resolve/convert/append-event while ensuring capture actions do not interrupt the active focus session
 - `pnpm smoke:macos-app` also verifies Work Item Event add/update/delete/list against the packaged SQLite-backed app
+- `pnpm smoke:macos-app` also verifies Day Event add/update/delete/list against the packaged SQLite-backed app while ensuring day notes do not interrupt the active focus session
 - `pnpm smoke:macos-app` also verifies startup normalization of legacy active Work Items, orphan active focus sessions, stale `agent.lock` / `agent.port` recovery, and migration of older `app_events` kind constraints
-- `pnpm smoke:export-focus-day` verifies fallback Markdown export, including Work Item notes and timestamped Work Item Events for touched items, against a temporary SQLite database
+- `pnpm smoke:export-focus-day` verifies fallback Markdown export, including Day Events, Work Item notes, and timestamped Work Item Events for touched items, against a temporary SQLite database
 - `pnpm smoke:app-events` verifies the local app-event migration, metrics summary, and Markdown export against a temporary SQLite database
-- `pnpm smoke:dogfood-report` verifies the evening dogfood report wrapper, Review Checklist, Activity Zone evidence warnings, Work Item notes, Work Item Events, Capture Activity, open captures, analysis prompts, and App Telemetry section
+- `pnpm smoke:dogfood-report` verifies the evening dogfood report wrapper, Review Checklist, Activity Zone evidence warnings, Day Events, Work Item notes, Work Item Events, Capture Activity, open captures, analysis prompts, and App Telemetry section
 - `pnpm smoke:dogfood-finish` verifies the end-of-day gate: no active focus session, no active Work Item, and at least one focus block
 - `pnpm smoke:dogfood-status` verifies the embedded-agent status checker against healthy and unhealthy temporary HTTP agents
 - `pnpm smoke:dogfood-ready` verifies the real-database readiness checker against clean and contaminated temporary SQLite databases, including running-process visibility and the actionable next commands
-- `pnpm smoke:dogfood-rc-check` verifies the release-candidate evidence checker against good, open-capture, no-active-focus-capture, empty-day, duplicate-title, and active-session temporary databases
+- `pnpm smoke:dogfood-rc-check` verifies the release-candidate evidence checker against good, open-capture, no-active-focus-capture, empty-day, duplicate-title, and active-session temporary databases, including Day Event evidence
 - `pnpm smoke:dogfood-reset-db` verifies dry-run, backup-reset behavior, and running-process refusal on temporary database files
 - `pnpm smoke:dogfood-start` verifies the start gate against clean and contaminated temporary SQLite databases, including clean-start reset, without opening the app
 - `pnpm smoke:dogfood-stop-active` verifies dry-run, direct SQLite fallback, running-process refusal, and running-agent API behavior for closing a stuck active focus block
@@ -158,7 +160,7 @@ Dogfood launch helper:
 - `pnpm export:focus-day` prints a Markdown day report from the local SQLite database as a fallback to UI copy
 - `pnpm dogfood:metrics` prints dogfood telemetry aggregates from the local SQLite app-event journal
 - `pnpm export:app-events` prints a Markdown event table for deeper inspection of show/hide/start/switch/stop/copy/API behavior
-- `pnpm dogfood:report` prints a Markdown dogfood report with focus data, Review Checklist, Capture Activity, open captures, app telemetry, and evening review prompts, marked as a draft if a focus block or Work Item is still active
+- `pnpm dogfood:report` prints a Markdown dogfood report with focus data, Review Checklist, Day Events, Capture Activity, open captures, app telemetry, and evening review prompts, marked as a draft if a focus block or Work Item is still active
 
 Runtime smoke in browser/mock mode:
 
@@ -170,7 +172,8 @@ Runtime smoke in browser/mock mode:
 - `pnpm smoke:focus-api` verifies the same flow and refuses to run over an existing active focus session
 - `pnpm smoke:corrections-api` verifies focus.create_stopped, focus.update, focus.split, Work Item edit, duplicate-title rejection, and corrected day-list data
 - `pnpm smoke:capture-api` verifies Capture Inbox create/list/update/delete/resolve/convert/append-event without interrupting focus
-- `pnpm smoke:mock-api` starts an isolated mock server, runs `smoke:focus-api`, `smoke:corrections-api`, and `smoke:capture-api`, and stops it
+- `pnpm smoke:day-events-api` verifies Day Event create/list/update/delete without interrupting focus
+- `pnpm smoke:mock-api` starts an isolated mock server, runs `smoke:focus-api`, `smoke:corrections-api`, `smoke:capture-api`, and `smoke:day-events-api`, and stops it
 - mock API also exposes `app_event.log`, `app_event.list`, and `app_event.summary`
 - manual browser UI smoke was checked on 2026-06-30: start by typed title, switch by typed title, stop with note, Today list, totals, and `Copy Report` Markdown with both Work Items
 
@@ -229,6 +232,7 @@ Third real dogfood day and release baseline:
 - Today's focus picture can also be exported from SQLite with `pnpm export:focus-day`
 - Evening dogfood report can be copied from the focus panel, shown as selected Markdown if clipboard access fails, or generated with `pnpm dogfood:report`; UI and CLI reports include the same `Review Checklist`
 - Day reports include a `Work Item Notes` section for touched Work Items that have non-empty notes
+- Day reports include a `Day Events` section for timestamped notes that belong to the day rather than one Work Item
 - Day reports include a `Work Item Events` section for timestamped Work Item observations created during the selected day
 - The UI and CLI label the report as a draft while a focus block or Work Item is still active and include an active-state warning in the Markdown
 - Capture Inbox for incoming events that should not interrupt the current focus block
@@ -245,6 +249,7 @@ Third real dogfood day and release baseline:
 - Create Work Item
 - Edit Work Item title, type, Activity Zone, and note
 - Add timestamped Work Item Events from the note editor
+- Add timestamped Day Events from the focus panel for buffers, recovery notes, tracking corrections, and other review context
 - Work Item cards show last touched time plus today/total tracked time when available
 - Create Work Item directly in `active` starts or switches the focus timer instead of leaving split active state
 - Touch
@@ -296,6 +301,7 @@ High-signal findings:
 - Work Item notes are still mutable descriptions; timestamped observations now live in separate Work Item Events.
 - Capture Inbox worked in real use on 2026-07-03: incoming events were captured during active focus, then resolved or converted later.
 - Work Item notes matter for review and appear in day reports for touched items; timestamped Work Item Events now cover day-specific observations.
+- Some observations belong to the whole day rather than one Work Item. Day Events now cover buffers before heavy meetings, recovery notes, tracking corrections, and similar review context.
 - Wrong Work Item assignment happened during dogfood; stopped blocks can now be corrected and split after the fact.
 - Activity Zones are now available on Work Items and copied into each focus block as a snapshot. Stopped blocks can be corrected independently, so changing a Work Item later does not rewrite past day reports. The UI and Markdown separate total tracked time, work focus, non-work tracked time, and per-zone totals for work, coordination, recovery, idle, and personal.
 - macOS window restore and the menu bar counter were newly fixed after the third dogfood day; the next dogfood day should verify that Command+Tab/Dock return and status refresh feel reliable in real use.
@@ -330,6 +336,25 @@ The current API surface is:
 - `work_item.events` to list events by Work Item and/or time window.
 
 The note editor can append a timestamped event without replacing the Work Item description. Capture Inbox can also append a capture as a Work Item Event, preserving the capture text and focus-session link. The focus panel shows Work Item Events for the day and lets user-authored note events be edited or deleted before the final report. UI/CLI Markdown exports include a `Work Item Events` section.
+
+## Day Events
+
+Day Events store timestamped day-level observations in SQLite table `day_events`.
+They are for review context that is not naturally owned by one Work Item:
+
+- buffer or mobilization before a heavy meeting;
+- recovery notes after a demanding block;
+- tracking corrections noticed during the day;
+- context that explains a gap without turning it into timed work.
+
+The current API surface is:
+
+- `day_event.add` to append a day-level note, optionally linked to the active focus session and Activity Zone;
+- `day_event.update` to edit the text or Activity Zone;
+- `day_event.delete` to remove a user-authored day note;
+- `day_event.list` to list day notes by time window.
+
+The focus panel has a compact `Add day note...` input. Adding, editing, or deleting a Day Event must not stop or switch the active timer. UI/CLI Markdown exports and the RC checker include a `Day Events` section.
 
 ## App Event Telemetry
 

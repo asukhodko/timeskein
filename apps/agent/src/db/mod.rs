@@ -3,6 +3,7 @@
 mod app_events;
 mod captures;
 mod connection;
+mod day_events;
 mod focus_sessions;
 mod refs;
 mod settings;

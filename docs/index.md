@@ -55,7 +55,7 @@ All documentation below is the **source of truth** for the project.
 |----------|-------------|
 | [00_project_overview.md](00_project_overview.md) | Main project document: concepts, principles, model |
 | [current-implementation.md](current-implementation.md) | Current repository/runtime state |
-| [dogfood-day.md](dogfood-day.md) | Protocol for replacing Session during one real workday, including Capture Inbox and local app telemetry checks |
+| [dogfood-day.md](dogfood-day.md) | Protocol for replacing Session during one real workday, including Capture Inbox, Day Events, and local app telemetry checks |
 | [dogfood-release-candidate.md](dogfood-release-candidate.md) | Release-candidate gate for daily Session replacement |
 | [dogfood-release-baseline.md](dogfood-release-baseline.md) | Accepted 2026-07-03 baseline for daily macOS use and known limitations |
 | [glossary.md](glossary.md) | Definitions of all terms and entities |

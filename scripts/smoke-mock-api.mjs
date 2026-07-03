@@ -39,6 +39,10 @@ try {
     ...process.env,
     TIMESKEIN_API_URL: apiUrl,
   });
+  await run("node", ["scripts/smoke-day-events-api.mjs"], {
+    ...process.env,
+    TIMESKEIN_API_URL: apiUrl,
+  });
 
   console.log(
     JSON.stringify(

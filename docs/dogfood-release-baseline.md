@@ -16,7 +16,7 @@ trustworthy enough for regular dogfooding:
 - keep one active timer and one active Work Item;
 - capture incoming interruptions without switching away from the current block;
 - produce an end-of-day report with focus blocks, Work Item totals, Activity Zone totals, gaps,
-  Capture Activity, open captures, Work Item notes, Work Item Events, and app telemetry.
+  Capture Activity, open captures, Day Events, Work Item notes, Work Item Events, and app telemetry.
 
 ## Evidence
 
@@ -84,10 +84,13 @@ Post-dogfood correction and first review enrichment are now partly implemented:
   shows today/total spent time, and copied reports include Activity Zone totals.
 - Timestamped Work Item Events can be appended from the note editor and appear
   in UI/CLI day reports.
+- Timestamped Day Events can be appended from the focus panel and appear in
+  UI/CLI day reports and RC evidence.
 - Captures can be appended as timestamped Work Item Events.
 - Open captures can be edited or deleted before the final day report.
 - User-authored Work Item Events can be edited or deleted before the final day
   report.
+- User-authored Day Events can be edited or deleted before the final day report.
 - Today and copied reports include an automatic Review Checklist for active-state
   blockers, open captures, significant gaps, open gaps, Activity Zone coverage,
   non-work tracking, capture coverage, and Work Item context coverage.
@@ -99,6 +102,8 @@ Remaining entry and review polish:
 
 - verify that the Review Checklist catches the actual evening cleanup during
   the next dogfood day.
+- verify that Day Events make buffers, recovery debt, gap explanations, and
+  tracking corrections visible without relying on memory.
 - decide whether per-block zone correction is enough, or whether day review
   needs a faster bulk zone editor.
 

@@ -103,6 +103,7 @@ async function loadEvidence(path, from, to, now) {
     openCaptures,
     capturesCreatedToday,
     workItemEvents,
+    dayEvents,
     events,
   ] = await Promise.all([
     loadSessions(path, from, to, now),
@@ -112,6 +113,7 @@ async function loadEvidence(path, from, to, now) {
     loadOpenCaptures(path),
     loadCapturesCreatedToday(path, from, to),
     loadWorkItemEvents(path, from, to),
+    loadDayEvents(path, from, to),
     loadEvents(path, from, to),
   ]);
 
@@ -124,6 +126,7 @@ async function loadEvidence(path, from, to, now) {
   const capturesDuringActiveFocus = capturesCreatedToday.filter((capture) => capture.focus_session_id).length;
   const workItemNoteCount = workItemTotals.filter((item) => item.note?.trim()).length;
   const workItemEventsDuringActiveFocus = workItemEvents.filter((event) => event.focus_session_id).length;
+  const dayEventsDuringActiveFocus = dayEvents.filter((event) => event.focus_session_id).length;
   const telemetry = summarizeEvents(events);
 
   return {
@@ -136,6 +139,8 @@ async function loadEvidence(path, from, to, now) {
     capturesDuringActiveFocus,
     workItemEvents,
     workItemEventsDuringActiveFocus,
+    dayEvents,
+    dayEventsDuringActiveFocus,
     events,
     totalFocusSeconds,
     workFocusSeconds,
@@ -288,6 +293,38 @@ async function loadWorkItemEvents(path, from, to) {
     .filter((event) => event.text);
 }
 
+async function loadDayEvents(path, from, to) {
+  if (!(await tableExists(path, "day_events"))) return [];
+
+  const rows = await queryJson(path, `
+    SELECT
+      id,
+      ts,
+      kind,
+      text,
+      focus_session_id,
+      activity_zone,
+      updated_at
+    FROM day_events
+    WHERE kind = 'note_added'
+      AND datetime(ts) >= datetime(${sqlString(from.toISOString())})
+      AND datetime(ts) < datetime(${sqlString(to.toISOString())})
+    ORDER BY datetime(ts) ASC
+  `);
+
+  return rows
+    .map((row) => ({
+      id: row.id,
+      ts: row.ts,
+      kind: row.kind,
+      text: typeof row.text === "string" ? row.text.trim() : "",
+      focus_session_id: row.focus_session_id ?? undefined,
+      activity_zone: row.activity_zone ?? undefined,
+      updated_at: row.updated_at,
+    }))
+    .filter((event) => event.text);
+}
+
 async function loadEvents(path, from, to) {
   if (!(await tableExists(path, "app_events"))) return [];
 
@@ -362,8 +399,13 @@ function assessEvidence(evidence, minFocusSeconds) {
     reviewItems.push("Non-work tracked time is zero. Confirm breaks, recovery, coordination, and personal blocks were not folded into work focus.");
   }
 
-  if (evidence.workItemEvents.length === 0 && evidence.sessions.length > 0) {
-    reviewItems.push("No timestamped Work Item Events found. If the report needs memory reconstruction, add event notes before treating it as final.");
+  if (
+    evidence.dayEvents.length === 0 &&
+    evidence.workItemEvents.length === 0 &&
+    evidence.workItemNoteCount === 0 &&
+    evidence.sessions.length > 0
+  ) {
+    reviewItems.push("No Day Events, Work Item notes, or timestamped Work Item Events found. If the report needs memory reconstruction, add context before treating it as final.");
   }
 
   if (evidence.openCaptures.length > 0) {
@@ -444,6 +486,8 @@ function buildRcReport(date, path, evidence, assessment, minFocusSeconds) {
     `- Entrances: ${evidence.sessions.length}`,
     `- Work Items in report: ${evidence.workItemTotals.length}`,
     `- Work Item notes in report: ${evidence.workItemNoteCount}`,
+    `- Day Events: ${evidence.dayEvents.length}`,
+    `- Day Events during active focus: ${evidence.dayEventsDuringActiveFocus}`,
     `- Work Item Events: ${evidence.workItemEvents.length}`,
     `- Work Item Events during active focus: ${evidence.workItemEventsDuringActiveFocus}`,
     `- Activity Zones in report: ${evidence.activityZoneTotals.length}`,
@@ -474,6 +518,16 @@ function buildRcReport(date, path, evidence, assessment, minFocusSeconds) {
     lines.push("## By Activity Zone", "", "| Duration | Entrances | Zone |", "| ---: | ---: | --- |");
     for (const item of evidence.activityZoneTotals) {
       lines.push(`| ${formatDuration(item.activeSeconds)} | ${item.entrances} | ${escapeMarkdownTable(formatActivityZoneLabel(item.zone))} |`);
+    }
+    lines.push("");
+  }
+
+  if (evidence.dayEvents.length > 0) {
+    lines.push("## Day Events", "", "| Time | Zone | During Focus | Event |", "| --- | --- | --- | --- |");
+    for (const event of evidence.dayEvents) {
+      lines.push(
+        `| ${escapeMarkdownTable(formatClockTime(event.ts))} | ${escapeMarkdownTable(event.activity_zone ? formatActivityZoneLabel(event.activity_zone) : "")} | ${escapeMarkdownTable(event.focus_session_id ? "yes" : "")} | ${escapeMarkdownTable(event.text)} |`
+      );
     }
     lines.push("");
   }
@@ -513,7 +567,7 @@ function buildRcReport(date, path, evidence, assessment, minFocusSeconds) {
     "",
     "- Timeskein was the primary tracker for the full day: yes/no",
     "- Activity Zones separated work from coordination/recovery/idle/personal well enough: yes/no",
-    "- Work Item Events or notes reduced memory reconstruction: yes/no",
+    "- Day Events, Work Item Events, or notes reduced memory reconstruction: yes/no",
     "- Capture Inbox preserved focus instead of becoming another pile: yes/no",
     "- Report is enough without memory reconstruction: yes/no",
     "- Remaining limitations are acceptable for daily use: yes/no",

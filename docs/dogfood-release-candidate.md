@@ -20,7 +20,7 @@ In scope:
 - manual focus-session tracking;
 - Work Items created or reused by title;
 - Capture Inbox for incoming events that should not interrupt focus;
-- Markdown day report, Capture Activity, open captures, gaps, Work Item totals, Work Item notes, and app telemetry;
+- Markdown day report, Capture Activity, open captures, gaps, Work Item totals, Day Events, Work Item notes, and app telemetry;
 - documentation, known limits, and opskarta status.
 
 Out of scope for this gate:
@@ -89,6 +89,7 @@ The final evidence must include:
 - focus blocks for the real workday;
 - total tracked time, work focus, and non-work tracked time;
 - Work Item totals;
+- Day Events for review context that is not owned by one Work Item;
 - Work Item notes for touched items;
 - Activity Zone totals;
 - timestamped Work Item Events, if they were needed to avoid memory reconstruction;

@@ -282,6 +282,15 @@ function buildDogfoodReport(
   });
 
   lines.push(formatReviewChecklistMarkdown(reviewItems).trim(), "");
+  lines.push(formatDailyControlGoalAuditMarkdown({
+    activeFocus,
+    activeWorkItems,
+    openCaptures,
+    captureActivity,
+    focusMarkdown,
+    telemetryMarkdown,
+    reviewItems,
+  }).trim(), "");
 
   lines.push(
     "## Focus Data",
@@ -447,6 +456,113 @@ function buildReviewChecklistItems({
   }
 
   return items;
+}
+
+function formatDailyControlGoalAuditMarkdown({
+  activeFocus,
+  activeWorkItems,
+  openCaptures,
+  captureActivity,
+  focusMarkdown,
+  telemetryMarkdown,
+  reviewItems,
+}) {
+  const hasReview = (title) => reviewItems.some((item) => item.title === title);
+  const hasFocusBlocks = focusMarkdown.includes("| Time | Duration | Zone | Work Item | Note |");
+  const totalTracked = extractLineValue(focusMarkdown, "Total tracked") ?? "n/a";
+  const workFocus = extractLineValue(focusMarkdown, "Work focus") ?? "n/a";
+  const nonWorkTracked = extractLineValue(focusMarkdown, "Non-work tracked") ?? "n/a";
+  const entrances = extractLineValue(focusMarkdown, "Entrances") ?? "0";
+  const windowEvidence = extractLineValue(telemetryMarkdown, "Window shown/hidden") ?? "n/a";
+  const apiErrors = parseLeadingNumber(extractLineValue(telemetryMarkdown, "API errors"));
+  const copyFailures = parseLeadingNumber(extractLineValue(telemetryMarkdown, "Copy failures"));
+  const startStopFailures = extractLineValue(telemetryMarkdown, "Start/stop failures") ?? "n/a";
+  const correctionEvidence =
+    extractLineValue(telemetryMarkdown, "Corrections requested/applied/reviewed/failed") ?? "n/a";
+  const telemetryAvailable = telemetryMarkdown.includes("Total events:");
+
+  const rows = [
+    {
+      requirement: "Final state clean",
+      status: activeFocus || activeWorkItems.length > 0 ? "block" : "pass",
+      evidence: `${activeFocus ? 1 : 0} active focus block(s), ${activeWorkItems.length} active Work Item(s)`,
+    },
+    {
+      requirement: "Focus blocks visible",
+      status: hasFocusBlocks ? "pass" : "block",
+      evidence: `${entrances} entrance(s), ${totalTracked} tracked`,
+    },
+    {
+      requirement: "Work Item totals available",
+      status: focusMarkdown.includes("## By Work Item") ? "pass" : "review",
+      evidence: focusMarkdown.includes("## By Work Item") ? "By Work Item section present" : "By Work Item section missing",
+    },
+    {
+      requirement: "Activity Zones separated",
+      status:
+        hasFocusBlocks && !hasReview("Review Activity Zone coverage") && !hasReview("Confirm non-work tracked time")
+          ? "pass"
+          : "review",
+      evidence: `${workFocus} work, ${nonWorkTracked} non-work`,
+    },
+    {
+      requirement: "Day and Work Item context present",
+      status: hasReview("No day or Work Item notes/events") ? "review" : "pass",
+      evidence: [
+        focusMarkdown.includes("## Day Events") ? "Day Events" : "",
+        focusMarkdown.includes("## Work Item Events") ? "Work Item Events" : "",
+        focusMarkdown.includes("## Work Item Notes") ? "Work Item Notes" : "",
+      ].filter(Boolean).join(", ") || "no context sections",
+    },
+    {
+      requirement: "Gaps and captures visible",
+      status: "pass",
+      evidence: `${focusMarkdown.includes("## Gaps >=") ? "gaps section present" : "no significant gaps section"}, ${openCaptures.length} open capture(s), ${captureActivity.length} capture(s) today`,
+    },
+    {
+      requirement: "Window and menubar friction evidenced",
+      status: !telemetryAvailable || apiErrors > 0 || copyFailures > 0 || startStopFailures !== "0/0" ? "review" : "pass",
+      evidence: `window shown/hidden ${windowEvidence}, API errors ${apiErrors}, start/stop failures ${startStopFailures}`,
+    },
+    {
+      requirement: "Tracking correction or review evidenced",
+      status: hasReview("Confirm tracking accuracy or test correction") ? "review" : "pass",
+      evidence: correctionEvidence,
+    },
+    {
+      requirement: "Hard blockers absent",
+      status: activeFocus || activeWorkItems.length > 0 ? "block" : "pass",
+      evidence: reviewItems.filter((item) => item.level === "blocker").length + " blocker(s)",
+    },
+    {
+      requirement: "Local gates",
+      status: "manual",
+      evidence: "Run pnpm test and pnpm dogfood:preflight on the same code before closing the goal",
+    },
+  ];
+
+  return [
+    "## Daily Control Goal Audit",
+    "",
+    "| Requirement | Status | Evidence |",
+    "| --- | --- | --- |",
+    ...rows.map(
+      (row) =>
+        `| ${escapeMarkdownTable(row.requirement)} | ${escapeMarkdownTable(row.status)} | ${escapeMarkdownTable(row.evidence)} |`
+    ),
+  ].join("\n");
+}
+
+function extractLineValue(markdown, label) {
+  const escapedLabel = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const match = markdown.match(new RegExp(`^${escapedLabel}:\\s*(.+)$`, "m"));
+  return match?.[1]?.trim();
+}
+
+function parseLeadingNumber(value) {
+  if (!value) return 0;
+  const match = value.match(/^\d+/);
+  return match ? Number(match[0]) : 0;
 }
 
 function parseCorrectionTelemetry(markdown) {

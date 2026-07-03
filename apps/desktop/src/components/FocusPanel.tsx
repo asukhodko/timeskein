@@ -944,6 +944,16 @@ async function buildDogfoodReportMarkdown(
   lines.push(
     formatReviewChecklistMarkdown(reviewItems).trim(),
     '',
+    formatDailyControlGoalAuditMarkdown({
+      activeFocus,
+      activeWorkItems,
+      openCaptures,
+      captureActivity,
+      todayMarkdown,
+      appTelemetryMarkdown,
+      reviewItems,
+    }).trim(),
+    '',
     '## Focus Data',
     '',
     todayMarkdown.trim(),
@@ -1214,6 +1224,121 @@ function formatReviewChecklistMarkdown(items: DayReviewItem[]) {
   }
 
   return `${lines.join('\n')}\n`
+}
+
+function formatDailyControlGoalAuditMarkdown({
+  activeFocus,
+  activeWorkItems,
+  openCaptures,
+  captureActivity,
+  todayMarkdown,
+  appTelemetryMarkdown,
+  reviewItems,
+}: {
+  activeFocus?: FocusSessionView
+  activeWorkItems: WorkItemView[]
+  openCaptures: CaptureView[]
+  captureActivity: CaptureView[]
+  todayMarkdown: string
+  appTelemetryMarkdown: string
+  reviewItems: DayReviewItem[]
+}) {
+  const hasReview = (title: string) => reviewItems.some((item) => item.title === title)
+  const hasFocusBlocks = todayMarkdown.includes('| Time | Duration | Zone | Work Item | Note |')
+  const totalTracked = extractLineValue(todayMarkdown, 'Total tracked') ?? 'n/a'
+  const workFocus = extractLineValue(todayMarkdown, 'Work focus') ?? 'n/a'
+  const nonWorkTracked = extractLineValue(todayMarkdown, 'Non-work tracked') ?? 'n/a'
+  const entrances = extractLineValue(todayMarkdown, 'Entrances') ?? '0'
+  const windowEvidence = extractLineValue(appTelemetryMarkdown, 'Window shown/hidden') ?? 'n/a'
+  const apiErrors = parseLeadingNumber(extractLineValue(appTelemetryMarkdown, 'API errors'))
+  const copyFailures = parseLeadingNumber(extractLineValue(appTelemetryMarkdown, 'Copy failures'))
+  const startStopFailures = extractLineValue(appTelemetryMarkdown, 'Start/stop failures') ?? 'n/a'
+  const correctionEvidence =
+    extractLineValue(appTelemetryMarkdown, 'Corrections requested/applied/reviewed/failed') ?? 'n/a'
+  const telemetryAvailable = appTelemetryMarkdown.includes('Total events:')
+  const rows = [
+    {
+      requirement: 'Final state clean',
+      status: activeFocus || activeWorkItems.length > 0 ? 'block' : 'pass',
+      evidence: `${activeFocus ? 1 : 0} active focus block(s), ${activeWorkItems.length} active Work Item(s)`,
+    },
+    {
+      requirement: 'Focus blocks visible',
+      status: hasFocusBlocks ? 'pass' : 'block',
+      evidence: `${entrances} entrance(s), ${totalTracked} tracked`,
+    },
+    {
+      requirement: 'Work Item totals available',
+      status: todayMarkdown.includes('## By Work Item') ? 'pass' : 'review',
+      evidence: todayMarkdown.includes('## By Work Item') ? 'By Work Item section present' : 'By Work Item section missing',
+    },
+    {
+      requirement: 'Activity Zones separated',
+      status: hasFocusBlocks && !hasReview('Review Activity Zone coverage') && !hasReview('Confirm non-work tracked time')
+        ? 'pass'
+        : 'review',
+      evidence: `${workFocus} work, ${nonWorkTracked} non-work`,
+    },
+    {
+      requirement: 'Day and Work Item context present',
+      status: hasReview('No day or Work Item notes/events') ? 'review' : 'pass',
+      evidence: [
+        todayMarkdown.includes('## Day Events') ? 'Day Events' : '',
+        todayMarkdown.includes('## Work Item Events') ? 'Work Item Events' : '',
+        todayMarkdown.includes('## Work Item Notes') ? 'Work Item Notes' : '',
+      ].filter(Boolean).join(', ') || 'no context sections',
+    },
+    {
+      requirement: 'Gaps and captures visible',
+      status: 'pass',
+      evidence: `${todayMarkdown.includes('## Gaps >=') ? 'gaps section present' : 'no significant gaps section'}, ${openCaptures.length} open capture(s), ${captureActivity.length} capture(s) today`,
+    },
+    {
+      requirement: 'Window and menubar friction evidenced',
+      status: !telemetryAvailable || apiErrors > 0 || copyFailures > 0 || startStopFailures !== '0/0'
+        ? 'review'
+        : 'pass',
+      evidence: `window shown/hidden ${windowEvidence}, API errors ${apiErrors}, start/stop failures ${startStopFailures}`,
+    },
+    {
+      requirement: 'Tracking correction or review evidenced',
+      status: hasReview('Confirm tracking accuracy or test correction') ? 'review' : 'pass',
+      evidence: correctionEvidence,
+    },
+    {
+      requirement: 'Hard blockers absent',
+      status: activeFocus || activeWorkItems.length > 0 ? 'block' : 'pass',
+      evidence: `${reviewItems.filter((item) => item.level === 'blocker').length} blocker(s)`,
+    },
+    {
+      requirement: 'Local gates',
+      status: 'manual',
+      evidence: 'Run pnpm test and pnpm dogfood:preflight on the same code before closing the goal',
+    },
+  ]
+
+  return [
+    '## Daily Control Goal Audit',
+    '',
+    '| Requirement | Status | Evidence |',
+    '| --- | --- | --- |',
+    ...rows.map(
+      (row) =>
+        `| ${escapeMarkdownTable(row.requirement)} | ${escapeMarkdownTable(row.status)} | ${escapeMarkdownTable(row.evidence)} |`
+    ),
+  ].join('\n')
+}
+
+function extractLineValue(markdown: string, label: string) {
+  const escapedLabel = label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const match = markdown.match(new RegExp(`^${escapedLabel}:\\s*(.+)$`, 'm'))
+  return match?.[1]?.trim()
+}
+
+function parseLeadingNumber(value?: string) {
+  if (!value) return 0
+  const match = value.match(/^\d+/)
+  return match ? Number(match[0]) : 0
 }
 
 function capturesForLocalDay(captures: CaptureView[], now: Date) {
@@ -1685,6 +1810,7 @@ function formatAppTelemetryMarkdown(summary: AppEventSummary) {
     `Start requests: ${summary.start_requests}`,
     `Switch requests: ${summary.switch_requests}`,
     `Stop requests: ${summary.stop_requests}`,
+    `Start/stop failures: ${summary.start_failures}/${summary.stop_failures}`,
     `Window shown/hidden: ${summary.window_shown}/${summary.window_hidden}`,
     `Window drag starts: ${summary.window_drag_started}`,
     `Copy failures: ${summary.copy_failures}`,

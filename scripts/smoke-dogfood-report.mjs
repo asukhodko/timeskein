@@ -67,6 +67,11 @@ try {
   assert(stdout.includes("## Focus Data"), "report did not include focus data section");
   assert(stdout.includes("## App Telemetry"), "report did not include app telemetry section");
   assert(stdout.includes("## Review Checklist"), "report did not include review checklist section");
+  assert(stdout.includes("## Daily Control Goal Audit"), "report did not include daily-control audit section");
+  assert(stdout.includes("| Focus blocks visible | pass |"), "report daily-control audit did not pass focus blocks");
+  assert(stdout.includes("| Activity Zones separated | pass |"), "report daily-control audit did not pass zones");
+  assert(stdout.includes("| Tracking correction or review evidenced | pass |"), "report daily-control audit did not pass correction evidence");
+  assert(stdout.includes("| Local gates | manual |"), "report daily-control audit did not include local gates");
   assert(
     stdout.includes("Resolve or convert open captures"),
     "report review checklist did not include open capture cleanup"

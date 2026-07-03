@@ -85,7 +85,8 @@ non-work tracked time, Activity Zone coverage, Work Item notes/events, Capture
 Inbox coverage, focus correction/review telemetry, and window/show-hide telemetry.
 The `Daily Control Goal Audit` section maps that evidence to the current
 daily-control goal, so the next dogfood day can be judged requirement by
-requirement instead of by memory.
+requirement instead of by memory. The same audit is included in the normal UI
+and CLI dogfood reports before the raw focus data.
 
 The final evidence must include:
 

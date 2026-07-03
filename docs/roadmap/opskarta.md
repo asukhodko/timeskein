@@ -9,10 +9,10 @@ tracked workdays. The near-term focus now stays narrow: improve post-factum
 correction and entry polish before widening scope to sync, Evidence Mode,
 automation, or new platforms.
 
-The current post-baseline gate is the Daily Control Goal Audit in
-`pnpm dogfood:rc-check`: it checks whether a real day has enough evidence for
-focus blocks, Work Item totals, Activity Zones, notes/events, captures, gaps,
-corrections, and app-friction review.
+The current post-baseline gate is the Daily Control Goal Audit in the UI/CLI
+dogfood report and in `pnpm dogfood:rc-check`: it checks whether a real day has
+enough evidence for focus blocks, Work Item totals, Activity Zones,
+notes/events, captures, gaps, corrections, and app-friction review.
 
 ## Executive view
 

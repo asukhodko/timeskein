@@ -132,7 +132,7 @@ Runtime smoke on macOS:
 - `pnpm smoke:macos-app` also verifies startup normalization of legacy active Work Items, orphan active focus sessions, stale `agent.lock` / `agent.port` recovery, and migration of older `app_events` kind constraints
 - `pnpm smoke:export-focus-day` verifies fallback Markdown export, including Day Events, Work Item notes, timestamped Work Item Events for touched items, and legacy focus-session schemas without Activity Zone columns, against temporary SQLite databases
 - `pnpm smoke:app-events` verifies the local app-event migration, metrics summary, and Markdown export against a temporary SQLite database
-- `pnpm smoke:dogfood-report` verifies the evening dogfood report wrapper, Review Checklist, Activity Zone evidence warnings, correction evidence prompts and accepted correction review, Day Events, Work Item notes, Work Item Events, Capture Activity, open captures, analysis prompts, and App Telemetry section
+- `pnpm smoke:dogfood-report` verifies the evening dogfood report wrapper, Review Checklist, Daily Control Goal Audit, Activity Zone evidence warnings, correction evidence prompts and accepted correction review, Day Events, Work Item notes, Work Item Events, Capture Activity, open captures, analysis prompts, and App Telemetry section
 - `pnpm smoke:dogfood-finish` verifies the end-of-day gate: no active focus session, no active Work Item, and at least one focus block
 - `pnpm smoke:dogfood-status` verifies the embedded-agent status checker against healthy and unhealthy temporary HTTP agents
 - `pnpm smoke:dogfood-ready` verifies the real-database readiness checker against clean and contaminated temporary SQLite databases, including running-process visibility and the actionable next commands
@@ -158,9 +158,9 @@ Dogfood launch helper:
 - `pnpm dogfood:macos` rebuilds and opens the packaged app for a real Session replacement day
 - `pnpm open:macos-app` refuses by default when `timeskein-desktop` is already running, so a dogfood start does not silently activate an old process; `--check-only` validates bundle plus guard without opening the app, and `--check-running-only` runs only the process guard before preflight has built the app
 - `pnpm export:focus-day` prints a Markdown day report from the local SQLite database as a fallback to UI copy
-- `pnpm dogfood:metrics` prints dogfood telemetry aggregates from the local SQLite app-event journal
+- `pnpm dogfood:metrics` prints dogfood telemetry aggregates from the local SQLite app-event journal, including start/stop failure counts
 - `pnpm export:app-events` prints a Markdown event table for deeper inspection of show/hide/start/switch/stop/copy/API behavior
-- `pnpm dogfood:report` prints a Markdown dogfood report with focus data, Review Checklist, Day Events, Capture Activity, open captures, app telemetry, and evening review prompts, marked as a draft if a focus block or Work Item is still active
+- `pnpm dogfood:report` prints a Markdown dogfood report with focus data, Review Checklist, Daily Control Goal Audit, Day Events, Capture Activity, open captures, app telemetry, and evening review prompts, marked as a draft if a focus block or Work Item is still active
 
 Runtime smoke in browser/mock mode:
 
@@ -227,7 +227,7 @@ Third real dogfood day and release baseline:
 - Day views include focus blocks that overlap the selected local day; duration totals are clipped to the selected day window
 - Today and Markdown export show an `Open Gap` when no focus block is running and the interval after the last stopped block is at least 20 minutes
 - Markdown reports use the corrected focus-session rows, so post-factum edits are reflected in copied day data
-- Today shows a `Review before report` checklist for active-state blockers, open captures, significant gaps, open gaps, Activity Zone coverage, non-work tracking, capture coverage, Work Item context coverage, and focus-correction evidence. If no correction is needed, the user can explicitly accept tracking accuracy from the checklist, which writes `focus_correction_reviewed` telemetry.
+- Today shows a `Review before report` checklist for active-state blockers, open captures, significant gaps, open gaps, Activity Zone coverage, non-work tracking, capture coverage, Work Item context coverage, and focus-correction evidence. If no correction is needed, the user can explicitly accept tracking accuracy from the checklist, which writes `focus_correction_reviewed` telemetry. Copied UI dogfood reports include the same Daily Control Goal Audit as the CLI report.
 - Today's focus picture can be copied as Markdown from the focus panel, including per-Work-Item totals, Activity Zone totals, and significant gaps
 - Today's focus picture can also be exported from SQLite with `pnpm export:focus-day`
 - Evening dogfood report can be copied from the focus panel, shown as selected Markdown if clipboard access fails, or generated with `pnpm dogfood:report`; UI and CLI reports include the same `Review Checklist`

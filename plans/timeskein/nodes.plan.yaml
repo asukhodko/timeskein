@@ -445,7 +445,7 @@ nodes:
     effort: 2
     deps:
       - id: ts.focus_core.dogfood_gate
-    notes: Fixed typing C/С opening Create, creating a new active Work Item, ambiguous last-seen timestamps, and added the first Capture Inbox baseline. Post-baseline work added Work Item title/basic-field editing, focus-block correction including add-missed-block, per-block Activity Zone snapshots/overrides, Work Item today/total time, Work Item list modes for accumulated multi-day inventories, a resizable Today/Work Item split, timestamped Day Events, timestamped Work Item Events, capture-to-event promotion, capture edit/delete for open items, Command+Tab/Dock restore, non-always-on-top window policy, native menu-bar status refresh, and separate Total tracked / Work focus / Non-work tracked report totals. Remaining friction is mostly richer correction/review UI.
+    notes: Fixed typing C/С opening Create, creating a new active Work Item, ambiguous last-seen timestamps, and added the first Capture Inbox baseline. Post-baseline work added Work Item title/basic-field editing, focus-block correction including add-missed-block, per-block Activity Zone snapshots/overrides, Work Item today/total time, Work Item list modes for accumulated multi-day inventories, a resizable Today/Work Item split, timestamped Day Events with gap/open-gap Explain shortcuts, timestamped Work Item Events, capture-to-event promotion, capture edit/delete for open items, Command+Tab/Dock restore, non-always-on-top window policy, native menu-bar status refresh, and separate Total tracked / Work focus / Non-work tracked report totals. Remaining friction is mostly richer correction/review UI.
     x:
       ops:
         attention_class: current

@@ -33,6 +33,7 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
   const [addingMissedBlock, setAddingMissedBlock] = useState(false)
   const [dayEventText, setDayEventText] = useState('')
   const titleInputRef = useRef<HTMLInputElement>(null)
+  const dayEventInputRef = useRef<HTMLInputElement>(null)
   const manualCopyRef = useRef<HTMLTextAreaElement>(null)
   const localDayKey = formatLocalDate(now)
   const dayWindow = useMemo(() => {
@@ -445,6 +446,21 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
     )
   }
 
+  const stageDayEvent = (text: string) => {
+    setDayEventText(text)
+    window.requestAnimationFrame(() => {
+      const input = dayEventInputRef.current
+      input?.focus()
+      input?.setSelectionRange(input.value.length, input.value.length)
+    })
+  }
+
+  const stageGapDayEvent = (gap: Gap, label = 'Gap') => {
+    stageDayEvent(
+      `${label} ${formatClockTime(gap.from)}-${formatClockTime(gap.to)} (${formatDuration(gap.seconds)}): `
+    )
+  }
+
   const mutationError = startMutation.error || stopMutation.error || addDayEventMutation.error
 
   return (
@@ -505,6 +521,7 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
 
         <div className="flex items-center gap-2 rounded-md border border-gray-800 bg-gray-900/40 px-3 py-2">
           <input
+            ref={dayEventInputRef}
             value={dayEventText}
             onChange={(event) => setDayEventText(event.target.value)}
             onKeyDown={(event) => {
@@ -611,13 +628,14 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
             className="grid gap-1.5 overflow-auto pr-1"
             style={{ maxHeight: `${todayListMaxHeightPx}px` }}
           >
-            {openGap && <OpenGapRow gap={openGap} />}
+            {openGap && <OpenGapRow gap={openGap} onExplain={() => stageGapDayEvent(openGap, 'Open gap')} />}
             {sessionsWithGaps.map(({ session, gapBefore }) => (
               <FocusSessionRow
                 key={session.id}
                 session={session}
                 gapBefore={gapBefore}
                 onCorrect={() => setCorrectingSession(session)}
+                onExplainGap={gapBefore ? () => stageGapDayEvent(gapBefore) : undefined}
               />
             ))}
           </div>
@@ -1898,6 +1916,7 @@ function FocusSessionRow({
   session,
   gapBefore,
   onCorrect,
+  onExplainGap,
 }: {
   session: FocusSessionView
   gapBefore?: {
@@ -1906,6 +1925,7 @@ function FocusSessionRow({
     seconds: number
   }
   onCorrect: () => void
+  onExplainGap?: () => void
 }) {
   const range = `${formatClockTime(session.started_at)}-${formatClockTime(session.stopped_at)}`
   const stateClass = session.state === 'active' ? 'text-emerald-300' : 'text-gray-500'
@@ -1955,8 +1975,19 @@ function FocusSessionRow({
         </div>
       )}
       {gapBefore !== undefined && gapBefore.seconds >= SIGNIFICANT_GAP_SECONDS && (
-        <div className="mt-0.5 text-right text-[11px] text-gray-600">
-          gap before: {formatClockTime(gapBefore.from)}-{formatClockTime(gapBefore.to)} · {formatDuration(gapBefore.seconds)}
+        <div className="mt-0.5 flex items-center justify-end gap-2 text-[11px] text-gray-600">
+          <span>
+            gap before: {formatClockTime(gapBefore.from)}-{formatClockTime(gapBefore.to)} · {formatDuration(gapBefore.seconds)}
+          </span>
+          {onExplainGap && (
+            <button
+              type="button"
+              onClick={onExplainGap}
+              className="rounded border border-amber-900/70 px-1.5 py-0.5 text-[10px] text-amber-300/80 hover:border-amber-600 hover:text-amber-200"
+            >
+              Explain
+            </button>
+          )}
         </div>
       )}
     </div>
@@ -1965,21 +1996,30 @@ function FocusSessionRow({
 
 function OpenGapRow({
   gap,
+  onExplain,
 }: {
   gap: {
     from: string
     to: string
     seconds: number
   }
+  onExplain: () => void
 }) {
   return (
     <div className="rounded border border-amber-800/50 bg-amber-950/20 px-2 py-1 text-xs">
-      <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2">
+      <div className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-2">
         <span className="font-mono tabular-nums text-amber-200">{formatDuration(gap.seconds)}</span>
         <span className="min-w-0 truncate text-amber-100">open gap since last stopped block</span>
         <span className="text-amber-300/80">
           {formatClockTime(gap.from)}-{formatClockTime(gap.to)}
         </span>
+        <button
+          type="button"
+          onClick={onExplain}
+          className="rounded border border-amber-800 px-1.5 py-0.5 text-[10px] font-medium text-amber-200 hover:border-amber-500 hover:text-amber-100"
+        >
+          Explain
+        </button>
       </div>
     </div>
   )

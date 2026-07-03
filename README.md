@@ -12,6 +12,7 @@ A desktop application for quickly tracking focus sessions and work items with re
 | Focus Session | Working baseline | Start, live timer, manual stop, post-factum correction, day list, tracked/work totals |
 | Activity Zones | Basic | `work`, `coordination`, `recovery`, `idle`, `personal` zones with per-focus-block snapshots and day-report totals |
 | Capture Inbox | Working baseline | Quick incoming-event capture without interrupting the active focus block |
+| Work Item List | Working baseline | `Recent`, `Today`, `Pinned`, and `All` modes keep a multi-day inventory navigable |
 | Work Item Events | Working baseline | Timestamped notes linked to Work Items and optionally to focus blocks |
 | Dogfood Telemetry | Working baseline | Local app-event journal and CLI metrics for tracking UX friction |
 | Mock Server | Working | Full API implementation for development |
@@ -290,6 +291,7 @@ Focus Session controls:
 - Work item states: active, waiting, blocked, done, someday, unknown
 - Work Item activity zones: work, coordination, recovery, idle, personal; focus blocks keep their own zone snapshot for report correction
 - Work Item list shows last touched time plus today/total tracked time when available
+- Work Item list can be narrowed to `Recent`, `Today`, `Pinned`, or `All`; typed search scans the matching inventory regardless of the current mode
 - Refs: URLs, file paths, issue keys with conflict detection
 - Pin items to keep them at top of list
 - Search by title/note

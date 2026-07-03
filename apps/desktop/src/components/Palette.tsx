@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import type { MouseEvent } from 'react'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { logAppEvent } from '../api/client'
@@ -22,12 +22,22 @@ import NoteEditor from './NoteEditor'
 import WorkItemEditor from './WorkItemEditor'
 import RefsPanel from './RefsPanel'
 import ConfirmDialog from './ConfirmDialog'
-import type { WorkItemState } from '@timeskein/contracts'
+import type { WorkItemState, WorkItemView } from '@timeskein/contracts'
 import { useCurrentFocusSession, useStartFocusSession } from '../hooks/useFocusSessions'
+
+type InventoryMode = 'recent' | 'today' | 'pinned' | 'all'
+
+const inventoryModes: Array<{ id: InventoryMode; label: string }> = [
+  { id: 'recent', label: 'Recent' },
+  { id: 'today', label: 'Today' },
+  { id: 'pinned', label: 'Pinned' },
+  { id: 'all', label: 'All' },
+]
 
 export default function Palette() {
   const [search, setSearch] = useState('')
   const [selectedIndex, setSelectedIndex] = useState(0)
+  const [inventoryMode, setInventoryMode] = useState<InventoryMode>('recent')
   const [showCreate, setShowCreate] = useState(false)
   const [showStateMenu, setShowStateMenu] = useState(false)
   const [showNoteEditor, setShowNoteEditor] = useState(false)
@@ -37,7 +47,13 @@ export default function Palette() {
 
   const { data, isLoading, error } = useInventory(search || undefined)
   const items = data?.items ?? []
-  const selectedItem = items[selectedIndex]
+  const searchText = search.trim()
+  const visibleItems = useMemo(
+    () => searchText ? items : filterInventoryItems(items, inventoryMode),
+    [items, inventoryMode, searchText]
+  )
+  const modeCounts = useMemo(() => countInventoryModes(items), [items])
+  const selectedItem = visibleItems[selectedIndex]
 
   const stateMutation = useSetWorkItemState()
   const noteMutation = useSetWorkItemNote()
@@ -166,13 +182,13 @@ export default function Palette() {
   }
 
   const handleMoveDown = () => {
-    setSelectedIndex((prev) => Math.min(prev + 1, items.length - 1))
+    setSelectedIndex((prev) => Math.min(prev + 1, Math.max(visibleItems.length - 1, 0)))
   }
 
   // Reset selection when items change
   useEffect(() => {
     setSelectedIndex(0)
-  }, [items.length, search])
+  }, [visibleItems.length, search, inventoryMode])
 
   // Keyboard navigation - use e.code for layout-independent shortcuts
   const handleKeyDown = useCallback(
@@ -199,7 +215,7 @@ export default function Palette() {
       switch (e.code) {
         case 'ArrowDown':
           e.preventDefault()
-          setSelectedIndex((prev) => Math.min(prev + 1, items.length - 1))
+          setSelectedIndex((prev) => Math.min(prev + 1, Math.max(visibleItems.length - 1, 0)))
           break
         case 'ArrowUp':
           e.preventDefault()
@@ -244,7 +260,7 @@ export default function Palette() {
           break
       }
     },
-    [items, selectedIndex, selectedItem, showCreate, showStateMenu, showNoteEditor, showWorkItemEditor, showRefsPanel, showDeleteConfirm, handleFocusSelected]
+    [visibleItems.length, selectedItem, showCreate, showStateMenu, showNoteEditor, showWorkItemEditor, showRefsPanel, showDeleteConfirm, handleFocusSelected]
   )
 
   useEffect(() => {
@@ -309,7 +325,7 @@ export default function Palette() {
         </div>
         <div className="flex items-center gap-3">
           <span className="text-xs text-gray-500">
-            {items.length} items
+            {visibleItems.length}{visibleItems.length === items.length ? '' : `/${items.length}`} items
           </span>
           <button
             data-no-drag
@@ -340,6 +356,11 @@ export default function Palette() {
           onCreateNew={() => setShowCreate(true)}
           autoFocus={false}
         />
+        <InventoryModeTabs
+          mode={inventoryMode}
+          counts={modeCounts}
+          onChange={setInventoryMode}
+        />
       </div>
 
       {/* Content */}
@@ -358,9 +379,19 @@ export default function Palette() {
             <div>{search ? 'No matching items' : 'No work items yet'}</div>
             <div className="text-xs mt-1">Press C or Alt+N to create one</div>
           </div>
+        ) : visibleItems.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-32 text-gray-500">
+            <div>No items in {inventoryMode}</div>
+            <button
+              className="mt-2 rounded border border-gray-700 px-2 py-1 text-xs text-gray-400 hover:border-blue-500/50 hover:text-blue-300"
+              onClick={() => setInventoryMode('all')}
+            >
+              Show all
+            </button>
+          </div>
         ) : (
           <InventoryList
-            items={items}
+            items={visibleItems}
             selectedIndex={selectedIndex}
             onSelect={setSelectedIndex}
             onRequestDelete={handleDelete}
@@ -503,4 +534,94 @@ function isEditableElement(target: EventTarget | null) {
 
 function createTelemetryActionId() {
   return globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`
+}
+
+function InventoryModeTabs({
+  mode,
+  counts,
+  onChange,
+}: {
+  mode: InventoryMode
+  counts: Record<InventoryMode, number>
+  onChange: (mode: InventoryMode) => void
+}) {
+  return (
+    <div className="mt-2 flex items-center justify-between gap-3">
+      <div className="grid min-w-0 flex-1 grid-cols-4 overflow-hidden rounded border border-gray-700 bg-gray-900/40">
+        {inventoryModes.map((item) => {
+          const isActive = item.id === mode
+          return (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => onChange(item.id)}
+              className={[
+                'flex min-w-0 items-center justify-center gap-1 px-2 py-1 text-xs transition-colors',
+                isActive
+                  ? 'bg-blue-500/20 text-blue-200'
+                  : 'text-gray-500 hover:bg-gray-800/80 hover:text-gray-300',
+              ].join(' ')}
+              title={modeTitle(item.id)}
+            >
+              <span className="truncate">{item.label}</span>
+              <span className={isActive ? 'text-blue-300/70' : 'text-gray-600'}>
+                {counts[item.id]}
+              </span>
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+function filterInventoryItems(items: WorkItemView[], mode: InventoryMode) {
+  switch (mode) {
+    case 'today':
+      return items.filter(isTodayInventoryItem)
+    case 'pinned':
+      return items.filter((item) => item.pinned)
+    case 'all':
+      return items
+    case 'recent':
+    default:
+      return items.filter(isRecentInventoryItem)
+  }
+}
+
+function countInventoryModes(items: WorkItemView[]): Record<InventoryMode, number> {
+  return {
+    recent: items.filter(isRecentInventoryItem).length,
+    today: items.filter(isTodayInventoryItem).length,
+    pinned: items.filter((item) => item.pinned).length,
+    all: items.length,
+  }
+}
+
+function isTodayInventoryItem(item: WorkItemView) {
+  return item.pinned || item.state === 'active' || item.today_active_seconds > 0
+}
+
+function isRecentInventoryItem(item: WorkItemView) {
+  if (isTodayInventoryItem(item)) return true
+
+  const touchedAt = item.last_seen_at || item.updated_at || item.created_at
+  const touchedMs = Date.parse(touchedAt)
+  if (!Number.isFinite(touchedMs)) return false
+
+  return Date.now() - touchedMs <= 72 * 60 * 60 * 1000
+}
+
+function modeTitle(mode: InventoryMode) {
+  switch (mode) {
+    case 'today':
+      return 'Items touched by today focus blocks plus pinned and active items'
+    case 'pinned':
+      return 'Pinned items'
+    case 'all':
+      return 'All items'
+    case 'recent':
+    default:
+      return 'Pinned, active, today, and recently touched items'
+  }
 }

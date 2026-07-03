@@ -239,6 +239,7 @@ Third real dogfood day and release baseline:
 - Open captures appear separately in the UI and CLI dogfood report for evening review
 - Manual Work Item inventory UI
 - Search
+- `Recent`, `Today`, `Pinned`, and `All` Work Item list modes for a multi-day inventory
 - Create Work Item
 - Edit Work Item title, type, Activity Zone, and note
 - Add timestamped Work Item Events from the note editor

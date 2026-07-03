@@ -222,10 +222,12 @@ This stops the current block without a note and starts a new linked block. Use `
 
 Continue an existing item:
 
-1. Select the Work Item.
-2. Leave the focus input empty and press `Space`, or click `Start Item` / `Switch Item`.
+1. Use `Recent`, `Today`, `Pinned`, or `All` to narrow the Work Item list if needed.
+2. Select the Work Item.
+3. Leave the focus input empty and press `Space`, or click `Start Item` / `Switch Item`.
 
 Faster path: double-click a Work Item to start or switch focus to it.
+Typed search can still find old Work Items when the current mode is too narrow.
 
 Changing a Work Item state to `Active` is another way to start or switch focus:
 

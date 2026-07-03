@@ -63,6 +63,9 @@ These were accepted limitations for the dogfood baseline, not blockers:
   limitations; both have been fixed in code after acceptance and need the next
   dogfood day for real-use confirmation.
 - The Work Item list shows today/total time spent per item when available.
+- The Work Item list now has `Recent`, `Today`, `Pinned`, and `All` modes; the
+  next dogfood day should verify that the accumulated multi-day inventory stays
+  cheap to navigate.
 
 ## Next Slice
 
@@ -84,6 +87,8 @@ Post-dogfood correction and first review enrichment are now partly implemented:
 - Today and copied reports include an automatic Review Checklist for active-state
   blockers, open captures, significant gaps, open gaps, capture coverage, and
   timestamped-event coverage.
+- Work Items can be viewed through `Recent`, `Today`, `Pinned`, and `All` modes,
+  while search remains the path to older matching items.
 
 Remaining entry and review polish:
 

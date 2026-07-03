@@ -127,6 +127,7 @@ gantt
 - Timestamped Work Item Events [done] (2 focus-blocks) {100%}
 - Post-factum focus correction [done] (3 focus-blocks) {100%}
 - Add local app-event telemetry for dogfood analysis [done] (2 focus-blocks) {100%}
+- Show automatic evening review checklist [done] (1 focus-blocks) {100%}
 - End-of-day analysis can use Timeskein data [done] {100%}
 - Capture Inbox [done] (9 focus-blocks) {100%}
 - Add captured-event model and Local API [done] (3 focus-blocks) {100%}
@@ -141,7 +142,7 @@ gantt
 - Focus Session core [in_progress] (17 focus-blocks) {85%}
 - Add FocusSession and SessionEvent persistence [in_progress] (3 focus-blocks) {70%}
 - Implement start, pause, resume, stop, cancel [in_progress] (3 focus-blocks) {45%}
-- Day review and export [in_progress] (14 focus-blocks) {92%}
+- Day review and export [in_progress] (15 focus-blocks) {92%}
 - Show focus blocks on a daily timeline [in_progress] (3 focus-blocks) {65%}
 - Compute totals, gaps, and entry count [in_progress] (2 focus-blocks) {98%}
 - Export dogfood day data as Markdown [in_progress] (2 focus-blocks) {98%}

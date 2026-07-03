@@ -73,6 +73,18 @@ export default function FocusPanel({ selectedItem }: FocusPanelProps) {
     () => (current ? undefined : openGapAfterLastSession(sessions, now)),
     [current, sessions, now]
   )
+  const reviewItems = useMemo(
+    () => buildDayReviewItems({
+      sessions,
+      activeFocus: current,
+      activeWorkItems,
+      openCaptures,
+      captureActivity,
+      workItemEvents,
+      openGap,
+    }),
+    [sessions, current, activeWorkItems, openCaptures, captureActivity, workItemEvents, openGap]
+  )
   const reportIsDraft = current?.state === 'active' || activeWorkItems.length > 0
   const trayStatusTitle = useMemo(
     () => buildTrayStatusTitle(current, now, activeSecondsTotal),
@@ -363,6 +375,7 @@ export default function FocusPanel({ selectedItem }: FocusPanelProps) {
       activeWorkItems,
       openCaptures,
       captureActivity,
+      reviewItems,
       sessions,
       inventoryItems,
       now
@@ -458,6 +471,8 @@ export default function FocusPanel({ selectedItem }: FocusPanelProps) {
         </div>
 
         <CaptureInbox focusSessionId={current?.id} targetWorkItemId={current?.work_item_id ?? selectedItem?.id} />
+
+        <DayReviewPanel items={reviewItems} />
 
         {workItemEvents.length > 0 && (
           <WorkItemEventsPanel
@@ -694,6 +709,7 @@ async function buildDogfoodReportMarkdown(
   activeWorkItems: WorkItemView[] = [],
   openCaptures: CaptureView[] = [],
   captureActivity: CaptureView[] = [],
+  reviewItems: DayReviewItem[] = [],
   sessions: FocusSessionView[] = [],
   workItems: WorkItemView[] = [],
   now = new Date()
@@ -754,6 +770,8 @@ async function buildDogfoodReportMarkdown(
   const appTelemetryMarkdown = await buildAppTelemetryMarkdown(now)
 
   lines.push(
+    formatReviewChecklistMarkdown(reviewItems).trim(),
+    '',
     '## Focus Data',
     '',
     todayMarkdown.trim(),
@@ -792,6 +810,174 @@ async function buildDogfoodReportMarkdown(
     '- Good enough to replace Session tomorrow: yes/no',
     '- Next product fix:',
   )
+
+  return `${lines.join('\n')}\n`
+}
+
+type Gap = {
+  from: string
+  to: string
+  seconds: number
+}
+
+type DayReviewItem = {
+  level: 'blocker' | 'review' | 'ok'
+  title: string
+  detail?: string
+}
+
+function buildDayReviewItems({
+  sessions,
+  activeFocus,
+  activeWorkItems,
+  openCaptures,
+  captureActivity,
+  workItemEvents,
+  openGap,
+}: {
+  sessions: FocusSessionView[]
+  activeFocus?: FocusSessionView
+  activeWorkItems: WorkItemView[]
+  openCaptures: CaptureView[]
+  captureActivity: CaptureView[]
+  workItemEvents: WorkItemEventView[]
+  openGap?: Gap
+}): DayReviewItem[] {
+  const items: DayReviewItem[] = []
+  const gaps = gapsBetweenSessions(sessions).filter((gap) => gap.seconds >= SIGNIFICANT_GAP_SECONDS)
+
+  if (activeFocus) {
+    items.push({
+      level: 'blocker',
+      title: 'Stop the active focus block',
+      detail: activeFocus.work_item_title ?? activeFocus.title,
+    })
+  }
+
+  if (activeWorkItems.length > 0) {
+    items.push({
+      level: 'blocker',
+      title: 'Clear active Work Item state',
+      detail: `${activeWorkItems.length} active item${activeWorkItems.length === 1 ? '' : 's'}`,
+    })
+  }
+
+  if (openCaptures.length > 0) {
+    items.push({
+      level: 'review',
+      title: 'Resolve or convert open captures',
+      detail: `${openCaptures.length} open`,
+    })
+  }
+
+  if (gaps.length > 0) {
+    items.push({
+      level: 'review',
+      title: 'Classify significant gaps',
+      detail: `${gaps.length} gap${gaps.length === 1 ? '' : 's'} >= ${formatDuration(SIGNIFICANT_GAP_SECONDS)}`,
+    })
+  }
+
+  if (openGap && openGap.seconds >= SIGNIFICANT_GAP_SECONDS) {
+    items.push({
+      level: 'review',
+      title: 'Explain current open gap',
+      detail: `${formatDuration(openGap.seconds)} since last stopped block`,
+    })
+  }
+
+  if (sessions.length > 0 && captureActivity.length === 0) {
+    items.push({
+      level: 'review',
+      title: 'Capture Inbox untested today',
+      detail: 'No captures created during this day',
+    })
+  }
+
+  if (captureActivity.length > 0 && captureActivity.every((capture) => !capture.focus_session_id)) {
+    items.push({
+      level: 'review',
+      title: 'Captures were not linked to active focus',
+      detail: 'Interruption handling is not proven for this day',
+    })
+  }
+
+  if (sessions.length > 0 && workItemEvents.length === 0) {
+    items.push({
+      level: 'review',
+      title: 'No timestamped Work Item events',
+      detail: 'Add event notes if the report still needs memory reconstruction',
+    })
+  }
+
+  if (sessions.length === 0) {
+    items.push({
+      level: 'review',
+      title: 'No focus blocks yet',
+      detail: 'Start the first block before the day can be reviewed',
+    })
+  }
+
+  if (items.length === 0) {
+    items.push({
+      level: 'ok',
+      title: 'Ready to copy final report',
+      detail: 'No automatic review items detected',
+    })
+  }
+
+  return items
+}
+
+function DayReviewPanel({ items }: { items: DayReviewItem[] }) {
+  const blockers = items.filter((item) => item.level === 'blocker').length
+  const reviews = items.filter((item) => item.level === 'review').length
+  const statusClass = blockers > 0
+    ? 'border-red-900/70 bg-red-950/20'
+    : reviews > 0
+      ? 'border-amber-900/70 bg-amber-950/20'
+      : 'border-emerald-900/70 bg-emerald-950/20'
+
+  return (
+    <div className={`grid gap-1 rounded-md border px-3 py-2 text-xs ${statusClass}`}>
+      <div className="flex items-center justify-between gap-2">
+        <span className="font-medium text-gray-200">Review before report</span>
+        <span className="text-gray-500">
+          {blockers > 0 ? `${blockers} blocker${blockers === 1 ? '' : 's'}` : reviews > 0 ? `${reviews} item${reviews === 1 ? '' : 's'}` : 'ready'}
+        </span>
+      </div>
+      <div className="grid gap-1">
+        {items.map((item) => (
+          <div key={`${item.level}:${item.title}:${item.detail ?? ''}`} className="grid grid-cols-[auto_minmax(0,1fr)] gap-2">
+            <span className={reviewItemDotClass(item.level)} />
+            <span className="min-w-0 text-gray-300">
+              <span className="font-medium text-gray-200">{item.title}</span>
+              {item.detail && <span className="text-gray-500"> · {truncate(item.detail, 100)}</span>}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function reviewItemDotClass(level: DayReviewItem['level']) {
+  const color = level === 'blocker'
+    ? 'bg-red-400'
+    : level === 'review'
+      ? 'bg-amber-300'
+      : 'bg-emerald-400'
+
+  return `mt-1.5 h-1.5 w-1.5 rounded-full ${color}`
+}
+
+function formatReviewChecklistMarkdown(items: DayReviewItem[]) {
+  const lines = ['## Review Checklist', '']
+  for (const item of items) {
+    const marker = item.level === 'ok' ? '[x]' : '[ ]'
+    const suffix = item.detail ? ` - ${formatMarkdownListText(item.detail)}` : ''
+    lines.push(`- ${marker} ${formatMarkdownListText(item.title)}${suffix}`)
+  }
 
   return `${lines.join('\n')}\n`
 }

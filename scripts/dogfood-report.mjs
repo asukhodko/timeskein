@@ -44,7 +44,8 @@ process.stdout.write(
     activeSummary.activeFocus,
     activeSummary.activeWorkItems,
     activeSummary.openCaptures,
-    activeSummary.captureActivity
+    activeSummary.captureActivity,
+    dayMarkdown
   )
 );
 
@@ -218,7 +219,8 @@ function buildDogfoodReport(
   activeFocus,
   activeWorkItems,
   openCaptures = [],
-  captureActivity = []
+  captureActivity = [],
+  focusMarkdown = dayMarkdown
 ) {
   const hasActiveWorkItems = activeWorkItems.length > 0;
   const reportState = activeFocus
@@ -270,6 +272,14 @@ function buildDogfoodReport(
     lines.push(formatCaptureActivityMarkdown(captureActivity).trim(), "");
   }
 
+  lines.push(formatReviewChecklistMarkdown(buildReviewChecklistItems({
+    activeFocus,
+    activeWorkItems,
+    openCaptures,
+    captureActivity,
+    focusMarkdown,
+  })).trim(), "");
+
   lines.push(
     "## Focus Data",
     "",
@@ -309,6 +319,101 @@ function buildDogfoodReport(
     "- Good enough to replace Session tomorrow: yes/no",
     "- Next product fix:",
   );
+
+  return `${lines.join("\n")}\n`;
+}
+
+function buildReviewChecklistItems({
+  activeFocus,
+  activeWorkItems,
+  openCaptures,
+  captureActivity,
+  focusMarkdown,
+}) {
+  const items = [];
+
+  if (activeFocus) {
+    items.push({
+      level: "blocker",
+      title: "Stop the active focus block",
+      detail: activeFocus.title,
+    });
+  }
+
+  if (activeWorkItems.length > 0) {
+    items.push({
+      level: "blocker",
+      title: "Clear active Work Item state",
+      detail: `${activeWorkItems.length} active item${activeWorkItems.length === 1 ? "" : "s"}`,
+    });
+  }
+
+  if (openCaptures.length > 0) {
+    items.push({
+      level: "review",
+      title: "Resolve or convert open captures",
+      detail: `${openCaptures.length} open`,
+    });
+  }
+
+  if (focusMarkdown.includes("## Gaps >=")) {
+    items.push({
+      level: "review",
+      title: "Classify significant gaps",
+      detail: "Review Gaps section",
+    });
+  }
+
+  if (focusMarkdown.includes("## Open Gap")) {
+    items.push({
+      level: "review",
+      title: "Explain current open gap",
+      detail: "Tracking is idle after the last stopped block",
+    });
+  }
+
+  if (focusMarkdown.includes("| Time | Duration | Zone | Work Item | Note |") && captureActivity.length === 0) {
+    items.push({
+      level: "review",
+      title: "Capture Inbox untested today",
+      detail: "No captures created during this day",
+    });
+  }
+
+  if (captureActivity.length > 0 && captureActivity.every((capture) => !capture.focus_session_id)) {
+    items.push({
+      level: "review",
+      title: "Captures were not linked to active focus",
+      detail: "Interruption handling is not proven for this day",
+    });
+  }
+
+  if (focusMarkdown.includes("| Time | Duration | Zone | Work Item | Note |") && !focusMarkdown.includes("## Work Item Events")) {
+    items.push({
+      level: "review",
+      title: "No timestamped Work Item events",
+      detail: "Add event notes if the report still needs memory reconstruction",
+    });
+  }
+
+  if (items.length === 0) {
+    items.push({
+      level: "ok",
+      title: "Ready to copy final report",
+      detail: "No automatic review items detected",
+    });
+  }
+
+  return items;
+}
+
+function formatReviewChecklistMarkdown(items) {
+  const lines = ["## Review Checklist", ""];
+  for (const item of items) {
+    const marker = item.level === "ok" ? "[x]" : "[ ]";
+    const suffix = item.detail ? ` - ${formatMarkdownListText(item.detail)}` : "";
+    lines.push(`- ${marker} ${formatMarkdownListText(item.title)}${suffix}`);
+  }
 
   return `${lines.join("\n")}\n`;
 }

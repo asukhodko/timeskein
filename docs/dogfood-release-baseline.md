@@ -81,10 +81,14 @@ Post-dogfood correction and first review enrichment are now partly implemented:
 - Open captures can be edited or deleted before the final day report.
 - User-authored Work Item Events can be edited or deleted before the final day
   report.
+- Today and copied reports include an automatic Review Checklist for active-state
+  blockers, open captures, significant gaps, open gaps, capture coverage, and
+  timestamped-event coverage.
 
 Remaining entry and review polish:
 
-- verify capture-to-Work-Item-event promotion during the next dogfood day.
+- verify that the Review Checklist catches the actual evening cleanup during
+  the next dogfood day.
 - decide whether per-block zone correction is enough, or whether day review
   needs a faster bulk zone editor.
 

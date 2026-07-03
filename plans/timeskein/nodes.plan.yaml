@@ -306,6 +306,19 @@ nodes:
     x:
       ops:
         attention_class: current
+  ts.day_review.review_checklist:
+    title: Show automatic evening review checklist
+    kind: task
+    parent: ts.day_review
+    status: done
+    effort: 1
+    deps:
+      - id: ts.day_review.export
+      - id: ts.day_review.work_item_events
+    notes: Today and dogfood reports show a Review Checklist for active-state blockers, open captures, significant gaps, open gaps, capture coverage, and timestamped-event coverage. The checklist is meant to make evening cleanup explicit before copying the final report.
+    x:
+      ops:
+        attention_class: current
   ts.day_review.analysis_gate:
     title: End-of-day analysis can use Timeskein data
     kind: milestone
@@ -314,6 +327,7 @@ nodes:
     milestone: true
     deps:
       - id: ts.day_review.app_telemetry
+      - id: ts.day_review.review_checklist
     x:
       ops:
         attention_class: current

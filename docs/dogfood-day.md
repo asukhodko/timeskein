@@ -159,7 +159,7 @@ Current status: the macOS dogfood release baseline was accepted on 2026-07-03. T
 | Post-factum correction | `cargo test -p timeskein-agent`, `pnpm smoke:corrections-api`, and `pnpm smoke:macos-app` verify update, split, reassignment, Work Item edit, and corrected day-list data | Wrong Work Item assignments can be fixed before copying the final report |
 | Significant gaps | UI and Markdown show gap ranges of 20+ minutes | Long breaks and lost intervals are visible enough |
 | Capture Inbox | `pnpm smoke:capture-api`, `pnpm smoke:mock-api`, and `pnpm smoke:macos-app` verify capture create/list/update/delete/resolve/convert/append-event without interrupting focus | Incoming events can be remembered and cleaned up without switching away from the current block |
-| Markdown export | `Copy Report` exports timeline, `By Work Item`, Work Item Events, gaps, Capture Activity, open captures, app telemetry, and review prompts; `Copy MD` exports the raw day picture; failed clipboard writes show selected Markdown; `pnpm smoke:export-focus-day` and `pnpm smoke:dogfood-report` verify SQLite fallbacks | Copied note is enough for evening analysis |
+| Markdown export | `Copy Report` exports timeline, `By Work Item`, Work Item Events, gaps, Capture Activity, open captures, Review Checklist, app telemetry, and review prompts; `Copy MD` exports the raw day picture; failed clipboard writes show selected Markdown; `pnpm smoke:export-focus-day` and `pnpm smoke:dogfood-report` verify SQLite fallbacks | Copied note is enough for evening analysis |
 | App friction telemetry | `app_events` stores local technical events, `pnpm smoke:app-events` verifies metrics/export, and `pnpm dogfood:report` includes `App Telemetry` | Start/switch/stop/copy/API/window friction is visible without relying only on memory |
 | macOS app with embedded agent and SQLite | `pnpm smoke:macos-app` verifies app launch, SQLite health, focus flow, stale lock/port recovery, and active focus restore after app restart | The real app survives normal workday use |
 
@@ -271,12 +271,14 @@ At the end of the day:
 
 1. Open Timeskein.
 2. Check Today work focus, total tracked time, zones, and entrance count.
-3. Click `Copy Report`.
-4. Paste the Markdown dogfood report into the day note or analysis thread.
+3. Clear or consciously accept every `Review before report` item.
+4. Click `Copy Report`.
+5. Paste the Markdown dogfood report into the day note or analysis thread.
 
 Use `Copy MD` only when the raw day picture is enough.
 If Today or the report shows `Open Gap`, there was a significant interval after the last stopped block with no active focus block. Treat it as either a real break or a lost-tracking interval during review.
 If the report shows `Open Captures`, edit, delete, resolve, or convert them before considering the day fully reviewed.
+If Today or the report shows `Review Checklist`, use it as the minimal evening queue: active-state blockers must be cleared, review items should be classified or consciously accepted before treating the report as final.
 If a focus block is still active, or a Work Item is still marked active, the UI labels the report as `Copy Draft` and the Markdown includes a warning. The CLI report uses the same draft warning. Stop the active block or clear the active Work Item before using the report as the final day artifact.
 If clipboard access is denied, Timeskein shows a selected text box with the Markdown. Copy it manually from there.
 

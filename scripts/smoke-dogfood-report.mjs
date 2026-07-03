@@ -55,6 +55,15 @@ try {
   );
   assert(stdout.includes("## Focus Data"), "report did not include focus data section");
   assert(stdout.includes("## App Telemetry"), "report did not include app telemetry section");
+  assert(stdout.includes("## Review Checklist"), "report did not include review checklist section");
+  assert(
+    stdout.includes("Resolve or convert open captures"),
+    "report review checklist did not include open capture cleanup"
+  );
+  assert(
+    stdout.includes("No timestamped Work Item events") === false,
+    "report review checklist missed existing timestamped Work Item event"
+  );
   assert(stdout.includes("## Open Captures"), "report did not include open captures section");
   assert(stdout.includes("Reply to incoming thread after focus"), "report did not include open capture text");
   assert(stdout.includes("## Capture Activity"), "report did not include Capture Activity section");
@@ -109,6 +118,10 @@ try {
     stuckItemDraftStdout.includes("Active Work Item: Stuck Active Item"),
     "stuck active item report did not name active Work Item"
   );
+  assert(
+    stuckItemDraftStdout.includes("Clear active Work Item state"),
+    "stuck active item review checklist did not include active Work Item cleanup"
+  );
 
   await runSql(`
     UPDATE work_items SET state = 'unknown' WHERE id = 'w3';
@@ -129,6 +142,10 @@ try {
   assert(draftStdout.includes("Report state: draft - focus block still active"), "draft report state is missing");
   assert(draftStdout.includes("## Active Block Warning"), "draft report did not include active block warning");
   assert(draftStdout.includes("Active Work Item: Still Running"), "draft report did not name active work item");
+  assert(
+    draftStdout.includes("Stop the active focus block"),
+    "active focus review checklist did not include stop action"
+  );
 
   console.log(
     JSON.stringify(

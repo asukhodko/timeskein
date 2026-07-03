@@ -80,6 +80,9 @@ and prints review items that must be resolved or consciously accepted before the
 milestone can be marked done. `dogfood:rc-check:save` writes
 `timeskein-dogfood-rc-check-YYYY-MM-DD.md` next to the saved day report.
 Both saved files can contain personal or internal work context and are ignored by git.
+The RC evidence summary also checks the post-baseline review data: work focus vs
+non-work tracked time, Activity Zone coverage, Work Item notes/events, Capture
+Inbox coverage, and window/show-hide telemetry.
 
 The final evidence must include:
 
@@ -87,6 +90,8 @@ The final evidence must include:
 - total tracked time, work focus, and non-work tracked time;
 - Work Item totals;
 - Work Item notes for touched items;
+- Activity Zone totals;
+- timestamped Work Item Events, if they were needed to avoid memory reconstruction;
 - Capture Activity for created, resolved, and converted captures;
 - significant gaps and open gap, if any;
 - open captures, if any;

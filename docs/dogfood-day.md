@@ -334,7 +334,7 @@ For a Dogfood Release Candidate day, run the RC evidence check after saving the 
 pnpm dogfood:rc-check:save
 ```
 
-The command prints hard blockers and review items for the Session replacement gate.
+The command prints hard blockers and review items for the Session replacement gate. Its evidence summary includes total tracked time, work focus, non-work tracked time, Activity Zone coverage, Work Item notes/events, Capture Inbox coverage, window telemetry, and product-friction counters.
 
 For a previous date:
 

@@ -352,6 +352,7 @@ nodes:
     deps:
       - id: ts.day_review.app_telemetry
       - id: ts.day_review.review_checklist
+    notes: The RC evidence check summarizes focus totals, Activity Zones, Work Item notes/events, Capture Inbox coverage, window telemetry, and product-friction counters so the next dogfood day can be judged against report usefulness rather than memory reconstruction.
     x:
       ops:
         attention_class: current

@@ -149,7 +149,7 @@ Dogfood launch helper:
 - `pnpm dogfood:finish:save` runs the same end-of-day gate and saves the Markdown report to `timeskein-dogfood-report-YYYY-MM-DD.md`
 - `pnpm dogfood:preflight` runs the local checks needed before trusting a real dogfood day, including Work Item list mode tests, isolated mock API, export, and dogfood-report smoke checks
 - `pnpm dogfood:ready` inspects the real local SQLite database for active sessions, active Work Items, duplicate titles, existing focus blocks for today, agent responsiveness, and running app processes; when the day is not ready it prints exact stop/reset commands
-- `pnpm dogfood:rc-check` prints the release-candidate evidence summary, hard blockers, review items, and manual verdict prompts for the saved dogfood day
+- `pnpm dogfood:rc-check` prints the release-candidate evidence summary, hard blockers, review items, and manual verdict prompts for the saved dogfood day; the summary includes total tracked time, work focus, non-work tracked time, Activity Zone coverage, Work Item notes/events, Capture Inbox coverage, window telemetry, and product-friction counters
 - `pnpm dogfood:rc-check:save` saves the same RC evidence to `timeskein-dogfood-rc-check-YYYY-MM-DD.md`
 - `pnpm dogfood:reset-db` moves the real local SQLite database and sidecar files aside only when `--apply` is passed; it refuses while the agent or app process appears alive unless `--force` is passed
 - `pnpm dogfood:stop-active` stops active focus sessions, writes a stop note, and clears active Work Items only when `--apply` is passed; it uses the running agent API when available and direct SQLite only when neither agent nor app process is alive, unless `--force` is passed

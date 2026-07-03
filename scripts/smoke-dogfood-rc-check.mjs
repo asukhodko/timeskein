@@ -18,27 +18,44 @@ try {
     VALUES
       ('w1', 'Deep Work', 'task', 'unknown', 0, '2026-06-30T06:00:00Z', '2026-06-30T08:00:00Z', '2026-06-30T08:00:00Z'),
       ('w2', 'Review', 'task', 'unknown', 0, '2026-06-30T08:30:00Z', '2026-06-30T10:00:00Z', '2026-06-30T10:00:00Z');
+    UPDATE work_items
+    SET activity_zone = 'coordination',
+        note = 'Review context for the evening report'
+    WHERE id = 'w2';
 
     INSERT INTO focus_sessions (id, title, work_item_id, state, target_seconds, note, started_at, stopped_at, updated_at)
     VALUES
       ('s1', 'Deep Work', 'w1', 'stopped', 1500, NULL, '2026-06-30T06:00:00Z', '2026-06-30T08:00:00Z', '2026-06-30T08:00:00Z'),
       ('s2', 'Review', 'w2', 'stopped', 1500, NULL, '2026-06-30T08:30:00Z', '2026-06-30T10:00:00Z', '2026-06-30T10:00:00Z');
+    UPDATE focus_sessions SET activity_zone = 'coordination' WHERE id = 's2';
 
     INSERT INTO captures (id, text, state, focus_session_id, created_at, updated_at, resolved_at)
     VALUES ('c1', 'Check incoming request later', 'resolved', 's1', '2026-06-30T07:00:00Z', '2026-06-30T10:10:00Z', '2026-06-30T10:10:00Z');
+
+    INSERT INTO work_item_events (id, ts, work_item_id, kind, payload)
+    VALUES ('we1', '2026-06-30T07:30:00Z', 'w1', 'note_added', '{"text":"Found the next concrete step","focus_session_id":"s1"}');
 
     INSERT INTO app_events (id, ts, source, kind, payload)
     VALUES
       ('e1', '2026-06-30T06:00:00Z', 'ui', 'app_started', NULL),
       ('e2', '2026-06-30T06:00:01Z', 'ui', 'focus_start_requested', '{"action_id":"a1"}'),
       ('e3', '2026-06-30T06:00:01Z', 'ui', 'focus_started', '{"action_id":"a1"}'),
-      ('e4', '2026-06-30T10:00:00Z', 'ui', 'report_copied', '{"report_kind":"dogfood"}');
+      ('e4', '2026-06-30T09:00:00Z', 'ui', 'window_shown', '{"control":"shortcut"}'),
+      ('e5', '2026-06-30T09:05:00Z', 'ui', 'window_hidden', '{"control":"esc"}'),
+      ('e6', '2026-06-30T10:00:00Z', 'ui', 'report_copied', '{"report_kind":"dogfood"}');
   `);
 
   const good = await runRcCheck(goodDb);
   assert(good.code === 0, "good day should not be blocked");
   assert(good.stdout.includes("Verdict: ready for human RC verdict"), "good day verdict is missing");
-  assert(good.stdout.includes("Focus total: 3:30:00"), "good day focus total is missing");
+  assert(good.stdout.includes("Total tracked: 3:30:00"), "good day total tracked is missing");
+  assert(good.stdout.includes("Work focus: 2:00:00"), "good day work focus is missing");
+  assert(good.stdout.includes("Non-work tracked: 1:30:00"), "good day non-work tracked is missing");
+  assert(good.stdout.includes("Activity Zones in report: 2"), "good day zone count is missing");
+  assert(good.stdout.includes("Work Item Events: 1"), "good day Work Item Events count is missing");
+  assert(good.stdout.includes("Window shown/hidden: 1/1"), "good day window telemetry is missing");
+  assert(good.stdout.includes("## By Activity Zone"), "good day zone section is missing");
+  assert(good.stdout.includes("## Work Item Events"), "good day Work Item Events section is missing");
   assert(good.stdout.includes("Captures created today: 1"), "good day capture count is missing");
   assert(good.stdout.includes("Captures during active focus: 1"), "good day active-focus capture count is missing");
   assert(good.stdout.includes("## Capture Activity"), "good day capture activity section is missing");
@@ -81,7 +98,7 @@ try {
   await copyDb(goodDb, captureFailureDb);
   await runSql(captureFailureDb, `
     INSERT INTO app_events (id, ts, source, kind, payload)
-    VALUES ('e5', '2026-06-30T10:30:00Z', 'ui', 'capture_create_failed', '{"action_id":"c1","error_code":"validation_error"}');
+    VALUES ('e7', '2026-06-30T10:30:00Z', 'ui', 'capture_create_failed', '{"action_id":"c1","error_code":"validation_error"}');
   `);
   const captureFailure = await runRcCheck(captureFailureDb);
   assert(captureFailure.code === 0, "capture failure should be a review item, not a hard blocker");
@@ -139,6 +156,8 @@ async function migrate(path) {
   await runSqlFile(path, join(repoRoot, "apps/agent/migrations/002_focus_sessions.sql"));
   await runSqlFile(path, join(repoRoot, "apps/agent/migrations/003_app_events.sql"));
   await runSqlFile(path, join(repoRoot, "apps/agent/migrations/004_captures.sql"));
+  await runSqlFile(path, join(repoRoot, "apps/agent/migrations/005_activity_zones.sql"));
+  await runSqlFile(path, join(repoRoot, "apps/agent/migrations/006_work_item_note_events.sql"));
 }
 
 async function runRcCheck(path, extraArgs = []) {

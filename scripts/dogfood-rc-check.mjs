@@ -10,6 +10,7 @@ import { promisify } from "node:util";
 const execFileAsync = promisify(execFile);
 const SIGNIFICANT_GAP_SECONDS = 20 * 60;
 const DEFAULT_MIN_FOCUS_MINUTES = 180;
+const WORK_ACTIVITY_ZONE = "work";
 
 const options = parseArgs(process.argv.slice(2));
 const date = options.date ? parseLocalDate(options.date) : new Date();
@@ -101,6 +102,7 @@ async function loadEvidence(path, from, to, now) {
     duplicateTitles,
     openCaptures,
     capturesCreatedToday,
+    workItemEvents,
     events,
   ] = await Promise.all([
     loadSessions(path, from, to, now),
@@ -109,13 +111,19 @@ async function loadEvidence(path, from, to, now) {
     loadDuplicateTitles(path),
     loadOpenCaptures(path),
     loadCapturesCreatedToday(path, from, to),
+    loadWorkItemEvents(path, from, to),
     loadEvents(path, from, to),
   ]);
 
   const totalFocusSeconds = sessions.reduce((sum, session) => sum + session.active_seconds, 0);
   const workItemTotals = aggregateWorkItemTotals(sessions);
+  const activityZoneTotals = aggregateActivityZoneTotals(sessions);
+  const workFocusSeconds = getZoneActiveSeconds(activityZoneTotals, WORK_ACTIVITY_ZONE);
+  const nonWorkSeconds = Math.max(totalFocusSeconds - workFocusSeconds, 0);
   const gaps = gapsBetweenSessions(sessions).filter((gap) => gap.seconds >= SIGNIFICANT_GAP_SECONDS);
   const capturesDuringActiveFocus = capturesCreatedToday.filter((capture) => capture.focus_session_id).length;
+  const workItemNoteCount = workItemTotals.filter((item) => item.note?.trim()).length;
+  const workItemEventsDuringActiveFocus = workItemEvents.filter((event) => event.focus_session_id).length;
   const telemetry = summarizeEvents(events);
 
   return {
@@ -126,9 +134,15 @@ async function loadEvidence(path, from, to, now) {
     openCaptures,
     capturesCreatedToday,
     capturesDuringActiveFocus,
+    workItemEvents,
+    workItemEventsDuringActiveFocus,
     events,
     totalFocusSeconds,
+    workFocusSeconds,
+    nonWorkSeconds,
     workItemTotals,
+    workItemNoteCount,
+    activityZoneTotals,
     gaps,
     telemetry,
   };
@@ -141,6 +155,8 @@ async function loadSessions(path, from, to, now) {
       fs.title,
       fs.work_item_id,
       wi.title AS work_item_title,
+      fs.activity_zone AS activity_zone,
+      wi.note AS work_item_note,
       fs.state,
       fs.note,
       fs.started_at,
@@ -156,6 +172,8 @@ async function loadSessions(path, from, to, now) {
     ...row,
     work_item_id: row.work_item_id ?? undefined,
     work_item_title: row.work_item_title ?? undefined,
+    activity_zone: row.activity_zone ?? WORK_ACTIVITY_ZONE,
+    work_item_note: row.work_item_note ?? undefined,
     note: row.note ?? undefined,
     stopped_at: row.stopped_at ?? undefined,
     active_seconds: clippedActiveSeconds(row.started_at, row.stopped_at, from, to, now),
@@ -233,6 +251,43 @@ async function loadCapturesCreatedToday(path, from, to) {
   `);
 }
 
+async function loadWorkItemEvents(path, from, to) {
+  if (!(await tableExists(path, "work_item_events"))) return [];
+
+  const rows = await queryJson(path, `
+    SELECT
+      e.id,
+      e.ts,
+      e.work_item_id,
+      e.kind,
+      e.payload,
+      wi.title AS work_item_title
+    FROM work_item_events e
+    LEFT JOIN work_items wi ON wi.id = e.work_item_id
+    WHERE e.kind = 'note_added'
+      AND datetime(e.ts) >= datetime(${sqlString(from.toISOString())})
+      AND datetime(e.ts) < datetime(${sqlString(to.toISOString())})
+    ORDER BY datetime(e.ts) ASC
+  `);
+
+  return rows
+    .map((row) => {
+      const payload = parsePayload(row.payload);
+      const text = typeof payload?.text === "string" ? payload.text.trim() : "";
+
+      return {
+        id: row.id,
+        ts: row.ts,
+        work_item_id: row.work_item_id,
+        work_item_title: row.work_item_title ?? undefined,
+        kind: row.kind,
+        text,
+        focus_session_id: typeof payload?.focus_session_id === "string" ? payload.focus_session_id : undefined,
+      };
+    })
+    .filter((event) => event.text);
+}
+
 async function loadEvents(path, from, to) {
   if (!(await tableExists(path, "app_events"))) return [];
 
@@ -299,6 +354,18 @@ function assessEvidence(evidence, minFocusSeconds) {
     );
   }
 
+  if (evidence.activityZoneTotals.length <= 1 && evidence.sessions.length > 0) {
+    reviewItems.push("Only one Activity Zone appears in the day. Confirm whether coordination/recovery/idle/personal time was intentionally absent or missed.");
+  }
+
+  if (evidence.nonWorkSeconds === 0 && evidence.sessions.length > 0) {
+    reviewItems.push("Non-work tracked time is zero. Confirm breaks, recovery, coordination, and personal blocks were not folded into work focus.");
+  }
+
+  if (evidence.workItemEvents.length === 0 && evidence.sessions.length > 0) {
+    reviewItems.push("No timestamped Work Item Events found. If the report needs memory reconstruction, add event notes before treating it as final.");
+  }
+
   if (evidence.openCaptures.length > 0) {
     reviewItems.push(`${evidence.openCaptures.length} open capture(s) remain. Resolve, convert, or explicitly accept them as follow-up.`);
   }
@@ -313,6 +380,10 @@ function assessEvidence(evidence, minFocusSeconds) {
 
   if (evidence.telemetry.total === 0) {
     reviewItems.push("No App Telemetry events found for this date.");
+  }
+
+  if (evidence.telemetry.total > 0 && evidence.telemetry.windowShown + evidence.telemetry.windowHidden === 0) {
+    reviewItems.push("No window show/hide telemetry found. Entry/window friction is not evidenced for this day.");
   }
 
   if (evidence.telemetry.apiErrors > 0) {
@@ -367,9 +438,15 @@ function buildRcReport(date, path, evidence, assessment, minFocusSeconds) {
     "",
     "## Evidence Summary",
     "",
-    `- Focus total: ${formatDuration(evidence.totalFocusSeconds)} (review threshold: ${formatDuration(minFocusSeconds)})`,
+    `- Total tracked: ${formatDuration(evidence.totalFocusSeconds)} (review threshold: ${formatDuration(minFocusSeconds)})`,
+    `- Work focus: ${formatDuration(evidence.workFocusSeconds)}`,
+    `- Non-work tracked: ${formatDuration(evidence.nonWorkSeconds)}`,
     `- Entrances: ${evidence.sessions.length}`,
     `- Work Items in report: ${evidence.workItemTotals.length}`,
+    `- Work Item notes in report: ${evidence.workItemNoteCount}`,
+    `- Work Item Events: ${evidence.workItemEvents.length}`,
+    `- Work Item Events during active focus: ${evidence.workItemEventsDuringActiveFocus}`,
+    `- Activity Zones in report: ${evidence.activityZoneTotals.length}`,
     `- Significant gaps: ${evidence.gaps.length}`,
     `- Captures created today: ${evidence.capturesCreatedToday.length}`,
     `- Captures during active focus: ${evidence.capturesDuringActiveFocus}`,
@@ -379,6 +456,8 @@ function buildRcReport(date, path, evidence, assessment, minFocusSeconds) {
     `- Copy failures/manual fallbacks: ${evidence.telemetry.copyFailures}/${evidence.telemetry.manualCopyFallbacks}`,
     `- Start/stop failures: ${evidence.telemetry.startFailures}/${evidence.telemetry.stopFailures}`,
     `- Capture failures: ${evidence.telemetry.captureFailures}`,
+    `- Window shown/hidden: ${evidence.telemetry.windowShown}/${evidence.telemetry.windowHidden}`,
+    `- Window drag starts: ${evidence.telemetry.windowDragStarted}`,
     `- Duplicate Work Item title groups: ${evidence.duplicateTitles.length}`,
     "",
   ];
@@ -387,6 +466,24 @@ function buildRcReport(date, path, evidence, assessment, minFocusSeconds) {
     lines.push("## By Work Item", "", "| Duration | Entrances | Work Item |", "| ---: | ---: | --- |");
     for (const item of evidence.workItemTotals) {
       lines.push(`| ${formatDuration(item.activeSeconds)} | ${item.entrances} | ${escapeMarkdownTable(item.title)} |`);
+    }
+    lines.push("");
+  }
+
+  if (evidence.activityZoneTotals.length > 0) {
+    lines.push("## By Activity Zone", "", "| Duration | Entrances | Zone |", "| ---: | ---: | --- |");
+    for (const item of evidence.activityZoneTotals) {
+      lines.push(`| ${formatDuration(item.activeSeconds)} | ${item.entrances} | ${escapeMarkdownTable(formatActivityZoneLabel(item.zone))} |`);
+    }
+    lines.push("");
+  }
+
+  if (evidence.workItemEvents.length > 0) {
+    lines.push("## Work Item Events", "", "| Time | Work Item | During Focus | Event |", "| --- | --- | --- | --- |");
+    for (const event of evidence.workItemEvents) {
+      lines.push(
+        `| ${escapeMarkdownTable(formatClockTime(event.ts))} | ${escapeMarkdownTable(event.work_item_title ?? "unknown Work Item")} | ${escapeMarkdownTable(event.focus_session_id ? "yes" : "")} | ${escapeMarkdownTable(event.text)} |`
+      );
     }
     lines.push("");
   }
@@ -415,6 +512,8 @@ function buildRcReport(date, path, evidence, assessment, minFocusSeconds) {
     "## Manual RC Verdict",
     "",
     "- Timeskein was the primary tracker for the full day: yes/no",
+    "- Activity Zones separated work from coordination/recovery/idle/personal well enough: yes/no",
+    "- Work Item Events or notes reduced memory reconstruction: yes/no",
     "- Capture Inbox preserved focus instead of becoming another pile: yes/no",
     "- Report is enough without memory reconstruction: yes/no",
     "- Remaining limitations are acceptable for daily use: yes/no",
@@ -484,9 +583,12 @@ function aggregateWorkItemTotals(sessions) {
   for (const session of sessions) {
     const key = session.work_item_id ?? `title:${session.title}`;
     const title = session.work_item_title ?? session.title;
-    const current = totals.get(key) ?? { title, activeSeconds: 0, entrances: 0 };
+    const current = totals.get(key) ?? { title, note: undefined, activeSeconds: 0, entrances: 0 };
 
     current.title = title;
+    if (session.work_item_note) {
+      current.note = session.work_item_note;
+    }
     current.activeSeconds += session.active_seconds;
     current.entrances += 1;
     totals.set(key, current);
@@ -499,6 +601,31 @@ function aggregateWorkItemTotals(sessions) {
 
     return left.title.localeCompare(right.title);
   });
+}
+
+function aggregateActivityZoneTotals(sessions) {
+  const totals = new Map();
+
+  for (const session of sessions) {
+    const zone = session.activity_zone ?? WORK_ACTIVITY_ZONE;
+    const current = totals.get(zone) ?? { zone, activeSeconds: 0, entrances: 0 };
+
+    current.activeSeconds += session.active_seconds;
+    current.entrances += 1;
+    totals.set(zone, current);
+  }
+
+  return Array.from(totals.values()).sort((left, right) => {
+    if (right.activeSeconds !== left.activeSeconds) {
+      return right.activeSeconds - left.activeSeconds;
+    }
+
+    return left.zone.localeCompare(right.zone);
+  });
+}
+
+function getZoneActiveSeconds(zoneTotals, zone) {
+  return zoneTotals.find((item) => item.zone === zone)?.activeSeconds ?? 0;
 }
 
 function gapsBetweenSessions(sessionsOldestFirst) {
@@ -518,6 +645,23 @@ function gapsBetweenSessions(sessionsOldestFirst) {
   });
 }
 
+function formatActivityZoneLabel(zone) {
+  switch (zone) {
+    case "work":
+      return "Work";
+    case "coordination":
+      return "Coordination";
+    case "recovery":
+      return "Recovery";
+    case "idle":
+      return "Idle";
+    case "personal":
+      return "Personal";
+    default:
+      return zone;
+  }
+}
+
 function summarizeEvents(events) {
   const byKind = {};
 
@@ -535,9 +679,14 @@ function summarizeEvents(events) {
     manualCopyFallbacks: count("manual_copy_fallback_shown"),
     startFailures: count("focus_start_failed"),
     stopFailures: count("focus_stop_failed"),
+    windowShown: count("window_shown"),
+    windowHidden: count("window_hidden"),
+    windowDragStarted: count("window_drag_started"),
     captureFailures:
       count("capture_create_failed") +
       count("capture_resolve_failed") +
+      count("capture_update_failed") +
+      count("capture_delete_failed") +
       count("capture_convert_failed"),
   };
 }

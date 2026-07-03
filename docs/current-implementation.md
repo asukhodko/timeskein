@@ -124,7 +124,7 @@ Runtime smoke on macOS:
 - `inventory.list` returns an empty list against the real SQLite-backed agent
 - `focus.start`, `focus.stop`, `focus.list`, and Work Item focus switching work against the real SQLite-backed agent
 - `pnpm smoke:macos-app` launches the packaged `.app` binary with a temporary home directory and verifies embedded-agent `agent.status`, `inventory.list`, focus start/stop/list, title reuse, focus switching, active Work Item deletion, and active focus restoration after app restart
-- `pnpm smoke:macos-app` also verifies post-factum focus correction: stopped block update, split, Work Item reassignment, Work Item edit, and day-list reflection
+- `pnpm smoke:macos-app` also verifies post-factum focus correction: missed stopped block creation, stopped block update, split, Work Item reassignment, Work Item edit, and day-list reflection
 - `pnpm smoke:macos-app` also verifies Capture Inbox create/update/delete/resolve/convert/append-event while ensuring capture actions do not interrupt the active focus session
 - `pnpm smoke:macos-app` also verifies Work Item Event add/update/delete/list against the packaged SQLite-backed app
 - `pnpm smoke:macos-app` also verifies startup normalization of legacy active Work Items, orphan active focus sessions, stale `agent.lock` / `agent.port` recovery, and migration of older `app_events` kind constraints
@@ -164,11 +164,11 @@ Runtime smoke in browser/mock mode:
 
 - mock server starts on localhost
 - `pnpm test` runs the fast local suite: contracts build, TypeScript typecheck, Rust agent tests, mock-store tests, Work Item list mode tests, mock API smoke, and key SQLite/report smoke checks
-- `cargo test -p timeskein-agent` includes handler-level integration tests against a temporary SQLite database for focus start/switch coherence and post-factum correction
-- `pnpm --filter @timeskein/mock-server test` covers mock-store invariants for one-active focus, Capture Inbox non-interruption and cleanup, and correction update/split/edit reflection
+- `cargo test -p timeskein-agent` includes handler-level integration tests against a temporary SQLite database for focus start/switch coherence and post-factum correction, including adding a missed stopped block
+- `pnpm --filter @timeskein/mock-server test` covers mock-store invariants for one-active focus, Capture Inbox non-interruption and cleanup, and correction add/update/split/edit reflection
 - `focus.start`, `focus.stop`, `focus.list`, and Work Item focus switching work against the mock API
 - `pnpm smoke:focus-api` verifies the same flow and refuses to run over an existing active focus session
-- `pnpm smoke:corrections-api` verifies focus.update, focus.split, Work Item edit, duplicate-title rejection, and corrected day-list data
+- `pnpm smoke:corrections-api` verifies focus.create_stopped, focus.update, focus.split, Work Item edit, duplicate-title rejection, and corrected day-list data
 - `pnpm smoke:capture-api` verifies Capture Inbox create/list/update/delete/resolve/convert/append-event without interrupting focus
 - `pnpm smoke:mock-api` starts an isolated mock server, runs `smoke:focus-api`, `smoke:corrections-api`, and `smoke:capture-api`, and stops it
 - mock API also exposes `app_event.log`, `app_event.list`, and `app_event.summary`
@@ -209,6 +209,7 @@ Third real dogfood day and release baseline:
 - Press `Space` with an empty focus input to start or switch to the selected Work Item
 - Double-click a Work Item to start or switch focus to it
 - Stop the active focus block by pressing `Enter` in the stop-note field or by clicking `Stop`
+- Add a missed stopped focus block from Today before copying the final report
 - Correct a stopped focus block from the Today list: edit start/end/note/Work Item or split it into two blocks
 - Switch directly to another focus title from the active focus panel
 - Set a Work Item to `active` to switch focus to it
@@ -280,7 +281,7 @@ The first Focus Session baseline is intentionally small. It stores manual contac
 
 The Rust agent stores focus sessions in SQLite. Partial unique indexes enforce at most one active focus session and at most one active Work Item. Work Item `active` is treated as the UI marker for the currently timed item: switching it stops the old focus block and starts a new linked block, while stopping a linked focus block clears `active` from Work Items. On startup, the agent normalizes old active Work Item rows and stops an active focus session if its linked Work Item is missing or deleted. Starting focus from typed text first searches for an existing Work Item with the same normalized title; if none exists, it creates one.
 
-Post-factum correction is implemented for stopped focus sessions. `focus.update` edits the block title/Work Item, start, stop, target, and note. `focus.split` cuts one stopped block into left/right blocks at a timestamp; the right side can be assigned to another Work Item by title. This covers common tracking mistakes by splitting around the wrong interval and updating the resulting block. The mock server exposes the same focus correction methods for browser development.
+Post-factum correction is implemented for stopped focus sessions. `focus.create_stopped` adds a missed stopped block without starting an active timer. `focus.update` edits the block title/Work Item, start, stop, target, and note. `focus.split` cuts one stopped block into left/right blocks at a timestamp; the right side can be assigned to another Work Item by title. This covers common tracking mistakes by adding a missed interval, splitting around the wrong interval, and updating the resulting block. The mock server exposes the same focus correction methods for browser development.
 
 ## Dogfood Findings
 
@@ -378,7 +379,7 @@ On multi-monitor macOS setups, the tray/status item is controlled by the system 
 - Focus Session does not implement pause, resume, or cancel yet.
 - Focus Session has a compact day list and Markdown copy, but not a full reporting/JSON/CSV export view yet.
 - App-event telemetry has CLI/report output, but no in-app inspection screen yet.
-- Post-factum correction is intentionally basic: stopped blocks can be edited, reassigned, re-zoned, and split, but there is no drag timeline, bulk edit, or dedicated correction wizard yet.
+- Post-factum correction is intentionally basic: stopped blocks can be added, edited, reassigned, re-zoned, and split, but there is no drag timeline, bulk edit, or dedicated correction wizard yet.
 - Capture Inbox is still compact: open captures can be edited or deleted, but there is no separate capture history screen beyond the open list and dogfood report.
 - Work Item Events are report-visible. User-authored `note_added` events can be edited or deleted; generated system events remain internal history.
 - Work Item notes are included in day reports for touched items, but they remain mutable descriptions rather than dated observations.

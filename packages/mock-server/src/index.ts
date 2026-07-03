@@ -565,6 +565,34 @@ function handleMethod(
       return successResponse(requestId, session);
     }
 
+    case "focus.create_stopped": {
+      const title = typeof params.title === "string" ? params.title.trim() : undefined;
+      const workItemId = params.work_item_id as string | undefined;
+      const startedAt = params.started_at as string | undefined;
+      const stoppedAt = params.stopped_at as string | undefined;
+      if ((!title && !workItemId) || !startedAt || !stoppedAt) {
+        return errorResponse(
+          requestId,
+          "validation_error",
+          "Title or work_item_id, started_at and stopped_at are required"
+        );
+      }
+
+      const session = store.createStoppedFocusSession({
+        title,
+        work_item_id: workItemId,
+        activity_zone: params.activity_zone as ActivityZone | undefined,
+        target_seconds: params.target_seconds as number | undefined,
+        note: params.note as string | null | undefined,
+        started_at: startedAt,
+        stopped_at: stoppedAt,
+      });
+      if (!session) {
+        return errorResponse(requestId, "validation_error", "Focus block cannot be created");
+      }
+      return successResponse(requestId, session);
+    }
+
     case "focus.split": {
       const id = params.id as string;
       const splitAt = params.split_at as string;
@@ -752,7 +780,7 @@ app.listen(PORT, () => {
   console.log("  inventory.list, inventory.get");
   console.log("  capture.create, capture.list, capture.resolve, capture.update, capture.delete, capture.convert_to_work_item");
   console.log("  work_item.create, work_item.touch, work_item.set_state, work_item.set_note, work_item.update, work_item.toggle_pin, work_item.delete");
-  console.log("  focus.current, focus.start, focus.stop, focus.update, focus.split, focus.list");
+  console.log("  focus.current, focus.start, focus.stop, focus.update, focus.create_stopped, focus.split, focus.list");
   console.log("  ref.add, ref.remove, ref.open, ref.check_conflict");
   console.log("  settings.get, settings.set, settings.get_denylist, settings.add_to_denylist, settings.remove_from_denylist");
 });

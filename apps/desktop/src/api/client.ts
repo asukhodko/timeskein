@@ -21,6 +21,7 @@ import {
   type FocusCurrentResponse,
   type FocusListResponse,
   type FocusSessionView,
+  type FocusCreateStoppedParams,
   type FocusSplitParams,
   type FocusSplitResponse,
   type FocusUpdateParams,
@@ -164,6 +165,8 @@ export const focusApi = {
     rpc<FocusSessionView>('focus.stop', params),
   update: (params: FocusUpdateParams) =>
     rpc<FocusSessionView>('focus.update', params),
+  createStopped: (params: FocusCreateStoppedParams) =>
+    rpc<FocusSessionView>('focus.create_stopped', params),
   split: (params: FocusSplitParams) =>
     rpc<FocusSplitResponse>('focus.split', params),
 }

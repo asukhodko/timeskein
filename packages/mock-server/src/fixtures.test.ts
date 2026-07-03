@@ -96,6 +96,21 @@ test("focus correction update, split and work item edit are reflected in day dat
   assert.equal(updated?.note, "corrected note");
   assert.equal(updated?.active_seconds, 180);
 
+  const missed = store.createStoppedFocusSession({
+    title: "Mock Correction Missed",
+    started_at: new Date(now + 300_000).toISOString(),
+    stopped_at: new Date(now + 600_000).toISOString(),
+    activity_zone: "coordination",
+    note: "added later",
+  });
+
+  assert.equal(missed?.state, "stopped");
+  assert.equal(missed?.work_item_title, "Mock Correction Missed");
+  assert.equal(missed?.activity_zone, "coordination");
+  assert.equal(missed?.note, "added later");
+  assert.equal(missed?.active_seconds, 300);
+  assert.equal(store.getActiveFocusSession(), undefined);
+
   const split = store.splitFocusSession(started.id, {
     split_at: splitAt,
     right_title: "Mock Correction Right",
@@ -167,11 +182,11 @@ test("focus correction update, split and work item edit are reflected in day dat
 
   const listed = store.listFocusSessions(
     new Date(now - 240_000).toISOString(),
-    new Date(now + 60_000).toISOString()
+    new Date(now + 660_000).toISOString()
   );
   const right = listed.find((session) => session.id === split.right.id);
 
-  assert.equal(listed.length, 2);
+  assert.equal(listed.length, 3);
   assert.equal(right?.work_item_title, "Mock Correction Right Edited");
   assert.equal(right?.activity_zone, "coordination");
 

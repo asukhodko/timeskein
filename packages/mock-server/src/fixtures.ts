@@ -984,6 +984,48 @@ export class MockDataStore {
     return this.withLiveTiming(session);
   }
 
+  createStoppedFocusSession(params: {
+    title?: string;
+    work_item_id?: string;
+    activity_zone?: ActivityZone;
+    target_seconds?: number;
+    note?: string | null;
+    started_at: string;
+    stopped_at: string;
+  }): FocusSessionView | undefined {
+    const assignment = this.resolveFocusAssignment({
+      title: params.title,
+      work_item_id: params.work_item_id,
+      fallbackTitle: "Missed focus block",
+      fallbackActivityZone: "work",
+    });
+    const startedAt = new Date(params.started_at).getTime();
+    const stoppedAt = new Date(params.stopped_at).getTime();
+    if (Number.isNaN(startedAt) || Number.isNaN(stoppedAt) || stoppedAt <= startedAt) {
+      return undefined;
+    }
+
+    const now = new Date().toISOString();
+    const session: FocusSessionView = {
+      id: uuidv4(),
+      title: assignment.title,
+      work_item_id: assignment.workItemId,
+      work_item_title: assignment.workItemTitle,
+      activity_zone: params.activity_zone || assignment.activityZone,
+      state: "stopped",
+      target_seconds: Math.max(params.target_seconds || 25 * 60, 60),
+      active_seconds: 0,
+      over_target_seconds: 0,
+      note: params.note?.trim() || undefined,
+      started_at: params.started_at,
+      stopped_at: params.stopped_at,
+      updated_at: now,
+    };
+    this.focusSessions.set(session.id, session);
+
+    return this.withLiveTiming(session);
+  }
+
   splitFocusSession(
     id: string,
     params: {

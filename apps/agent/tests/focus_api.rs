@@ -5,10 +5,10 @@ use serde_json::json;
 use tempfile::tempdir;
 use timeskein_agent::api::{
     handle_capture_append_to_work_item_event, handle_capture_create, handle_capture_delete,
-    handle_capture_update, handle_focus_list, handle_focus_split, handle_focus_start,
-    handle_focus_stop, handle_focus_update, handle_inventory_list, handle_work_item_add_event,
-    handle_work_item_delete_event, handle_work_item_events, handle_work_item_update,
-    handle_work_item_update_event,
+    handle_capture_update, handle_focus_create_stopped, handle_focus_list, handle_focus_split,
+    handle_focus_start, handle_focus_stop, handle_focus_update, handle_inventory_list,
+    handle_work_item_add_event, handle_work_item_delete_event, handle_work_item_events,
+    handle_work_item_update, handle_work_item_update_event,
 };
 use timeskein_agent::{db::Database, AppState};
 use tokio::sync::RwLock;
@@ -337,6 +337,40 @@ async fn stopped_focus_block_can_be_updated_split_and_reported_correctly() {
     assert_eq!(updated["note"].as_str(), Some("corrected note"));
     assert_eq!(updated["active_seconds"].as_i64(), Some(180));
 
+    let missed_start = end + Duration::minutes(10);
+    let missed_end = missed_start + Duration::minutes(20);
+    let missed = handle_focus_create_stopped(
+        &state,
+        json!({
+            "title": "Correction Missed",
+            "started_at": missed_start.to_rfc3339(),
+            "stopped_at": missed_end.to_rfc3339(),
+            "activity_zone": "coordination",
+            "note": "added after the fact",
+        }),
+        "create-stopped",
+    )
+    .await
+    .expect("create stopped");
+
+    assert_eq!(missed["state"].as_str(), Some("stopped"));
+    assert_eq!(
+        missed["work_item_title"].as_str(),
+        Some("Correction Missed")
+    );
+    assert_eq!(missed["activity_zone"].as_str(), Some("coordination"));
+    assert_eq!(missed["note"].as_str(), Some("added after the fact"));
+    assert_eq!(missed["active_seconds"].as_i64(), Some(1200));
+
+    let current_after_missed =
+        timeskein_agent::api::handle_focus_current(&state, json!({}), "current-after-missed")
+            .await
+            .expect("current after missed block");
+    assert!(
+        current_after_missed["session"].is_null(),
+        "post-factum block unexpectedly started an active timer"
+    );
+
     let split = handle_focus_split(
         &state,
         json!({
@@ -528,7 +562,7 @@ async fn stopped_focus_block_can_be_updated_split_and_reported_correctly() {
         &state,
         json!({
             "from": (start - Duration::minutes(1)).to_rfc3339(),
-            "to": (end + Duration::minutes(1)).to_rfc3339(),
+            "to": (missed_end + Duration::minutes(1)).to_rfc3339(),
         }),
         "list",
     )
@@ -536,20 +570,24 @@ async fn stopped_focus_block_can_be_updated_split_and_reported_correctly() {
     .expect("list");
     let sessions = listed["sessions"].as_array().expect("sessions");
 
-    assert_eq!(sessions.len(), 2);
-    assert_eq!(listed["active_seconds_total"].as_i64(), Some(180));
+    assert_eq!(sessions.len(), 3);
+    assert_eq!(listed["active_seconds_total"].as_i64(), Some(1380));
     assert_eq!(
         sessions[1]["work_item_title"].as_str(),
         Some("Correction Right Edited")
     );
     assert_eq!(sessions[1]["activity_zone"].as_str(), Some("coordination"));
+    assert_eq!(
+        sessions[2]["work_item_title"].as_str(),
+        Some("Correction Missed")
+    );
 
     let inventory = handle_inventory_list(
         &state,
         json!({
             "focus_window": {
                 "from": (start - Duration::minutes(1)).to_rfc3339(),
-                "to": (end + Duration::minutes(1)).to_rfc3339(),
+                "to": (missed_end + Duration::minutes(1)).to_rfc3339(),
             }
         }),
         "inventory",

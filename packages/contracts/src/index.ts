@@ -475,6 +475,17 @@ export interface FocusUpdateParams {
   stopped_at?: string;  // ISO 8601
 }
 
+// focus.create_stopped parameters
+export interface FocusCreateStoppedParams {
+  title?: string;
+  work_item_id?: string;
+  activity_zone?: ActivityZone;
+  target_seconds?: number;
+  note?: string | null;
+  started_at: string;  // ISO 8601
+  stopped_at: string;  // ISO 8601
+}
+
 // focus.split parameters
 export interface FocusSplitParams {
   id: string;

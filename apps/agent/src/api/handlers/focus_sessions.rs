@@ -288,21 +288,8 @@ pub async fn handle_focus_update(
     let requested_stopped_at = parse_optional_datetime(params.get("stopped_at"), request_id)?;
     let requested_activity_zone =
         parse_optional_activity_zone(params.get("activity_zone"), request_id)?;
-    let requested_target_seconds = params
-        .get("target_seconds")
-        .map(|value| {
-            value
-                .as_i64()
-                .filter(|seconds| *seconds >= 60)
-                .ok_or_else(|| {
-                    RpcResponse::error(
-                        request_id.to_string(),
-                        "validation_error",
-                        "Target seconds must be at least 60",
-                    )
-                })
-        })
-        .transpose()?;
+    let requested_target_seconds =
+        parse_optional_target_seconds(params.get("target_seconds"), request_id)?;
     let requested_note = parse_nullable_note(params.get("note"), request_id)?;
 
     let state = state.write().await;
@@ -371,6 +358,69 @@ pub async fn handle_focus_update(
     })?;
 
     let view = FocusSessionView::from_session(&session, updated_work_item_title, Utc::now());
+    Ok(serde_json::to_value(view).unwrap())
+}
+
+/// Handle focus.create_stopped.
+pub async fn handle_focus_create_stopped(
+    state: &Arc<RwLock<AppState>>,
+    params: serde_json::Value,
+    request_id: &str,
+) -> Result<serde_json::Value, RpcResponse> {
+    let requested_title = parse_optional_title(params.get("title"), request_id)?;
+    let requested_work_item_id =
+        parse_optional_uuid(params.get("work_item_id"), request_id)?.map(Some);
+    if requested_title.is_none() && requested_work_item_id.is_none() {
+        return Err(RpcResponse::error(
+            request_id.to_string(),
+            "validation_error",
+            "Title or work_item_id is required",
+        ));
+    }
+
+    let started_at = parse_required_datetime(params.get("started_at"), request_id)?;
+    let stopped_at = parse_required_datetime(params.get("stopped_at"), request_id)?;
+    validate_focus_interval(started_at, stopped_at, request_id)?;
+
+    let requested_activity_zone =
+        parse_optional_activity_zone(params.get("activity_zone"), request_id)?;
+    let requested_target_seconds =
+        parse_optional_target_seconds(params.get("target_seconds"), request_id)?;
+    let requested_note = parse_nullable_note(params.get("note"), request_id)?;
+
+    let state = state.write().await;
+    let (title, work_item_id, work_item_title, assignment_activity_zone) =
+        resolve_focus_assignment(
+            &state,
+            requested_title,
+            requested_work_item_id,
+            "Missed focus block".to_string(),
+            None,
+            None,
+            ActivityZone::Work,
+            request_id,
+        )
+        .await?;
+
+    let now = Utc::now();
+    let session = FocusSession {
+        id: Uuid::new_v4(),
+        title,
+        work_item_id,
+        activity_zone: requested_activity_zone.unwrap_or(assignment_activity_zone),
+        state: FocusSessionState::Stopped,
+        target_seconds: requested_target_seconds.unwrap_or(25 * 60),
+        note: requested_note.unwrap_or(None),
+        started_at,
+        stopped_at: Some(stopped_at),
+        updated_at: now,
+    };
+
+    state.db.create_focus_session(&session).await.map_err(|e| {
+        RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
+    })?;
+
+    let view = FocusSessionView::from_session(&session, work_item_title, now);
     Ok(serde_json::to_value(view).unwrap())
 }
 
@@ -755,6 +805,26 @@ fn parse_optional_activity_zone(
                         request_id.to_string(),
                         "validation_error",
                         "Invalid activity zone",
+                    )
+                })
+        })
+        .transpose()
+}
+
+fn parse_optional_target_seconds(
+    value: Option<&serde_json::Value>,
+    request_id: &str,
+) -> Result<Option<i64>, RpcResponse> {
+    value
+        .map(|value| {
+            value
+                .as_i64()
+                .filter(|seconds| *seconds >= 60)
+                .ok_or_else(|| {
+                    RpcResponse::error(
+                        request_id.to_string(),
+                        "validation_error",
+                        "Target seconds must be at least 60",
                     )
                 })
         })

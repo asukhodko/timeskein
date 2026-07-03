@@ -193,6 +193,7 @@ async fn dispatch_method(
         "focus.start" => handle_focus_start(state, params, request_id).await,
         "focus.stop" => handle_focus_stop(state, params, request_id).await,
         "focus.update" => handle_focus_update(state, params, request_id).await,
+        "focus.create_stopped" => handle_focus_create_stopped(state, params, request_id).await,
         "focus.split" => handle_focus_split(state, params, request_id).await,
         "focus.list" => handle_focus_list(state, params, request_id).await,
 

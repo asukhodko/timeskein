@@ -9,7 +9,7 @@ A desktop application for quickly tracking focus sessions and work items with re
 | Component | Status | Notes |
 |-----------|--------|-------|
 | Frontend (React + Tailwind) | Working | Runs in browser via Vite |
-| Focus Session | Working baseline | Start, live timer, manual stop, post-factum correction, day list, tracked/work totals |
+| Focus Session | Working baseline | Start, live timer, manual stop, post-factum edit/split/add-missed-block correction, day list, tracked/work totals |
 | Activity Zones | Basic | `work`, `coordination`, `recovery`, `idle`, `personal` zones with per-focus-block snapshots and day-report totals |
 | Capture Inbox | Working baseline | Quick incoming-event capture without interrupting the active focus block |
 | Work Item List | Working baseline | `Recent`, `Today`, `Pinned`, and `All` modes keep a multi-day inventory navigable |
@@ -261,6 +261,7 @@ Focus Session controls:
 | `Start Item` / `Switch Item` | Start or continue focus on the selected Work Item |
 | Double-click Work Item | Start or switch focus to that Work Item |
 | Stop note + `Enter` or `Stop` | Stop the active focus session and optionally save a note |
+| Today `Add Block` | Add a missed stopped focus block before copying the final report |
 | Today row `Edit` | Correct a stopped focus block or split it into two blocks |
 
 **State shortcuts (in State menu):**
@@ -277,7 +278,7 @@ Focus Session controls:
 
 - Manual work item management (create/edit/touch/note/state/pin/refs/delete)
 - Manual focus sessions with 25-minute target and overflow tracking
-- Post-factum correction for stopped focus blocks: edit time/note/Work Item/Activity Zone or split the block
+- Post-factum correction for stopped focus blocks: add a missed block, edit time/note/Work Item/Activity Zone, or split a block
 - Capture Inbox for incoming events that should be handled later without interrupting the current focus block
 - Timestamped Work Item Events for observations during the day, with edit/delete cleanup for user-authored notes
 - Open captures can be edited, deleted, resolved, converted to Work Items, or appended as timestamped Work Item Events
@@ -307,7 +308,7 @@ Focus Session controls:
 
 - **Browser mode uses mock data** - SQLite persistence is available in the macOS app, not in browser dev mode
 - **Focus Session has no pause/resume/cancel yet** - the current baseline is start/stop only
-- **Post-factum correction is basic** - stopped focus blocks can be edited and split, but there is not yet a drag timeline or multi-step correction wizard
+- **Post-factum correction is basic** - stopped focus blocks can be added, edited, and split, but there is not yet a drag timeline or multi-step correction wizard
 - **Capture Inbox is still compact** - proven in one full dogfood day, with edit/delete for open captures; a fuller capture history screen is not implemented yet
 - **Work Item Events are basic** - user-authored `note_added` events can be appended, promoted from captures, edited, deleted, and reported; generated system events are not exposed as an editable history yet
 - **Work Item notes remain mutable descriptions** - timestamped observations should use Work Item Events instead

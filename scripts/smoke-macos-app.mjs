@@ -488,6 +488,24 @@ async function runCorrectionSmoke(port) {
   assert(split.right.work_item_title === rightTitle, "focus.split did not assign right title");
   assert(split.right.activity_zone === "work", "focus.split did not snapshot packaged right zone");
 
+  const missedStart = new Date(end.getTime() + 5 * 60_000);
+  const missedStop = new Date(missedStart.getTime() + 20 * 60_000);
+  const missedTitle = `${title} missed`;
+  const missed = await rpc(port, "focus.create_stopped", {
+    title: missedTitle,
+    started_at: missedStart.toISOString(),
+    stopped_at: missedStop.toISOString(),
+    activity_zone: "coordination",
+    note: "packaged missed block",
+  });
+  assert(missed.state === "stopped", "focus.create_stopped did not create a stopped packaged block");
+  assert(missed.work_item_title === missedTitle, "focus.create_stopped did not assign packaged Work Item");
+  assert(missed.activity_zone === "coordination", "focus.create_stopped did not set packaged zone");
+  assert(missed.active_seconds >= 1199, "focus.create_stopped returned wrong packaged duration");
+
+  const currentAfterMissed = await rpc(port, "focus.current");
+  assert(!currentAfterMissed.session, "focus.create_stopped unexpectedly started packaged active timer");
+
   const editedRightTitle = `${rightTitle} edited`;
   const editedItem = await rpc(port, "work_item.update", {
     id: split.right.work_item_id,
@@ -555,8 +573,10 @@ async function runCorrectionSmoke(port) {
 
   const day = await rpc(port, "focus.list", todayWindow());
   const rightFound = day.sessions.find((session) => session.id === split.right.id);
+  const missedFound = day.sessions.find((session) => session.id === missed.id);
   assert(rightFound?.work_item_title === editedRightTitle, "focus.list did not reflect edited item title");
   assert(rightFound?.activity_zone === "coordination", "focus.list did not reflect corrected packaged zone");
+  assert(missedFound?.work_item_title === missedTitle, "focus.list did not include packaged missed block");
 }
 
 async function waitForPortFile(path, timeoutMs) {

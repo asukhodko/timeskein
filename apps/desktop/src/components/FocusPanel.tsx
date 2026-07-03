@@ -12,6 +12,7 @@ import { appEventApi, logAppEvent, shellApi } from '../api/client'
 import { formatClockTime, formatDuration, truncate } from '../utils/formatTime'
 import CaptureInbox from './CaptureInbox'
 import FocusCorrectionDialog from './FocusCorrectionDialog'
+import MissedFocusBlockDialog from './MissedFocusBlockDialog'
 
 interface FocusPanelProps {
   selectedItem?: WorkItemView
@@ -28,6 +29,7 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
   const [copyReportState, setCopyReportState] = useState<'idle' | 'copied' | 'failed'>('idle')
   const [manualCopy, setManualCopy] = useState<{ label: string; text: string } | null>(null)
   const [correctingSession, setCorrectingSession] = useState<FocusSessionView | null>(null)
+  const [addingMissedBlock, setAddingMissedBlock] = useState(false)
   const titleInputRef = useRef<HTMLInputElement>(null)
   const manualCopyRef = useRef<HTMLTextAreaElement>(null)
   const localDayKey = formatLocalDate(now)
@@ -498,6 +500,13 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
             <div className="flex items-center gap-1">
               <button
                 type="button"
+                onClick={() => setAddingMissedBlock(true)}
+                className="rounded border border-gray-700 px-2 py-0.5 text-[11px] font-medium text-gray-300 transition-colors hover:border-gray-500 hover:text-gray-100"
+              >
+                Add Block
+              </button>
+              <button
+                type="button"
                 onClick={copyTodayMarkdown}
                 disabled={sessions.length === 0}
                 className="rounded border border-gray-700 px-2 py-0.5 text-[11px] font-medium text-gray-300 transition-colors hover:border-gray-500 hover:text-gray-100 disabled:cursor-not-allowed disabled:border-gray-800 disabled:text-gray-600"
@@ -565,6 +574,14 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
         <FocusCorrectionDialog
           session={correctingSession}
           onClose={() => setCorrectingSession(null)}
+        />
+      )}
+
+      {addingMissedBlock && (
+        <MissedFocusBlockDialog
+          initialTitle={selectedItem?.title}
+          initialActivityZone={selectedItem?.activity_zone}
+          onClose={() => setAddingMissedBlock(false)}
         />
       )}
     </section>

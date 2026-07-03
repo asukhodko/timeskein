@@ -108,6 +108,26 @@ assert(split.right.note === "right block note", "focus.split did not set right b
 assert(split.left.active_seconds >= 29, "focus.split left block duration is too small");
 assert(split.right.active_seconds >= 29, "focus.split right block duration is too small");
 
+const missedStart = new Date(end.getTime() + 5 * 60_000);
+const missedStop = new Date(missedStart.getTime() + 20 * 60_000);
+const missedTitle = `${title} missed`;
+const missed = await rpc("focus.create_stopped", {
+  title: missedTitle,
+  started_at: missedStart.toISOString(),
+  stopped_at: missedStop.toISOString(),
+  activity_zone: "coordination",
+  note: "post-factum missed block",
+});
+
+assert(missed.state === "stopped", "focus.create_stopped did not create a stopped block");
+assert(missed.work_item_title === missedTitle, "focus.create_stopped did not assign the missed work item");
+assert(missed.activity_zone === "coordination", "focus.create_stopped did not set activity zone");
+assert(missed.note === "post-factum missed block", "focus.create_stopped did not keep note");
+assert(missed.active_seconds >= 1199, "focus.create_stopped returned wrong duration");
+
+const currentAfterMissed = await rpc("focus.current");
+assert(!currentAfterMissed.session, "focus.create_stopped unexpectedly started an active timer");
+
 const editedRightTitle = `${rightTitle} edited`;
 const editedItem = await rpc("work_item.update", {
   id: split.right.work_item_id,
@@ -194,8 +214,10 @@ assert(duplicateRejected, "work_item.update allowed a duplicate title");
 const day = await rpc("focus.list", todayWindow());
 const leftFound = day.sessions.find((session) => session.id === split.left.id);
 const rightFound = day.sessions.find((session) => session.id === split.right.id);
+const missedFound = day.sessions.find((session) => session.id === missed.id);
 assert(leftFound, "focus.list did not include corrected left block");
 assert(rightFound, "focus.list did not include split right block");
+assert(missedFound, "focus.list did not include manually created missed block");
 assert(rightFound.work_item_title === editedRightTitle, "focus.list did not reflect edited Work Item title");
 assert(rightFound.activity_zone === "coordination", "focus.list did not reflect corrected activity zone");
 
@@ -205,6 +227,7 @@ console.log(
       ok: true,
       corrected_session_id: split.left.id,
       split_session_id: split.right.id,
+      missed_session_id: missed.id,
       edited_work_item_id: editedItem.id,
     },
     null,

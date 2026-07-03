@@ -46,8 +46,9 @@ Capture Inbox failure or data-loss risk.
 
 These were accepted limitations for the dogfood baseline, not blockers:
 
-- Focus correction is basic: stopped blocks can be edited, split, and reassigned,
-  but there is no drag timeline, bulk edit, or dedicated correction workflow yet.
+- Focus correction is basic: stopped blocks can be added, edited, split, and
+  reassigned, but there is no drag timeline, bulk edit, or dedicated correction
+  workflow yet.
 - Work Item editing covers title, type, Activity Zone, and note; refs, state,
   pinning, touch, and delete remain separate actions.
 - Stop notes can be edited through the basic focus-block correction dialog, but
@@ -73,6 +74,7 @@ These were accepted limitations for the dogfood baseline, not blockers:
 
 Post-dogfood correction and first review enrichment are now partly implemented:
 
+- missed stopped focus blocks can be added without starting an active timer;
 - stopped focus blocks can be edited, split, reassigned by Work Item title, and
   re-zoned;
 - Work Item titles and basic fields can be edited with duplicate-title

@@ -117,6 +117,27 @@ assert(editedItem.title === editedRightTitle, "work_item.update did not update t
 assert(editedItem.type === "project", "work_item.update did not update type");
 assert(editedItem.note === "edited item note", "work_item.update did not update note");
 
+const eventWindowStart = new Date(Date.now() - 60_000).toISOString();
+const event = await rpc("work_item.add_event", {
+  id: editedItem.id,
+  text: "timestamped correction smoke event",
+  focus_session_id: split.right.id,
+});
+assert(event.kind === "note_added", "work_item.add_event did not create a note_added event");
+assert(event.text === "timestamped correction smoke event", "work_item.add_event did not return event text");
+assert(event.focus_session_id === split.right.id, "work_item.add_event did not keep focus_session_id");
+
+const events = await rpc("work_item.events", {
+  id: editedItem.id,
+  from: eventWindowStart,
+  to: new Date(Date.now() + 60_000).toISOString(),
+});
+assert(events.total === 1, "work_item.events did not return the timestamped event");
+assert(
+  events.events[0].text === "timestamped correction smoke event",
+  "work_item.events returned wrong event text"
+);
+
 const duplicate = await rpc("work_item.create", {
   title: `${title} duplicate`,
   type: "task",

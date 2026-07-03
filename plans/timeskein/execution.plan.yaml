@@ -120,7 +120,14 @@ execution:
       actual_start: "2026-06-30"
       updated_at: "2026-07-03T20:55:00+03:00"
       confidence: 0.9
-      note: Today can copy raw Markdown or a dogfood report with evening prompts, and shows selected Markdown when clipboard access fails. The same day data can be exported from SQLite with pnpm export:focus-day; pnpm dogfood:finish checks overlapping day blocks and active focus before printing the report. Reports now include App Telemetry, Activity Zone totals, Work Item notes for touched items, and Capture Activity for created, resolved, and converted captures. Corrected focus-session rows are reflected in the copied report. JSON/CSV export is not implemented.
+      note: Today can copy raw Markdown or a dogfood report with evening prompts, and shows selected Markdown when clipboard access fails. The same day data can be exported from SQLite with pnpm export:focus-day; pnpm dogfood:finish checks overlapping day blocks and active focus before printing the report. Reports now include App Telemetry, Activity Zone totals, Work Item notes, timestamped Work Item Events, and Capture Activity for created, resolved, and converted captures. Corrected focus-session rows are reflected in the copied report. JSON/CSV export is not implemented.
+    ts.day_review.work_item_events:
+      progress: 1.0
+      actual_start: "2026-07-03"
+      actual_finish: "2026-07-03"
+      updated_at: "2026-07-03T21:20:00+03:00"
+      confidence: 0.85
+      note: Implemented work_item.add_event and work_item.events in the Rust agent and mock API, added the note-editor append flow, showed latest day events in the focus panel, and included Work Item Events in UI/CLI Markdown reports plus smoke coverage. Event edit/delete and capture-to-event promotion remain future work.
     ts.day_review.corrections:
       progress: 1.0
       actual_start: "2026-07-03"
@@ -162,7 +169,7 @@ execution:
       actual_finish: "2026-07-03"
       updated_at: "2026-07-03T18:20:00+03:00"
       confidence: 0.9
-      note: Open captures can be resolved or converted to Work Items, and dogfood reports show Capture Activity plus separate open captures. The 2026-07-03 dogfood day created four captures during active focus, with two resolved, one converted, one left open as visible follow-up, and zero capture failures. Edit/delete and append-as-timestamped-note remain future work.
+      note: Open captures can be resolved or converted to Work Items, and dogfood reports show Capture Activity plus separate open captures. The 2026-07-03 dogfood day created four captures during active focus, with two resolved, one converted, one left open as visible follow-up, and zero capture failures. Edit/delete and append-as-Work-Item-event remain future work.
     ts.hardening.smoke:
       progress: 0.99
       actual_start: "2026-06-30"
@@ -181,7 +188,7 @@ execution:
       actual_start: "2026-07-01"
       updated_at: "2026-07-03T20:55:00+03:00"
       confidence: 0.85
-      note: Fixed C/С shortcut capture while typing, active Work Item creation, visible create errors, ambiguous last-seen labels, Work Item notes in reports, minimal Capture Inbox, Work Item basic editing, post-factum focus-block correction, Activity Zone totals, and Work Item today/total list metrics. Remaining friction is mostly window behavior, menu bar counter refresh, and timestamped notes/events.
+      note: Fixed C/С shortcut capture while typing, active Work Item creation, visible create errors, ambiguous last-seen labels, Work Item notes in reports, minimal Capture Inbox, Work Item basic editing, post-factum focus-block correction, Activity Zone totals, Work Item today/total list metrics, and timestamped Work Item Events. Remaining friction is mostly window behavior, menu bar counter refresh, and capture-to-event promotion.
     ts.hardening.package_app:
       progress: 1.0
       actual_start: "2026-06-30"

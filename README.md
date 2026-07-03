@@ -12,6 +12,7 @@ A desktop application for quickly tracking focus sessions and work items with re
 | Focus Session | Working baseline | Start, live timer, manual stop, post-factum correction, day list, total active time |
 | Activity Zones | Basic | Work Item-level `work`, `coordination`, `recovery`, `idle`, `personal` zones with day-report totals |
 | Capture Inbox | Working baseline | Quick incoming-event capture without interrupting the active focus block |
+| Work Item Events | Working baseline | Timestamped append-only notes linked to Work Items and optionally to focus blocks |
 | Dogfood Telemetry | Working baseline | Local app-event journal and CLI metrics for tracking UX friction |
 | Mock Server | Working | Full API implementation for development |
 | Rust Agent | Working | SQLite-backed Local API, embedded in macOS app |
@@ -144,7 +145,7 @@ At the end of the day, export the analysis note:
 pnpm dogfood:finish:save
 ```
 
-This writes `timeskein-dogfood-report-YYYY-MM-DD.md` in the current directory. The report includes focus blocks, Work Item totals, Activity Zone totals, Work Item notes for items touched that day, Capture Activity for the day, open Capture Inbox entries, and local app telemetry: starts, switches, stops, Capture Inbox actions, API errors, show/hide events, copy failures, and likely friction points.
+This writes `timeskein-dogfood-report-YYYY-MM-DD.md` in the current directory. The report includes focus blocks, Work Item totals, Activity Zone totals, Work Item notes and timestamped Work Item Events for items touched that day, Capture Activity for the day, open Capture Inbox entries, and local app telemetry: starts, switches, stops, Capture Inbox actions, API errors, show/hide events, copy failures, and likely friction points.
 Saved dogfood reports and RC checks can contain personal or internal work context, so they are ignored by git.
 To print the report to stdout instead:
 
@@ -275,13 +276,14 @@ Focus Session controls:
 - Manual focus sessions with 25-minute target and overflow tracking
 - Post-factum correction for stopped focus blocks: edit time/note/Work Item or split the block
 - Capture Inbox for incoming events that should be handled later without interrupting the current focus block
+- Timestamped Work Item Events for append-only observations during the day
 - Running focus session restored from SQLite after frontend/app restart
 - Focus sessions are linked to Work Items; typed titles reuse existing Work Items instead of creating duplicates
 - Setting a Work Item to `active` starts or switches the linked focus session; stopping it clears `active`
 - Day panel with focus blocks, total active time, entrance count, zones, and gaps
 - Open gap warning when no focus block is running and the time since the last stopped block is significant
 - Day totals count the part of each focus block that overlaps the selected local day
-- Markdown dogfood report from the Today panel or CLI, with focus data, Work Item totals, Activity Zone totals, Work Item notes for touched items, significant gaps, Capture Activity, open captures, review prompts, and draft warning while a focus block or Work Item is active
+- Markdown dogfood report from the Today panel or CLI, with focus data, Work Item totals, Activity Zone totals, Work Item notes and timestamped events for touched items, significant gaps, Capture Activity, open captures, review prompts, and draft warning while a focus block or Work Item is active
 - macOS menu bar item shows the active focus duration as a short `12m Focus` status while a block is running
 - Work item states: active, waiting, blocked, done, someday, unknown
 - Work Item activity zones: work, coordination, recovery, idle, personal
@@ -299,8 +301,9 @@ Focus Session controls:
 - **Browser mode uses mock data** - SQLite persistence is available in the macOS app, not in browser dev mode
 - **Focus Session has no pause/resume/cancel yet** - the current baseline is start/stop only
 - **Post-factum correction is basic** - stopped focus blocks can be edited and split, but there is not yet a drag timeline or multi-step correction wizard
-- **Capture Inbox is minimal** - proven in one full dogfood day, but capture edit/delete and append-as-timestamped-note are not implemented yet
-- **Work Item notes are not timestamped** - they appear in day reports for touched items, but they are still one mutable description field
+- **Capture Inbox is minimal** - proven in one full dogfood day, but capture edit/delete and append-as-Work-Item-event are not implemented yet
+- **Work Item Events are basic** - timestamped events can be appended and reported, but they cannot be edited, deleted, or promoted from captures yet
+- **Work Item notes remain mutable descriptions** - timestamped observations should use Work Item Events instead
 - **Activity zones are Work Item-level only** - reports show zone totals, but the top-line `Total focus` still sums every tracked interval
 - **macOS Command+Tab does not restore a hidden borderless window yet** - use the menu bar item or global shortcut
 - **The menu bar focus counter can lag until the item is clicked** - this is known dogfood friction

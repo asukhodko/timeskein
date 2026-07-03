@@ -1,6 +1,7 @@
 //! Work Items repository
 
 use anyhow::Result;
+use chrono::{DateTime, Utc};
 use sqlx::Row;
 use uuid::Uuid;
 
@@ -305,6 +306,46 @@ impl Database {
 
         Ok(())
     }
+
+    /// List Work Item events, optionally scoped by item and time window.
+    pub async fn list_work_item_events(
+        &self,
+        work_item_id: Option<Uuid>,
+        from: Option<DateTime<Utc>>,
+        to: Option<DateTime<Utc>>,
+    ) -> Result<Vec<WorkItemEvent>> {
+        let mut sql = String::from(
+            "SELECT id, ts, work_item_id, kind, payload
+             FROM work_item_events
+             WHERE 1 = 1",
+        );
+
+        if work_item_id.is_some() {
+            sql.push_str(" AND work_item_id = ?");
+        }
+        if from.is_some() {
+            sql.push_str(" AND datetime(ts) >= datetime(?)");
+        }
+        if to.is_some() {
+            sql.push_str(" AND datetime(ts) < datetime(?)");
+        }
+        sql.push_str(" ORDER BY datetime(ts) ASC");
+
+        let mut query = sqlx::query(&sql);
+        if let Some(work_item_id) = work_item_id {
+            query = query.bind(work_item_id.to_string());
+        }
+        if let Some(from) = from {
+            query = query.bind(from.to_rfc3339());
+        }
+        if let Some(to) = to {
+            query = query.bind(to.to_rfc3339());
+        }
+
+        let rows = query.fetch_all(self.pool()).await?;
+
+        rows.iter().map(work_item_event_from_row).collect()
+    }
 }
 
 /// Parse a work item from a database row
@@ -354,5 +395,24 @@ fn work_item_from_row(row: &sqlx::sqlite::SqliteRow) -> Result<WorkItem> {
         updated_at,
         last_seen_at,
         deleted_at,
+    })
+}
+
+fn work_item_event_from_row(row: &sqlx::sqlite::SqliteRow) -> Result<WorkItemEvent> {
+    let id_str: String = row.get("id");
+    let work_item_id_str: String = row.get("work_item_id");
+    let ts_str: String = row.get("ts");
+    let kind_str: String = row.get("kind");
+    let payload_str: Option<String> = row.get("payload");
+
+    Ok(WorkItemEvent {
+        id: Uuid::parse_str(&id_str)?,
+        ts: DateTime::parse_from_rfc3339(&ts_str)?.with_timezone(&Utc),
+        work_item_id: Uuid::parse_str(&work_item_id_str)?,
+        kind: WorkItemEventKind::from_str(&kind_str).unwrap_or(WorkItemEventKind::Updated),
+        payload: payload_str
+            .as_deref()
+            .map(serde_json::from_str)
+            .transpose()?,
     })
 }

@@ -16,7 +16,7 @@ trustworthy enough for regular dogfooding:
 - keep one active timer and one active Work Item;
 - capture incoming interruptions without switching away from the current block;
 - produce an end-of-day report with focus blocks, Work Item totals, Activity Zone totals, gaps,
-  Capture Activity, open captures, Work Item notes, and app telemetry.
+  Capture Activity, open captures, Work Item notes, Work Item Events, and app telemetry.
 
 ## Evidence
 
@@ -51,9 +51,10 @@ These were accepted limitations for the dogfood baseline, not blockers:
 - Work Item editing covers title, type, Activity Zone, and note; refs, state,
   pinning, touch, and delete remain separate actions.
 - Stop notes cannot be edited after the block is stopped.
-- Work Item notes are mutable descriptions, not timestamped activity notes.
+- Work Item notes are mutable descriptions; timestamped observations are stored
+  separately as Work Item Events.
 - Capture Inbox cannot edit or delete captures, and cannot append a capture as
-  a timestamped Work Item note yet.
+  a Work Item Event yet.
 - Activity zones are Work Item-level only. Reports show zone totals, but the
   top-line `Total focus` still counts every tracked block.
 - The macOS borderless window can stay visually on top in awkward moments and
@@ -71,11 +72,13 @@ Post-dogfood correction and first review enrichment are now partly implemented:
 - copied reports use the corrected focus-session rows.
 - Work Items carry Activity Zones, the list shows today/total spent time, and
   copied reports include Activity Zone totals.
+- Timestamped Work Item Events can be appended from the note editor and appear
+  in UI/CLI day reports.
 
 Remaining entry and review polish:
 
 - make hidden-window restore and status-bar updates less surprising;
-- add timestamped notes or events if stop notes and captures are not enough.
+- add capture-to-Work-Item-event promotion if captures often become review notes.
 - decide whether top-line report totals should include filtered numbers such as
   work-only focus and recovery time.
 

@@ -11,6 +11,7 @@ import type {
   AppEventSummary,
   AppEventView,
   ActivityZone,
+  WorkItemEventView,
 } from "@timeskein/contracts";
 import { v4 as uuidv4 } from "uuid";
 
@@ -172,6 +173,7 @@ export class MockDataStore {
   private focusSessions: Map<string, FocusSessionView>;
   private captures: Map<string, CaptureView>;
   private appEvents: Map<string, AppEventView>;
+  private workItemEvents: Map<string, WorkItemEventView>;
   private startTime: number;
 
   constructor() {
@@ -181,6 +183,7 @@ export class MockDataStore {
     this.focusSessions = new Map();
     this.captures = new Map();
     this.appEvents = new Map();
+    this.workItemEvents = new Map();
     this.startTime = Date.now();
 
     // Initialize with mock data
@@ -555,6 +558,47 @@ export class MockDataStore {
     item.updated_at = now;
     item.last_seen_at = now;
     return true;
+  }
+
+  addWorkItemEvent(params: { id: string; text: string; focus_session_id?: string }): WorkItemEventView | undefined {
+    const item = this.workItems.get(params.id);
+    const text = params.text.trim();
+    if (!item || !text) return undefined;
+
+    const now = new Date().toISOString();
+    item.updated_at = now;
+    item.last_seen_at = now;
+
+    const payload: Record<string, unknown> = { text };
+    if (params.focus_session_id) {
+      payload.focus_session_id = params.focus_session_id;
+    }
+
+    const event: WorkItemEventView = {
+      id: uuidv4(),
+      ts: now,
+      work_item_id: item.id,
+      kind: "note_added",
+      text,
+      focus_session_id: params.focus_session_id,
+      payload,
+    };
+
+    this.workItemEvents.set(event.id, event);
+    return event;
+  }
+
+  listWorkItemEvents(params: { id?: string; from?: string; to?: string } = {}): WorkItemEventView[] {
+    const fromTime = params.from ? new Date(params.from).getTime() : Number.NEGATIVE_INFINITY;
+    const toTime = params.to ? new Date(params.to).getTime() : Number.POSITIVE_INFINITY;
+
+    return Array.from(this.workItemEvents.values())
+      .filter((event) => {
+        if (params.id && event.work_item_id !== params.id) return false;
+        const eventTime = new Date(event.ts).getTime();
+        return eventTime >= fromTime && eventTime < toTime;
+      })
+      .sort((left, right) => new Date(left.ts).getTime() - new Date(right.ts).getTime());
   }
 
   updateWorkItem(

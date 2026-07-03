@@ -26,8 +26,9 @@ to.setDate(to.getDate() + 1);
 
 const sessions = await loadSessions(dbPath, from, to, now);
 const activeSecondsTotal = sessions.reduce((sum, session) => sum + session.active_seconds, 0);
+const workItemEvents = await loadWorkItemEvents(dbPath, from, to);
 
-process.stdout.write(buildDayMarkdown(sessions, activeSecondsTotal, from, now));
+process.stdout.write(buildDayMarkdown(sessions, activeSecondsTotal, from, now, workItemEvents));
 
 function parseArgs(args) {
   const result = {};
@@ -131,6 +132,56 @@ async function loadSessions(path, from, to, now) {
   });
 }
 
+async function loadWorkItemEvents(path, from, to) {
+  const query = `
+    SELECT
+      e.id,
+      e.ts,
+      e.work_item_id,
+      e.kind,
+      e.payload,
+      wi.title AS work_item_title
+    FROM work_item_events e
+    LEFT JOIN work_items wi ON wi.id = e.work_item_id
+    WHERE e.kind = 'note_added'
+      AND datetime(e.ts) >= datetime(${sqlString(from.toISOString())})
+      AND datetime(e.ts) < datetime(${sqlString(to.toISOString())})
+    ORDER BY datetime(e.ts) ASC
+  `;
+
+  const { stdout } = await execFileAsync("sqlite3", sqliteReadArgs(path, query), {
+    maxBuffer: 10 * 1024 * 1024,
+  });
+  const rows = stdout.trim() ? JSON.parse(stdout) : [];
+
+  return rows
+    .map((row) => {
+      const payload = parseJsonPayload(row.payload);
+      const text = typeof payload?.text === "string" ? payload.text.trim() : "";
+
+      return {
+        id: row.id,
+        ts: row.ts,
+        work_item_id: row.work_item_id,
+        work_item_title: row.work_item_title ?? undefined,
+        kind: row.kind,
+        text,
+        focus_session_id: typeof payload?.focus_session_id === "string" ? payload.focus_session_id : undefined,
+      };
+    })
+    .filter((event) => event.text);
+}
+
+function parseJsonPayload(value) {
+  if (!value) return undefined;
+
+  try {
+    return JSON.parse(value);
+  } catch {
+    return undefined;
+  }
+}
+
 function clippedActiveSeconds(startedAtValue, stoppedAtValue, from, to, now) {
   const startedAt = new Date(startedAtValue);
   const stoppedAt = stoppedAtValue ? new Date(stoppedAtValue) : now;
@@ -148,7 +199,7 @@ function sqlString(value) {
   return `'${value.replaceAll("'", "''")}'`;
 }
 
-function buildDayMarkdown(sessionsOldestFirst, activeSecondsTotal, day, now) {
+function buildDayMarkdown(sessionsOldestFirst, activeSecondsTotal, day, now, workItemEvents = []) {
   const dayStart = startOfLocalDay(day);
   const dayEnd = nextLocalDay(dayStart);
   const dateTitle = day.toLocaleDateString([], {
@@ -200,6 +251,7 @@ function buildDayMarkdown(sessionsOldestFirst, activeSecondsTotal, day, now) {
   }
 
   appendWorkItemNotes(lines, workItemTotals);
+  appendWorkItemEvents(lines, workItemEvents, sessionsOldestFirst);
 
   const zoneTotals = aggregateActivityZoneTotals(sessionsOldestFirst);
   if (zoneTotals.length > 0) {
@@ -312,6 +364,34 @@ function appendWorkItemNotes(lines, workItemTotals) {
   for (const item of itemsWithNotes) {
     lines.push(`- ${formatMarkdownListText(item.title)}: ${formatMarkdownListText(item.note)}`);
   }
+}
+
+function appendWorkItemEvents(lines, events, sessions) {
+  if (events.length === 0) {
+    return;
+  }
+
+  const sessionsById = new Map(sessions.map((session) => [session.id, session]));
+  lines.push("", "## Work Item Events", "", "| Time | Work Item | During | Event |", "| --- | --- | --- | --- |");
+  for (const event of events) {
+    lines.push(
+      `| ${escapeMarkdownTable(formatClockTime(event.ts))} | ${escapeMarkdownTable(formatEventWorkItemTitle(event, sessionsById))} | ${escapeMarkdownTable(formatEventDuring(event, sessionsById))} | ${escapeMarkdownTable(event.text)} |`
+    );
+  }
+}
+
+function formatEventWorkItemTitle(event, sessionsById) {
+  if (event.work_item_title) return event.work_item_title;
+
+  const session = event.focus_session_id ? sessionsById.get(event.focus_session_id) : undefined;
+  return session?.work_item_title ?? session?.title ?? "unknown Work Item";
+}
+
+function formatEventDuring(event, sessionsById) {
+  if (!event.focus_session_id) return "";
+
+  const session = sessionsById.get(event.focus_session_id);
+  return session?.work_item_title ?? session?.title ?? "linked focus block";
 }
 
 function gapsBetweenSessions(sessionsOldestFirst) {

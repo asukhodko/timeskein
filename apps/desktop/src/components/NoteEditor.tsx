@@ -4,11 +4,23 @@ interface NoteEditorProps {
   itemTitle: string
   currentNote: string | null
   onSave: (note: string) => void
+  onAppendEvent?: (text: string) => Promise<void> | void
+  appendPending?: boolean
+  appendError?: string | null
   onClose: () => void
 }
 
-export default function NoteEditor({ itemTitle, currentNote, onSave, onClose }: NoteEditorProps) {
+export default function NoteEditor({
+  itemTitle,
+  currentNote,
+  onSave,
+  onAppendEvent,
+  appendPending = false,
+  appendError,
+  onClose,
+}: NoteEditorProps) {
   const [note, setNote] = useState(currentNote || '')
+  const [eventText, setEventText] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const modalRef = useRef<HTMLDivElement>(null)
 
@@ -44,6 +56,18 @@ export default function NoteEditor({ itemTitle, currentNote, onSave, onClose }: 
     }
   }, [note, onSave, onClose])
 
+  const appendEvent = async () => {
+    const trimmed = eventText.trim()
+    if (!trimmed || !onAppendEvent || appendPending) return
+
+    try {
+      await onAppendEvent(trimmed)
+      setEventText('')
+    } catch {
+      // The parent mutation exposes the error state; keep typed text intact.
+    }
+  }
+
   return (
     <div
       data-timeskein-modal="true"
@@ -55,7 +79,8 @@ export default function NoteEditor({ itemTitle, currentNote, onSave, onClose }: 
       >
         <div className="text-sm text-gray-400 mb-1">Edit note for:</div>
         <div className="text-gray-200 font-medium mb-3 truncate">{itemTitle}</div>
-        
+
+        <div className="mb-2 text-xs uppercase tracking-wide text-gray-500">Description</div>
         <textarea
           ref={textareaRef}
           value={note}
@@ -66,7 +91,42 @@ export default function NoteEditor({ itemTitle, currentNote, onSave, onClose }: 
                      text-gray-200 placeholder-gray-500 resize-none
                      focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
         />
-        
+
+        {onAppendEvent && (
+          <div className="mt-4 grid gap-2">
+            <div className="text-xs uppercase tracking-wide text-gray-500">Timestamped event</div>
+            <textarea
+              value={eventText}
+              onChange={(e) => setEventText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  void appendEvent()
+                }
+              }}
+              placeholder="What changed or happened?"
+              rows={3}
+              className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg
+                         text-gray-200 placeholder-gray-500 resize-none
+                         focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+            />
+            {appendError && (
+              <div className="text-xs text-red-300">{appendError}</div>
+            )}
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={() => void appendEvent()}
+                disabled={!eventText.trim() || appendPending}
+                className="px-3 py-1.5 text-sm bg-emerald-700 hover:bg-emerald-600 text-white rounded transition-colors disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-500"
+              >
+                {appendPending ? 'Adding...' : 'Add Event'}
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="flex justify-between items-center mt-3">
           <div className="text-xs text-gray-500">
             Ctrl+Enter to save, Esc to cancel

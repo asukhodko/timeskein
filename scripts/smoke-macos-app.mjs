@@ -451,6 +451,25 @@ async function runCorrectionSmoke(port) {
   assert(editedItem.title === editedRightTitle, "work_item.update did not update title");
   assert(editedItem.type === "project", "work_item.update did not update type");
 
+  const eventWindowStart = new Date(Date.now() - 60_000).toISOString();
+  const event = await rpc(port, "work_item.add_event", {
+    id: editedItem.id,
+    text: "packaged timestamped event",
+    focus_session_id: split.right.id,
+  });
+  assert(event.kind === "note_added", "work_item.add_event did not create note_added event");
+  assert(event.text === "packaged timestamped event", "work_item.add_event did not return event text");
+
+  const events = await rpc(port, "work_item.events", {
+    id: editedItem.id,
+    from: eventWindowStart,
+    to: new Date(Date.now() + 60_000).toISOString(),
+  });
+  assert(
+    events.events.some((entry) => entry.kind === "note_added" && entry.text === "packaged timestamped event"),
+    "work_item.events did not list packaged event"
+  );
+
   const day = await rpc(port, "focus.list", todayWindow());
   const rightFound = day.sessions.find((session) => session.id === split.right.id);
   assert(rightFound?.work_item_title === editedRightTitle, "focus.list did not reflect edited item title");

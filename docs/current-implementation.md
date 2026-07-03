@@ -127,9 +127,9 @@ Runtime smoke on macOS:
 - `pnpm smoke:macos-app` also verifies post-factum focus correction: stopped block update, split, Work Item reassignment, Work Item edit, and day-list reflection
 - `pnpm smoke:macos-app` also verifies Capture Inbox create/resolve/convert while ensuring capture actions do not interrupt the active focus session
 - `pnpm smoke:macos-app` also verifies startup normalization of legacy active Work Items, orphan active focus sessions, stale `agent.lock` / `agent.port` recovery, and migration of older `app_events` kind constraints
-- `pnpm smoke:export-focus-day` verifies fallback Markdown export, including Work Item notes for touched items, against a temporary SQLite database
+- `pnpm smoke:export-focus-day` verifies fallback Markdown export, including Work Item notes and timestamped Work Item Events for touched items, against a temporary SQLite database
 - `pnpm smoke:app-events` verifies the local app-event migration, metrics summary, and Markdown export against a temporary SQLite database
-- `pnpm smoke:dogfood-report` verifies the evening dogfood report wrapper, Work Item notes, Capture Activity, open captures, analysis prompts, and App Telemetry section
+- `pnpm smoke:dogfood-report` verifies the evening dogfood report wrapper, Work Item notes, Work Item Events, Capture Activity, open captures, analysis prompts, and App Telemetry section
 - `pnpm smoke:dogfood-finish` verifies the end-of-day gate: no active focus session, no active Work Item, and at least one focus block
 - `pnpm smoke:dogfood-status` verifies the embedded-agent status checker against healthy and unhealthy temporary HTTP agents
 - `pnpm smoke:dogfood-ready` verifies the real-database readiness checker against clean and contaminated temporary SQLite databases, including running-process visibility and the actionable next commands
@@ -226,6 +226,7 @@ Third real dogfood day and release baseline:
 - Today's focus picture can also be exported from SQLite with `pnpm export:focus-day`
 - Evening dogfood report can be copied from the focus panel, shown as selected Markdown if clipboard access fails, or generated with `pnpm dogfood:report`
 - Day reports include a `Work Item Notes` section for touched Work Items that have non-empty notes
+- Day reports include a `Work Item Events` section for timestamped append-only Work Item observations created during the selected day
 - The UI and CLI label the report as a draft while a focus block or Work Item is still active and include an active-state warning in the Markdown
 - Capture Inbox for incoming events that should not interrupt the current focus block
 - Captures link to the active focus session when one exists
@@ -237,6 +238,7 @@ Third real dogfood day and release baseline:
 - Search
 - Create Work Item
 - Edit Work Item title, type, Activity Zone, and note
+- Add timestamped Work Item Events from the note editor
 - Work Item cards show last touched time plus today/total tracked time when available
 - Create Work Item directly in `active` starts or switches the focus timer instead of leaving split active state
 - Touch
@@ -282,9 +284,9 @@ High-signal findings:
 - Creating a new Work Item directly as `Active` must work; the first dogfood day hit this twice and the path is now fixed.
 - `last_seen_at` labels looked like spent duration; the UI now says `ago`.
 - The report needs activity zones before `break` or `idle` blocks can be tracked without polluting total focus.
-- Work Item notes are currently a single mutable description, not a timestamped activity log.
+- Work Item notes are still mutable descriptions; timestamped observations now live in separate Work Item Events.
 - Capture Inbox worked in real use on 2026-07-03: incoming events were captured during active focus, then resolved or converted later.
-- Work Item notes matter for review and now appear in day reports for touched items; they are still not timestamped.
+- Work Item notes matter for review and appear in day reports for touched items; timestamped Work Item Events now cover day-specific observations.
 - Wrong Work Item assignment happened during dogfood; stopped blocks can now be corrected and split after the fact.
 - Activity Zones are now available at Work Item level and appear in day reports. They separate review data by work, coordination, recovery, idle, and personal, but the top-line total still counts every tracked block.
 - Command+Tab does not restore a hidden borderless Timeskein window yet.
@@ -303,6 +305,21 @@ The current baseline stores:
 - created, updated, resolved, and converted timestamps.
 
 Capture is intentionally separate from focus sessions. Creating, resolving, or converting a capture must not stop or switch the active timer. Converting a capture creates or reuses a Work Item by normalized title, but does not start focus on that Work Item. The dogfood report includes a `Capture Activity` table for all captures created during the selected day, with state, focus context, and outcome. The RC checker also counts how many captures were linked to an active focus session, because that is the real evidence for interruption handling during focus.
+
+## Work Item Events
+
+Work Item Events store timestamped append-only observations in SQLite table `work_item_events`.
+They are separate from the mutable Work Item `note` field:
+
+- `note` is the current description/context of the Work Item;
+- `note_added` events are dated observations for the day journal.
+
+The current API surface is:
+
+- `work_item.add_event` to append an event to a Work Item, optionally linked to the active focus session;
+- `work_item.events` to list events by Work Item and/or time window.
+
+The note editor can append a timestamped event without replacing the Work Item description. The focus panel shows the latest Work Item Events for the day, and UI/CLI Markdown exports include a `Work Item Events` section.
 
 ## App Event Telemetry
 
@@ -353,8 +370,9 @@ On multi-monitor macOS setups, the tray/status item is controlled by the system 
 - Focus Session has a compact day list and Markdown copy, but not a full reporting/JSON/CSV export view yet.
 - App-event telemetry has CLI/report output, but no in-app inspection screen yet.
 - Post-factum correction is intentionally basic: stopped blocks can be edited and split, but there is no drag timeline, bulk edit, or dedicated correction wizard yet.
-- Capture Inbox is minimal: no edit/delete UI yet, no append-to-Work-Item-note action yet, and no separate capture history screen beyond the open list and dogfood report.
-- Work Item notes are included in day reports for touched items, but they are not timestamped and do not appear as a separate timeline.
+- Capture Inbox is minimal: no edit/delete UI yet, no append-to-Work-Item-event action yet, and no separate capture history screen beyond the open list and dogfood report.
+- Work Item Events are append-only and report-visible, but they cannot be edited, deleted, or created directly from Capture Inbox yet.
+- Work Item notes are included in day reports for touched items, but they remain mutable descriptions rather than dated observations.
 - Command+Tab does not restore the hidden borderless macOS window yet.
 - The borderless macOS window can remain visually on top in awkward moments.
 - The menu bar focus counter can lag until the status item is clicked.
@@ -370,5 +388,5 @@ On multi-monitor macOS setups, the tray/status item is controlled by the system 
 1. Improve macOS window return behavior, especially hidden-window restore through Command+Tab and surprising always-on-top moments.
 2. Make the menu bar focus counter update reliably without click refresh.
 3. Add a clearer correction workflow if split + update is not enough after the next dogfood day.
-4. Add timestamped Work Item notes or events if captures and stop notes are not enough for review.
+4. Add capture-to-Work-Item-event promotion if captures often become review notes rather than follow-up tasks.
 5. Decide whether Activity Zone totals should also produce filtered top-line numbers such as work-only focus and recovery time.

@@ -5,6 +5,10 @@ import {
   type InventoryListResponse,
   type InventoryListParams,
   type WorkItemView,
+  type WorkItemAddEventParams,
+  type WorkItemEventView,
+  type WorkItemEventsParams,
+  type WorkItemEventsResponse,
   type WorkItemUpdateParams,
   type WorkItemCreateParams,
   type WorkItemCreateResponse,
@@ -132,6 +136,10 @@ export const workItemApi = {
     rpc<{ success: boolean }>('work_item.set_state', { id, state }),
   setNote: (id: string, note: string) =>
     rpc<{ success: boolean }>('work_item.set_note', { id, note }),
+  addEvent: (params: WorkItemAddEventParams) =>
+    rpc<WorkItemEventView>('work_item.add_event', params),
+  events: (params?: WorkItemEventsParams) =>
+    rpc<WorkItemEventsResponse>('work_item.events', params),
   togglePin: (id: string) =>
     rpc<{ success: boolean; pinned: boolean }>('work_item.toggle_pin', { id }),
   delete: (id: string, mode?: 'soft' | 'hard') =>

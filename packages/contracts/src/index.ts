@@ -52,6 +52,30 @@ export interface WorkItemView {
   last_seen_at?: string;  // ISO 8601
 }
 
+export type WorkItemEventKind =
+  | "created"
+  | "touched"
+  | "state_changed"
+  | "note_changed"
+  | "pinned"
+  | "unpinned"
+  | "ref_attached"
+  | "ref_removed"
+  | "opened_ref"
+  | "updated"
+  | "note_added"
+  | "deleted";
+
+export interface WorkItemEventView {
+  id: string;
+  ts: string;  // ISO 8601
+  work_item_id: string;
+  kind: WorkItemEventKind;
+  text?: string;
+  focus_session_id?: string;
+  payload?: Record<string, unknown>;
+}
+
 // -----------------------------------------------------------------------------
 // Focus Session Types
 // -----------------------------------------------------------------------------
@@ -371,6 +395,24 @@ export interface WorkItemUpdateParams {
   type?: WorkItemType;
   activity_zone?: ActivityZone;
   note?: string | null;
+}
+
+export interface WorkItemAddEventParams {
+  id: string;
+  text: string;
+  focus_session_id?: string;
+}
+
+export interface WorkItemEventsParams {
+  id?: string;
+  from?: string;  // ISO 8601
+  to?: string;  // ISO 8601
+}
+
+export interface WorkItemEventsResponse {
+  events: WorkItemEventView[];
+  total: number;
+  updated_at: string;
 }
 
 // focus.start parameters

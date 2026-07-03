@@ -266,7 +266,19 @@ nodes:
     effort: 2
     deps:
       - id: ts.day_review.totals_gaps
-    notes: Today can copy the raw day picture or a dogfood report with review prompts, and shows selected Markdown if clipboard access fails. UI and CLI reports are marked as draft when a focus session or Work Item is still active. SQLite fallback export, CLI dogfood report, and dogfood:finish end-of-day gate are implemented; finish refuses active focus sessions, stuck active Work Items, and empty days. Reports now include Activity Zone totals, Work Item notes for touched items, and Capture Activity for created, resolved, and converted captures. JSON/CSV export remains future work.
+    notes: Today can copy the raw day picture or a dogfood report with review prompts, and shows selected Markdown if clipboard access fails. UI and CLI reports are marked as draft when a focus session or Work Item is still active. SQLite fallback export, CLI dogfood report, and dogfood:finish end-of-day gate are implemented; finish refuses active focus sessions, stuck active Work Items, and empty days. Reports now include Activity Zone totals, Work Item notes, Work Item Events, and Capture Activity for created, resolved, and converted captures. JSON/CSV export remains future work.
+    x:
+      ops:
+        attention_class: current
+  ts.day_review.work_item_events:
+    title: Timestamped Work Item Events
+    kind: task
+    parent: ts.day_review
+    status: done
+    effort: 2
+    deps:
+      - id: ts.day_review.export
+    notes: Work Item Events can be appended from the note editor, linked to the active focus session when applicable, listed through Local API, shown in the focus panel, and exported in UI/CLI Markdown reports. Edit/delete and capture-to-event promotion remain future work.
     x:
       ops:
         attention_class: current
@@ -347,7 +359,7 @@ nodes:
     effort: 3
     deps:
       - id: ts.capture.quick_ui
-    notes: Open captures can be resolved or converted to a Work Item, and dogfood reports show all captures created during the selected day, including resolved and converted items. The 2026-07-03 dogfood day created four captures during active focus, with two resolved, one converted, one intentionally left visible as follow-up, and zero capture failures. Append-as-timestamped-note, edit/delete, and a fuller history view remain future work.
+    notes: Open captures can be resolved or converted to a Work Item, and dogfood reports show all captures created during the selected day, including resolved and converted items. The 2026-07-03 dogfood day created four captures during active focus, with two resolved, one converted, one intentionally left visible as follow-up, and zero capture failures. Append-as-Work-Item-event, edit/delete, and a fuller history view remain future work.
     x:
       ops:
         attention_class: current
@@ -381,7 +393,7 @@ nodes:
     effort: 2
     deps:
       - id: ts.focus_core.dogfood_gate
-    notes: Fixed typing C/С opening Create, creating a new active Work Item, ambiguous last-seen timestamps, and added the first Capture Inbox baseline. Post-baseline work added Work Item title/basic-field editing and focus-block correction. Remaining friction includes Command+Tab restore, stale menu-bar counter, split resizing, and time-spent columns.
+    notes: Fixed typing C/С opening Create, creating a new active Work Item, ambiguous last-seen timestamps, and added the first Capture Inbox baseline. Post-baseline work added Work Item title/basic-field editing, focus-block correction, Activity Zones, Work Item today/total time, and timestamped Work Item Events. Remaining friction includes Command+Tab restore, stale menu-bar counter, split resizing, and capture-to-event promotion.
     x:
       ops:
         attention_class: current
@@ -417,7 +429,7 @@ nodes:
     deps:
       - id: ts.hardening.package_app
       - id: ts.hardening.backup_reset
-    notes: "Dogfood Release Candidate doc defines the pass/fail gate. Dogfood Release Baseline records the accepted 2026-07-03 verdict and known limitations. Since acceptance, post-factum focus correction, Work Item title/type/Activity Zone editing, Activity Zone report totals, and today/total Work Item time are implemented. Remaining limitations include stop-note editing, Capture Inbox edit/delete, window restore, and menu bar counter refresh."
+    notes: "Dogfood Release Candidate doc defines the pass/fail gate. Dogfood Release Baseline records the accepted 2026-07-03 verdict and known limitations. Since acceptance, post-factum focus correction, Work Item title/type/Activity Zone editing, Activity Zone report totals, today/total Work Item time, and timestamped Work Item Events are implemented. Remaining limitations include stop-note editing, Capture Inbox edit/delete, capture-to-event promotion, window restore, and menu bar counter refresh."
     x:
       ops:
         attention_class: current

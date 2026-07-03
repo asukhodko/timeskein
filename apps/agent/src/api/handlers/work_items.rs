@@ -1,6 +1,6 @@
 //! Work item API handlers
 
-use chrono::Utc;
+use chrono::{DateTime, Utc};
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use uuid::Uuid;
@@ -8,7 +8,7 @@ use uuid::Uuid;
 use crate::api::handlers::RpcResponse;
 use crate::domain::{
     ActivityZone, AppEvent, AppEventKind, AppEventSource, FocusSession, WorkItem, WorkItemEvent,
-    WorkItemEventKind, WorkItemState, WorkItemType, WorkItemView,
+    WorkItemEventKind, WorkItemEventView, WorkItemState, WorkItemType, WorkItemView,
 };
 use crate::AppState;
 
@@ -296,6 +296,82 @@ pub async fn handle_work_item_set_note(
         .ok();
 
     Ok(serde_json::json!({ "success": true }))
+}
+
+/// Handle work_item.add_event
+pub async fn handle_work_item_add_event(
+    state: &Arc<RwLock<AppState>>,
+    params: serde_json::Value,
+    request_id: &str,
+) -> Result<serde_json::Value, RpcResponse> {
+    let id = get_work_item_id(&params, request_id)?;
+    let text = params
+        .get("text")
+        .and_then(|value| value.as_str())
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .ok_or_else(|| {
+            RpcResponse::error(
+                request_id.to_string(),
+                "validation_error",
+                "Event text is required",
+            )
+        })?;
+    let focus_session_id = parse_optional_uuid(params.get("focus_session_id"), request_id)?;
+
+    let state = state.write().await;
+    let mut item = state
+        .db
+        .get_work_item(id)
+        .await
+        .map_err(|e| RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string()))?
+        .ok_or_else(|| {
+            RpcResponse::error(request_id.to_string(), "not_found", "Work item not found")
+        })?;
+
+    item.touch();
+    state.db.update_work_item(&item).await.map_err(|e| {
+        RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
+    })?;
+
+    let mut payload = serde_json::json!({ "text": text });
+    if let Some(focus_session_id) = focus_session_id {
+        payload["focus_session_id"] = serde_json::Value::String(focus_session_id.to_string());
+    }
+    let event = WorkItemEvent::new(id, WorkItemEventKind::NoteAdded, Some(payload));
+
+    state.db.log_event(&event).await.map_err(|e| {
+        RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
+    })?;
+
+    Ok(serde_json::to_value(WorkItemEventView::from_event(event)).unwrap())
+}
+
+/// Handle work_item.events
+pub async fn handle_work_item_events(
+    state: &Arc<RwLock<AppState>>,
+    params: serde_json::Value,
+    request_id: &str,
+) -> Result<serde_json::Value, RpcResponse> {
+    let work_item_id = parse_optional_uuid(params.get("id"), request_id)?;
+    let from = parse_optional_datetime(params.get("from"), request_id)?;
+    let to = parse_optional_datetime(params.get("to"), request_id)?;
+
+    let state = state.read().await;
+    let events = state
+        .db
+        .list_work_item_events(work_item_id, from, to)
+        .await
+        .map_err(|e| RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string()))?
+        .into_iter()
+        .map(WorkItemEventView::from_event)
+        .collect::<Vec<_>>();
+
+    Ok(serde_json::json!({
+        "events": events,
+        "total": events.len(),
+        "updated_at": Utc::now().to_rfc3339(),
+    }))
 }
 
 /// Handle work_item.update
@@ -746,4 +822,40 @@ fn get_work_item_id(params: &serde_json::Value, request_id: &str) -> Result<Uuid
             "Invalid work item ID",
         )
     })
+}
+
+fn parse_optional_uuid(
+    value: Option<&serde_json::Value>,
+    request_id: &str,
+) -> Result<Option<Uuid>, RpcResponse> {
+    value
+        .and_then(|value| value.as_str())
+        .filter(|value| !value.trim().is_empty())
+        .map(|value| {
+            Uuid::parse_str(value).map_err(|_| {
+                RpcResponse::error(request_id.to_string(), "validation_error", "Invalid UUID")
+            })
+        })
+        .transpose()
+}
+
+fn parse_optional_datetime(
+    value: Option<&serde_json::Value>,
+    request_id: &str,
+) -> Result<Option<DateTime<Utc>>, RpcResponse> {
+    value
+        .and_then(|value| value.as_str())
+        .filter(|value| !value.trim().is_empty())
+        .map(|value| {
+            DateTime::parse_from_rfc3339(value)
+                .map(|dt| dt.with_timezone(&Utc))
+                .map_err(|_| {
+                    RpcResponse::error(
+                        request_id.to_string(),
+                        "validation_error",
+                        "Invalid datetime",
+                    )
+                })
+        })
+        .transpose()
 }

@@ -11,6 +11,7 @@ import {
   useTouchWorkItem,
   useToggleWorkItemPin,
   useDeleteWorkItem,
+  useAddWorkItemEvent,
 } from '../hooks/useInventory'
 import SearchInput from './SearchInput'
 import InventoryList from './InventoryList'
@@ -22,7 +23,7 @@ import WorkItemEditor from './WorkItemEditor'
 import RefsPanel from './RefsPanel'
 import ConfirmDialog from './ConfirmDialog'
 import type { WorkItemState } from '@timeskein/contracts'
-import { useStartFocusSession } from '../hooks/useFocusSessions'
+import { useCurrentFocusSession, useStartFocusSession } from '../hooks/useFocusSessions'
 
 export default function Palette() {
   const [search, setSearch] = useState('')
@@ -40,12 +41,15 @@ export default function Palette() {
 
   const stateMutation = useSetWorkItemState()
   const noteMutation = useSetWorkItemNote()
+  const eventMutation = useAddWorkItemEvent()
   const addRefMutation = useAddRef()
   const removeRefMutation = useRemoveRef()
   const touchMutation = useTouchWorkItem()
   const pinMutation = useToggleWorkItemPin()
   const deleteMutation = useDeleteWorkItem()
   const startFocusMutation = useStartFocusSession()
+  const currentFocusQuery = useCurrentFocusSession()
+  const currentFocus = currentFocusQuery.data?.session
 
   const handleHideWindow = async () => {
     try {
@@ -260,6 +264,16 @@ export default function Palette() {
     }
   }
 
+  const handleAppendEvent = async (text: string) => {
+    if (!selectedItem) return
+
+    await eventMutation.mutateAsync({
+      id: selectedItem.id,
+      text,
+      focus_session_id: currentFocus?.work_item_id === selectedItem.id ? currentFocus.id : undefined,
+    })
+  }
+
   const handleAddRef = (kind: string, value: string) => {
     if (selectedItem) {
       addRefMutation.mutate({ work_item_id: selectedItem.id, kind, value })
@@ -440,6 +454,9 @@ export default function Palette() {
           itemTitle={selectedItem.title}
           currentNote={selectedItem.note || null}
           onSave={handleNoteSave}
+          onAppendEvent={handleAppendEvent}
+          appendPending={eventMutation.isPending}
+          appendError={eventMutation.error instanceof Error ? eventMutation.error.message : null}
           onClose={() => setShowNoteEditor(false)}
         />
       )}

@@ -89,6 +89,7 @@ gantt
     🔄 Show focus blocks on a daily timeline  :active, ts_day_review_timeline,    2026-07-02, 2d
     🔄 Compute totals, gaps, and entry count  :active, ts_day_review_totals_gaps,    2026-07-06, 1d
     🔄 Export dogfood day data as Markdown  :active, ts_day_review_export,    2026-07-07, 1d
+    ✅ Timestamped Work Item Events  :done, ts_day_review_work_item_events,    2026-07-03, 1d
     ✅ Post-factum focus correction  :done, ts_day_review_corrections,    2026-07-03, 1d
     ✅ Add local app-event telemetry for dogfood analysis  :done, ts_day_review_app_telemetry,    2026-07-08, 1d
     ✅ End-of-day analysis can use Timeskein data  :milestone, done, ts_day_review_analysis_gate,    2026-07-01, 0d
@@ -121,6 +122,7 @@ gantt
 - Bind focus sessions to Work Items or free intentions [done] (2 focus-blocks) {100%}
 - Capture a note at the end of a focus session [done] (1 focus-blocks) {100%}
 - First real Focus Session dogfood [done] {100%}
+- Timestamped Work Item Events [done] (2 focus-blocks) {100%}
 - Post-factum focus correction [done] (3 focus-blocks) {100%}
 - Add local app-event telemetry for dogfood analysis [done] (2 focus-blocks) {100%}
 - End-of-day analysis can use Timeskein data [done] {100%}
@@ -138,7 +140,7 @@ gantt
 - Focus Session core [in_progress] (17 focus-blocks) {85%}
 - Add FocusSession and SessionEvent persistence [in_progress] (3 focus-blocks) {70%}
 - Implement start, pause, resume, stop, cancel [in_progress] (3 focus-blocks) {45%}
-- Day review and export [in_progress] (12 focus-blocks) {90%}
+- Day review and export [in_progress] (14 focus-blocks) {92%}
 - Show focus blocks on a daily timeline [in_progress] (3 focus-blocks) {65%}
 - Compute totals, gaps, and entry count [in_progress] (2 focus-blocks) {96%}
 - Export dogfood day data as Markdown [in_progress] (2 focus-blocks) {97%}

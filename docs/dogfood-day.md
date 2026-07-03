@@ -46,6 +46,7 @@ Timeskein is ready for regular use when it can capture a workday without side tr
 - what focus blocks happened;
 - which Work Item each block belonged to;
 - which Work Item descriptions were relevant to the day;
+- which timestamped Work Item observations were recorded during the day;
 - how long each block lasted;
 - where the meaningful gaps were;
 - how much active focus time the day contained.
@@ -158,7 +159,7 @@ Current status: the macOS dogfood release baseline was accepted on 2026-07-03. T
 | Post-factum correction | `cargo test -p timeskein-agent`, `pnpm smoke:corrections-api`, and `pnpm smoke:macos-app` verify update, split, reassignment, Work Item edit, and corrected day-list data | Wrong Work Item assignments can be fixed before copying the final report |
 | Significant gaps | UI and Markdown show gap ranges of 20+ minutes | Long breaks and lost intervals are visible enough |
 | Capture Inbox | `pnpm smoke:capture-api`, `pnpm smoke:mock-api`, and `pnpm smoke:macos-app` verify capture create/list/resolve/convert without interrupting focus | Incoming events can be remembered without switching away from the current block |
-| Markdown export | `Copy Report` exports timeline, `By Work Item`, gaps, Capture Activity, open captures, app telemetry, and review prompts; `Copy MD` exports the raw day picture; failed clipboard writes show selected Markdown; `pnpm smoke:export-focus-day` and `pnpm smoke:dogfood-report` verify SQLite fallbacks | Copied note is enough for evening analysis |
+| Markdown export | `Copy Report` exports timeline, `By Work Item`, Work Item Events, gaps, Capture Activity, open captures, app telemetry, and review prompts; `Copy MD` exports the raw day picture; failed clipboard writes show selected Markdown; `pnpm smoke:export-focus-day` and `pnpm smoke:dogfood-report` verify SQLite fallbacks | Copied note is enough for evening analysis |
 | App friction telemetry | `app_events` stores local technical events, `pnpm smoke:app-events` verifies metrics/export, and `pnpm dogfood:report` includes `App Telemetry` | Start/switch/stop/copy/API/window friction is visible without relying only on memory |
 | macOS app with embedded agent and SQLite | `pnpm smoke:macos-app` verifies app launch, SQLite health, focus flow, stale lock/port recovery, and active focus restore after app restart | The real app survives normal workday use |
 
@@ -296,7 +297,7 @@ pnpm dogfood:finish > timeskein-dogfood-report.md
 ```
 
 `dogfood:finish` refuses to produce a final report while a focus block or Work Item is still active, or when there are no focus blocks for the selected date.
-The focus-day export includes a `Work Item Notes` section for touched Work Items that have a non-empty note. This is for evening analysis context; notes are still mutable Work Item descriptions, not timestamped event notes.
+The focus-day export includes a `Work Item Notes` section for touched Work Items that have a non-empty note. This is for current Work Item context. Use timestamped Work Item Events for observations tied to a concrete moment in the day; those appear separately in `Work Item Events`.
 The dogfood report also includes `Capture Activity` for every capture created during the selected day, including captures that were already resolved or converted. `Open Captures` remains a separate action list for unresolved inbox entries.
 For the release-candidate verdict, inspect whether `Capture Activity` rows were created during a real focus block. A capture made after stopping all work proves the inbox can store text, but it does not prove interruption handling during focus.
 
@@ -373,9 +374,9 @@ The dogfood day fails if any of these happens often enough to break trust:
 
 - There is no pause/resume/cancel model yet. Stop and start again instead.
 - Stopped focus blocks can be edited or split from the Today list. The correction workflow is basic: there is no drag timeline or bulk edit yet.
-- Capture Inbox is minimal. It can create, resolve, and convert captures, but cannot edit/delete captures or append them as timestamped Work Item notes yet.
+- Capture Inbox is minimal. It can create, resolve, and convert captures, but cannot edit/delete captures or append them as Work Item Events yet.
 - There are no activity zones yet. A Work Item named `Break` still contributes to total focus.
-- Work Item notes are a single mutable field, not timestamped observations.
+- Work Item notes are a single mutable field; timestamped observations are separate Work Item Events.
 - There is no automatic active-window detection.
 - There is no synchronization between devices.
 - Browser development mode uses mock data; the real dogfood trial should use the macOS app.

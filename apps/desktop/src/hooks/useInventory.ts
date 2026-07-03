@@ -1,11 +1,18 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { inventoryApi, workItemApi, refApi } from '../api/client'
-import type { WorkItemCreateParams, WorkItemState, WorkItemUpdateParams } from '@timeskein/contracts'
+import type {
+  WorkItemAddEventParams,
+  WorkItemCreateParams,
+  WorkItemEventsParams,
+  WorkItemState,
+  WorkItemUpdateParams,
+} from '@timeskein/contracts'
 
 // Query keys
 export const queryKeys = {
   inventory: ['inventory'] as const,
   workItem: (id: string) => ['workItem', id] as const,
+  workItemEvents: (params?: WorkItemEventsParams) => ['workItemEvents', params] as const,
 }
 
 // Inventory hook
@@ -25,6 +32,13 @@ export function useInventory(search?: string) {
         to: dayEnd.toISOString(),
       },
     }),
+  })
+}
+
+export function useWorkItemEvents(params?: WorkItemEventsParams) {
+  return useQuery({
+    queryKey: queryKeys.workItemEvents(params),
+    queryFn: () => workItemApi.events(params),
   })
 }
 
@@ -73,6 +87,18 @@ export function useSetWorkItemNote() {
     mutationFn: ({ id, note }: { id: string; note: string }) => workItemApi.setNote(id, note),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.inventory })
+    },
+  })
+}
+
+export function useAddWorkItemEvent() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (params: WorkItemAddEventParams) => workItemApi.addEvent(params),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.inventory })
+      queryClient.invalidateQueries({ queryKey: ['workItemEvents'] })
     },
   })
 }

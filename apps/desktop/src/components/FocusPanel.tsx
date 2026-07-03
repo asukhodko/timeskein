@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import type { ActivityZone, AppEventSummary, CaptureView, FocusSessionView, WorkItemView } from '@timeskein/contracts'
+import type { ActivityZone, AppEventSummary, CaptureView, FocusSessionView, WorkItemEventView, WorkItemView } from '@timeskein/contracts'
 import {
   useCurrentFocusSession,
   useStartFocusSession,
   useStopFocusSession,
   useTodayFocusSessions,
 } from '../hooks/useFocusSessions'
-import { useInventory } from '../hooks/useInventory'
+import { useInventory, useWorkItemEvents } from '../hooks/useInventory'
 import { useCaptureActivity, useOpenCaptures } from '../hooks/useCaptures'
 import { appEventApi, logAppEvent, shellApi } from '../api/client'
 import { formatClockTime, formatDuration, truncate } from '../utils/formatTime'
@@ -29,10 +29,20 @@ export default function FocusPanel({ selectedItem }: FocusPanelProps) {
   const [correctingSession, setCorrectingSession] = useState<FocusSessionView | null>(null)
   const titleInputRef = useRef<HTMLInputElement>(null)
   const manualCopyRef = useRef<HTMLTextAreaElement>(null)
+  const localDayKey = formatLocalDate(now)
+  const dayWindow = useMemo(() => {
+    const dayStart = startOfLocalDay(now)
+    const dayEnd = nextLocalDay(dayStart)
+    return {
+      from: dayStart.toISOString(),
+      to: dayEnd.toISOString(),
+    }
+  }, [localDayKey])
 
   const currentQuery = useCurrentFocusSession()
   const todayQuery = useTodayFocusSessions()
   const inventoryQuery = useInventory()
+  const workItemEventsQuery = useWorkItemEvents(dayWindow)
   const capturesQuery = useOpenCaptures()
   const captureActivityQuery = useCaptureActivity()
   const startMutation = useStartFocusSession()
@@ -50,7 +60,11 @@ export default function FocusPanel({ selectedItem }: FocusPanelProps) {
   const openCaptures = capturesQuery.data?.captures ?? []
   const captureActivity = useMemo(
     () => capturesForLocalDay(captureActivityQuery.data?.captures ?? [], now),
-    [captureActivityQuery.data?.captures, now]
+    [captureActivityQuery.data?.captures, localDayKey]
+  )
+  const workItemEvents = useMemo(
+    () => noteEventsOnly(workItemEventsQuery.data?.events ?? []),
+    [workItemEventsQuery.data?.events]
   )
   const sessionsWithGaps = useMemo(() => withGaps([...sessions].reverse()), [sessions])
   const openGap = useMemo(
@@ -60,8 +74,8 @@ export default function FocusPanel({ selectedItem }: FocusPanelProps) {
   const reportIsDraft = current?.state === 'active' || activeWorkItems.length > 0
   const trayStatusTitle = useMemo(() => buildTrayStatusTitle(current), [current])
   const todayMarkdown = useMemo(
-    () => buildTodayMarkdown(sessions, activeSecondsTotal, now, inventoryItems),
-    [sessions, activeSecondsTotal, now, inventoryItems]
+    () => buildTodayMarkdown(sessions, activeSecondsTotal, now, inventoryItems, workItemEvents),
+    [sessions, activeSecondsTotal, now, inventoryItems, workItemEvents]
   )
   const focusTitleInput = ({ force = false } = {}) => {
     window.requestAnimationFrame(() => {
@@ -440,6 +454,14 @@ export default function FocusPanel({ selectedItem }: FocusPanelProps) {
 
         <CaptureInbox focusSessionId={current?.id} />
 
+        {workItemEvents.length > 0 && (
+          <WorkItemEventsPanel
+            events={workItemEvents}
+            workItems={inventoryItems}
+            sessions={sessions}
+          />
+        )}
+
         {mutationError && (
           <div className="mt-2 text-xs text-red-300">
             {mutationError instanceof Error ? mutationError.message : 'Focus action failed'}
@@ -563,7 +585,8 @@ function buildTodayMarkdown(
   sessionsOldestFirst: FocusSessionView[],
   activeSecondsTotal: number,
   now: Date,
-  workItems: WorkItemView[] = []
+  workItems: WorkItemView[] = [],
+  workItemEvents: WorkItemEventView[] = []
 ) {
   const dayStart = startOfLocalDay(now)
   const dayEnd = nextLocalDay(dayStart)
@@ -631,6 +654,7 @@ function buildTodayMarkdown(
   }
 
   appendWorkItemNotes(lines, workItemTotals)
+  appendWorkItemEvents(lines, workItemEvents, sessionsOldestFirst, workItems)
 
   const gaps = gapsBetweenSessions(sessionsOldestFirst).filter(
     (gap) => gap.seconds >= SIGNIFICANT_GAP_SECONDS
@@ -773,6 +797,47 @@ function capturesForLocalDay(captures: CaptureView[], now: Date) {
       return createdAt >= dayStart && createdAt < dayEnd
     })
     .sort((left, right) => new Date(left.created_at).getTime() - new Date(right.created_at).getTime())
+}
+
+function noteEventsOnly(events: WorkItemEventView[]) {
+  return events
+    .filter((event) => event.kind === 'note_added' && event.text?.trim())
+    .sort((left, right) => new Date(left.ts).getTime() - new Date(right.ts).getTime())
+}
+
+function WorkItemEventsPanel({
+  events,
+  workItems,
+  sessions,
+}: {
+  events: WorkItemEventView[]
+  workItems: WorkItemView[]
+  sessions: FocusSessionView[]
+}) {
+  const latest = [...events]
+    .sort((left, right) => new Date(right.ts).getTime() - new Date(left.ts).getTime())
+    .slice(0, 3)
+  const workItemsById = new Map(workItems.map((item) => [item.id, item]))
+  const sessionsById = new Map(sessions.map((session) => [session.id, session]))
+
+  return (
+    <div className="grid gap-1 rounded-md border border-gray-800 bg-gray-900/50 px-3 py-2 text-xs">
+      <div className="flex items-center justify-between text-gray-400">
+        <span className="font-medium text-gray-300">Work Item Events</span>
+        <span>{events.length}</span>
+      </div>
+      {latest.map((event) => (
+        <div key={event.id} className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-2 text-gray-300">
+          <span className="font-mono text-gray-500">{formatClockTime(event.ts)}</span>
+          <span className="min-w-0 truncate">
+            <span className="font-medium text-gray-200">{truncate(formatEventWorkItemTitle(event, workItemsById, sessionsById), 40)}</span>
+            <span className="text-gray-500"> · </span>
+            <span>{truncate(event.text ?? '', 80)}</span>
+          </span>
+        </div>
+      ))}
+    </div>
+  )
 }
 
 function formatCaptureActivityMarkdown(
@@ -938,6 +1003,47 @@ function appendWorkItemNotes(
   for (const item of itemsWithNotes) {
     lines.push(`- ${formatMarkdownListText(item.title)}: ${formatMarkdownListText(item.note ?? '')}`)
   }
+}
+
+function appendWorkItemEvents(
+  lines: string[],
+  events: WorkItemEventView[],
+  sessions: FocusSessionView[],
+  workItems: WorkItemView[]
+) {
+  const noteEvents = noteEventsOnly(events)
+  if (noteEvents.length === 0) {
+    return
+  }
+
+  const workItemsById = new Map(workItems.map((item) => [item.id, item]))
+  const sessionsById = new Map(sessions.map((session) => [session.id, session]))
+  lines.push('', '## Work Item Events', '', '| Time | Work Item | During | Event |', '| --- | --- | --- | --- |')
+  for (const event of noteEvents) {
+    lines.push(
+      `| ${escapeMarkdownTable(formatClockTime(event.ts))} | ${escapeMarkdownTable(formatEventWorkItemTitle(event, workItemsById, sessionsById))} | ${escapeMarkdownTable(formatEventDuring(event, sessionsById))} | ${escapeMarkdownTable(event.text ?? '')} |`
+    )
+  }
+}
+
+function formatEventWorkItemTitle(
+  event: WorkItemEventView,
+  workItemsById: Map<string, WorkItemView>,
+  sessionsById: Map<string, FocusSessionView>
+) {
+  return workItemsById.get(event.work_item_id)?.title
+    ?? (event.focus_session_id ? sessionsById.get(event.focus_session_id)?.work_item_title : undefined)
+    ?? (event.focus_session_id ? sessionsById.get(event.focus_session_id)?.title : undefined)
+    ?? 'unknown Work Item'
+}
+
+function formatEventDuring(event: WorkItemEventView, sessionsById: Map<string, FocusSessionView>) {
+  if (!event.focus_session_id) {
+    return ''
+  }
+
+  const session = sessionsById.get(event.focus_session_id)
+  return session?.work_item_title ?? session?.title ?? 'linked focus block'
 }
 
 function gapsBetweenSessions(sessionsOldestFirst: FocusSessionView[]) {

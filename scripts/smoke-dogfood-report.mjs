@@ -33,6 +33,10 @@ try {
       ('c1', 'Reply to incoming thread after focus', 'open', NULL, NULL, '2026-06-30T07:10:00Z', '2026-06-30T07:10:00Z', NULL, NULL),
       ('c2', 'Already handled interruption', 'resolved', NULL, 's1', '2026-06-30T07:12:00Z', '2026-06-30T07:20:00Z', '2026-06-30T07:20:00Z', NULL),
       ('c3', 'Turn into follow-up', 'converted', 'w2', 's2', '2026-06-30T07:40:00Z', '2026-06-30T07:45:00Z', NULL, '2026-06-30T07:45:00Z');
+
+    INSERT INTO work_item_events (id, ts, work_item_id, kind, payload)
+    VALUES
+      ('e1', '2026-06-30T06:12:00Z', 'w1', 'note_added', '{"text":"implementation checkpoint","focus_session_id":"s1"}');
   `);
 
   const { stdout } = await execFileAsync(
@@ -62,6 +66,11 @@ try {
   assert(
     stdout.includes("- Deep Work: Keep the implementation context here."),
     "report did not include Work Item note"
+  );
+  assert(stdout.includes("## Work Item Events"), "report did not include Work Item Events section");
+  assert(
+    stdout.includes("| Deep Work | Deep Work | implementation checkpoint |"),
+    "report did not include timestamped Work Item event"
   );
   assert(stdout.includes("## Gaps >= 20:00"), "report did not include significant gaps");
   assert(stdout.includes("### Entry Cost"), "report did not include entry cost prompts");

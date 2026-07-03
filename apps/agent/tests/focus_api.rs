@@ -5,7 +5,8 @@ use serde_json::json;
 use tempfile::tempdir;
 use timeskein_agent::api::{
     handle_focus_list, handle_focus_split, handle_focus_start, handle_focus_stop,
-    handle_focus_update, handle_inventory_list, handle_work_item_update,
+    handle_focus_update, handle_inventory_list, handle_work_item_add_event,
+    handle_work_item_events, handle_work_item_update,
 };
 use timeskein_agent::{db::Database, AppState};
 use tokio::sync::RwLock;
@@ -167,10 +168,15 @@ async fn stopped_focus_block_can_be_updated_split_and_reported_correctly() {
     assert_eq!(split["left"]["active_seconds"].as_i64(), Some(60));
     assert_eq!(split["right"]["active_seconds"].as_i64(), Some(120));
 
+    let right_item_id = split["right"]["work_item_id"]
+        .as_str()
+        .expect("right item id")
+        .to_string();
+    let right_session_id = split["right"]["id"].as_str().expect("right session id");
     let edited_item = handle_work_item_update(
         &state,
         json!({
-            "id": split["right"]["work_item_id"].as_str().expect("right item id"),
+            "id": right_item_id.clone(),
             "title": "Correction Right Edited",
             "type": "project",
             "activity_zone": "coordination",
@@ -188,6 +194,51 @@ async fn stopped_focus_block_can_be_updated_split_and_reported_correctly() {
     assert_eq!(edited_item["type"].as_str(), Some("project"));
     assert_eq!(edited_item["activity_zone"].as_str(), Some("coordination"));
     assert_eq!(edited_item["note"].as_str(), Some("edited item note"));
+
+    let event_window_start = Utc::now() - Duration::minutes(1);
+    let added_event = handle_work_item_add_event(
+        &state,
+        json!({
+            "id": right_item_id.clone(),
+            "text": "timestamped implementation event",
+            "focus_session_id": right_session_id,
+        }),
+        "add-event",
+    )
+    .await
+    .expect("add event");
+
+    assert_eq!(added_event["kind"].as_str(), Some("note_added"));
+    assert_eq!(
+        added_event["text"].as_str(),
+        Some("timestamped implementation event")
+    );
+    assert_eq!(
+        added_event["focus_session_id"].as_str(),
+        Some(right_session_id)
+    );
+
+    let listed_events = handle_work_item_events(
+        &state,
+        json!({
+            "id": right_item_id,
+            "from": event_window_start.to_rfc3339(),
+            "to": (Utc::now() + Duration::minutes(1)).to_rfc3339(),
+        }),
+        "list-events",
+    )
+    .await
+    .expect("list events");
+    let events = listed_events["events"].as_array().expect("events");
+    let note_added_event = events
+        .iter()
+        .find(|event| event["kind"].as_str() == Some("note_added"))
+        .expect("note_added event");
+
+    assert_eq!(
+        note_added_event["text"].as_str(),
+        Some("timestamped implementation event")
+    );
 
     let listed = handle_focus_list(
         &state,

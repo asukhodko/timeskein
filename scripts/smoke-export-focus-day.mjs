@@ -31,6 +31,10 @@ try {
       ('s1', 'Deep Work', 'w1', 'stopped', 1500, 'first block', '2026-06-30T06:00:00Z', '2026-06-30T06:25:00Z', '2026-06-30T06:25:00Z'),
       ('s2', 'Meetings', 'w2', 'stopped', 1500, NULL, '2026-06-30T07:00:00Z', '2026-06-30T07:30:00Z', '2026-06-30T07:30:00Z'),
       ('s3', 'Deep Work', 'w1', 'stopped', 1500, NULL, '2026-06-30T07:35:00Z', '2026-06-30T07:45:00Z', '2026-06-30T07:45:00Z');
+
+    INSERT INTO work_item_events (id, ts, work_item_id, kind, payload)
+    VALUES
+      ('e1', '2026-06-30T06:12:00Z', 'w1', 'note_added', '{"text":"implementation checkpoint","focus_session_id":"s1"}');
   `);
 
   const { stdout } = await execFileAsync(
@@ -63,6 +67,11 @@ try {
   assert(
     stdout.includes("- Deep Work: Keep the implementation context here."),
     "export did not include Work Item note"
+  );
+  assert(stdout.includes("## Work Item Events"), "export did not include Work Item Events section");
+  assert(
+    stdout.includes("| Deep Work | Deep Work | implementation checkpoint |"),
+    "export did not include timestamped Work Item event"
   );
   assert(stdout.includes("## Gaps >= 20:00"), "export did not include significant gaps section");
   assert(stdout.includes(": 35:00"), "export did not include expected significant gap duration");

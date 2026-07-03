@@ -76,6 +76,28 @@ impl Database {
         sqlx::raw_sql(captures_sql).execute(&self.pool).await?;
 
         self.ensure_work_item_activity_zones().await?;
+        self.ensure_work_item_note_events().await?;
+
+        Ok(())
+    }
+
+    async fn ensure_work_item_note_events(&self) -> Result<()> {
+        let table_sql: Option<String> = sqlx::query_scalar(
+            "SELECT sql FROM sqlite_master WHERE type='table' AND name='work_item_events'",
+        )
+        .fetch_optional(&self.pool)
+        .await?;
+
+        if table_sql
+            .as_deref()
+            .is_some_and(|sql| sql.contains("note_added") && sql.contains("updated"))
+        {
+            return Ok(());
+        }
+
+        info!("Migrating work_item_events kind constraint for timestamped notes...");
+        let note_events_sql = include_str!("../../migrations/006_work_item_note_events.sql");
+        sqlx::raw_sql(note_events_sql).execute(&self.pool).await?;
 
         Ok(())
     }

@@ -332,6 +332,40 @@ function handleMethod(
       return successResponse(requestId, { success: true });
     }
 
+    case "work_item.add_event": {
+      const id = params.id as string;
+      const text = params.text as string;
+      if (!id) {
+        return errorResponse(requestId, "validation_error", "Work item ID is required");
+      }
+      if (!text || !text.trim()) {
+        return errorResponse(requestId, "validation_error", "Event text is required");
+      }
+
+      const event = store.addWorkItemEvent({
+        id,
+        text,
+        focus_session_id: params.focus_session_id as string | undefined,
+      });
+      if (!event) {
+        return errorResponse(requestId, "not_found", "Work item not found");
+      }
+      return successResponse(requestId, event);
+    }
+
+    case "work_item.events": {
+      const events = store.listWorkItemEvents({
+        id: params.id as string | undefined,
+        from: params.from as string | undefined,
+        to: params.to as string | undefined,
+      });
+      return successResponse(requestId, {
+        events,
+        total: events.length,
+        updated_at: new Date().toISOString(),
+      });
+    }
+
     case "work_item.update": {
       const id = params.id as string;
       if (!id) {

@@ -283,10 +283,29 @@ pub enum WorkItemEventKind {
     RefRemoved,
     OpenedRef,
     Updated,
+    NoteAdded,
     Deleted,
 }
 
 impl WorkItemEventKind {
+    pub fn from_str(s: &str) -> Option<Self> {
+        match s.to_lowercase().as_str() {
+            "created" => Some(Self::Created),
+            "touched" => Some(Self::Touched),
+            "state_changed" => Some(Self::StateChanged),
+            "note_changed" => Some(Self::NoteChanged),
+            "pinned" => Some(Self::Pinned),
+            "unpinned" => Some(Self::Unpinned),
+            "ref_attached" => Some(Self::RefAttached),
+            "ref_removed" => Some(Self::RefRemoved),
+            "opened_ref" => Some(Self::OpenedRef),
+            "updated" => Some(Self::Updated),
+            "note_added" => Some(Self::NoteAdded),
+            "deleted" => Some(Self::Deleted),
+            _ => None,
+        }
+    }
+
     pub fn as_str(&self) -> &'static str {
         match self {
             Self::Created => "created",
@@ -299,6 +318,7 @@ impl WorkItemEventKind {
             Self::RefRemoved => "ref_removed",
             Self::OpenedRef => "opened_ref",
             Self::Updated => "updated",
+            Self::NoteAdded => "note_added",
             Self::Deleted => "deleted",
         }
     }
@@ -326,6 +346,47 @@ impl WorkItemEvent {
             work_item_id,
             kind,
             payload,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WorkItemEventView {
+    pub id: Uuid,
+    pub ts: String,
+    pub work_item_id: Uuid,
+    pub kind: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub text: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub focus_session_id: Option<Uuid>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub payload: Option<serde_json::Value>,
+}
+
+impl WorkItemEventView {
+    pub fn from_event(event: WorkItemEvent) -> Self {
+        let text = event
+            .payload
+            .as_ref()
+            .and_then(|payload| payload.get("text"))
+            .and_then(|value| value.as_str())
+            .map(str::to_string);
+        let focus_session_id = event
+            .payload
+            .as_ref()
+            .and_then(|payload| payload.get("focus_session_id"))
+            .and_then(|value| value.as_str())
+            .and_then(|value| Uuid::parse_str(value).ok());
+
+        Self {
+            id: event.id,
+            ts: event.ts.to_rfc3339(),
+            work_item_id: event.work_item_id,
+            kind: event.kind.as_str().to_string(),
+            text,
+            focus_session_id,
+            payload: event.payload,
         }
     }
 }

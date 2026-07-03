@@ -68,7 +68,7 @@ CREATE TABLE work_item_events (
     kind TEXT NOT NULL CHECK(kind IN (
         'created', 'touched', 'state_changed', 'note_changed',
         'pinned', 'unpinned', 'ref_attached', 'ref_removed',
-        'opened_ref', 'deleted'
+        'opened_ref', 'updated', 'note_added', 'deleted'
     )),
     payload TEXT,
     FOREIGN KEY (work_item_id) REFERENCES work_items(id) ON DELETE CASCADE

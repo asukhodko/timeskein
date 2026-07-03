@@ -66,6 +66,8 @@ These were accepted limitations for the dogfood baseline, not blockers:
 - The Work Item list now has `Recent`, `Today`, `Pinned`, and `All` modes; the
   next dogfood day should verify that the accumulated multi-day inventory stays
   cheap to navigate.
+- The Today list height can be resized relative to the Work Item inventory; the
+  next dogfood day should verify whether this is enough for review-heavy days.
 
 ## Next Slice
 
@@ -89,6 +91,7 @@ Post-dogfood correction and first review enrichment are now partly implemented:
   timestamped-event coverage.
 - Work Items can be viewed through `Recent`, `Today`, `Pinned`, and `All` modes,
   while search remains the path to older matching items.
+- The Today/Work Item split can be resized and reset locally.
 
 Remaining entry and review polish:
 

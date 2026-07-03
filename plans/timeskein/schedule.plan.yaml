@@ -25,6 +25,9 @@ schedule:
     ts.ux_entry.inventory_modes:
       start: "2026-07-03"
       duration: 1d
+    ts.ux_entry.resizable_today_split:
+      start: "2026-07-03"
+      duration: 1d
 
     ts.focus_core.model_migrations:
       start: "2026-06-30"

@@ -240,6 +240,7 @@ Third real dogfood day and release baseline:
 - Manual Work Item inventory UI
 - Search
 - `Recent`, `Today`, `Pinned`, and `All` Work Item list modes for a multi-day inventory
+- Resizable divider between the Today list and Work Item inventory search/list area
 - Create Work Item
 - Edit Work Item title, type, Activity Zone, and note
 - Add timestamped Work Item Events from the note editor

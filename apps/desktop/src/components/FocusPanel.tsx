@@ -15,11 +15,12 @@ import FocusCorrectionDialog from './FocusCorrectionDialog'
 
 interface FocusPanelProps {
   selectedItem?: WorkItemView
+  todayListMaxHeightPx?: number
 }
 
 const SIGNIFICANT_GAP_SECONDS = 20 * 60
 
-export default function FocusPanel({ selectedItem }: FocusPanelProps) {
+export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }: FocusPanelProps) {
   const [title, setTitle] = useState('')
   const [note, setNote] = useState('')
   const [now, setNow] = useState(() => new Date())
@@ -542,7 +543,10 @@ export default function FocusPanel({ selectedItem }: FocusPanelProps) {
         ) : sessionsWithGaps.length === 0 ? (
           <div className="text-xs text-gray-500">No focus blocks today</div>
         ) : (
-          <div className="grid max-h-72 gap-1.5 overflow-auto pr-1">
+          <div
+            className="grid gap-1.5 overflow-auto pr-1"
+            style={{ maxHeight: `${todayListMaxHeightPx}px` }}
+          >
             {openGap && <OpenGapRow gap={openGap} />}
             {sessionsWithGaps.map(({ session, gapBefore }) => (
               <FocusSessionRow

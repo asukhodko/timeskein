@@ -141,6 +141,7 @@ Check the basics before starting work:
 - The window can be moved by dragging the header.
 - The window can be hidden with `Esc` when no dialog is open and shown again.
 - Today is visible.
+- The divider above Work Item search can resize the Today list; double-click resets it.
 - There is no unexpected active focus block from a previous experiment.
 
 ## Readiness Audit

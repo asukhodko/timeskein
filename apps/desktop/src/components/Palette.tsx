@@ -32,10 +32,16 @@ import {
   type InventoryMode,
 } from '../utils/inventoryModes'
 
+const todayListHeightStorageKey = 'timeskein.todayListHeightPx'
+const defaultTodayListHeightPx = 288
+const minTodayListHeightPx = 120
+const maxTodayListHeightPx = 520
+
 export default function Palette() {
   const [search, setSearch] = useState('')
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [inventoryMode, setInventoryMode] = useState<InventoryMode>('recent')
+  const [todayListHeightPx, setTodayListHeightPx] = useState(readTodayListHeight)
   const [showCreate, setShowCreate] = useState(false)
   const [showStateMenu, setShowStateMenu] = useState(false)
   const [showNoteEditor, setShowNoteEditor] = useState(false)
@@ -95,6 +101,34 @@ export default function Palette() {
     } catch {
       // Browser mode has no native window to drag.
     }
+  }
+
+  const handleStartTodayResize = (event: MouseEvent<HTMLButtonElement>) => {
+    if (event.button !== 0) return
+
+    event.preventDefault()
+    const startY = event.clientY
+    const startHeight = todayListHeightPx
+
+    const handleMouseMove = (moveEvent: globalThis.MouseEvent) => {
+      setTodayListHeightPx(clampTodayListHeight(startHeight + moveEvent.clientY - startY))
+    }
+
+    const handleMouseUp = (upEvent: globalThis.MouseEvent) => {
+      const nextHeight = clampTodayListHeight(startHeight + upEvent.clientY - startY)
+      setTodayListHeightPx(nextHeight)
+      writeTodayListHeight(nextHeight)
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+    }
+
+    document.addEventListener('mousemove', handleMouseMove)
+    document.addEventListener('mouseup', handleMouseUp)
+  }
+
+  const resetTodayHeight = () => {
+    setTodayListHeightPx(defaultTodayListHeightPx)
+    writeTodayListHeight(defaultTodayListHeightPx)
   }
 
   // Action handlers for clickable shortcuts
@@ -344,7 +378,18 @@ export default function Palette() {
         </div>
       </div>
 
-      <FocusPanel selectedItem={selectedItem} />
+      <FocusPanel selectedItem={selectedItem} todayListMaxHeightPx={todayListHeightPx} />
+
+      <button
+        type="button"
+        data-no-drag
+        onMouseDown={handleStartTodayResize}
+        onDoubleClick={resetTodayHeight}
+        className="group flex h-2 cursor-row-resize items-center justify-center border-b border-gray-700 bg-gray-950/80 hover:bg-gray-800/80"
+        title="Drag to resize Today. Double-click to reset."
+      >
+        <span className="h-0.5 w-12 rounded bg-gray-700 transition-colors group-hover:bg-blue-500/70" />
+      </button>
 
       {/* Search */}
       <div className="px-4 py-2 border-b border-gray-700">
@@ -532,6 +577,28 @@ function isEditableElement(target: EventTarget | null) {
 
 function createTelemetryActionId() {
   return globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`
+}
+
+function readTodayListHeight() {
+  if (typeof window === 'undefined') return defaultTodayListHeightPx
+
+  const stored = window.localStorage.getItem(todayListHeightStorageKey)
+  if (!stored) return defaultTodayListHeightPx
+
+  const parsed = Number.parseInt(stored, 10)
+  return Number.isFinite(parsed) ? clampTodayListHeight(parsed) : defaultTodayListHeightPx
+}
+
+function writeTodayListHeight(height: number) {
+  try {
+    window.localStorage.setItem(todayListHeightStorageKey, String(clampTodayListHeight(height)))
+  } catch {
+    // localStorage can be unavailable in some browser shells.
+  }
+}
+
+function clampTodayListHeight(height: number) {
+  return Math.max(minTodayListHeightPx, Math.min(maxTodayListHeightPx, Math.round(height)))
 }
 
 function InventoryModeTabs({

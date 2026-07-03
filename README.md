@@ -293,6 +293,7 @@ Focus Session controls:
 - Work Item activity zones: work, coordination, recovery, idle, personal; focus blocks keep their own zone snapshot for report correction
 - Work Item list shows last touched time plus today/total tracked time when available
 - Work Item list can be narrowed to `Recent`, `Today`, `Pinned`, or `All`; typed search scans the matching inventory regardless of the current mode
+- Today list height can be resized by dragging the divider above the Work Item search and reset with a double-click
 - Refs: URLs, file paths, issue keys with conflict detection
 - Pin items to keep them at top of list
 - Search by title/note

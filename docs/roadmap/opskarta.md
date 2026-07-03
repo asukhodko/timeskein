@@ -77,6 +77,7 @@ gantt
     ✅ Document macOS multi-monitor status item limits  :done, ts_ux_entry_monitor_policy,    2026-07-03, 1d
     🔄 Reduce the path from intent to tracked work  :active, ts_ux_entry_fast_track_flow,    2026-07-03, 1d
     ✅ Keep the multi-day Work Item list navigable  :done, ts_ux_entry_inventory_modes,    2026-07-03, 1d
+    ✅ Resize Today versus Work Item inventory  :done, ts_ux_entry_resizable_today_split,    2026-07-03, 1d
     section Focus Session core
     🔄 Add FocusSession and SessionEvent persistence  :active, ts_focus_core_model_migrations,    2026-06-30, 2d
     ✅ Add contracts and Local API for focus sessions  :done, ts_focus_core_contracts_api,    2026-07-02, 2d
@@ -120,6 +121,7 @@ gantt
 - Wire tray menu actions [done] (1 focus-blocks) {100%}
 - Document macOS multi-monitor status item limits [done] (1 focus-blocks) {100%}
 - Keep the multi-day Work Item list navigable [done] (1 focus-blocks) {100%}
+- Resize Today versus Work Item inventory [done] (1 focus-blocks) {100%}
 - Add contracts and Local API for focus sessions [done] (3 focus-blocks) {100%}
 - Build focus timer UI with overflow [done] (3 focus-blocks) {100%}
 - Restore running focus session after app restart [done] (2 focus-blocks) {100%}
@@ -139,7 +141,7 @@ gantt
 - Rebuild macOS app for regular personal use [done] (1 focus-blocks) {100%}
 - Write dogfood release notes and known limitations [done] (1 focus-blocks) {100%}
 - Session replacement dogfood baseline [done] {100%}
-- App entry UX [in_progress] (7 focus-blocks) {96%}
+- App entry UX [in_progress] (8 focus-blocks) {96%}
 - Reduce the path from intent to tracked work [in_progress] (2 focus-blocks) {85%}
 - Focus Session core [in_progress] (17 focus-blocks) {85%}
 - Add FocusSession and SessionEvent persistence [in_progress] (3 focus-blocks) {70%}

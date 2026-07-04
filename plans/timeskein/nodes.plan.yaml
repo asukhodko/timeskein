@@ -516,7 +516,7 @@ nodes:
     effort: 1
     deps:
       - id: ts.hardening.dogfood_release
-    notes: The day must exercise show and hide window entrypoints, typed start, selected/list continuation, Work Item today/total badges, at least two Activity Zones, Day Events, Work Item Events or accepted absence, Capture Inbox, and correction or accepted correction review.
+    notes: The day must exercise show and hide window entrypoints, typed start, selected/list continuation, Work Item today/total badges with explicit review acceptance, at least two Activity Zones, Day Events, Work Item Events or accepted absence, Capture Inbox, and correction or accepted correction review.
     x:
       ops:
         attention_class: current

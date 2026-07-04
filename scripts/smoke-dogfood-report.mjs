@@ -52,7 +52,8 @@ try {
       ('ae1', '2026-06-30T07:50:00Z', 'ui', 'focus_correction_requested', 's1', '{"action_id":"k1","control":"edit_block"}'),
       ('ae2', '2026-06-30T07:50:01Z', 'ui', 'focus_corrected', 's1', '{"action_id":"k1","control":"edit_block"}'),
       ('ae3', '2026-06-30T07:51:00Z', 'ui', 'window_show_requested', NULL, '{"control":"tray_click"}'),
-      ('ae4', '2026-06-30T07:52:00Z', 'ui', 'window_hide_requested', NULL, '{"control":"global_shortcut"}');
+      ('ae4', '2026-06-30T07:52:00Z', 'ui', 'window_hide_requested', NULL, '{"control":"global_shortcut"}'),
+      ('ae5', '2026-06-30T07:53:00Z', 'ui', 'work_item_time_badges_reviewed', NULL, '{"action_id":"b1","control":"review_checklist","touched_work_item_count":2}');
 
     UPDATE work_items SET activity_zone = 'coordination' WHERE id = 'w2';
     UPDATE focus_sessions SET activity_zone = 'coordination' WHERE work_item_id = 'w2';
@@ -74,6 +75,7 @@ try {
   assert(stdout.includes("## Review Checklist"), "report did not include review checklist section");
   assert(stdout.includes("## Daily Control Goal Audit"), "report did not include daily-control audit section");
   assert(stdout.includes("| Focus blocks visible | pass |"), "report daily-control audit did not pass focus blocks");
+  assert(stdout.includes("| Work Item totals available | pass |"), "report daily-control audit did not pass Work Item totals");
   assert(stdout.includes("| Activity Zones separated | pass |"), "report daily-control audit did not pass zones");
   assert(stdout.includes("| Window and menubar friction evidenced | pass |"), "report daily-control audit did not pass window evidence");
   assert(stdout.includes("| Start and continue paths evidenced | pass |"), "report daily-control audit did not pass entry-path evidence");
@@ -107,6 +109,10 @@ try {
   assert(
     stdout.includes("Confirm tracking accuracy or test correction") === false,
     "report review checklist should not flag correction coverage when a correction was applied"
+  );
+  assert(
+    stdout.includes("Confirm Work Item today/total badges") === false,
+    "report review checklist should not flag Work Item badge coverage when explicitly reviewed"
   );
   assert(stdout.includes("## Open Captures"), "report did not include open captures section");
   assert(stdout.includes("Reply to incoming thread after focus"), "report did not include open capture text");
@@ -166,6 +172,10 @@ try {
   assert(
     thinEvidenceStdout.includes("No day or Work Item notes/events"),
     "report review checklist did not flag missing day/Work Item context"
+  );
+  assert(
+    thinEvidenceStdout.includes("Confirm Work Item today/total badges"),
+    "report review checklist did not flag missing Work Item badge review"
   );
   assert(
     thinEvidenceStdout.includes("Confirm tracking accuracy or test correction"),

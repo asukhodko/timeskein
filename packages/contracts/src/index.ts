@@ -187,6 +187,7 @@ export type AppEventKind =
   | "capture_converted"
   | "capture_convert_failed"
   | "capture_followup_reviewed"
+  | "work_item_time_badges_reviewed"
   | "api_error";
 
 export interface AppEventView {
@@ -233,6 +234,7 @@ export interface AppEventSummary {
   capture_converted: number;
   capture_convert_failures: number;
   capture_followup_reviews: number;
+  work_item_time_badge_reviews: number;
   window_shown: number;
   window_hidden: number;
   window_show_requested: number;

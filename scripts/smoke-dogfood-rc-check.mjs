@@ -52,7 +52,8 @@ try {
       ('e10', '2026-06-30T10:05:01Z', 'ui', 'focus_corrected', '{"action_id":"k1","control":"edit_block"}'),
       ('e13', '2026-06-30T08:30:00Z', 'ui', 'focus_start_requested', '{"action_id":"a2","control":"selected_item"}'),
       ('e14', '2026-06-30T08:30:01Z', 'ui', 'focus_started', '{"action_id":"a2","control":"selected_item"}'),
-      ('e15', '2026-06-30T10:00:00Z', 'ui', 'focus_stop_requested', '{"action_id":"a3","control":"stop_button_or_enter"}');
+      ('e15', '2026-06-30T10:00:00Z', 'ui', 'focus_stop_requested', '{"action_id":"a3","control":"stop_button_or_enter"}'),
+      ('e20', '2026-06-30T10:06:00Z', 'ui', 'work_item_time_badges_reviewed', '{"action_id":"b1","control":"review_checklist","touched_work_item_count":2}');
   `);
 
   const good = await runRcCheck(goodDb);
@@ -62,6 +63,7 @@ try {
   assert(good.stdout.includes("Total tracked: 3:30:00"), "good day total tracked is missing");
   assert(good.stdout.includes("Work focus: 2:00:00"), "good day work focus is missing");
   assert(good.stdout.includes("Non-work tracked: 1:30:00"), "good day non-work tracked is missing");
+  assert(good.stdout.includes("Work Item time badge reviews: 1"), "good day Work Item badge review count is missing");
   assert(good.stdout.includes("Activity Zones in report: 2"), "good day zone count is missing");
   assert(good.stdout.includes("Significant gaps: 1"), "good day significant gap count is missing");
   assert(good.stdout.includes("Significant gaps explained: 1/1"), "good day explained gap count is missing");
@@ -76,6 +78,7 @@ try {
   assert(good.stdout.includes("Window show/hide requests: 1/1"), "good day window request telemetry is missing");
   assert(good.stdout.includes("## Daily Control Goal Audit"), "good day goal audit section is missing");
   assert(good.stdout.includes("| Focus blocks visible | pass |"), "good day focus-block audit row is missing");
+  assert(good.stdout.includes("| Work Item totals available | pass |"), "good day Work Item totals audit row is missing");
   assert(good.stdout.includes("| Activity Zones separated | pass |"), "good day activity-zone audit row is missing");
   assert(good.stdout.includes("| Gaps and captures visible | pass |"), "good day gap/capture audit row is missing");
   assert(good.stdout.includes("| Start and continue paths evidenced | pass |"), "good day entry-path audit row is missing");
@@ -159,6 +162,20 @@ try {
   assert(
     hideOnlyWindowRequestStrict.stdout.includes("| Window and menubar friction evidenced | review |"),
     "missing show request should mark window audit for review"
+  );
+
+  const noBadgeReviewDb = join(tempDir, "no-badge-review.db");
+  await copyDb(goodDb, noBadgeReviewDb);
+  await runSql(noBadgeReviewDb, "DELETE FROM app_events WHERE kind = 'work_item_time_badges_reviewed';");
+  const noBadgeReviewStrict = await runRcCheck(noBadgeReviewDb, ["--strict"]);
+  assert(noBadgeReviewStrict.code !== 0, "strict RC check should fail without Work Item badge review evidence");
+  assert(
+    noBadgeReviewStrict.stdout.includes("No Work Item today/total badge review telemetry found"),
+    "strict RC check should explain missing Work Item badge review evidence"
+  );
+  assert(
+    noBadgeReviewStrict.stdout.includes("| Work Item totals available | review |"),
+    "missing Work Item badge review should mark Work Item totals audit for review"
   );
 
   const savedPath = join(tempDir, "rc-check.md");

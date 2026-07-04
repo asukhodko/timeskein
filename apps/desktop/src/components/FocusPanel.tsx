@@ -511,7 +511,10 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
     const actionId = createTelemetryActionId()
     const kind = action === 'accept_open_captures'
       ? 'capture_followup_reviewed'
-      : 'focus_correction_reviewed'
+      : action === 'accept_work_item_time_badges'
+        ? 'work_item_time_badges_reviewed'
+        : 'focus_correction_reviewed'
+    const touchedWorkItemCount = new Set(sessions.map((session) => session.work_item_id).filter(Boolean)).size
 
     await logAppEvent({
       source: 'ui',
@@ -520,6 +523,7 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
         action_id: actionId,
         control: 'review_checklist',
         ...(action === 'accept_open_captures' ? { open_count: openCaptures.length } : {}),
+        ...(action === 'accept_work_item_time_badges' ? { touched_work_item_count: touchedWorkItemCount } : {}),
       },
     })
 
@@ -1012,7 +1016,7 @@ type DayReviewItem = {
   action?: DayReviewAction
 }
 
-type DayReviewAction = 'accept_tracking_accuracy' | 'accept_open_captures'
+type DayReviewAction = 'accept_tracking_accuracy' | 'accept_open_captures' | 'accept_work_item_time_badges'
 
 function buildDayReviewItems({
   sessions,
@@ -1101,6 +1105,15 @@ function buildDayReviewItems({
       level: 'review',
       title: 'Confirm non-work tracked time',
       detail: 'Breaks, recovery, coordination, and personal blocks may be missing',
+    })
+  }
+
+  if (sessions.length > 0 && touchedWorkItemIds.size > 0 && (appTelemetry?.work_item_time_badge_reviews ?? 0) === 0) {
+    items.push({
+      level: 'review',
+      title: 'Confirm Work Item today/total badges',
+      detail: `${touchedWorkItemIds.size} touched Work Item${touchedWorkItemIds.size === 1 ? '' : 's'}`,
+      action: 'accept_work_item_time_badges',
     })
   }
 
@@ -1285,6 +1298,7 @@ function formatDailyControlGoalAuditMarkdown({
   const correctionEvidence =
     extractLineValue(appTelemetryMarkdown, 'Corrections requested/applied/reviewed/failed') ?? 'n/a'
   const captureFollowupReviews = parseLeadingNumber(extractLineValue(appTelemetryMarkdown, 'Capture follow-up reviews'))
+  const workItemTimeBadgeReviews = parseLeadingNumber(extractLineValue(appTelemetryMarkdown, 'Work Item time badge reviews'))
   const telemetryAvailable = appTelemetryMarkdown.includes('Total events:')
   const rows = [
     {
@@ -1299,8 +1313,10 @@ function formatDailyControlGoalAuditMarkdown({
     },
     {
       requirement: 'Work Item totals available',
-      status: todayMarkdown.includes('## By Work Item') ? 'pass' : 'review',
-      evidence: todayMarkdown.includes('## By Work Item') ? 'By Work Item section present' : 'By Work Item section missing',
+      status: todayMarkdown.includes('## By Work Item') && !hasReview('Confirm Work Item today/total badges') ? 'pass' : 'review',
+      evidence: todayMarkdown.includes('## By Work Item')
+        ? `By Work Item section present, ${workItemTimeBadgeReviews} UI badge review(s)`
+        : 'By Work Item section missing',
     },
     {
       requirement: 'Activity Zones separated',
@@ -1886,6 +1902,7 @@ function formatAppTelemetryMarkdown(summary: AppEventSummary) {
     `Manual copy fallbacks: ${summary.manual_copy_fallbacks}`,
     `Capture created/resolved/converted: ${summary.capture_created}/${summary.capture_resolved}/${summary.capture_converted}`,
     `Capture follow-up reviews: ${summary.capture_followup_reviews}`,
+    `Work Item time badge reviews: ${summary.work_item_time_badge_reviews}`,
     `Capture updated/deleted: ${summary.capture_updated}/${summary.capture_deleted}`,
     `Capture failures create/resolve/update/delete/convert: ${summary.capture_create_failures}/${summary.capture_resolve_failures}/${summary.capture_update_failures}/${summary.capture_delete_failures}/${summary.capture_convert_failures}`,
     `Corrections requested/applied/reviewed/failed: ${summary.correction_requests}/${summary.corrections}/${summary.correction_reviews}/${summary.correction_failures}`,

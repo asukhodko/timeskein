@@ -179,7 +179,7 @@ impl Database {
 
         if table_sql
             .as_deref()
-            .is_some_and(|sql| sql.contains("capture_followup_reviewed"))
+            .is_some_and(|sql| sql.contains("work_item_time_badges_reviewed"))
         {
             return Ok(());
         }

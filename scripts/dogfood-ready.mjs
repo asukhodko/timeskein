@@ -80,7 +80,7 @@ function appendDailyControlChecklist(lines) {
   lines.push("## Daily-Control Checklist", "");
   lines.push("- Exercise window entrypoints: tray/menu, global shortcut, macOS reopen, hide with Esc or close.");
   lines.push("- Start one new Work Item by typed title and continue one existing Work Item from the list.");
-  lines.push("- After a touched Work Item has focus time, confirm its card shows today and total time in the Work Item list.");
+  lines.push("- After a touched Work Item has focus time, confirm its card shows today and total time in the Work Item list, then accept that review item.");
   lines.push("- Use at least two Activity Zones, including one non-work zone such as coordination/recovery/idle/personal.");
   lines.push("- Add one Day Event for a buffer, gap, recovery note, or tracking correction.");
   lines.push("- Add or promote one timestamped Work Item Event when a task-specific detail matters.");

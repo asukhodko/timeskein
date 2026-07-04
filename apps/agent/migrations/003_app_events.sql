@@ -48,6 +48,7 @@ CREATE TABLE IF NOT EXISTS app_events (
         'capture_converted',
         'capture_convert_failed',
         'capture_followup_reviewed',
+        'work_item_time_badges_reviewed',
         'api_error'
     )),
     work_item_id TEXT,

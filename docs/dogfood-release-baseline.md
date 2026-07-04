@@ -98,6 +98,8 @@ Post-dogfood correction and first review enrichment are now partly implemented:
 - App Telemetry and RC checks include both show and hide request counts, so the
   next dogfood day can distinguish real window entrypoint tests from passive
   visibility changes.
+- The Review Checklist can record explicit `work_item_time_badges_reviewed`
+  evidence after touched Work Item cards are checked for today/total time.
 - Work Items can be viewed through `Recent`, `Today`, `Pinned`, and `All` modes,
   while search remains the path to older matching items.
 - The Today/Work Item split can be resized and reset locally.

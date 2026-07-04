@@ -12,7 +12,10 @@ Evidence Mode, automation, or new platforms.
 The current post-baseline gate is the Daily Control Goal Audit in the UI/CLI
 dogfood report and in `pnpm dogfood:rc-check`: it checks whether a real day has
 enough evidence for focus blocks, Work Item totals, Activity Zones,
-notes/events, captures, gaps, corrections, and app-friction review. Window
+notes/events, captures, gaps, corrections, and app-friction review. Work Item
+totals now require an explicit UI checklist acceptance that touched Work Item
+cards showed today/total time, not only the presence of `By Work Item` rows in
+the Markdown report. Window
 friction evidence now includes both show and hide request counts, so window entrypoints
 must be exercised rather than inferred from passive visibility events. Entry
 evidence also checks both typed start and selected/list continuation, so the day

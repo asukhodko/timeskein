@@ -94,6 +94,7 @@ const APP_EVENT_KINDS = new Set<string>([
   "capture_converted",
   "capture_convert_failed",
   "capture_followup_reviewed",
+  "work_item_time_badges_reviewed",
   "api_error",
 ]);
 

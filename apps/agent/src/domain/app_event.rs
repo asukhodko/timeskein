@@ -78,6 +78,7 @@ pub enum AppEventKind {
     CaptureConverted,
     CaptureConvertFailed,
     CaptureFollowupReviewed,
+    WorkItemTimeBadgesReviewed,
     ApiError,
 }
 
@@ -125,6 +126,7 @@ impl AppEventKind {
             "capture_converted" => Some(Self::CaptureConverted),
             "capture_convert_failed" => Some(Self::CaptureConvertFailed),
             "capture_followup_reviewed" => Some(Self::CaptureFollowupReviewed),
+            "work_item_time_badges_reviewed" => Some(Self::WorkItemTimeBadgesReviewed),
             "api_error" => Some(Self::ApiError),
             _ => None,
         }
@@ -173,6 +175,7 @@ impl AppEventKind {
             Self::CaptureConverted => "capture_converted",
             Self::CaptureConvertFailed => "capture_convert_failed",
             Self::CaptureFollowupReviewed => "capture_followup_reviewed",
+            Self::WorkItemTimeBadgesReviewed => "work_item_time_badges_reviewed",
             Self::ApiError => "api_error",
         }
     }

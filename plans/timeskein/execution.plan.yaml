@@ -253,7 +253,7 @@ execution:
       actual_start: "2026-07-04"
       updated_at: "2026-07-04T05:35:00+03:00"
       confidence: 0.8
-      note: Waiting for the next real dogfood day. Readiness is green, but the daily-control goal needs real evidence for window entrypoints, typed and selected/list starts, Work Item time badges, zones, notes/events, captures, correction/review, and evening report usefulness.
+      note: Waiting for the next real dogfood day. Readiness is green, but the daily-control goal needs real evidence for window entrypoints, typed and selected/list starts, accepted Work Item today/total badge review, zones, notes/events, captures, correction/review, and evening report usefulness.
     ts.daily_control.goal_check:
       progress: 0.0
       updated_at: "2026-07-04T05:35:00+03:00"

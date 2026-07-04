@@ -442,6 +442,10 @@ function assessEvidence(evidence, minFocusSeconds) {
     reviewItems.push("No Day Events, Work Item notes, or timestamped Work Item Events found. If the report needs memory reconstruction, add context before treating it as final.");
   }
 
+  if (evidence.sessions.length > 0 && evidence.workItemTotals.length > 0 && evidence.telemetry.workItemTimeBadgeReviews === 0) {
+    reviewItems.push("No Work Item today/total badge review telemetry found. Check touched Work Item cards and accept that review before closing the goal.");
+  }
+
   if (evidence.dayEvents.length > 0 && evidence.dayEventsWithZone === 0) {
     reviewItems.push("Day Events exist, but none have an Activity Zone. Confirm buffers, recovery, idle, coordination, and personal notes are classified before the final verdict.");
   }
@@ -564,6 +568,7 @@ function buildRcReport(date, path, evidence, assessment, minFocusSeconds, strict
     `- Non-work tracked: ${formatDuration(evidence.nonWorkSeconds)}`,
     `- Entrances: ${evidence.sessions.length}`,
     `- Work Items in report: ${evidence.workItemTotals.length}`,
+    `- Work Item time badge reviews: ${evidence.telemetry.workItemTimeBadgeReviews}`,
     `- Work Item notes in report: ${evidence.workItemNoteCount}`,
     `- Day Events: ${evidence.dayEvents.length}`,
     `- Day Events with Activity Zone: ${evidence.dayEventsWithZone}`,
@@ -700,8 +705,12 @@ function formatGoalAuditMarkdown(evidence, assessment, minFocusSeconds) {
     },
     {
       requirement: "Work Item totals available",
-      status: evidence.workItemTotals.length > 0 ? "pass" : "block",
-      evidence: `${evidence.workItemTotals.length} Work Item total row(s)`,
+      status: evidence.workItemTotals.length === 0
+        ? "block"
+        : evidence.telemetry.workItemTimeBadgeReviews > 0
+          ? "pass"
+          : "review",
+      evidence: `${evidence.workItemTotals.length} Work Item total row(s), ${evidence.telemetry.workItemTimeBadgeReviews} UI badge review(s)`,
     },
     {
       requirement: "Activity Zones separated",
@@ -946,6 +955,7 @@ function summarizeEvents(events) {
     correctionReviews: count("focus_correction_reviewed"),
     correctionFailures: count("focus_correction_failed"),
     captureFollowupReviews: count("capture_followup_reviewed"),
+    workItemTimeBadgeReviews: count("work_item_time_badges_reviewed"),
     windowShown: count("window_shown"),
     windowHidden: count("window_hidden"),
     windowShowRequested: count("window_show_requested"),

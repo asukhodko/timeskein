@@ -403,6 +403,15 @@ function buildReviewChecklistItems({
     });
   }
 
+  const workItemTimeBadgeReviews = parseLeadingNumber(extractLineValue(telemetryMarkdown, "Work Item time badge reviews"));
+  if (focusMarkdown.includes("| Time | Duration | Zone | Work Item | Note |") && workItemTimeBadgeReviews === 0) {
+    items.push({
+      level: "review",
+      title: "Confirm Work Item today/total badges",
+      detail: "Check touched Work Item cards show today and total time",
+    });
+  }
+
   if (focusMarkdown.includes("| Time | Duration | Zone | Work Item | Note |") && captureActivity.length === 0) {
     items.push({
       level: "review",
@@ -517,6 +526,7 @@ function formatDailyControlGoalAuditMarkdown({
   const correctionEvidence =
     extractLineValue(telemetryMarkdown, "Corrections requested/applied/reviewed/failed") ?? "n/a";
   const captureFollowupReviews = parseLeadingNumber(extractLineValue(telemetryMarkdown, "Capture follow-up reviews"));
+  const workItemTimeBadgeReviews = parseLeadingNumber(extractLineValue(telemetryMarkdown, "Work Item time badge reviews"));
   const telemetryAvailable = telemetryMarkdown.includes("Total events:");
 
   const rows = [
@@ -532,8 +542,10 @@ function formatDailyControlGoalAuditMarkdown({
     },
     {
       requirement: "Work Item totals available",
-      status: focusMarkdown.includes("## By Work Item") ? "pass" : "review",
-      evidence: focusMarkdown.includes("## By Work Item") ? "By Work Item section present" : "By Work Item section missing",
+      status: focusMarkdown.includes("## By Work Item") && !hasReview("Confirm Work Item today/total badges") ? "pass" : "review",
+      evidence: focusMarkdown.includes("## By Work Item")
+        ? `By Work Item section present, ${workItemTimeBadgeReviews} UI badge review(s)`
+        : "By Work Item section missing",
     },
     {
       requirement: "Activity Zones separated",

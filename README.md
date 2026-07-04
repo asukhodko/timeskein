@@ -88,6 +88,8 @@ pnpm --filter @timeskein/desktop build
 # → target/release/bundle/macos/Timeskein.app
 ```
 
+For dogfood days, prefer the guarded commands below over opening the app directly.
+
 ### Starting a Dogfood Day on macOS
 
 ```bash
@@ -127,6 +129,8 @@ pnpm dogfood:preflight
 pnpm open:macos-app
 pnpm dogfood:status
 ```
+
+`pnpm dogfood:macos` is kept as a low-level rebuild-and-open helper for development/manual debugging. It is not the normal dogfood start or continue path because it does not inspect the real day state before opening the app.
 
 If `dogfood:ready` reports old test data and you want a clean trial database, follow its exact next commands. Usually that means first quitting Timeskein, then dry-running and applying the reset:
 

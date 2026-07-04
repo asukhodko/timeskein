@@ -138,6 +138,11 @@ Build or reuse the current macOS app:
 pnpm dogfood:macos
 ```
 
+This is a low-level rebuild-and-open helper for development/manual debugging.
+Do not use it as the normal dogfood day entry point: it does not inspect the
+real day state before opening the app. Use `pnpm dogfood:start` for a clean
+day start and `pnpm dogfood:continue` to reopen an already started day.
+
 If the shell says `permission denied` for `Timeskein.app`, the app bundle was executed as a file. Use `open .../Timeskein.app` or run the binary directly:
 
 ```bash

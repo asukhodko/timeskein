@@ -44,6 +44,7 @@ try {
     ready.stdout.includes("pnpm dogfood:goal-check -- --date YYYY-MM-DD"),
     "ready output did not include after-midnight goal-check date reminder"
   );
+  assert(!ready.stdout.includes("pnpm dogfood:macos"), "ready output still suggests bypassing dogfood gates");
 
   const dummyApp = spawnDummyTimeskein();
   try {

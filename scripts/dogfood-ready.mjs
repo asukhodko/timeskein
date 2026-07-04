@@ -43,7 +43,7 @@ if (!existsSync(dbPath)) {
 }
 
 if (!existsSync(appBundlePath)) {
-  warnings.push("macOS app bundle is not built yet. Run `pnpm dogfood:macos` after preflight.");
+  warnings.push("macOS app bundle is not built yet. `pnpm dogfood:start` will build it through preflight before opening the app.");
 }
 
 if (responsiveAgent) {

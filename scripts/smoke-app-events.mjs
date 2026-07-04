@@ -19,26 +19,28 @@ try {
     INSERT INTO app_events (id, ts, source, kind, work_item_id, focus_session_id, payload)
     VALUES
       ('e1', '2026-06-30T06:00:00Z', 'ui', 'window_shown', NULL, NULL, '{"control":"tray"}'),
-      ('e2', '2026-06-30T06:00:10Z', 'ui', 'focus_start_requested', 'w1', NULL, '{"action_id":"a1","control":"typed"}'),
-      ('e3', '2026-06-30T06:00:11Z', 'ui', 'focus_started', 'w1', 's1', '{"action_id":"a1","already_active":false}'),
-      ('e4', '2026-06-30T06:20:00Z', 'ui', 'focus_stop_requested', 'w1', 's1', '{"action_id":"a2"}'),
-      ('e5', '2026-06-30T06:20:01Z', 'ui', 'focus_stopped', 'w1', 's1', '{"action_id":"a2"}'),
-      ('e6', '2026-06-30T06:30:00Z', 'agent', 'agent_stale_runtime_recovered', NULL, NULL, NULL),
-      ('e7', '2026-06-30T06:40:00Z', 'ui', 'report_copy_failed', NULL, NULL, '{"report_kind":"dogfood"}'),
-      ('e8', '2026-06-30T06:40:01Z', 'ui', 'manual_copy_fallback_shown', NULL, NULL, '{"report_kind":"dogfood"}'),
-      ('e9', '2026-06-30T06:50:00Z', 'ui', 'capture_create_requested', NULL, 's1', '{"action_id":"c1","control":"capture_input","has_active_focus":true}'),
-      ('e10', '2026-06-30T06:50:01Z', 'ui', 'capture_created', NULL, 's1', '{"action_id":"c1","control":"capture_input","has_active_focus":true}'),
-      ('e11', '2026-06-30T06:55:00Z', 'ui', 'capture_resolve_requested', NULL, 's1', '{"action_id":"c2","control":"done_button","had_focus_link":true}'),
-      ('e12', '2026-06-30T06:55:01Z', 'ui', 'capture_resolved', NULL, 's1', '{"action_id":"c2","control":"done_button","had_focus_link":true}'),
-      ('e13', '2026-06-30T06:56:00Z', 'ui', 'capture_update_requested', NULL, 's1', '{"action_id":"c3","control":"edit_button","had_focus_link":true}'),
-      ('e14', '2026-06-30T06:56:01Z', 'ui', 'capture_updated', NULL, 's1', '{"action_id":"c3","control":"edit_button","had_focus_link":true}'),
-      ('e15', '2026-06-30T06:57:00Z', 'ui', 'capture_delete_requested', NULL, 's1', '{"action_id":"c4","control":"delete_button","had_focus_link":true}'),
-      ('e16', '2026-06-30T06:57:01Z', 'ui', 'capture_deleted', NULL, 's1', '{"action_id":"c4","control":"delete_button","had_focus_link":true}'),
-      ('e17', '2026-06-30T06:58:00Z', 'ui', 'capture_convert_failed', NULL, 's1', '{"action_id":"c5","control":"make_item_button","error_code":"not_found"}'),
-      ('e18', '2026-06-30T07:10:00Z', 'ui', 'focus_correction_requested', 'w1', 's1', '{"action_id":"k1","control":"edit_block"}'),
-      ('e19', '2026-06-30T07:10:01Z', 'ui', 'focus_corrected', 'w1', 's1', '{"action_id":"k1","control":"edit_block"}'),
-      ('e20', '2026-06-30T07:11:00Z', 'ui', 'focus_correction_failed', 'w1', 's1', '{"action_id":"k2","control":"split_block","error_code":"validation_error"}'),
-      ('e21', '2026-06-30T07:12:00Z', 'ui', 'focus_correction_reviewed', NULL, NULL, '{"action_id":"k3","control":"review_checklist"}');
+      ('e2', '2026-06-30T06:00:00Z', 'ui', 'window_show_requested', NULL, NULL, '{"control":"tray_click"}'),
+      ('e3', '2026-06-30T06:00:05Z', 'ui', 'window_hide_requested', NULL, NULL, '{"control":"global_shortcut"}'),
+      ('e4', '2026-06-30T06:00:10Z', 'ui', 'focus_start_requested', 'w1', NULL, '{"action_id":"a1","control":"typed"}'),
+      ('e5', '2026-06-30T06:00:11Z', 'ui', 'focus_started', 'w1', 's1', '{"action_id":"a1","already_active":false}'),
+      ('e6', '2026-06-30T06:20:00Z', 'ui', 'focus_stop_requested', 'w1', 's1', '{"action_id":"a2"}'),
+      ('e7', '2026-06-30T06:20:01Z', 'ui', 'focus_stopped', 'w1', 's1', '{"action_id":"a2"}'),
+      ('e8', '2026-06-30T06:30:00Z', 'agent', 'agent_stale_runtime_recovered', NULL, NULL, NULL),
+      ('e9', '2026-06-30T06:40:00Z', 'ui', 'report_copy_failed', NULL, NULL, '{"report_kind":"dogfood"}'),
+      ('e10', '2026-06-30T06:40:01Z', 'ui', 'manual_copy_fallback_shown', NULL, NULL, '{"report_kind":"dogfood"}'),
+      ('e11', '2026-06-30T06:50:00Z', 'ui', 'capture_create_requested', NULL, 's1', '{"action_id":"c1","control":"capture_input","has_active_focus":true}'),
+      ('e12', '2026-06-30T06:50:01Z', 'ui', 'capture_created', NULL, 's1', '{"action_id":"c1","control":"capture_input","has_active_focus":true}'),
+      ('e13', '2026-06-30T06:55:00Z', 'ui', 'capture_resolve_requested', NULL, 's1', '{"action_id":"c2","control":"done_button","had_focus_link":true}'),
+      ('e14', '2026-06-30T06:55:01Z', 'ui', 'capture_resolved', NULL, 's1', '{"action_id":"c2","control":"done_button","had_focus_link":true}'),
+      ('e15', '2026-06-30T06:56:00Z', 'ui', 'capture_update_requested', NULL, 's1', '{"action_id":"c3","control":"edit_button","had_focus_link":true}'),
+      ('e16', '2026-06-30T06:56:01Z', 'ui', 'capture_updated', NULL, 's1', '{"action_id":"c3","control":"edit_button","had_focus_link":true}'),
+      ('e17', '2026-06-30T06:57:00Z', 'ui', 'capture_delete_requested', NULL, 's1', '{"action_id":"c4","control":"delete_button","had_focus_link":true}'),
+      ('e18', '2026-06-30T06:57:01Z', 'ui', 'capture_deleted', NULL, 's1', '{"action_id":"c4","control":"delete_button","had_focus_link":true}'),
+      ('e19', '2026-06-30T06:58:00Z', 'ui', 'capture_convert_failed', NULL, 's1', '{"action_id":"c5","control":"make_item_button","error_code":"not_found"}'),
+      ('e20', '2026-06-30T07:10:00Z', 'ui', 'focus_correction_requested', 'w1', 's1', '{"action_id":"k1","control":"edit_block"}'),
+      ('e21', '2026-06-30T07:10:01Z', 'ui', 'focus_corrected', 'w1', 's1', '{"action_id":"k1","control":"edit_block"}'),
+      ('e22', '2026-06-30T07:11:00Z', 'ui', 'focus_correction_failed', 'w1', 's1', '{"action_id":"k2","control":"split_block","error_code":"validation_error"}'),
+      ('e23', '2026-06-30T07:12:00Z', 'ui', 'focus_correction_reviewed', NULL, NULL, '{"action_id":"k3","control":"review_checklist"}');
   `);
 
   const { stdout: metricsStdout } = await execFileAsync(
@@ -47,9 +49,10 @@ try {
     { cwd: repoRoot }
   );
   assert(metricsStdout.includes("## App Telemetry"), "metrics did not include App Telemetry header");
-  assert(metricsStdout.includes("Total events: 21"), "metrics did not count events");
+  assert(metricsStdout.includes("Total events: 23"), "metrics did not count events");
   assert(metricsStdout.includes("Start requests: 1"), "metrics did not count start requests");
   assert(metricsStdout.includes("Manual copy fallbacks: 1"), "metrics did not count manual copy fallbacks");
+  assert(metricsStdout.includes("Window show/hide requests: 1/1"), "metrics did not count native window requests");
   assert(metricsStdout.includes("Capture created/resolved/converted: 1/1/0"), "metrics did not count capture outcomes");
   assert(metricsStdout.includes("Capture updated/deleted: 1/1"), "metrics did not count capture cleanup");
   assert(metricsStdout.includes("Capture failures create/resolve/update/delete/convert: 0/0/0/0/1"), "metrics did not count capture failures");
@@ -64,6 +67,7 @@ try {
   );
   assert(exportStdout.includes("# Timeskein app events"), "event export did not include title");
   assert(exportStdout.includes("focus_start_requested"), "event export did not include start request");
+  assert(exportStdout.includes("window_show_requested"), "event export did not include native window request");
   assert(exportStdout.includes("capture_created"), "event export did not include capture event");
   assert(exportStdout.includes("focus_corrected"), "event export did not include correction event");
   assert(exportStdout.includes("manual_copy_fallback_shown"), "event export did not include copy fallback");

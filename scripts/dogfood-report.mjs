@@ -447,6 +447,17 @@ function buildReviewChecklistItems({
     }
   }
 
+  const windowTelemetry = parseWindowTelemetry(telemetryMarkdown);
+  if (focusMarkdown.includes("| Time | Duration | Zone | Work Item | Note |") && windowTelemetry) {
+    if (windowTelemetry.showRequests + windowTelemetry.hideRequests === 0) {
+      items.push({
+        level: "review",
+        title: "Test native window entrypoints",
+        detail: "No tray/menu/shortcut/reopen show-hide request telemetry found",
+      });
+    }
+  }
+
   if (items.length === 0) {
     items.push({
       level: "ok",
@@ -456,6 +467,16 @@ function buildReviewChecklistItems({
   }
 
   return items;
+}
+
+function parseWindowTelemetry(markdown) {
+  const match = markdown.match(/Window show\/hide requests:\s*(\d+)\/(\d+)/);
+  if (!match) return undefined;
+
+  return {
+    showRequests: Number(match[1]),
+    hideRequests: Number(match[2]),
+  };
 }
 
 function formatDailyControlGoalAuditMarkdown({
@@ -474,6 +495,7 @@ function formatDailyControlGoalAuditMarkdown({
   const nonWorkTracked = extractLineValue(focusMarkdown, "Non-work tracked") ?? "n/a";
   const entrances = extractLineValue(focusMarkdown, "Entrances") ?? "0";
   const windowEvidence = extractLineValue(telemetryMarkdown, "Window shown/hidden") ?? "n/a";
+  const windowRequestEvidence = extractLineValue(telemetryMarkdown, "Window show/hide requests") ?? "n/a";
   const apiErrors = parseLeadingNumber(extractLineValue(telemetryMarkdown, "API errors"));
   const copyFailures = parseLeadingNumber(extractLineValue(telemetryMarkdown, "Copy failures"));
   const startStopFailures = extractLineValue(telemetryMarkdown, "Start/stop failures") ?? "n/a";
@@ -521,8 +543,15 @@ function formatDailyControlGoalAuditMarkdown({
     },
     {
       requirement: "Window and menubar friction evidenced",
-      status: !telemetryAvailable || apiErrors > 0 || copyFailures > 0 || startStopFailures !== "0/0" ? "review" : "pass",
-      evidence: `window shown/hidden ${windowEvidence}, API errors ${apiErrors}, start/stop failures ${startStopFailures}`,
+      status:
+        !telemetryAvailable ||
+        apiErrors > 0 ||
+        copyFailures > 0 ||
+        startStopFailures !== "0/0" ||
+        hasReview("Test native window entrypoints")
+          ? "review"
+          : "pass",
+      evidence: `window shown/hidden ${windowEvidence}, requests ${windowRequestEvidence}, API errors ${apiErrors}, start/stop failures ${startStopFailures}`,
     },
     {
       requirement: "Tracking correction or review evidenced",

@@ -466,6 +466,10 @@ function assessEvidence(evidence, minFocusSeconds) {
     reviewItems.push("No window show/hide telemetry found. Entry/window friction is not evidenced for this day.");
   }
 
+  if (evidence.telemetry.total > 0 && evidence.telemetry.windowShowRequested + evidence.telemetry.windowHideRequested === 0) {
+    reviewItems.push("No native window show/hide request telemetry found. Test tray/menu/shortcut/reopen entry before closing the goal.");
+  }
+
   if (evidence.telemetry.apiErrors > 0) {
     reviewItems.push(`${evidence.telemetry.apiErrors} API error event(s) found. Check whether any tracking data was lost.`);
   }
@@ -552,6 +556,7 @@ function buildRcReport(date, path, evidence, assessment, minFocusSeconds, strict
     `- Capture failures: ${evidence.telemetry.captureFailures}`,
     `- Corrections requested/applied/reviewed/failed: ${evidence.telemetry.correctionRequests}/${evidence.telemetry.corrections}/${evidence.telemetry.correctionReviews}/${evidence.telemetry.correctionFailures}`,
     `- Window shown/hidden: ${evidence.telemetry.windowShown}/${evidence.telemetry.windowHidden}`,
+    `- Window show/hide requests: ${evidence.telemetry.windowShowRequested}/${evidence.telemetry.windowHideRequested}`,
     `- Window drag starts: ${evidence.telemetry.windowDragStarted}`,
     `- Duplicate Work Item title groups: ${evidence.duplicateTitles.length}`,
     "",
@@ -684,14 +689,15 @@ function formatGoalAuditMarkdown(evidence, assessment, minFocusSeconds) {
       requirement: "Window and menubar friction evidenced",
       status: evidence.telemetry.total === 0
         ? "review"
-        : evidence.telemetry.apiErrors +
+        : evidence.telemetry.windowShowRequested + evidence.telemetry.windowHideRequested === 0 ||
+            evidence.telemetry.apiErrors +
             evidence.telemetry.copyFailures +
             evidence.telemetry.startFailures +
             evidence.telemetry.stopFailures >
           0
           ? "review"
           : "pass",
-      evidence: `${evidence.telemetry.windowShown}/${evidence.telemetry.windowHidden} show/hide, ${evidence.telemetry.windowDragStarted} drag start(s), ${evidence.telemetry.apiErrors} API error(s)`,
+      evidence: `${evidence.telemetry.windowShown}/${evidence.telemetry.windowHidden} show/hide, ${evidence.telemetry.windowShowRequested}/${evidence.telemetry.windowHideRequested} native requests, ${evidence.telemetry.windowDragStarted} drag start(s), ${evidence.telemetry.apiErrors} API error(s)`,
     },
     {
       requirement: "Tracking correction or review evidenced",
@@ -881,6 +887,8 @@ function summarizeEvents(events) {
     correctionFailures: count("focus_correction_failed"),
     windowShown: count("window_shown"),
     windowHidden: count("window_hidden"),
+    windowShowRequested: count("window_show_requested"),
+    windowHideRequested: count("window_hide_requested"),
     windowDragStarted: count("window_drag_started"),
     captureFailures:
       count("capture_create_failed") +

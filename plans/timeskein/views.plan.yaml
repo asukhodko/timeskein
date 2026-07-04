@@ -115,7 +115,7 @@ x:
         mgmt:
           health: green
           owner: a.sukhodko
-          sync_note: macOS Session replacement dogfood baseline accepted on 2026-07-03; post-factum correction now covers missed-block creation, edit, and split, with entry/window polish remaining.
+          sync_note: macOS Session replacement dogfood baseline accepted on 2026-07-03; post-factum correction covers missed-block creation, edit, and split, and native window request telemetry is ready for the next entry-polish dogfood gate.
       future-directions:
         title: Future directions
         scope_nodes:

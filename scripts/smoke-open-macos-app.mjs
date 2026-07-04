@@ -151,4 +151,8 @@ async function assertMacosWindowPolicy() {
     mainSource.includes("start_tray_status_updater"),
     "Tauri main.rs must run the native tray status updater"
   );
+  assert(
+    mainSource.includes("WindowShowRequested") && mainSource.includes("WindowHideRequested"),
+    "Tauri main.rs must log native window show/hide requests for dogfood friction analysis"
+  );
 }

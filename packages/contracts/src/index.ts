@@ -152,6 +152,8 @@ export type AppEventKind =
   | "agent_stale_runtime_recovered"
   | "window_shown"
   | "window_hidden"
+  | "window_show_requested"
+  | "window_hide_requested"
   | "window_drag_started"
   | "focus_start_requested"
   | "focus_started"
@@ -229,6 +231,8 @@ export interface AppEventSummary {
   capture_convert_failures: number;
   window_shown: number;
   window_hidden: number;
+  window_show_requested: number;
+  window_hide_requested: number;
   window_drag_started: number;
   stale_runtime_recoveries: number;
   already_active_start_attempts: number;

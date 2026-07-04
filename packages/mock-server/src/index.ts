@@ -59,6 +59,8 @@ const APP_EVENT_KINDS = new Set<string>([
   "agent_stale_runtime_recovered",
   "window_shown",
   "window_hidden",
+  "window_show_requested",
+  "window_hide_requested",
   "window_drag_started",
   "focus_start_requested",
   "focus_started",

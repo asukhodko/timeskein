@@ -147,7 +147,7 @@ At the end of the day, export the analysis note:
 pnpm dogfood:finish:save
 ```
 
-This writes `timeskein-dogfood-report-YYYY-MM-DD.md` in the current directory. The report includes focus blocks, Work Item totals, Activity Zone totals, Day Events, Work Item notes and timestamped Work Item Events for items touched that day, Capture Activity for the day, open Capture Inbox entries, Review Checklist, Daily Control Goal Audit, and local app telemetry: starts, switches, stops, start/stop failures, Capture Inbox actions, focus corrections or accepted correction review, API errors, show/hide events, copy failures, and likely friction points.
+This writes `timeskein-dogfood-report-YYYY-MM-DD.md` in the current directory. The report includes focus blocks, Work Item totals, Activity Zone totals, Day Events, Work Item notes and timestamped Work Item Events for items touched that day, Capture Activity for the day, open Capture Inbox entries, Review Checklist, Daily Control Goal Audit, and local app telemetry: starts, switches, stops, start/stop failures, Capture Inbox actions, focus corrections or accepted correction review, API errors, show/hide events, native show/hide requests from tray/menu/shortcut/reopen entrypoints, copy failures, and likely friction points.
 It also writes `timeskein-dogfood-rc-check-YYYY-MM-DD.md`, so the evening evidence package contains both the readable day report and the requirement-by-requirement RC audit.
 Saved dogfood reports and RC checks can contain personal or internal work context, so they are ignored by git.
 To print the report to stdout instead:
@@ -169,7 +169,7 @@ For the Dogfood Release Candidate gate, rerun the evidence check explicitly when
 pnpm dogfood:rc-check:save
 ```
 
-The RC check exits with code 1 for hard blockers such as active state, duplicate Work Item titles, or an empty day. Its evidence summary includes total tracked time, work focus, non-work tracked time, Activity Zone coverage, Work Item notes/events, Capture Inbox coverage, correction telemetry, window telemetry, and product-friction counters. It also includes a `Daily Control Goal Audit` table that maps the current day to the active daily-control objective. Review items still require human judgment against the release-candidate criteria.
+The RC check exits with code 1 for hard blockers such as active state, duplicate Work Item titles, or an empty day. Its evidence summary includes total tracked time, work focus, non-work tracked time, Activity Zone coverage, Work Item notes/events, Capture Inbox coverage, correction telemetry, window telemetry including native show/hide request evidence, and product-friction counters. It also includes a `Daily Control Goal Audit` table that maps the current day to the active daily-control objective. Review items still require human judgment against the release-candidate criteria.
 Before marking the daily-control goal complete, use strict mode so unresolved review items fail the command:
 
 ```bash
@@ -324,7 +324,7 @@ Focus Session controls:
 - **Day Events are basic** - user-authored day-level notes can be added, re-zoned, edited, deleted, and reported; there is no separate day journal screen yet
 - **Work Item notes remain mutable descriptions** - timestamped observations should use Work Item Events instead
 - **Activity zone correction is basic** - new focus blocks snapshot the Work Item zone and stopped blocks can be corrected, but there is no bulk zone editor yet
-- **macOS window restore and menu bar counter are newly fixed** - the packaged app now avoids always-on-top/task-switcher hiding, handles macOS reopen, and updates the menu bar title from the native shell; verify this in the next dogfood day
+- **macOS window restore and menu bar counter are newly fixed** - the packaged app now avoids always-on-top/task-switcher hiding, handles macOS reopen, and updates the menu bar title from the native shell; the next dogfood day should verify this through non-zero native show/hide request telemetry from tray/menu/shortcut/reopen entrypoints
 - **macOS packaging produces `.app` only** - DMG packaging is deferred
 - **Windows packaging deferred** - current recovery baseline targets browser and macOS first
 - **Automated e2e tests are not implemented yet** - current validation is manual smoke plus build/type checks

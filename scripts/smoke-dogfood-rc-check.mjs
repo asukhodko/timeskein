@@ -45,9 +45,11 @@ try {
       ('e3', '2026-06-30T06:00:01Z', 'ui', 'focus_started', '{"action_id":"a1"}'),
       ('e4', '2026-06-30T09:00:00Z', 'ui', 'window_shown', '{"control":"shortcut"}'),
       ('e5', '2026-06-30T09:05:00Z', 'ui', 'window_hidden', '{"control":"esc"}'),
-      ('e6', '2026-06-30T10:00:00Z', 'ui', 'report_copied', '{"report_kind":"dogfood"}'),
-      ('e7', '2026-06-30T10:05:00Z', 'ui', 'focus_correction_requested', '{"action_id":"k1","control":"edit_block"}'),
-      ('e8', '2026-06-30T10:05:01Z', 'ui', 'focus_corrected', '{"action_id":"k1","control":"edit_block"}');
+      ('e6', '2026-06-30T09:00:00Z', 'ui', 'window_show_requested', '{"control":"tray_click"}'),
+      ('e7', '2026-06-30T09:05:00Z', 'ui', 'window_hide_requested', '{"control":"global_shortcut"}'),
+      ('e8', '2026-06-30T10:00:00Z', 'ui', 'report_copied', '{"report_kind":"dogfood"}'),
+      ('e9', '2026-06-30T10:05:00Z', 'ui', 'focus_correction_requested', '{"action_id":"k1","control":"edit_block"}'),
+      ('e10', '2026-06-30T10:05:01Z', 'ui', 'focus_corrected', '{"action_id":"k1","control":"edit_block"}');
   `);
 
   const good = await runRcCheck(goodDb);
@@ -64,6 +66,7 @@ try {
   assert(good.stdout.includes("Work Item Events: 1"), "good day Work Item Events count is missing");
   assert(good.stdout.includes("Corrections requested/applied/reviewed/failed: 1/1/0/0"), "good day correction telemetry is missing");
   assert(good.stdout.includes("Window shown/hidden: 1/1"), "good day window telemetry is missing");
+  assert(good.stdout.includes("Window show/hide requests: 1/1"), "good day native window request telemetry is missing");
   assert(good.stdout.includes("## Daily Control Goal Audit"), "good day goal audit section is missing");
   assert(good.stdout.includes("| Focus blocks visible | pass |"), "good day focus-block audit row is missing");
   assert(good.stdout.includes("| Activity Zones separated | pass |"), "good day activity-zone audit row is missing");
@@ -82,6 +85,16 @@ try {
   assert(goodStrict.code === 0, "good day should pass strict RC check");
   assert(goodStrict.stdout.includes("Strict mode: yes"), "strict RC check marker is missing");
 
+  const noWindowRequestDb = join(tempDir, "no-window-request.db");
+  await copyDb(goodDb, noWindowRequestDb);
+  await runSql(noWindowRequestDb, "DELETE FROM app_events WHERE kind IN ('window_show_requested', 'window_hide_requested');");
+  const noWindowRequestStrict = await runRcCheck(noWindowRequestDb, ["--strict"]);
+  assert(noWindowRequestStrict.code !== 0, "strict RC check should fail without native window request evidence");
+  assert(
+    noWindowRequestStrict.stdout.includes("No native window show/hide request telemetry found"),
+    "strict RC check should explain missing native window request evidence"
+  );
+
   const savedPath = join(tempDir, "rc-check.md");
   const saved = await runRcCheck(goodDb, ["--out", savedPath]);
   assert(saved.code === 0, "good day should save RC check");
@@ -95,7 +108,7 @@ try {
   await runSql(reviewedOnlyDb, `
     DELETE FROM app_events WHERE kind IN ('focus_correction_requested', 'focus_corrected');
     INSERT INTO app_events (id, ts, source, kind, payload)
-    VALUES ('e9', '2026-06-30T10:06:00Z', 'ui', 'focus_correction_reviewed', '{"action_id":"k2","control":"review_checklist"}');
+    VALUES ('e11', '2026-06-30T10:06:00Z', 'ui', 'focus_correction_reviewed', '{"action_id":"k2","control":"review_checklist"}');
   `);
   const reviewedOnly = await runRcCheck(reviewedOnlyDb);
   assert(reviewedOnly.code === 0, "accepted correction review should not block");
@@ -171,7 +184,7 @@ try {
   await copyDb(goodDb, captureFailureDb);
   await runSql(captureFailureDb, `
     INSERT INTO app_events (id, ts, source, kind, payload)
-    VALUES ('e9', '2026-06-30T10:30:00Z', 'ui', 'capture_create_failed', '{"action_id":"c1","error_code":"validation_error"}');
+    VALUES ('e12', '2026-06-30T10:30:00Z', 'ui', 'capture_create_failed', '{"action_id":"c1","error_code":"validation_error"}');
   `);
   const captureFailure = await runRcCheck(captureFailureDb);
   assert(captureFailure.code === 0, "capture failure should be a review item, not a hard blocker");

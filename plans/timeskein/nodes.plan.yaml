@@ -92,7 +92,7 @@ nodes:
     effort: 1
     deps:
       - id: ts.ux_entry.hide_toggle
-    notes: Left-click and Show/Hide toggle the window. The window no longer uses always-on-top or task-switcher hiding, macOS Reopen restores a hidden window, and the native shell keeps the menu bar title updated from the local API.
+    notes: Left-click and Show/Hide toggle the window. The window no longer uses always-on-top or task-switcher hiding, macOS Reopen restores a hidden window, the native shell keeps the menu bar title updated from the local API, and native show/hide requests are logged for tray/menu/shortcut/reopen entrypoints.
     x:
       ops:
         attention_class: current
@@ -338,7 +338,7 @@ nodes:
     effort: 2
     deps:
       - id: ts.day_review.export
-    notes: SQLite app_events, Local API, UI/agent/script logging, metrics export, dogfood report section, and smoke coverage are implemented. Capture Inbox create/resolve/convert actions, post-factum focus corrections, and accepted correction-review decisions are included in telemetry, including failure counters. Payloads must stay technical and must not store raw titles, notes, URLs, or typed text.
+    notes: SQLite app_events, Local API, UI/agent/script logging, metrics export, dogfood report section, and smoke coverage are implemented. Capture Inbox create/resolve/convert actions, post-factum focus corrections, accepted correction-review decisions, and native window show/hide requests are included in telemetry, including failure counters. Payloads must stay technical and must not store raw titles, notes, URLs, or typed text.
     x:
       ops:
         attention_class: current
@@ -365,7 +365,7 @@ nodes:
     deps:
       - id: ts.day_review.app_telemetry
       - id: ts.day_review.review_checklist
-    notes: The UI/CLI dogfood report and RC evidence check summarize focus totals, Activity Zones, Day Events, Work Item notes/events, Capture Inbox coverage, window telemetry, and product-friction counters. They include a Daily Control Goal Audit table, and dogfood:rc-check:strict fails on unresolved review items, so the next dogfood day can be judged requirement by requirement against report usefulness rather than memory reconstruction.
+    notes: The UI/CLI dogfood report and RC evidence check summarize focus totals, Activity Zones, Day Events, Work Item notes/events, Capture Inbox coverage, window telemetry including native show/hide request counts, and product-friction counters. They include a Daily Control Goal Audit table, and dogfood:rc-check:strict fails on unresolved review items, so the next dogfood day can be judged requirement by requirement against report usefulness rather than memory reconstruction.
     x:
       ops:
         attention_class: current
@@ -445,7 +445,7 @@ nodes:
     effort: 2
     deps:
       - id: ts.focus_core.dogfood_gate
-    notes: Fixed typing C/С opening Create, creating a new active Work Item, ambiguous last-seen timestamps, and added the first Capture Inbox baseline. Post-baseline work added Work Item title/basic-field editing, focus-block correction including add-missed-block, per-block Activity Zone snapshots/overrides, Work Item today/total time, Work Item list modes for accumulated multi-day inventories, a resizable Today/Work Item split, timestamped Day Events with explicit zones and gap/open-gap Explain shortcuts, timestamped Work Item Events, capture-to-event promotion, capture edit/delete for open items, Command+Tab/Dock restore, non-always-on-top window policy, native menu-bar status refresh, and separate Total tracked / Work focus / Non-work tracked report totals. Remaining friction is mostly richer correction/review UI.
+    notes: Fixed typing C/С opening Create, creating a new active Work Item, ambiguous last-seen timestamps, and added the first Capture Inbox baseline. Post-baseline work added Work Item title/basic-field editing, focus-block correction including add-missed-block, per-block Activity Zone snapshots/overrides, Work Item today/total time, Work Item list modes for accumulated multi-day inventories, a resizable Today/Work Item split, timestamped Day Events with explicit zones and gap/open-gap Explain shortcuts, timestamped Work Item Events, capture-to-event promotion, capture edit/delete for open items, Command+Tab/Dock restore, non-always-on-top window policy, native menu-bar status refresh, native show/hide request telemetry, and separate Total tracked / Work focus / Non-work tracked report totals. Remaining friction is mostly richer correction/review UI.
     x:
       ops:
         attention_class: current
@@ -481,7 +481,7 @@ nodes:
     deps:
       - id: ts.hardening.package_app
       - id: ts.hardening.backup_reset
-    notes: "Dogfood Release Candidate doc defines the pass/fail gate. Dogfood Release Baseline records the accepted 2026-07-03 verdict and known limitations. Since acceptance, post-factum focus correction including add-missed-block, per-block Activity Zone correction, Work Item title/type/Activity Zone editing, separate Total tracked / Work focus / Non-work tracked report totals, Activity Zone report totals, today/total Work Item time, timestamped Day Events, timestamped Work Item Events with user-authored event edit/delete, capture-to-event promotion, capture edit/delete for open items, window restore, and native menu bar counter refresh are implemented. Remaining limitations include richer correction/review UI."
+    notes: "Dogfood Release Candidate doc defines the pass/fail gate. Dogfood Release Baseline records the accepted 2026-07-03 verdict and known limitations. Since acceptance, post-factum focus correction including add-missed-block, per-block Activity Zone correction, Work Item title/type/Activity Zone editing, separate Total tracked / Work focus / Non-work tracked report totals, Activity Zone report totals, today/total Work Item time, timestamped Day Events, timestamped Work Item Events with user-authored event edit/delete, capture-to-event promotion, capture edit/delete for open items, window restore, native menu bar counter refresh, and native show/hide request telemetry are implemented. Remaining limitations include richer correction/review UI."
     x:
       ops:
         attention_class: current

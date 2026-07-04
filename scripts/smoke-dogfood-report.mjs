@@ -47,7 +47,9 @@ try {
     INSERT INTO app_events (id, ts, source, kind, focus_session_id, payload)
     VALUES
       ('ae1', '2026-06-30T07:50:00Z', 'ui', 'focus_correction_requested', 's1', '{"action_id":"k1","control":"edit_block"}'),
-      ('ae2', '2026-06-30T07:50:01Z', 'ui', 'focus_corrected', 's1', '{"action_id":"k1","control":"edit_block"}');
+      ('ae2', '2026-06-30T07:50:01Z', 'ui', 'focus_corrected', 's1', '{"action_id":"k1","control":"edit_block"}'),
+      ('ae3', '2026-06-30T07:51:00Z', 'ui', 'window_show_requested', NULL, '{"control":"tray_click"}'),
+      ('ae4', '2026-06-30T07:52:00Z', 'ui', 'window_hide_requested', NULL, '{"control":"global_shortcut"}');
 
     UPDATE work_items SET activity_zone = 'coordination' WHERE id = 'w2';
     UPDATE focus_sessions SET activity_zone = 'coordination' WHERE work_item_id = 'w2';
@@ -70,6 +72,7 @@ try {
   assert(stdout.includes("## Daily Control Goal Audit"), "report did not include daily-control audit section");
   assert(stdout.includes("| Focus blocks visible | pass |"), "report daily-control audit did not pass focus blocks");
   assert(stdout.includes("| Activity Zones separated | pass |"), "report daily-control audit did not pass zones");
+  assert(stdout.includes("| Window and menubar friction evidenced | pass |"), "report daily-control audit did not pass window evidence");
   assert(stdout.includes("| Tracking correction or review evidenced | pass |"), "report daily-control audit did not pass correction evidence");
   assert(stdout.includes("| Local gates | manual |"), "report daily-control audit did not include local gates");
   assert(

@@ -207,6 +207,8 @@ fn build_summary(events: Vec<AppEvent>) -> serde_json::Value {
         "capture_convert_failures": count(&by_kind, "capture_convert_failed"),
         "window_shown": count(&by_kind, "window_shown"),
         "window_hidden": count(&by_kind, "window_hidden"),
+        "window_show_requested": count(&by_kind, "window_show_requested"),
+        "window_hide_requested": count(&by_kind, "window_hide_requested"),
         "window_drag_started": count(&by_kind, "window_drag_started"),
         "stale_runtime_recoveries": count(&by_kind, "agent_stale_runtime_recovered"),
         "already_active_start_attempts": already_active_action_ids.len() + already_active_without_action,

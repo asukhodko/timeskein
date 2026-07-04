@@ -65,22 +65,59 @@ fn set_tray_status_title_value<R: Runtime>(
     Ok(())
 }
 
-fn show_main_window<R: Runtime>(app: &AppHandle<R>) {
+fn show_main_window<R: Runtime>(app: &AppHandle<R>, control: &'static str) {
     if let Some(window) = app.get_webview_window("main") {
+        log_native_window_request(app, AppEventKind::WindowShowRequested, control);
         let _ = window.unminimize();
         let _ = window.show();
         let _ = window.set_focus();
     }
 }
 
-fn toggle_main_window<R: Runtime>(app: &AppHandle<R>) {
+fn hide_main_window<R: Runtime>(app: &AppHandle<R>, control: &'static str) {
+    if let Some(window) = app.get_webview_window("main") {
+        log_native_window_request(app, AppEventKind::WindowHideRequested, control);
+        let _ = window.hide();
+    }
+}
+
+fn toggle_main_window<R: Runtime>(app: &AppHandle<R>, control: &'static str) {
     if let Some(window) = app.get_webview_window("main") {
         if window.is_visible().unwrap_or(false) {
+            log_native_window_request(app, AppEventKind::WindowHideRequested, control);
             let _ = window.hide();
         } else {
-            show_main_window(app);
+            show_main_window(app, control);
         }
     }
+}
+
+fn log_native_window_request<R: Runtime>(
+    app: &AppHandle<R>,
+    kind: AppEventKind,
+    control: &'static str,
+) {
+    let api_url = app.state::<AgentRuntime>().api_url.clone();
+    let Some(port) = parse_local_api_port(&api_url) else {
+        return;
+    };
+
+    tauri::async_runtime::spawn(async move {
+        let body = serde_json::json!({
+            "version": "1.0",
+            "request_id": format!("native-window-{}-{control}", kind.as_str()),
+            "method": "app_event.log",
+            "params": {
+                "source": "ui",
+                "kind": kind.as_str(),
+                "payload": {
+                    "control": control
+                }
+            }
+        })
+        .to_string();
+        let _ = send_local_api_request(port, &body).await;
+    });
 }
 
 fn start_tray_status_updater<R: Runtime>(app: AppHandle<R>, api_url: String) {
@@ -399,7 +436,7 @@ fn main() {
                         app.exit(0);
                     }
                     "toggle" => {
-                        toggle_main_window(app);
+                        toggle_main_window(app, "tray_menu");
                     }
                     _ => {}
                 })
@@ -411,7 +448,7 @@ fn main() {
                     } = event
                     {
                         let app = tray.app_handle();
-                        toggle_main_window(app);
+                        toggle_main_window(app, "tray_click");
                     }
                 })
                 .build(app)?;
@@ -428,7 +465,7 @@ fn main() {
                 match app
                     .global_shortcut()
                     .on_shortcut(shortcut, |app, _shortcut, _event| {
-                        toggle_main_window(app);
+                        toggle_main_window(app, "global_shortcut");
                     }) {
                     Ok(()) => {
                         eprintln!("Registered global shortcut: {label}");
@@ -452,7 +489,7 @@ fn main() {
         .on_window_event(|window, event| {
             // Hide window instead of closing on ESC or close button
             if let WindowEvent::CloseRequested { api, .. } = event {
-                let _ = window.hide();
+                hide_main_window(window.app_handle(), "close_request");
                 api.prevent_close();
             }
         })
@@ -465,7 +502,7 @@ fn main() {
             } = event
             {
                 if !has_visible_windows {
-                    show_main_window(app);
+                    show_main_window(app, "macos_reopen");
                 }
             }
         });

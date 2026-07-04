@@ -1123,6 +1123,14 @@ function buildDayReviewItems({
   }
 
   if (sessions.length > 0 && appTelemetry) {
+    if (appTelemetry.window_show_requested + appTelemetry.window_hide_requested === 0) {
+      items.push({
+        level: 'review',
+        title: 'Test native window entrypoints',
+        detail: 'No tray/menu/shortcut/reopen show-hide request telemetry found',
+      })
+    }
+
     if (appTelemetry.correction_failures > 0) {
       items.push({
         level: 'review',
@@ -1250,6 +1258,7 @@ function formatDailyControlGoalAuditMarkdown({
   const nonWorkTracked = extractLineValue(todayMarkdown, 'Non-work tracked') ?? 'n/a'
   const entrances = extractLineValue(todayMarkdown, 'Entrances') ?? '0'
   const windowEvidence = extractLineValue(appTelemetryMarkdown, 'Window shown/hidden') ?? 'n/a'
+  const windowRequestEvidence = extractLineValue(appTelemetryMarkdown, 'Window show/hide requests') ?? 'n/a'
   const apiErrors = parseLeadingNumber(extractLineValue(appTelemetryMarkdown, 'API errors'))
   const copyFailures = parseLeadingNumber(extractLineValue(appTelemetryMarkdown, 'Copy failures'))
   const startStopFailures = extractLineValue(appTelemetryMarkdown, 'Start/stop failures') ?? 'n/a'
@@ -1295,10 +1304,15 @@ function formatDailyControlGoalAuditMarkdown({
     },
     {
       requirement: 'Window and menubar friction evidenced',
-      status: !telemetryAvailable || apiErrors > 0 || copyFailures > 0 || startStopFailures !== '0/0'
-        ? 'review'
-        : 'pass',
-      evidence: `window shown/hidden ${windowEvidence}, API errors ${apiErrors}, start/stop failures ${startStopFailures}`,
+      status:
+        !telemetryAvailable ||
+        apiErrors > 0 ||
+        copyFailures > 0 ||
+        startStopFailures !== '0/0' ||
+        hasReview('Test native window entrypoints')
+          ? 'review'
+          : 'pass',
+      evidence: `window shown/hidden ${windowEvidence}, requests ${windowRequestEvidence}, API errors ${apiErrors}, start/stop failures ${startStopFailures}`,
     },
     {
       requirement: 'Tracking correction or review evidenced',
@@ -1812,6 +1826,7 @@ function formatAppTelemetryMarkdown(summary: AppEventSummary) {
     `Stop requests: ${summary.stop_requests}`,
     `Start/stop failures: ${summary.start_failures}/${summary.stop_failures}`,
     `Window shown/hidden: ${summary.window_shown}/${summary.window_hidden}`,
+    `Window show/hide requests: ${summary.window_show_requested}/${summary.window_hide_requested}`,
     `Window drag starts: ${summary.window_drag_started}`,
     `Copy failures: ${summary.copy_failures}`,
     `Manual copy fallbacks: ${summary.manual_copy_fallbacks}`,

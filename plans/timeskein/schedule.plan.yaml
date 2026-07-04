@@ -56,6 +56,9 @@ schedule:
     ts.day_review.work_item_events:
       start: "2026-07-03"
       duration: 1d
+    ts.day_review.day_events:
+      start: "2026-07-03"
+      duration: 1d
     ts.day_review.corrections:
       start: "2026-07-03"
       duration: 1d

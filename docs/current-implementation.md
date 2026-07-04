@@ -2,7 +2,7 @@
 
 ## Status
 
-Last updated: 2026-07-03.
+Last updated: 2026-07-04.
 
 This document describes what the repository actually runs today. Target architecture and future plans remain in RFCs and roadmap documents.
 

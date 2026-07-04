@@ -46,11 +46,11 @@ flowchart LR
     style app_entry_ux stroke:#111827,stroke-width:3px
     focus_session_core["Focus<br/>Session core<br/>85%<br/>веха 2026-07-01"]
     class focus_session_core exec_done
-    day_review_export["Day review<br/>and export<br/>~95%<br/>веха 2026-07-01"]
+    day_review_export["Day review<br/>and export<br/>95%<br/>веха 2026-07-01"]
     class day_review_export exec_done
     capture_inbox["Capture<br/>Inbox<br/>100%<br/>окно 2026-07-07..2026-07-08"]
     class capture_inbox exec_done
-    dogfood_hardening["Dogfood<br/>hardening<br/>~100%<br/>веха 2026-07-06"]
+    dogfood_hardening["Dogfood<br/>hardening<br/>100%<br/>веха 2026-07-06"]
     class dogfood_hardening exec_done
     future_directions["Future<br/>directions<br/>n/a"]
     class future_directions exec_mgmt_neutral
@@ -103,6 +103,7 @@ gantt
     🔄 Compute totals, gaps, and entry count  :active, ts_day_review_totals_gaps,    2026-07-06, 1d
     🔄 Export dogfood day data as Markdown  :active, ts_day_review_export,    2026-07-07, 1d
     ✅ Timestamped Work Item Events  :done, ts_day_review_work_item_events,    2026-07-03, 1d
+    ✅ Timestamped Day Events  :done, ts_day_review_day_events,    2026-07-03, 1d
     ✅ Post-factum focus correction  :done, ts_day_review_corrections,    2026-07-03, 1d
     ✅ Add local app-event telemetry for dogfood analysis  :done, ts_day_review_app_telemetry,    2026-07-08, 1d
     ✅ End-of-day analysis can use Timeskein data  :milestone, done, ts_day_review_analysis_gate,    2026-07-01, 0d
@@ -140,7 +141,7 @@ gantt
 - Capture a note at the end of a focus session [done] (1 focus-blocks) {100%}
 - First real Focus Session dogfood [done] {100%}
 - Timestamped Work Item Events [done] (2 focus-blocks) {100%}
-- Timestamped Day Events [done] (1 focus-blocks)
+- Timestamped Day Events [done] (1 focus-blocks) {100%}
 - Post-factum focus correction [done] (3 focus-blocks) {100%}
 - Add local app-event telemetry for dogfood analysis [done] (2 focus-blocks) {100%}
 - Show automatic evening review checklist [done] (1 focus-blocks) {100%}
@@ -149,7 +150,7 @@ gantt
 - Add captured-event model and Local API [done] (3 focus-blocks) {100%}
 - Add fast capture control [done] (3 focus-blocks) {100%}
 - Review and promote captured events [done] (3 focus-blocks) {100%}
-- Add local data backup and reset path [done] (2 focus-blocks)
+- Add local data backup and reset path [done] (2 focus-blocks) {100%}
 - Rebuild macOS app for regular personal use [done] (1 focus-blocks) {100%}
 - Write dogfood release notes and known limitations [done] (1 focus-blocks) {100%}
 - Session replacement dogfood baseline [done] {100%}
@@ -158,11 +159,11 @@ gantt
 - Focus Session core [in_progress] (17 focus-blocks) {85%}
 - Add FocusSession and SessionEvent persistence [in_progress] (3 focus-blocks) {70%}
 - Implement start, pause, resume, stop, cancel [in_progress] (3 focus-blocks) {45%}
-- Day review and export [in_progress] (16 focus-blocks) {92% cov:94%}
+- Day review and export [in_progress] (16 focus-blocks) {93%}
 - Show focus blocks on a daily timeline [in_progress] (3 focus-blocks) {65%}
 - Compute totals, gaps, and entry count [in_progress] (2 focus-blocks) {98%}
 - Export dogfood day data as Markdown [in_progress] (2 focus-blocks) {98%}
-- Dogfood hardening [in_progress] (8 focus-blocks) {100% cov:75%}
+- Dogfood hardening [in_progress] (8 focus-blocks) {100%}
 - Add smoke checks for focus-session flows [in_progress] (2 focus-blocks) {99%}
 - Fix first dogfood friction [in_progress] (2 focus-blocks) {100%}
 <!-- GENERATED:END -->

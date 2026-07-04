@@ -1,6 +1,7 @@
 import clsx from 'clsx'
 import type { ActivityZone, WorkItemView, WorkItemState } from '@timeskein/contracts'
-import { formatDuration, formatRelativeTime, truncate } from '../utils/formatTime'
+import { formatRelativeTime, truncate } from '../utils/formatTime'
+import { getWorkItemTimeBadges } from '../utils/workItemCardMeta'
 
 interface WorkItemCardProps {
   item: WorkItemView
@@ -34,8 +35,7 @@ export default function WorkItemCard({
 }: WorkItemCardProps) {
   const lastSeen = formatRelativeTime(item.last_seen_at)
   const lastSeenLabel = lastSeen === '—' || lastSeen === 'now' ? lastSeen : `${lastSeen} ago`
-  const hasToday = item.today_active_seconds > 0
-  const hasTotal = item.total_active_seconds > 0
+  const timeBadges = getWorkItemTimeBadges(item)
 
   return (
     <div
@@ -86,16 +86,19 @@ export default function WorkItemCard({
             >
               {item.activity_zone}
             </span>
-            {hasToday && (
-              <span className="rounded border border-gray-700 px-1.5 py-0.5 text-gray-300">
-                today {formatDuration(item.today_active_seconds)}
+            {timeBadges.map((badge) => (
+              <span
+                key={badge.kind}
+                className={clsx(
+                  'rounded border px-1.5 py-0.5',
+                  badge.kind === 'today'
+                    ? 'border-gray-700 text-gray-300'
+                    : 'border-gray-800 text-gray-500'
+                )}
+              >
+                {badge.label} {badge.value}
               </span>
-            )}
-            {hasTotal && (
-              <span className="rounded border border-gray-800 px-1.5 py-0.5 text-gray-500">
-                total {formatDuration(item.total_active_seconds)}
-              </span>
-            )}
+            ))}
           </div>
         </div>
 

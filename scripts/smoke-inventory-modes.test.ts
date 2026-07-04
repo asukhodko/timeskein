@@ -9,6 +9,7 @@ import {
   isRecentInventoryItem,
   isTodayInventoryItem,
 } from '../apps/desktop/src/utils/inventoryModes'
+import { getWorkItemTimeBadges } from '../apps/desktop/src/utils/workItemCardMeta'
 
 const now = Date.parse('2026-07-03T12:00:00.000Z')
 
@@ -93,6 +94,29 @@ test('inventory mode shortcuts use Alt plus digits without stealing plain state 
   assert.equal(inventoryModeForShortcut('Digit1', true, true), undefined)
   assert.equal(inventoryModeForShortcut('Digit1', true, false, true), undefined)
   assert.equal(inventoryModeForShortcut('Digit5', true), undefined)
+})
+
+test('work item card metadata exposes today and total tracked time badges', () => {
+  assert.deepEqual(
+    getWorkItemTimeBadges(item('tracked', {
+      today_active_seconds: 75,
+      total_active_seconds: 3725,
+    })),
+    [
+      { kind: 'today', label: 'today', value: '1:15' },
+      { kind: 'total', label: 'total', value: '1:02:05' },
+    ]
+  )
+
+  assert.deepEqual(
+    getWorkItemTimeBadges(item('historical-only', {
+      today_active_seconds: 0,
+      total_active_seconds: 600,
+    })),
+    [{ kind: 'total', label: 'total', value: '10:00' }]
+  )
+
+  assert.deepEqual(getWorkItemTimeBadges(item('untracked')), [])
 })
 
 function titles(items: WorkItemView[]) {

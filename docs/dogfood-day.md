@@ -171,6 +171,8 @@ when the real situation appears:
   show/hide requests from window entrypoints;
 - start one new Work Item by typed title and continue one existing Work Item
   from the list;
+- after a touched Work Item has focus time, check that its card shows today's
+  tracked time and total tracked time in the Work Item list;
 - use at least two Activity Zones, with one non-work zone such as `recovery`,
   `idle`, `coordination`, or `personal`;
 - add one Day Event with an explicit zone;

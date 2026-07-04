@@ -37,6 +37,10 @@ try {
     "ready output did not include window entrypoint reminder"
   );
   assert(
+    ready.stdout.includes("card shows today and total time"),
+    "ready output did not include Work Item time-total UI reminder"
+  );
+  assert(
     ready.stdout.includes("pnpm dogfood:goal-check"),
     "ready output did not include final goal-check reminder"
   );

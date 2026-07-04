@@ -182,7 +182,7 @@ For the Dogfood Release Candidate gate, rerun the evidence check explicitly when
 pnpm dogfood:rc-check:save
 ```
 
-The RC check exits with code 1 for hard blockers such as active state, duplicate Work Item titles, or an empty day. Its evidence summary includes total tracked time, work focus, non-work tracked time, Activity Zone coverage, Work Item notes/events, Capture Inbox coverage, typed entry and selected/list continuation evidence, correction telemetry, window telemetry including show/hide request evidence, and product-friction counters. It also includes a `Daily Control Goal Audit` table that maps the current day to the active daily-control objective. The gaps/captures audit row is marked for review when captures are missing, not linked to active focus, left open without a `capture_followup_reviewed` event, or when significant gaps lack Day Event explanations. Review items still require human judgment against the release-candidate criteria.
+The RC check exits with code 1 for hard blockers such as active state, duplicate Work Item titles, or an empty day. Its evidence summary includes total tracked time, work focus, non-work tracked time, Activity Zone coverage, Work Item notes/events, Capture Inbox coverage, typed entry and selected/list continuation evidence, correction telemetry, window telemetry including both show and hide request evidence, and product-friction counters. It also includes a `Daily Control Goal Audit` table that maps the current day to the active daily-control objective. The gaps/captures audit row is marked for review when captures are missing, not linked to active focus, left open without a `capture_followup_reviewed` event, or when significant gaps lack Day Event explanations. Review items still require human judgment against the release-candidate criteria.
 Before marking the daily-control goal complete, run the final gate. It runs `pnpm test`, `pnpm dogfood:preflight`, and the strict RC check on the same code:
 
 ```bash
@@ -344,7 +344,7 @@ Focus Session controls:
 - **Day Events are basic** - user-authored day-level notes can be added, re-zoned, edited, deleted, and reported; there is no separate day journal screen yet
 - **Work Item notes remain mutable descriptions** - timestamped observations should use Work Item Events instead
 - **Activity zone correction is basic** - new focus blocks snapshot the Work Item zone and stopped blocks can be corrected, but there is no bulk zone editor yet
-- **macOS window restore and menu bar counter are newly fixed** - the packaged app now avoids always-on-top/task-switcher hiding, handles macOS reopen, and updates the menu bar title from the native shell; the next dogfood day should verify this through non-zero show/hide request telemetry from window entrypoints
+- **macOS window restore and menu bar counter are newly fixed** - the packaged app now avoids always-on-top/task-switcher hiding, handles macOS reopen, and updates the menu bar title from the native shell; the next dogfood day should verify this through non-zero show and hide request telemetry from window entrypoints
 - **macOS packaging produces `.app` only** - DMG packaging is deferred
 - **Windows packaging deferred** - current recovery baseline targets browser and macOS first
 - **Automated e2e tests are not implemented yet** - current validation is manual smoke plus build/type checks

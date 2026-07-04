@@ -133,7 +133,7 @@ Runtime smoke on macOS:
 - `pnpm smoke:macos-app` also verifies startup normalization of legacy active Work Items, orphan active focus sessions, stale `agent.lock` / `agent.port` recovery, and migration of older `app_events` kind constraints
 - `pnpm smoke:export-focus-day` verifies fallback Markdown export, including Day Events, Work Item notes, timestamped Work Item Events for touched items, and legacy focus-session schemas without Activity Zone columns, against temporary SQLite databases
 - `pnpm smoke:app-events` verifies the local app-event migration, metrics summary, and Markdown export against a temporary SQLite database
-- `pnpm smoke:dogfood-report` verifies the evening dogfood report wrapper, Review Checklist, Daily Control Goal Audit, Activity Zone evidence warnings, entry-path evidence prompts, correction evidence prompts, accepted correction review, accepted open-capture follow-up review, Day Events, Work Item notes, Work Item Events, Capture Activity, open captures, analysis prompts, and App Telemetry section, including typed/selected entry and window show/hide request evidence
+- `pnpm smoke:dogfood-report` verifies the evening dogfood report wrapper, Review Checklist, Daily Control Goal Audit, Activity Zone evidence warnings, entry-path evidence prompts, correction evidence prompts, accepted correction review, accepted open-capture follow-up review, Day Events, Work Item notes, Work Item Events, Capture Activity, open captures, analysis prompts, and App Telemetry section, including typed/selected entry and both window show and hide request evidence
 - `pnpm smoke:dogfood-finish` verifies the end-of-day gate: no active focus session, no active Work Item, at least one focus block, and `--save` writing both the day report and RC check
 - `pnpm smoke:dogfood-status` verifies the embedded-agent status checker against healthy and unhealthy temporary HTTP agents
 - `pnpm smoke:dogfood-ready` verifies the real-database readiness checker against clean and contaminated temporary SQLite databases, including running-process visibility and the actionable next commands
@@ -153,7 +153,7 @@ Dogfood launch helper:
 - `pnpm dogfood:finish:save` runs the same end-of-day gate and saves both `timeskein-dogfood-report-YYYY-MM-DD.md` and `timeskein-dogfood-rc-check-YYYY-MM-DD.md`
 - `pnpm dogfood:preflight` runs the local checks needed before trusting a real dogfood day, including opskarta roadmap validation, Work Item list mode tests, isolated mock API, export, and dogfood-report smoke checks
 - `pnpm dogfood:ready` inspects the real local SQLite database for active sessions, active Work Items, duplicate titles, existing focus blocks for today, agent responsiveness, and running app processes; when the day is not ready it prints exact stop/reset commands, and when the day is ready it prints the next start command plus the Daily-Control Checklist for the next dogfood pass
-- `pnpm dogfood:rc-check` prints the release-candidate evidence summary, `Daily Control Goal Audit`, hard blockers, review items, and manual verdict prompts for the saved dogfood day; the summary includes total tracked time, work focus, non-work tracked time, Activity Zone coverage, Work Item notes/events, Capture Inbox coverage, typed entry and selected/list continuation evidence, correction telemetry, window telemetry with show/hide request counts, and product-friction counters
+- `pnpm dogfood:rc-check` prints the release-candidate evidence summary, `Daily Control Goal Audit`, hard blockers, review items, and manual verdict prompts for the saved dogfood day; the summary includes total tracked time, work focus, non-work tracked time, Activity Zone coverage, Work Item notes/events, Capture Inbox coverage, typed entry and selected/list continuation evidence, correction telemetry, window telemetry with both show and hide request counts, and product-friction counters
 - `pnpm dogfood:rc-check:save` saves the same RC evidence again when it needs to be inspected without regenerating the day report
 - `pnpm dogfood:rc-check:strict` uses the same evidence but exits with code 1 when any review item remains, for the final daily-control goal closure check
 - `pnpm dogfood:goal-check` runs the final closure gate for the active daily-control goal: `pnpm test`, `pnpm dogfood:preflight`, and strict RC evidence for the selected dogfood day
@@ -308,7 +308,7 @@ High-signal findings:
 - Some observations belong to the whole day rather than one Work Item. Day Events now cover buffers before heavy meetings, recovery notes, tracking corrections, and similar review context.
 - Wrong Work Item assignment happened during dogfood; stopped blocks can now be corrected and split after the fact.
 - Activity Zones are now available on Work Items and copied into each focus block as a snapshot. Stopped blocks can be corrected independently, so changing a Work Item later does not rewrite past day reports. The UI and Markdown separate total tracked time, work focus, non-work tracked time, and per-zone totals for work, coordination, recovery, idle, and personal.
-- macOS window restore and the menu bar counter were newly fixed after the third dogfood day; the next dogfood day should verify that Command+Tab/Dock return and status refresh feel reliable in real use, with show/hide request telemetry proving window entrypoints were exercised.
+- macOS window restore and the menu bar counter were newly fixed after the third dogfood day; the next dogfood day should verify that Command+Tab/Dock return and status refresh feel reliable in real use, with both show and hide request telemetry proving window entrypoints were exercised.
 
 ## Capture Inbox Data
 
@@ -386,7 +386,7 @@ pnpm dogfood:finish:save
 pnpm dogfood:goal-check
 ```
 
-The report telemetry section includes action counts, typed entry and selected/list continuation evidence, start/switch/stop failures, Capture Inbox action counts and failures, API errors, window show/hide counts, show/hide request counts, copy fallback counts, average start latency, likely show-to-start friction gaps, attempts to start the already active Work Item, and stale runtime recovery events.
+The report telemetry section includes action counts, typed entry and selected/list continuation evidence, start/switch/stop failures, Capture Inbox action counts and failures, API errors, window show/hide counts, both show and hide request counts, copy fallback counts, average start latency, likely show-to-start friction gaps, attempts to start the already active Work Item, and stale runtime recovery events.
 
 ## Global Shortcut and Tray
 
@@ -413,7 +413,7 @@ On multi-monitor macOS setups, the tray/status item is controlled by the system 
 - Capture Inbox is still compact: open captures can be edited or deleted, but there is no separate capture history screen beyond the open list and dogfood report.
 - Work Item Events are report-visible. User-authored `note_added` events can be edited or deleted; generated system events remain internal history.
 - Work Item notes are included in day reports for touched items, but they remain mutable descriptions rather than dated observations.
-- macOS window restore and menu bar status refresh were newly fixed after the third dogfood day, but still need one real dogfood pass with show/hide request telemetry before being considered fully proven.
+- macOS window restore and menu bar status refresh were newly fixed after the third dogfood day, but still need one real dogfood pass with both show and hide request telemetry before being considered fully proven.
 - Activity Zones have per-focus-block snapshots and overrides; there is no bulk zone correction UI yet.
 - Automated e2e tests are not implemented yet.
 - Cross-platform CI is not implemented yet.
@@ -423,7 +423,7 @@ On multi-monitor macOS setups, the tray/status item is controlled by the system 
 
 ## Next Engineering Steps
 
-1. Verify the new macOS window return and native menu bar status refresh in the next dogfood day, including non-zero show/hide request counts for window entrypoints.
+1. Verify the new macOS window return and native menu bar status refresh in the next dogfood day, including non-zero show and hide request counts for window entrypoints.
 2. Add a clearer correction workflow if split + update + zone correction is not enough after the next dogfood day.
 3. Verify capture-to-Work-Item-event promotion in the next dogfood day.
 4. Decide whether the current per-block zone override is enough, or whether day review needs a faster bulk editor.

@@ -462,11 +462,11 @@ function buildReviewChecklistItems({
 
   const windowTelemetry = parseWindowTelemetry(telemetryMarkdown);
   if (focusMarkdown.includes("| Time | Duration | Zone | Work Item | Note |") && windowTelemetry) {
-    if (windowTelemetry.showRequests + windowTelemetry.hideRequests === 0) {
+    if (windowTelemetry.showRequests === 0 || windowTelemetry.hideRequests === 0) {
       items.push({
         level: "review",
         title: "Test window entrypoints",
-        detail: "No tray/menu/shortcut/reopen show-hide request telemetry found",
+        detail: `${windowTelemetry.showRequests} show request(s), ${windowTelemetry.hideRequests} hide request(s)`,
       });
     }
   }

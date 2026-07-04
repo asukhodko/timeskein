@@ -125,8 +125,40 @@ try {
   const noWindowRequestStrict = await runRcCheck(noWindowRequestDb, ["--strict"]);
   assert(noWindowRequestStrict.code !== 0, "strict RC check should fail without window request evidence");
   assert(
-    noWindowRequestStrict.stdout.includes("No window show/hide request telemetry found"),
-    "strict RC check should explain missing window request evidence"
+    noWindowRequestStrict.stdout.includes("No window show request telemetry found"),
+    "strict RC check should explain missing window show request evidence"
+  );
+  assert(
+    noWindowRequestStrict.stdout.includes("No window hide request telemetry found"),
+    "strict RC check should explain missing window hide request evidence"
+  );
+
+  const showOnlyWindowRequestDb = join(tempDir, "show-only-window-request.db");
+  await copyDb(goodDb, showOnlyWindowRequestDb);
+  await runSql(showOnlyWindowRequestDb, "DELETE FROM app_events WHERE kind = 'window_hide_requested';");
+  const showOnlyWindowRequestStrict = await runRcCheck(showOnlyWindowRequestDb, ["--strict"]);
+  assert(showOnlyWindowRequestStrict.code !== 0, "strict RC check should fail without hide request evidence");
+  assert(
+    showOnlyWindowRequestStrict.stdout.includes("No window hide request telemetry found"),
+    "strict RC check should explain missing window hide request evidence when show exists"
+  );
+  assert(
+    showOnlyWindowRequestStrict.stdout.includes("| Window and menubar friction evidenced | review |"),
+    "missing hide request should mark window audit for review"
+  );
+
+  const hideOnlyWindowRequestDb = join(tempDir, "hide-only-window-request.db");
+  await copyDb(goodDb, hideOnlyWindowRequestDb);
+  await runSql(hideOnlyWindowRequestDb, "DELETE FROM app_events WHERE kind = 'window_show_requested';");
+  const hideOnlyWindowRequestStrict = await runRcCheck(hideOnlyWindowRequestDb, ["--strict"]);
+  assert(hideOnlyWindowRequestStrict.code !== 0, "strict RC check should fail without show request evidence");
+  assert(
+    hideOnlyWindowRequestStrict.stdout.includes("No window show request telemetry found"),
+    "strict RC check should explain missing window show request evidence when hide exists"
+  );
+  assert(
+    hideOnlyWindowRequestStrict.stdout.includes("| Window and menubar friction evidenced | review |"),
+    "missing show request should mark window audit for review"
   );
 
   const savedPath = join(tempDir, "rc-check.md");

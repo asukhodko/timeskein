@@ -168,7 +168,7 @@ when the real situation appears:
 
 - open, hide, and restore Timeskein through the menu bar, `Esc`, Command+Tab,
   and the normal app entrypoint; the final telemetry should include non-zero
-  show/hide requests from window entrypoints;
+  show and hide requests from window entrypoints;
 - start one new Work Item by typed title and continue one existing Work Item
   from the list;
 - after a touched Work Item has focus time, check that its card shows today's
@@ -203,13 +203,13 @@ Current status: the macOS dogfood release baseline was accepted on 2026-07-03. T
 | No duplicate Work Items by title | Smoke checks `focus.start` and `work_item.create` title reuse | No duplicate Work Items appear from normal typing |
 | One active timer and one active Work Item | Smoke checks switching by title, by Work Item state, deleting the active Work Item, SQLite single-active guards, and startup normalization | No visible split brain while switching tasks |
 | Stop and later continue same Work Item | Smoke checks repeat `focus.start` with the same title | Continuing yesterday/today items is discoverable |
-| Show, hide, move window | Implemented in macOS shell and header drag; show/hide request telemetry is recorded for window entrypoints | Window behavior does not irritate during the day and telemetry proves those entrypoints were exercised |
+| Show, hide, move window | Implemented in macOS shell and header drag; show and hide request telemetry is recorded for window entrypoints | Window behavior does not irritate during the day and telemetry proves those entrypoints were exercised |
 | Today block list and totals | `focus.list` and UI show block duration, time range, stop note, work focus, total tracked time, zones, and entrances | The list matches remembered work blocks |
 | Post-factum correction | `cargo test -p timeskein-agent`, `pnpm smoke:corrections-api`, and `pnpm smoke:macos-app` verify missed-block creation, update, split, reassignment, Work Item edit, and corrected day-list data | Wrong or missing Work Item intervals can be fixed before copying the final report |
 | Significant gaps | UI and Markdown show gap ranges of 20+ minutes | Long breaks and lost intervals are visible enough |
 | Capture Inbox | `pnpm smoke:capture-api`, `pnpm smoke:mock-api`, and `pnpm smoke:macos-app` verify capture create/list/update/delete/resolve/convert/append-event without interrupting focus | Incoming events can be remembered and cleaned up without switching away from the current block |
 | Markdown export | `Copy Report` exports timeline, `By Work Item`, Activity Zone totals, Day Events, Work Item Events, gaps, Capture Activity, open captures, Review Checklist, app telemetry, and review prompts; `Copy MD` exports the raw day picture; failed clipboard writes show selected Markdown; `pnpm smoke:export-focus-day` and `pnpm smoke:dogfood-report` verify SQLite fallbacks | Copied note is enough for evening analysis |
-| App friction telemetry | `app_events` stores local technical events, `pnpm smoke:app-events` verifies metrics/export, and `pnpm dogfood:report` includes `App Telemetry` with window show/hide request counts | Start/switch/stop/copy/API/window friction is visible without relying only on memory |
+| App friction telemetry | `app_events` stores local technical events, `pnpm smoke:app-events` verifies metrics/export, and `pnpm dogfood:report` includes `App Telemetry` with both window show and hide request counts | Start/switch/stop/copy/API/window friction is visible without relying only on memory |
 | macOS app with embedded agent and SQLite | `pnpm smoke:macos-app` verifies app launch, SQLite health, focus flow, stale lock/port recovery, and active focus restore after app restart | The real app survives normal workday use |
 
 The dogfood goal is complete only after a real day produces a copied Markdown day note that is useful for analysis.
@@ -242,7 +242,7 @@ The third real dogfood day on 2026-07-03 closed the Capture Inbox release-candid
 - two captures resolved, one converted to a Work Item, one left open as visible follow-up
 - no API errors, copy failures, capture failures, duplicate-title groups, or active-state split brain
 
-Remaining friction is tracked as post-baseline work. Post-factum focus correction, Work Item title/basic-field editing, today/total time columns, macOS window restore, native menu bar status refresh, and window show/hide request telemetry are implemented. The next dogfood day should verify the macOS entry fixes in real use.
+Remaining friction is tracked as post-baseline work. Post-factum focus correction, Work Item title/basic-field editing, today/total time columns, macOS window restore, native menu bar status refresh, and window show/hide request telemetry are implemented. The next dogfood day should verify the macOS entry fixes in real use through both show and hide request events.
 
 For the stricter daily-use gate, use [Dogfood Release Candidate](dogfood-release-candidate.md). The day protocol explains how to run the test; the release-candidate gate decides whether the current baseline is good enough to replace Session.
 
@@ -385,7 +385,7 @@ For a Dogfood Release Candidate day, rerun the RC evidence check when you want t
 pnpm dogfood:rc-check:save
 ```
 
-The command prints hard blockers and review items for the Session replacement gate. Its evidence summary includes total tracked time, work focus, non-work tracked time, Activity Zone coverage, Work Item notes/events, Capture Inbox coverage, typed entry and selected/list continuation evidence, correction telemetry, window telemetry with show/hide request counts, and product-friction counters. The same `Daily Control Goal Audit` framing maps the day to the active daily-control goal: focus blocks, Work Item totals, Activity Zones, notes/events, gaps/captures, entry-path evidence, window friction evidence, tracking correction evidence, hard blockers, and the manual local gates. The gaps/captures audit row moves to `review` when significant gaps are unexplained, captures remain open without explicit follow-up acceptance, no captures were created, or captures were not linked to active focus.
+The command prints hard blockers and review items for the Session replacement gate. Its evidence summary includes total tracked time, work focus, non-work tracked time, Activity Zone coverage, Work Item notes/events, Capture Inbox coverage, typed entry and selected/list continuation evidence, correction telemetry, window telemetry with both show and hide request counts, and product-friction counters. The same `Daily Control Goal Audit` framing maps the day to the active daily-control goal: focus blocks, Work Item totals, Activity Zones, notes/events, gaps/captures, entry-path evidence, window friction evidence, tracking correction evidence, hard blockers, and the manual local gates. The gaps/captures audit row moves to `review` when significant gaps are unexplained, captures remain open without explicit follow-up acceptance, no captures were created, or captures were not linked to active focus.
 Before marking the daily-control goal complete, run the final gate. It runs `pnpm test`, `pnpm dogfood:preflight`, and the strict RC check on the same code:
 
 ```bash

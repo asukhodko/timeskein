@@ -1141,11 +1141,11 @@ function buildDayReviewItems({
       })
     }
 
-    if (appTelemetry.window_show_requested + appTelemetry.window_hide_requested === 0) {
+    if (appTelemetry.window_show_requested === 0 || appTelemetry.window_hide_requested === 0) {
       items.push({
         level: 'review',
         title: 'Test window entrypoints',
-        detail: 'No tray/menu/shortcut/reopen show-hide request telemetry found',
+        detail: `${appTelemetry.window_show_requested} show request(s), ${appTelemetry.window_hide_requested} hide request(s)`,
       })
     }
 

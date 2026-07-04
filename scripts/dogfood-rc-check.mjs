@@ -486,8 +486,12 @@ function assessEvidence(evidence, minFocusSeconds) {
     reviewItems.push("No window show/hide telemetry found. Entry/window friction is not evidenced for this day.");
   }
 
-  if (evidence.telemetry.total > 0 && evidence.telemetry.windowShowRequested + evidence.telemetry.windowHideRequested === 0) {
-    reviewItems.push("No window show/hide request telemetry found. Test tray/menu/shortcut/reopen/Esc entry before closing the goal.");
+  if (evidence.telemetry.total > 0 && evidence.telemetry.windowShowRequested === 0) {
+    reviewItems.push("No window show request telemetry found. Test tray/menu/shortcut/reopen entry before closing the goal.");
+  }
+
+  if (evidence.telemetry.total > 0 && evidence.telemetry.windowHideRequested === 0) {
+    reviewItems.push("No window hide request telemetry found. Test Esc/close/menu hide before closing the goal.");
   }
 
   if (evidence.telemetry.apiErrors > 0) {
@@ -724,7 +728,8 @@ function formatGoalAuditMarkdown(evidence, assessment, minFocusSeconds) {
       requirement: "Window and menubar friction evidenced",
       status: evidence.telemetry.total === 0
         ? "review"
-        : evidence.telemetry.windowShowRequested + evidence.telemetry.windowHideRequested === 0 ||
+        : evidence.telemetry.windowShowRequested === 0 ||
+            evidence.telemetry.windowHideRequested === 0 ||
             evidence.telemetry.apiErrors +
             evidence.telemetry.copyFailures +
             evidence.telemetry.startFailures +

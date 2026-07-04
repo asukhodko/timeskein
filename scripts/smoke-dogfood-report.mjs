@@ -175,6 +175,14 @@ try {
     thinEvidenceStdout.includes("Exercise start and continue paths"),
     "report review checklist did not flag missing entry-path evidence"
   );
+  assert(
+    thinEvidenceStdout.includes("Test window entrypoints"),
+    "report review checklist did not flag missing window request evidence"
+  );
+  assert(
+    thinEvidenceStdout.includes("0 show request(s), 0 hide request(s)"),
+    "report review checklist did not show missing window request counts"
+  );
 
   await runSql(`
     INSERT INTO app_events (id, ts, source, kind, payload)

@@ -154,6 +154,18 @@ async function assertMacosWindowPolicy() {
     "Tauri main.rs must run the native tray status updater"
   );
   assert(
+    mainSource.includes("tauri_plugin_global_shortcut::Builder::new().build()") &&
+      mainSource.includes(".global_shortcut()") &&
+      mainSource.includes("toggle_main_window(app, \"global_shortcut\")"),
+    "Tauri main.rs must register a global show/hide shortcut for low-friction dogfood entry"
+  );
+  assert(
+    mainSource.includes("\"Ctrl+Shift+Space\"") &&
+      mainSource.includes("\"Ctrl+Option+Space\"") &&
+      mainSource.includes("\"Cmd+Option+Space\""),
+    "Tauri main.rs must keep the documented global shortcut fallback candidates"
+  );
+  assert(
     mainSource.includes("WindowShowRequested") && mainSource.includes("WindowHideRequested"),
     "Tauri main.rs must log shell window show/hide requests for dogfood friction analysis"
   );

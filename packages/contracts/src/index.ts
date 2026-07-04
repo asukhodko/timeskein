@@ -186,6 +186,7 @@ export type AppEventKind =
   | "capture_convert_requested"
   | "capture_converted"
   | "capture_convert_failed"
+  | "capture_followup_reviewed"
   | "api_error";
 
 export interface AppEventView {
@@ -231,6 +232,7 @@ export interface AppEventSummary {
   capture_convert_requests: number;
   capture_converted: number;
   capture_convert_failures: number;
+  capture_followup_reviews: number;
   window_shown: number;
   window_hidden: number;
   window_show_requested: number;

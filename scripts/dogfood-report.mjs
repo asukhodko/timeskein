@@ -263,7 +263,7 @@ function buildDogfoodReport(
       "## Open Captures",
       "",
       ...openCaptures.map((capture) => `- ${formatClockTime(capture.created_at)} ${formatMarkdownListText(capture.text)}`),
-      "- Resolve or convert these captures during review.",
+      "- Resolve, convert, or explicitly accept these captures as follow-up during review.",
       ""
     );
   }
@@ -361,10 +361,12 @@ function buildReviewChecklistItems({
     });
   }
 
-  if (openCaptures.length > 0) {
+  const captureFollowupReviews = parseLeadingNumber(extractLineValue(telemetryMarkdown, "Capture follow-up reviews"));
+
+  if (openCaptures.length > 0 && captureFollowupReviews === 0) {
     items.push({
       level: "review",
-      title: "Resolve or convert open captures",
+      title: "Resolve, convert, or accept open captures",
       detail: `${openCaptures.length} open`,
     });
   }
@@ -514,6 +516,7 @@ function formatDailyControlGoalAuditMarkdown({
   const entryTelemetry = parseEntryTelemetry(telemetryMarkdown);
   const correctionEvidence =
     extractLineValue(telemetryMarkdown, "Corrections requested/applied/reviewed/failed") ?? "n/a";
+  const captureFollowupReviews = parseLeadingNumber(extractLineValue(telemetryMarkdown, "Capture follow-up reviews"));
   const telemetryAvailable = telemetryMarkdown.includes("Total events:");
 
   const rows = [
@@ -551,8 +554,14 @@ function formatDailyControlGoalAuditMarkdown({
     },
     {
       requirement: "Gaps and captures visible",
-      status: "pass",
-      evidence: `${focusMarkdown.includes("## Gaps >=") ? "gaps section present" : "no significant gaps section"}, ${openCaptures.length} open capture(s), ${captureActivity.length} capture(s) today`,
+      status:
+        hasReview("Classify significant gaps") ||
+        hasReview("Capture Inbox untested today") ||
+        hasReview("Captures were not linked to active focus") ||
+        hasReview("Resolve, convert, or accept open captures")
+          ? "review"
+          : "pass",
+      evidence: `${focusMarkdown.includes("## Gaps >=") ? "gaps section present" : "no significant gaps section"}, ${openCaptures.length} open capture(s), ${captureFollowupReviews} follow-up review(s), ${captureActivity.length} capture(s) today`,
     },
     {
       requirement: "Window and menubar friction evidenced",

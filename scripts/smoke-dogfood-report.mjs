@@ -81,8 +81,12 @@ try {
   assert(stdout.includes("| Local gates | manual |"), "report daily-control audit did not include local gates");
   assert(stdout.includes("pnpm dogfood:goal-check"), "report daily-control audit did not mention goal-check");
   assert(
-    stdout.includes("Resolve or convert open captures"),
+    stdout.includes("Resolve, convert, or accept open captures"),
     "report review checklist did not include open capture cleanup"
+  );
+  assert(
+    stdout.includes("| Gaps and captures visible | review |"),
+    "report daily-control audit should review unaccepted open captures"
   );
   assert(
     stdout.includes("No timestamped Work Item events") === false,
@@ -186,6 +190,26 @@ try {
   assert(
     reviewedCorrectionStdout.includes("Confirm tracking accuracy or test correction") === false,
     "report review checklist should not flag correction evidence after explicit review"
+  );
+
+  await runSql(`
+    INSERT INTO app_events (id, ts, source, kind, payload)
+    VALUES ('ae4', '2026-06-30T07:56:00Z', 'ui', 'capture_followup_reviewed', '{"action_id":"c1","control":"review_checklist","open_count":1}');
+  `);
+
+  const { stdout: reviewedCaptureStdout } = await execFileAsync(
+    "node",
+    [join(repoRoot, "scripts/dogfood-report.mjs"), "--db", dbPath, "--date", "2026-06-30"],
+    { cwd: repoRoot }
+  );
+
+  assert(
+    reviewedCaptureStdout.includes("Resolve, convert, or accept open captures") === false,
+    "report review checklist should not flag open captures after explicit follow-up review"
+  );
+  assert(
+    reviewedCaptureStdout.includes("Capture follow-up reviews: 1"),
+    "report telemetry should include capture follow-up review"
   );
 
   await runSql(`

@@ -207,6 +207,7 @@ fn build_summary(events: Vec<AppEvent>) -> serde_json::Value {
         "capture_convert_requests": count(&by_kind, "capture_convert_requested"),
         "capture_converted": count(&by_kind, "capture_converted"),
         "capture_convert_failures": count(&by_kind, "capture_convert_failed"),
+        "capture_followup_reviews": count(&by_kind, "capture_followup_reviewed"),
         "window_shown": count(&by_kind, "window_shown"),
         "window_hidden": count(&by_kind, "window_hidden"),
         "window_show_requested": count(&by_kind, "window_show_requested"),

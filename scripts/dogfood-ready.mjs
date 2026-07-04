@@ -84,7 +84,7 @@ function appendDailyControlChecklist(lines) {
   lines.push("- Use at least two Activity Zones, including one non-work zone such as coordination/recovery/idle/personal.");
   lines.push("- Add one Day Event for a buffer, gap, recovery note, or tracking correction.");
   lines.push("- Add or promote one timestamped Work Item Event when a task-specific detail matters.");
-  lines.push("- Capture at least one incoming interruption during an active focus block and resolve, convert, or explicitly leave it open.");
+  lines.push("- Capture at least one incoming interruption during an active focus block and resolve, convert, or explicitly accept it as follow-up.");
   lines.push("- Before final report, correct one safe tracking detail or accept tracking accuracy in the review checklist.");
   lines.push("- Close the day with `pnpm dogfood:finish:save`; before completing the goal, run `pnpm dogfood:goal-check`.");
   lines.push("- If the day is closed after midnight, pass the dogfood date explicitly: `pnpm dogfood:finish:save -- --date YYYY-MM-DD` and `pnpm dogfood:goal-check -- --date YYYY-MM-DD`.");

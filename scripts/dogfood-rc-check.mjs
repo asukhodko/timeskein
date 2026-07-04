@@ -450,7 +450,7 @@ function assessEvidence(evidence, minFocusSeconds) {
     reviewItems.push("No timestamped Work Item Events found. If any task-specific detail mattered, add or promote an event before relying on memory.");
   }
 
-  if (evidence.openCaptures.length > 0) {
+  if (evidence.openCaptures.length > 0 && evidence.telemetry.captureFollowupReviews === 0) {
     reviewItems.push(`${evidence.openCaptures.length} open capture(s) remain. Resolve, convert, or explicitly accept them as follow-up.`);
   }
 
@@ -572,6 +572,7 @@ function buildRcReport(date, path, evidence, assessment, minFocusSeconds, strict
     `- Captures created today: ${evidence.capturesCreatedToday.length}`,
     `- Captures during active focus: ${evidence.capturesDuringActiveFocus}`,
     `- Open captures: ${evidence.openCaptures.length}`,
+    `- Open capture follow-up reviews: ${evidence.telemetry.captureFollowupReviews}`,
     `- App telemetry events: ${evidence.telemetry.total}`,
     `- Start/switch/stop requests: ${evidence.telemetry.startRequests}/${evidence.telemetry.switchRequests}/${evidence.telemetry.stopRequests}`,
     `- Typed/selected entry requests: ${evidence.telemetry.typedEntryRequests}/${evidence.telemetry.selectedEntryRequests}`,
@@ -672,7 +673,7 @@ function formatGoalAuditMarkdown(evidence, assessment, minFocusSeconds) {
   const gapCaptureStatus = evidence.sessions.length === 0
     ? "block"
     : evidence.unexplainedGapCount > 0 ||
-        evidence.openCaptures.length > 0 ||
+        (evidence.openCaptures.length > 0 && evidence.telemetry.captureFollowupReviews === 0) ||
         evidence.capturesCreatedToday.length === 0 ||
         (evidence.capturesCreatedToday.length > 0 && evidence.capturesDuringActiveFocus === 0)
       ? "review"
@@ -717,7 +718,7 @@ function formatGoalAuditMarkdown(evidence, assessment, minFocusSeconds) {
     {
       requirement: "Gaps and captures visible",
       status: gapCaptureStatus,
-      evidence: `${evidence.gaps.length} significant gap(s), ${Math.min(evidence.gapExplanationEvents, evidence.gaps.length)} explained, ${evidence.openCaptures.length} open capture(s), ${evidence.capturesDuringActiveFocus}/${evidence.capturesCreatedToday.length} capture(s) during active focus`,
+      evidence: `${evidence.gaps.length} significant gap(s), ${Math.min(evidence.gapExplanationEvents, evidence.gaps.length)} explained, ${evidence.openCaptures.length} open capture(s), ${evidence.telemetry.captureFollowupReviews} follow-up review(s), ${evidence.capturesDuringActiveFocus}/${evidence.capturesCreatedToday.length} capture(s) during active focus`,
     },
     {
       requirement: "Window and menubar friction evidenced",
@@ -939,6 +940,7 @@ function summarizeEvents(events) {
     corrections: count("focus_corrected"),
     correctionReviews: count("focus_correction_reviewed"),
     correctionFailures: count("focus_correction_failed"),
+    captureFollowupReviews: count("capture_followup_reviewed"),
     windowShown: count("window_shown"),
     windowHidden: count("window_hidden"),
     windowShowRequested: count("window_show_requested"),

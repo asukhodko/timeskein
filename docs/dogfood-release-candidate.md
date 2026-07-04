@@ -142,7 +142,7 @@ The RC passes only if all of these are true:
 - Starting, switching, stopping, hiding, showing, and copying the report are
   cheap enough to keep tracking during the day.
 - Open captures are resolved, converted, or explicitly accepted as remaining
-  follow-up work.
+  follow-up work through the review checklist.
 - Remaining limitations are documented and are not blockers for daily use.
 - The roadmap marks the release baseline according to the actual result.
 

@@ -84,9 +84,16 @@ const APP_EVENT_KINDS = new Set<string>([
   "capture_resolve_requested",
   "capture_resolved",
   "capture_resolve_failed",
+  "capture_update_requested",
+  "capture_updated",
+  "capture_update_failed",
+  "capture_delete_requested",
+  "capture_deleted",
+  "capture_delete_failed",
   "capture_convert_requested",
   "capture_converted",
   "capture_convert_failed",
+  "capture_followup_reviewed",
   "api_error",
 ]);
 

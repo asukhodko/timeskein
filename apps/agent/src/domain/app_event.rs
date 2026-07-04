@@ -77,6 +77,7 @@ pub enum AppEventKind {
     CaptureConvertRequested,
     CaptureConverted,
     CaptureConvertFailed,
+    CaptureFollowupReviewed,
     ApiError,
 }
 
@@ -123,6 +124,7 @@ impl AppEventKind {
             "capture_convert_requested" => Some(Self::CaptureConvertRequested),
             "capture_converted" => Some(Self::CaptureConverted),
             "capture_convert_failed" => Some(Self::CaptureConvertFailed),
+            "capture_followup_reviewed" => Some(Self::CaptureFollowupReviewed),
             "api_error" => Some(Self::ApiError),
             _ => None,
         }
@@ -170,6 +172,7 @@ impl AppEventKind {
             Self::CaptureConvertRequested => "capture_convert_requested",
             Self::CaptureConverted => "capture_converted",
             Self::CaptureConvertFailed => "capture_convert_failed",
+            Self::CaptureFollowupReviewed => "capture_followup_reviewed",
             Self::ApiError => "api_error",
         }
     }

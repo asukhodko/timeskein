@@ -181,7 +181,7 @@ when the real situation appears:
 - add or promote one timestamped Work Item Event if a detail matters for
   evening analysis;
 - create at least one capture during an active focus block and resolve,
-  convert, or consciously leave it open for the report;
+  convert, or explicitly accept it as follow-up in the review checklist;
 - intentionally correct one safe tracking detail before final copy, such as a
   stopped block note, Work Item assignment, split point, or Activity Zone.
 
@@ -385,7 +385,7 @@ For a Dogfood Release Candidate day, rerun the RC evidence check when you want t
 pnpm dogfood:rc-check:save
 ```
 
-The command prints hard blockers and review items for the Session replacement gate. Its evidence summary includes total tracked time, work focus, non-work tracked time, Activity Zone coverage, Work Item notes/events, Capture Inbox coverage, typed entry and selected/list continuation evidence, correction telemetry, window telemetry with show/hide request counts, and product-friction counters. The same `Daily Control Goal Audit` framing maps the day to the active daily-control goal: focus blocks, Work Item totals, Activity Zones, notes/events, gaps/captures, entry-path evidence, window friction evidence, tracking correction evidence, hard blockers, and the manual local gates. The gaps/captures audit row moves to `review` when significant gaps are unexplained, captures remain open, no captures were created, or captures were not linked to active focus.
+The command prints hard blockers and review items for the Session replacement gate. Its evidence summary includes total tracked time, work focus, non-work tracked time, Activity Zone coverage, Work Item notes/events, Capture Inbox coverage, typed entry and selected/list continuation evidence, correction telemetry, window telemetry with show/hide request counts, and product-friction counters. The same `Daily Control Goal Audit` framing maps the day to the active daily-control goal: focus blocks, Work Item totals, Activity Zones, notes/events, gaps/captures, entry-path evidence, window friction evidence, tracking correction evidence, hard blockers, and the manual local gates. The gaps/captures audit row moves to `review` when significant gaps are unexplained, captures remain open without explicit follow-up acceptance, no captures were created, or captures were not linked to active focus.
 Before marking the daily-control goal complete, run the final gate. It runs `pnpm test`, `pnpm dogfood:preflight`, and the strict RC check on the same code:
 
 ```bash

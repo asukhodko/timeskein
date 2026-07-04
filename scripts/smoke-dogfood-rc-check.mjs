@@ -204,6 +204,27 @@ try {
     "strict RC check should explain review-item failure"
   );
 
+  const acceptedOpenCaptureDb = join(tempDir, "accepted-open-capture.db");
+  await copyDb(openCaptureDb, acceptedOpenCaptureDb);
+  await runSql(acceptedOpenCaptureDb, `
+    INSERT INTO app_events (id, ts, source, kind, payload)
+    VALUES ('e16', '2026-06-30T10:20:00Z', 'ui', 'capture_followup_reviewed', '{"action_id":"c2","control":"review_checklist","open_count":1}');
+  `);
+  const acceptedOpenCaptureStrict = await runRcCheck(acceptedOpenCaptureDb, ["--strict"]);
+  assert(acceptedOpenCaptureStrict.code === 0, "accepted open capture should pass strict RC check");
+  assert(
+    acceptedOpenCaptureStrict.stdout.includes("Open capture follow-up reviews: 1"),
+    "accepted open capture follow-up evidence is missing"
+  );
+  assert(
+    acceptedOpenCaptureStrict.stdout.includes("| Gaps and captures visible | pass |"),
+    "accepted open capture should pass gap/capture audit row"
+  );
+  assert(
+    acceptedOpenCaptureStrict.stdout.includes("open capture(s) remain") === false,
+    "accepted open capture should clear open-capture review item"
+  );
+
   const noActiveFocusCaptureDb = join(tempDir, "no-active-focus-capture.db");
   await copyDb(goodDb, noActiveFocusCaptureDb);
   await runSql(noActiveFocusCaptureDb, "UPDATE captures SET focus_session_id = NULL WHERE id = 'c1';");

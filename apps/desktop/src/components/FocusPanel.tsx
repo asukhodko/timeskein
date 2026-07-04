@@ -508,15 +508,18 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
   }
 
   const handleReviewAction = async (action: DayReviewAction) => {
-    if (action !== 'accept_tracking_accuracy') return
-
     const actionId = createTelemetryActionId()
+    const kind = action === 'accept_open_captures'
+      ? 'capture_followup_reviewed'
+      : 'focus_correction_reviewed'
+
     await logAppEvent({
       source: 'ui',
-      kind: 'focus_correction_reviewed',
+      kind,
       payload: {
         action_id: actionId,
         control: 'review_checklist',
+        ...(action === 'accept_open_captures' ? { open_count: openCaptures.length } : {}),
       },
     })
 
@@ -927,7 +930,7 @@ async function buildDogfoodReportMarkdown(
       '## Open Captures',
       '',
       ...openCaptures.map((capture) => `- ${formatClockTime(capture.created_at)} ${formatMarkdownListText(capture.text)}`),
-      '- Resolve or convert these captures during review.',
+      '- Resolve, convert, or explicitly accept these captures as follow-up during review.',
       ''
     )
   }
@@ -1009,7 +1012,7 @@ type DayReviewItem = {
   action?: DayReviewAction
 }
 
-type DayReviewAction = 'accept_tracking_accuracy'
+type DayReviewAction = 'accept_tracking_accuracy' | 'accept_open_captures'
 
 function buildDayReviewItems({
   sessions,
@@ -1060,11 +1063,12 @@ function buildDayReviewItems({
     })
   }
 
-  if (openCaptures.length > 0) {
+  if (openCaptures.length > 0 && (appTelemetry?.capture_followup_reviews ?? 0) === 0) {
     items.push({
       level: 'review',
-      title: 'Resolve or convert open captures',
+      title: 'Resolve, convert, or accept open captures',
       detail: `${openCaptures.length} open`,
+      action: 'accept_open_captures',
     })
   }
 
@@ -1280,6 +1284,7 @@ function formatDailyControlGoalAuditMarkdown({
   const entryTelemetry = parseEntryTelemetryMarkdown(appTelemetryMarkdown)
   const correctionEvidence =
     extractLineValue(appTelemetryMarkdown, 'Corrections requested/applied/reviewed/failed') ?? 'n/a'
+  const captureFollowupReviews = parseLeadingNumber(extractLineValue(appTelemetryMarkdown, 'Capture follow-up reviews'))
   const telemetryAvailable = appTelemetryMarkdown.includes('Total events:')
   const rows = [
     {
@@ -1315,8 +1320,14 @@ function formatDailyControlGoalAuditMarkdown({
     },
     {
       requirement: 'Gaps and captures visible',
-      status: 'pass',
-      evidence: `${todayMarkdown.includes('## Gaps >=') ? 'gaps section present' : 'no significant gaps section'}, ${openCaptures.length} open capture(s), ${captureActivity.length} capture(s) today`,
+      status:
+        hasReview('Classify significant gaps') ||
+        hasReview('Capture Inbox untested today') ||
+        hasReview('Captures were not linked to active focus') ||
+        hasReview('Resolve, convert, or accept open captures')
+          ? 'review'
+          : 'pass',
+      evidence: `${todayMarkdown.includes('## Gaps >=') ? 'gaps section present' : 'no significant gaps section'}, ${openCaptures.length} open capture(s), ${captureFollowupReviews} follow-up review(s), ${captureActivity.length} capture(s) today`,
     },
     {
       requirement: 'Window and menubar friction evidenced',
@@ -1874,6 +1885,7 @@ function formatAppTelemetryMarkdown(summary: AppEventSummary) {
     `Copy failures: ${summary.copy_failures}`,
     `Manual copy fallbacks: ${summary.manual_copy_fallbacks}`,
     `Capture created/resolved/converted: ${summary.capture_created}/${summary.capture_resolved}/${summary.capture_converted}`,
+    `Capture follow-up reviews: ${summary.capture_followup_reviews}`,
     `Capture updated/deleted: ${summary.capture_updated}/${summary.capture_deleted}`,
     `Capture failures create/resolve/update/delete/convert: ${summary.capture_create_failures}/${summary.capture_resolve_failures}/${summary.capture_update_failures}/${summary.capture_delete_failures}/${summary.capture_convert_failures}`,
     `Corrections requested/applied/reviewed/failed: ${summary.correction_requests}/${summary.corrections}/${summary.correction_reviews}/${summary.correction_failures}`,

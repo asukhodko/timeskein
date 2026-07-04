@@ -182,7 +182,7 @@ For the Dogfood Release Candidate gate, rerun the evidence check explicitly when
 pnpm dogfood:rc-check:save
 ```
 
-The RC check exits with code 1 for hard blockers such as active state, duplicate Work Item titles, or an empty day. Its evidence summary includes total tracked time, work focus, non-work tracked time, Activity Zone coverage, Work Item notes/events, Capture Inbox coverage, typed entry and selected/list continuation evidence, correction telemetry, window telemetry including show/hide request evidence, and product-friction counters. It also includes a `Daily Control Goal Audit` table that maps the current day to the active daily-control objective. The gaps/captures audit row is marked for review when captures are missing, not linked to active focus, left open, or when significant gaps lack Day Event explanations. Review items still require human judgment against the release-candidate criteria.
+The RC check exits with code 1 for hard blockers such as active state, duplicate Work Item titles, or an empty day. Its evidence summary includes total tracked time, work focus, non-work tracked time, Activity Zone coverage, Work Item notes/events, Capture Inbox coverage, typed entry and selected/list continuation evidence, correction telemetry, window telemetry including show/hide request evidence, and product-friction counters. It also includes a `Daily Control Goal Audit` table that maps the current day to the active daily-control objective. The gaps/captures audit row is marked for review when captures are missing, not linked to active focus, left open without a `capture_followup_reviewed` event, or when significant gaps lack Day Event explanations. Review items still require human judgment against the release-candidate criteria.
 Before marking the daily-control goal complete, run the final gate. It runs `pnpm test`, `pnpm dogfood:preflight`, and the strict RC check on the same code:
 
 ```bash
@@ -318,7 +318,7 @@ Focus Session controls:
 - Day panel with focus blocks, total tracked time, work focus, non-work tracked time, entrance count, zones, and gaps
 - Open gap warning when no focus block is running and the time since the last stopped block is significant
 - Day totals count the part of each focus block that overlaps the selected local day
-- Review checklist in Today and copied dogfood reports: active-state blockers, open captures, significant gaps, open gap, Activity Zone coverage, non-work tracking, capture coverage, and Work Item context coverage
+- Review checklist in Today and copied dogfood reports: active-state blockers, open captures, significant gaps, open gap, Activity Zone coverage, non-work tracking, capture coverage, Work Item context coverage, and explicit accept actions for tracking accuracy and open-capture follow-up
 - Markdown dogfood report from the Today panel or CLI, with focus data, Work Item totals, Activity Zone totals, Day Events, Work Item notes and timestamped events for touched items, significant gaps, Capture Activity, open captures, review checklist/prompts, and draft warning while a focus block or Work Item is active
 - macOS menu bar item shows the active focus duration as a short `12m Focus` status while a block is running, and today's total when no block is active
 - Work item states: active, waiting, blocked, done, someday, unknown

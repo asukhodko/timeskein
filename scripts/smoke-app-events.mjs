@@ -40,7 +40,8 @@ try {
       ('e20', '2026-06-30T07:10:00Z', 'ui', 'focus_correction_requested', 'w1', 's1', '{"action_id":"k1","control":"edit_block"}'),
       ('e21', '2026-06-30T07:10:01Z', 'ui', 'focus_corrected', 'w1', 's1', '{"action_id":"k1","control":"edit_block"}'),
       ('e22', '2026-06-30T07:11:00Z', 'ui', 'focus_correction_failed', 'w1', 's1', '{"action_id":"k2","control":"split_block","error_code":"validation_error"}'),
-      ('e23', '2026-06-30T07:12:00Z', 'ui', 'focus_correction_reviewed', NULL, NULL, '{"action_id":"k3","control":"review_checklist"}');
+      ('e23', '2026-06-30T07:12:00Z', 'ui', 'focus_correction_reviewed', NULL, NULL, '{"action_id":"k3","control":"review_checklist"}'),
+      ('e24', '2026-06-30T07:13:00Z', 'ui', 'capture_followup_reviewed', NULL, NULL, '{"action_id":"c6","control":"review_checklist","open_count":1}');
   `);
 
   const { stdout: metricsStdout } = await execFileAsync(
@@ -49,12 +50,13 @@ try {
     { cwd: repoRoot }
   );
   assert(metricsStdout.includes("## App Telemetry"), "metrics did not include App Telemetry header");
-  assert(metricsStdout.includes("Total events: 23"), "metrics did not count events");
+  assert(metricsStdout.includes("Total events: 24"), "metrics did not count events");
   assert(metricsStdout.includes("Start requests: 1"), "metrics did not count start requests");
   assert(metricsStdout.includes("Typed/selected entry requests: 1/0"), "metrics did not count entry request controls");
   assert(metricsStdout.includes("Manual copy fallbacks: 1"), "metrics did not count manual copy fallbacks");
   assert(metricsStdout.includes("Window show/hide requests: 1/1"), "metrics did not count window requests");
   assert(metricsStdout.includes("Capture created/resolved/converted: 1/1/0"), "metrics did not count capture outcomes");
+  assert(metricsStdout.includes("Capture follow-up reviews: 1"), "metrics did not count capture follow-up reviews");
   assert(metricsStdout.includes("Capture updated/deleted: 1/1"), "metrics did not count capture cleanup");
   assert(metricsStdout.includes("Capture failures create/resolve/update/delete/convert: 0/0/0/0/1"), "metrics did not count capture failures");
   assert(metricsStdout.includes("Corrections requested/applied/reviewed/failed: 1/1/1/1"), "metrics did not count corrections");
@@ -70,6 +72,7 @@ try {
   assert(exportStdout.includes("focus_start_requested"), "event export did not include start request");
   assert(exportStdout.includes("window_show_requested"), "event export did not include window request");
   assert(exportStdout.includes("capture_created"), "event export did not include capture event");
+  assert(exportStdout.includes("capture_followup_reviewed"), "event export did not include capture follow-up review");
   assert(exportStdout.includes("focus_corrected"), "event export did not include correction event");
   assert(exportStdout.includes("manual_copy_fallback_shown"), "event export did not include copy fallback");
 

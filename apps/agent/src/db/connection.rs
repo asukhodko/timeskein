@@ -179,7 +179,7 @@ impl Database {
 
         if table_sql
             .as_deref()
-            .is_some_and(|sql| sql.contains("window_show_requested"))
+            .is_some_and(|sql| sql.contains("capture_followup_reviewed"))
         {
             return Ok(());
         }

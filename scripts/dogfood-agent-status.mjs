@@ -28,7 +28,7 @@ if (!result.ok) {
       "## Next",
       "",
       "- If Timeskein is not running, start the dogfood day with `pnpm dogfood:start`.",
-      "- If the app is already built and readiness was checked, open it with `pnpm dogfood:macos`.",
+      "- If the dogfood day was already started and Timeskein was quit, reopen it with `pnpm dogfood:continue`.",
       "- If a stale port file remains after a crash, launching the app again should rewrite it.",
       "",
     ].join("\n")
@@ -82,7 +82,8 @@ function printHelp() {
   console.log(`Usage: pnpm dogfood:status [--support-dir path] [--timeout-ms 20000]
 
 Waits for the local Timeskein embedded agent port file and verifies agent.status.
-Exits with code 1 when the agent does not become responsive or reports db_ok=false.`);
+Exits with code 1 when the agent does not become responsive or reports db_ok=false.
+Use dogfood:start for a clean day start and dogfood:continue to reopen an already started day.`);
 }
 
 async function waitForAgent(path, timeout) {

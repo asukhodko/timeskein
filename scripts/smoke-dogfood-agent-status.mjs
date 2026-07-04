@@ -30,6 +30,9 @@ try {
     assert(unhealthy.code !== 0, "unhealthy agent should fail status");
     assert(unhealthy.stdout.includes("Status: NOT READY"), "unhealthy status did not report NOT READY");
     assert(unhealthy.stdout.includes("database is not healthy"), "unhealthy status did not explain db health");
+    assert(unhealthy.stdout.includes("pnpm dogfood:start"), "unhealthy status did not mention guarded start");
+    assert(unhealthy.stdout.includes("pnpm dogfood:continue"), "unhealthy status did not mention guarded continue");
+    assert(!unhealthy.stdout.includes("pnpm dogfood:macos"), "unhealthy status still suggests bypassing the start gate");
   } finally {
     await unhealthyServer.close();
   }

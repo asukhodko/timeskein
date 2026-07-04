@@ -26,7 +26,7 @@ try {
     INSERT INTO focus_sessions (id, title, work_item_id, state, target_seconds, note, started_at, stopped_at, updated_at)
     VALUES
       ('s1', 'Deep Work', 'w1', 'stopped', 1500, NULL, '2026-06-30T06:00:00Z', '2026-06-30T08:00:00Z', '2026-06-30T08:00:00Z'),
-      ('s2', 'Review', 'w2', 'stopped', 1500, NULL, '2026-06-30T08:10:00Z', '2026-06-30T09:40:00Z', '2026-06-30T09:40:00Z');
+      ('s2', 'Review', 'w2', 'stopped', 1500, NULL, '2026-06-30T08:30:00Z', '2026-06-30T10:00:00Z', '2026-06-30T10:00:00Z');
     UPDATE focus_sessions SET activity_zone = 'coordination' WHERE id = 's2';
 
     INSERT INTO captures (id, text, state, focus_session_id, created_at, updated_at, resolved_at)
@@ -36,7 +36,7 @@ try {
     VALUES ('we1', '2026-06-30T07:30:00Z', 'w1', 'note_added', '{"text":"Found the next concrete step","focus_session_id":"s1"}');
 
     INSERT INTO day_events (id, ts, kind, text, focus_session_id, activity_zone, updated_at)
-    VALUES ('de1', '2026-06-30T07:45:00Z', 'note_added', 'Meeting buffer was costly', 's1', 'work', '2026-06-30T07:45:00Z');
+    VALUES ('de1', '2026-06-30T07:45:00Z', 'note_added', 'Gap explained: meeting buffer was costly', 's1', 'work', '2026-06-30T07:45:00Z');
 
     INSERT INTO app_events (id, ts, source, kind, payload)
     VALUES
@@ -60,6 +60,8 @@ try {
   assert(good.stdout.includes("Work focus: 2:00:00"), "good day work focus is missing");
   assert(good.stdout.includes("Non-work tracked: 1:30:00"), "good day non-work tracked is missing");
   assert(good.stdout.includes("Activity Zones in report: 2"), "good day zone count is missing");
+  assert(good.stdout.includes("Significant gaps: 1"), "good day significant gap count is missing");
+  assert(good.stdout.includes("Significant gaps explained: 1/1"), "good day explained gap count is missing");
   assert(good.stdout.includes("Day Events: 1"), "good day Day Events count is missing");
   assert(good.stdout.includes("Day Events with Activity Zone: 1"), "good day zoned Day Events count is missing");
   assert(good.stdout.includes("Day Events during active focus: 1"), "good day active-focus Day Events count is missing");
@@ -75,7 +77,7 @@ try {
   assert(good.stdout.includes("pnpm dogfood:goal-check"), "good day local-gates audit did not mention goal-check");
   assert(good.stdout.includes("## By Activity Zone"), "good day zone section is missing");
   assert(good.stdout.includes("## Day Events"), "good day Day Events section is missing");
-  assert(good.stdout.includes("Meeting buffer was costly"), "good day Day Event text is missing");
+  assert(good.stdout.includes("Gap explained: meeting buffer was costly"), "good day Day Event text is missing");
   assert(good.stdout.includes("## Work Item Events"), "good day Work Item Events section is missing");
   assert(good.stdout.includes("Captures created today: 1"), "good day capture count is missing");
   assert(good.stdout.includes("Captures during active focus: 1"), "good day active-focus capture count is missing");
@@ -85,6 +87,16 @@ try {
   const goodStrict = await runRcCheck(goodDb, ["--strict"]);
   assert(goodStrict.code === 0, "good day should pass strict RC check");
   assert(goodStrict.stdout.includes("Strict mode: yes"), "strict RC check marker is missing");
+
+  const unexplainedGapDb = join(tempDir, "unexplained-gap.db");
+  await copyDb(goodDb, unexplainedGapDb);
+  await runSql(unexplainedGapDb, "UPDATE day_events SET text = 'Meeting buffer was costly' WHERE id = 'de1';");
+  const unexplainedGapStrict = await runRcCheck(unexplainedGapDb, ["--strict"]);
+  assert(unexplainedGapStrict.code !== 0, "strict RC check should fail when significant gaps are not explained");
+  assert(
+    unexplainedGapStrict.stdout.includes("significant gap(s) lack a Day Event explanation"),
+    "strict RC check should explain missing gap explanation"
+  );
 
   const noWindowRequestDb = join(tempDir, "no-window-request.db");
   await copyDb(goodDb, noWindowRequestDb);

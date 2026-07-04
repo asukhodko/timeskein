@@ -369,7 +369,7 @@ function buildReviewChecklistItems({
     });
   }
 
-  if (focusMarkdown.includes("## Gaps >=")) {
+  if (focusMarkdown.includes("## Gaps >=") && !hasGapExplanationEvent(focusMarkdown)) {
     items.push({
       level: "review",
       title: "Classify significant gaps",
@@ -377,7 +377,7 @@ function buildReviewChecklistItems({
     });
   }
 
-  if (focusMarkdown.includes("## Open Gap")) {
+  if (focusMarkdown.includes("## Open Gap") && !hasOpenGapExplanationEvent(focusMarkdown)) {
     items.push({
       level: "review",
       title: "Explain current open gap",
@@ -616,6 +616,14 @@ function countActivityZoneRows(markdown) {
     .filter((line) => !line.includes("---"))
     .filter((line) => !line.includes("Duration") || !line.includes("Zone"))
     .length;
+}
+
+function hasGapExplanationEvent(markdown) {
+  return /\bopen\s+gap\b|\bgap\b|разрыв|перерыв|буфер|recovery/i.test(extractMarkdownSection(markdown, "## Day Events"));
+}
+
+function hasOpenGapExplanationEvent(markdown) {
+  return /\bopen\s+gap\b/i.test(extractMarkdownSection(markdown, "## Day Events"));
 }
 
 function extractMarkdownSection(markdown, title) {

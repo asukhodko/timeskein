@@ -1041,6 +1041,8 @@ function buildDayReviewItems({
   const nonWorkSeconds = Math.max(activeSecondsTotal - getZoneActiveSeconds(zoneTotals, 'work'), 0)
   const touchedWorkItemIds = new Set(sessions.map((session) => session.work_item_id).filter(Boolean))
   const touchedWorkItemNoteCount = workItems.filter((item) => touchedWorkItemIds.has(item.id) && item.note?.trim()).length
+  const gapExplanationCount = dayEvents.filter((event) => isGapExplanationText(event.text)).length
+  const unexplainedGapCount = Math.max(gaps.length - gapExplanationCount, 0)
 
   if (activeFocus) {
     items.push({
@@ -1066,15 +1068,15 @@ function buildDayReviewItems({
     })
   }
 
-  if (gaps.length > 0) {
+  if (unexplainedGapCount > 0) {
     items.push({
       level: 'review',
       title: 'Classify significant gaps',
-      detail: `${gaps.length} gap${gaps.length === 1 ? '' : 's'} >= ${formatDuration(SIGNIFICANT_GAP_SECONDS)}`,
+      detail: `${unexplainedGapCount}/${gaps.length} gap${gaps.length === 1 ? '' : 's'} still need Day Event explanation`,
     })
   }
 
-  if (openGap && openGap.seconds >= SIGNIFICANT_GAP_SECONDS) {
+  if (openGap && openGap.seconds >= SIGNIFICANT_GAP_SECONDS && !dayEvents.some((event) => isOpenGapExplanationText(event.text))) {
     items.push({
       level: 'review',
       title: 'Explain current open gap',
@@ -1910,6 +1912,14 @@ function getZoneActiveSeconds(
   zone: ActivityZone
 ) {
   return zoneTotals.find((item) => item.zone === zone)?.activeSeconds ?? 0
+}
+
+function isGapExplanationText(text: string | undefined) {
+  return /\bopen\s+gap\b|\bgap\b|разрыв|перерыв|буфер|recovery/i.test(text ?? '')
+}
+
+function isOpenGapExplanationText(text: string | undefined) {
+  return /\bopen\s+gap\b/i.test(text ?? '')
 }
 
 function appendWorkItemNotes(

@@ -128,6 +128,8 @@ async function loadEvidence(path, from, to, now) {
   const workFocusSeconds = getZoneActiveSeconds(activityZoneTotals, WORK_ACTIVITY_ZONE);
   const nonWorkSeconds = Math.max(totalFocusSeconds - workFocusSeconds, 0);
   const gaps = gapsBetweenSessions(sessions).filter((gap) => gap.seconds >= SIGNIFICANT_GAP_SECONDS);
+  const gapExplanationEvents = dayEvents.filter((event) => isGapExplanationText(event.text)).length;
+  const unexplainedGapCount = Math.max(gaps.length - gapExplanationEvents, 0);
   const capturesDuringActiveFocus = capturesCreatedToday.filter((capture) => capture.focus_session_id).length;
   const workItemNoteCount = workItemTotals.filter((item) => item.note?.trim()).length;
   const workItemEventsDuringActiveFocus = workItemEvents.filter((event) => event.focus_session_id).length;
@@ -156,6 +158,8 @@ async function loadEvidence(path, from, to, now) {
     workItemNoteCount,
     activityZoneTotals,
     gaps,
+    gapExplanationEvents,
+    unexplainedGapCount,
     telemetry,
   };
 }
@@ -494,8 +498,10 @@ function assessEvidence(evidence, minFocusSeconds) {
     reviewItems.push("No focus correction or correction-review telemetry found. If no correction was needed, explicitly accept that; otherwise test add/edit/split correction before closing the goal.");
   }
 
-  if (evidence.gaps.length > 0) {
-    reviewItems.push(`${evidence.gaps.length} significant gap(s) found. Classify them as real breaks or lost tracking.`);
+  if (evidence.unexplainedGapCount > 0) {
+    reviewItems.push(
+      `${evidence.unexplainedGapCount} of ${evidence.gaps.length} significant gap(s) lack a Day Event explanation. Use Explain or add a Day Event before closing the goal.`
+    );
   }
 
   return {
@@ -546,6 +552,7 @@ function buildRcReport(date, path, evidence, assessment, minFocusSeconds, strict
     `- Work Item Events during active focus: ${evidence.workItemEventsDuringActiveFocus}`,
     `- Activity Zones in report: ${evidence.activityZoneTotals.length}`,
     `- Significant gaps: ${evidence.gaps.length}`,
+    `- Significant gaps explained: ${Math.min(evidence.gapExplanationEvents, evidence.gaps.length)}/${evidence.gaps.length}`,
     `- Captures created today: ${evidence.capturesCreatedToday.length}`,
     `- Captures during active focus: ${evidence.capturesDuringActiveFocus}`,
     `- Open captures: ${evidence.openCaptures.length}`,
@@ -683,7 +690,7 @@ function formatGoalAuditMarkdown(evidence, assessment, minFocusSeconds) {
     {
       requirement: "Gaps and captures visible",
       status: "pass",
-      evidence: `${evidence.gaps.length} significant gap(s), ${evidence.openCaptures.length} open capture(s), ${evidence.capturesCreatedToday.length} capture(s) today`,
+      evidence: `${evidence.gaps.length} significant gap(s), ${Math.min(evidence.gapExplanationEvents, evidence.gaps.length)} explained, ${evidence.openCaptures.length} open capture(s), ${evidence.capturesCreatedToday.length} capture(s) today`,
     },
     {
       requirement: "Window and menubar friction evidenced",
@@ -768,6 +775,10 @@ function formatCaptureOutcome(capture) {
   }
 
   return "open";
+}
+
+function isGapExplanationText(text) {
+  return /\bopen\s+gap\b|\bgap\b|разрыв|перерыв|буфер|recovery/i.test(text ?? "");
 }
 
 function clippedActiveSeconds(startedAtValue, stoppedAtValue, from, to, now) {

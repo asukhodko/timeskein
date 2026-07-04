@@ -182,7 +182,7 @@ For the Dogfood Release Candidate gate, rerun the evidence check explicitly when
 pnpm dogfood:rc-check:save
 ```
 
-The RC check exits with code 1 for hard blockers such as active state, duplicate Work Item titles, or an empty day. Its evidence summary includes total tracked time, work focus, non-work tracked time, Activity Zone coverage, Work Item notes/events, Capture Inbox coverage, correction telemetry, window telemetry including show/hide request evidence, and product-friction counters. It also includes a `Daily Control Goal Audit` table that maps the current day to the active daily-control objective. Review items still require human judgment against the release-candidate criteria.
+The RC check exits with code 1 for hard blockers such as active state, duplicate Work Item titles, or an empty day. Its evidence summary includes total tracked time, work focus, non-work tracked time, Activity Zone coverage, Work Item notes/events, Capture Inbox coverage, typed entry and selected/list continuation evidence, correction telemetry, window telemetry including show/hide request evidence, and product-friction counters. It also includes a `Daily Control Goal Audit` table that maps the current day to the active daily-control objective. Review items still require human judgment against the release-candidate criteria.
 Before marking the daily-control goal complete, run the final gate. It runs `pnpm test`, `pnpm dogfood:preflight`, and the strict RC check on the same code:
 
 ```bash

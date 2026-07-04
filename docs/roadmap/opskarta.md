@@ -14,7 +14,9 @@ dogfood report and in `pnpm dogfood:rc-check`: it checks whether a real day has
 enough evidence for focus blocks, Work Item totals, Activity Zones,
 notes/events, captures, gaps, corrections, and app-friction review. Window
 friction evidence now includes show/hide request counts, so window entrypoints
-must be exercised rather than inferred from passive visibility events. If
+must be exercised rather than inferred from passive visibility events. Entry
+evidence also checks both typed start and selected/list continuation, so the day
+proves that starting new work and returning to existing work are both cheap. If
 Timeskein is quit during an already started dogfood day, `pnpm dogfood:continue`
 reopens it through readiness continue mode and the same process/preflight/app-open
 guard as the normal start path.

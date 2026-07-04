@@ -466,6 +466,22 @@ function assessEvidence(evidence, minFocusSeconds) {
     reviewItems.push("No App Telemetry events found for this date.");
   }
 
+  if (evidence.sessions.length > 0 && evidence.telemetry.startRequests + evidence.telemetry.switchRequests === 0) {
+    reviewItems.push("No focus start/switch request telemetry found. Entry cost is not evidenced for this day.");
+  }
+
+  if (evidence.sessions.length > 0 && evidence.telemetry.typedEntryRequests === 0) {
+    reviewItems.push("No typed focus entry request found. Start a new Work Item by typed title before closing the goal.");
+  }
+
+  if (evidence.sessions.length > 0 && evidence.telemetry.selectedEntryRequests === 0) {
+    reviewItems.push("No selected/list Work Item entry request found. Continue an existing Work Item from the list before closing the goal.");
+  }
+
+  if (evidence.sessions.length > 0 && evidence.telemetry.stopRequests === 0) {
+    reviewItems.push("No focus stop request telemetry found. Stop flow cost is not evidenced for this day.");
+  }
+
   if (evidence.telemetry.total > 0 && evidence.telemetry.windowShown + evidence.telemetry.windowHidden === 0) {
     reviewItems.push("No window show/hide telemetry found. Entry/window friction is not evidenced for this day.");
   }
@@ -557,6 +573,8 @@ function buildRcReport(date, path, evidence, assessment, minFocusSeconds, strict
     `- Captures during active focus: ${evidence.capturesDuringActiveFocus}`,
     `- Open captures: ${evidence.openCaptures.length}`,
     `- App telemetry events: ${evidence.telemetry.total}`,
+    `- Start/switch/stop requests: ${evidence.telemetry.startRequests}/${evidence.telemetry.switchRequests}/${evidence.telemetry.stopRequests}`,
+    `- Typed/selected entry requests: ${evidence.telemetry.typedEntryRequests}/${evidence.telemetry.selectedEntryRequests}`,
     `- API errors: ${evidence.telemetry.apiErrors}`,
     `- Copy failures/manual fallbacks: ${evidence.telemetry.copyFailures}/${evidence.telemetry.manualCopyFallbacks}`,
     `- Start/stop failures: ${evidence.telemetry.startFailures}/${evidence.telemetry.stopFailures}`,
@@ -705,6 +723,17 @@ function formatGoalAuditMarkdown(evidence, assessment, minFocusSeconds) {
           ? "review"
           : "pass",
       evidence: `${evidence.telemetry.windowShown}/${evidence.telemetry.windowHidden} show/hide, ${evidence.telemetry.windowShowRequested}/${evidence.telemetry.windowHideRequested} show/hide request(s), ${evidence.telemetry.windowDragStarted} drag start(s), ${evidence.telemetry.apiErrors} API error(s)`,
+    },
+    {
+      requirement: "Start and continue paths evidenced",
+      status: evidence.sessions.length === 0
+        ? "block"
+        : evidence.telemetry.typedEntryRequests > 0 &&
+            evidence.telemetry.selectedEntryRequests > 0 &&
+            evidence.telemetry.stopRequests > 0
+          ? "pass"
+          : "review",
+      evidence: `${evidence.telemetry.typedEntryRequests} typed, ${evidence.telemetry.selectedEntryRequests} selected/list, ${evidence.telemetry.stopRequests} stop request(s)`,
     },
     {
       requirement: "Tracking correction or review evidenced",
@@ -888,6 +917,11 @@ function summarizeEvents(events) {
     total: events.length,
     byKind,
     apiErrors: count("api_error"),
+    startRequests: count("focus_start_requested"),
+    switchRequests: count("focus_switch_requested"),
+    stopRequests: count("focus_stop_requested"),
+    typedEntryRequests: countEntryRequestsByControls(events, ["typed"]),
+    selectedEntryRequests: countEntryRequestsByControls(events, ["selected_item", "selected_shortcut", "double_click"]),
     copyFailures: count("report_copy_failed"),
     manualCopyFallbacks: count("manual_copy_fallback_shown"),
     startFailures: count("focus_start_failed"),
@@ -908,6 +942,19 @@ function summarizeEvents(events) {
       count("capture_delete_failed") +
       count("capture_convert_failed"),
   };
+}
+
+function countEntryRequestsByControls(events, controls) {
+  const allowedControls = new Set(controls);
+
+  return events.filter((event) => {
+    if (event.kind !== "focus_start_requested" && event.kind !== "focus_switch_requested") {
+      return false;
+    }
+
+    const control = event.payload?.control;
+    return typeof control === "string" && allowedControls.has(control);
+  }).length;
 }
 
 function parsePayload(value) {

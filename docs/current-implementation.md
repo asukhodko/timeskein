@@ -153,7 +153,7 @@ Dogfood launch helper:
 - `pnpm dogfood:finish:save` runs the same end-of-day gate and saves both `timeskein-dogfood-report-YYYY-MM-DD.md` and `timeskein-dogfood-rc-check-YYYY-MM-DD.md`
 - `pnpm dogfood:preflight` runs the local checks needed before trusting a real dogfood day, including opskarta roadmap validation, Work Item list mode tests, isolated mock API, export, and dogfood-report smoke checks
 - `pnpm dogfood:ready` inspects the real local SQLite database for active sessions, active Work Items, duplicate titles, existing focus blocks for today, agent responsiveness, and running app processes; when the day is not ready it prints exact stop/reset commands, and when the day is ready it prints the next start command plus the Daily-Control Checklist for the next dogfood pass
-- `pnpm dogfood:rc-check` prints the release-candidate evidence summary, `Daily Control Goal Audit`, hard blockers, review items, and manual verdict prompts for the saved dogfood day; the summary includes total tracked time, work focus, non-work tracked time, Activity Zone coverage, Work Item notes/events, Capture Inbox coverage, correction telemetry, window telemetry with show/hide request counts, and product-friction counters
+- `pnpm dogfood:rc-check` prints the release-candidate evidence summary, `Daily Control Goal Audit`, hard blockers, review items, and manual verdict prompts for the saved dogfood day; the summary includes total tracked time, work focus, non-work tracked time, Activity Zone coverage, Work Item notes/events, Capture Inbox coverage, typed entry and selected/list continuation evidence, correction telemetry, window telemetry with show/hide request counts, and product-friction counters
 - `pnpm dogfood:rc-check:save` saves the same RC evidence again when it needs to be inspected without regenerating the day report
 - `pnpm dogfood:rc-check:strict` uses the same evidence but exits with code 1 when any review item remains, for the final daily-control goal closure check
 - `pnpm dogfood:goal-check` runs the final closure gate for the active daily-control goal: `pnpm test`, `pnpm dogfood:preflight`, and strict RC evidence for the selected dogfood day
@@ -386,7 +386,7 @@ pnpm dogfood:finish:save
 pnpm dogfood:goal-check
 ```
 
-The report telemetry section includes action counts, start/switch/stop failures, Capture Inbox action counts and failures, API errors, window show/hide counts, show/hide request counts, copy fallback counts, average start latency, likely show-to-start friction gaps, attempts to start the already active Work Item, and stale runtime recovery events.
+The report telemetry section includes action counts, typed entry and selected/list continuation evidence, start/switch/stop failures, Capture Inbox action counts and failures, API errors, window show/hide counts, show/hide request counts, copy fallback counts, average start latency, likely show-to-start friction gaps, attempts to start the already active Work Item, and stale runtime recovery events.
 
 ## Global Shortcut and Tray
 

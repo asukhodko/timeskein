@@ -41,15 +41,18 @@ try {
     INSERT INTO app_events (id, ts, source, kind, payload)
     VALUES
       ('e1', '2026-06-30T06:00:00Z', 'ui', 'app_started', NULL),
-      ('e2', '2026-06-30T06:00:01Z', 'ui', 'focus_start_requested', '{"action_id":"a1"}'),
-      ('e3', '2026-06-30T06:00:01Z', 'ui', 'focus_started', '{"action_id":"a1"}'),
+      ('e2', '2026-06-30T06:00:01Z', 'ui', 'focus_start_requested', '{"action_id":"a1","control":"typed"}'),
+      ('e3', '2026-06-30T06:00:01Z', 'ui', 'focus_started', '{"action_id":"a1","control":"typed"}'),
       ('e4', '2026-06-30T09:00:00Z', 'ui', 'window_shown', '{"control":"shortcut"}'),
       ('e5', '2026-06-30T09:05:00Z', 'ui', 'window_hidden', '{"control":"esc"}'),
       ('e6', '2026-06-30T09:00:00Z', 'ui', 'window_show_requested', '{"control":"tray_click"}'),
       ('e7', '2026-06-30T09:05:00Z', 'ui', 'window_hide_requested', '{"control":"global_shortcut"}'),
       ('e8', '2026-06-30T10:00:00Z', 'ui', 'report_copied', '{"report_kind":"dogfood"}'),
       ('e9', '2026-06-30T10:05:00Z', 'ui', 'focus_correction_requested', '{"action_id":"k1","control":"edit_block"}'),
-      ('e10', '2026-06-30T10:05:01Z', 'ui', 'focus_corrected', '{"action_id":"k1","control":"edit_block"}');
+      ('e10', '2026-06-30T10:05:01Z', 'ui', 'focus_corrected', '{"action_id":"k1","control":"edit_block"}'),
+      ('e13', '2026-06-30T08:30:00Z', 'ui', 'focus_start_requested', '{"action_id":"a2","control":"selected_item"}'),
+      ('e14', '2026-06-30T08:30:01Z', 'ui', 'focus_started', '{"action_id":"a2","control":"selected_item"}'),
+      ('e15', '2026-06-30T10:00:00Z', 'ui', 'focus_stop_requested', '{"action_id":"a3","control":"stop_button_or_enter"}');
   `);
 
   const good = await runRcCheck(goodDb);
@@ -66,12 +69,15 @@ try {
   assert(good.stdout.includes("Day Events with Activity Zone: 1"), "good day zoned Day Events count is missing");
   assert(good.stdout.includes("Day Events during active focus: 1"), "good day active-focus Day Events count is missing");
   assert(good.stdout.includes("Work Item Events: 1"), "good day Work Item Events count is missing");
+  assert(good.stdout.includes("Start/switch/stop requests: 2/0/1"), "good day entry request count is missing");
+  assert(good.stdout.includes("Typed/selected entry requests: 1/1"), "good day entry control count is missing");
   assert(good.stdout.includes("Corrections requested/applied/reviewed/failed: 1/1/0/0"), "good day correction telemetry is missing");
   assert(good.stdout.includes("Window shown/hidden: 1/1"), "good day window telemetry is missing");
   assert(good.stdout.includes("Window show/hide requests: 1/1"), "good day window request telemetry is missing");
   assert(good.stdout.includes("## Daily Control Goal Audit"), "good day goal audit section is missing");
   assert(good.stdout.includes("| Focus blocks visible | pass |"), "good day focus-block audit row is missing");
   assert(good.stdout.includes("| Activity Zones separated | pass |"), "good day activity-zone audit row is missing");
+  assert(good.stdout.includes("| Start and continue paths evidenced | pass |"), "good day entry-path audit row is missing");
   assert(good.stdout.includes("| Tracking correction or review evidenced | pass |"), "good day correction audit row is missing");
   assert(good.stdout.includes("| Local gates | manual |"), "good day local-gates audit row is missing");
   assert(good.stdout.includes("pnpm dogfood:goal-check"), "good day local-gates audit did not mention goal-check");
@@ -96,6 +102,16 @@ try {
   assert(
     unexplainedGapStrict.stdout.includes("significant gap(s) lack a Day Event explanation"),
     "strict RC check should explain missing gap explanation"
+  );
+
+  const noSelectedEntryDb = join(tempDir, "no-selected-entry.db");
+  await copyDb(goodDb, noSelectedEntryDb);
+  await runSql(noSelectedEntryDb, "DELETE FROM app_events WHERE id IN ('e13', 'e14');");
+  const noSelectedEntryStrict = await runRcCheck(noSelectedEntryDb, ["--strict"]);
+  assert(noSelectedEntryStrict.code !== 0, "strict RC check should fail without selected/list entry evidence");
+  assert(
+    noSelectedEntryStrict.stdout.includes("No selected/list Work Item entry request found"),
+    "strict RC check should explain missing selected/list entry evidence"
   );
 
   const noWindowRequestDb = join(tempDir, "no-window-request.db");

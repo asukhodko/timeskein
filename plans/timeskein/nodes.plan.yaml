@@ -92,7 +92,7 @@ nodes:
     effort: 1
     deps:
       - id: ts.ux_entry.hide_toggle
-    notes: Left-click and Show/Hide toggle the window. The window no longer uses always-on-top or task-switcher hiding, macOS Reopen restores a hidden window, the native shell keeps the menu bar title updated from the local API, and show/hide requests are logged for window entrypoints.
+    notes: Left-click and Show/Hide toggle the window. The window no longer uses always-on-top or task-switcher hiding, macOS Reopen restores a hidden window, the native shell keeps the menu bar title updated from the local API, show/hide requests are logged for window entrypoints, and dogfood:continue reopens an already started dogfood day through the same guarded app-opening path.
     x:
       ops:
         attention_class: current
@@ -116,7 +116,7 @@ nodes:
     effort: 2
     deps:
       - id: ts.ux_entry.tray_actions
-    notes: Focus tracking can start from a free text intention or selected Work Item. First dogfood day exposed shortcut friction while typing, fixed by ignoring palette shortcuts inside editable fields.
+    notes: Focus tracking can start from a free text intention or selected Work Item. First dogfood day exposed shortcut friction while typing, fixed by ignoring palette shortcuts inside editable fields. Guarded dogfood:continue reduces return friction after quitting Timeskein during an already started dogfood day without bypassing readiness checks.
     x:
       ops:
         attention_class: current
@@ -433,7 +433,7 @@ nodes:
     effort: 2
     deps:
       - id: ts.day_review.analysis_gate
-    notes: "pnpm test now covers contracts build, TypeScript typecheck, Rust agent integration tests with temporary SQLite, mock-store unit tests, Work Item list mode tests, mock API smoke, Day Events API smoke, and key SQLite/report smoke. dogfood:preflight adds script syntax checks, Work Item list mode tests, packaged macOS build, embedded-agent smoke, focus switching, post-factum correction API, Work Item editing, capture API, Day Events API, Capture Inbox telemetry, stale lock/port recovery, app_events constraint migration, restart/restore, and dogfood start/status/ready/rc-check/reset/stop-active/open-app smoke. Export and RC-check smokes now include legacy focus-session schemas without Activity Zone columns. Browser UI smoke is still manual."
+    notes: "pnpm test now covers contracts build, TypeScript typecheck, Rust agent integration tests with temporary SQLite, mock-store unit tests, Work Item list mode tests, mock API smoke, Day Events API smoke, and key SQLite/report smoke. dogfood:preflight adds script syntax checks, Work Item list mode tests, packaged macOS build, embedded-agent smoke, focus switching, post-factum correction API, Work Item editing, capture API, Day Events API, Capture Inbox telemetry, stale lock/port recovery, app_events constraint migration, restart/restore, and dogfood start/continue/status/ready/rc-check/reset/stop-active/open-app smoke. Export and RC-check smokes now include legacy focus-session schemas without Activity Zone columns. Browser UI smoke is still manual."
     x:
       ops:
         attention_class: current
@@ -445,7 +445,7 @@ nodes:
     effort: 2
     deps:
       - id: ts.focus_core.dogfood_gate
-    notes: Fixed typing C/С opening Create, creating a new active Work Item, ambiguous last-seen timestamps, and added the first Capture Inbox baseline. Post-baseline work added Work Item title/basic-field editing, focus-block correction including add-missed-block, per-block Activity Zone snapshots/overrides, Work Item today/total time, Work Item list modes for accumulated multi-day inventories, a resizable Today/Work Item split, timestamped Day Events with explicit zones and gap/open-gap Explain shortcuts, timestamped Work Item Events, capture-to-event promotion, capture edit/delete for open items, Command+Tab/Dock restore, non-always-on-top window policy, native menu-bar status refresh, show/hide request telemetry, and separate Total tracked / Work focus / Non-work tracked report totals. Remaining friction is mostly richer correction/review UI.
+    notes: Fixed typing C/С opening Create, creating a new active Work Item, ambiguous last-seen timestamps, and added the first Capture Inbox baseline. Post-baseline work added Work Item title/basic-field editing, focus-block correction including add-missed-block, per-block Activity Zone snapshots/overrides, Work Item today/total time, Work Item list modes for accumulated multi-day inventories, a resizable Today/Work Item split, timestamped Day Events with explicit zones and gap/open-gap Explain shortcuts, timestamped Work Item Events, capture-to-event promotion, capture edit/delete for open items, Command+Tab/Dock restore, non-always-on-top window policy, native menu-bar status refresh, show/hide request telemetry, guarded dogfood:continue for reopening an existing day, and separate Total tracked / Work focus / Non-work tracked report totals. Remaining friction is mostly richer correction/review UI.
     x:
       ops:
         attention_class: current

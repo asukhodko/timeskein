@@ -14,7 +14,10 @@ dogfood report and in `pnpm dogfood:rc-check`: it checks whether a real day has
 enough evidence for focus blocks, Work Item totals, Activity Zones,
 notes/events, captures, gaps, corrections, and app-friction review. Window
 friction evidence now includes show/hide request counts, so window entrypoints
-must be exercised rather than inferred from passive visibility events.
+must be exercised rather than inferred from passive visibility events. If
+Timeskein is quit during an already started dogfood day, `pnpm dogfood:continue`
+reopens it through readiness continue mode and the same process/preflight/app-open
+guard as the normal start path.
 `pnpm dogfood:finish:save` now saves both the readable day report and the
 RC-check evidence file, so the evening package is collected in one step.
 For final goal closure, `pnpm dogfood:goal-check` runs `pnpm test`,
@@ -41,7 +44,7 @@ flowchart LR
 
     recovered_baseline["Recovered<br/>baseline<br/>100%<br/>веха 2026-06-30"]
     class recovered_baseline exec_done
-    app_entry_ux["App<br/>entry UX<br/>95%<br/>веха 2026-07-03"]
+    app_entry_ux["App<br/>entry UX<br/>100%<br/>веха 2026-07-03"]
     class app_entry_ux exec_mgmt_yellow
     style app_entry_ux stroke:#111827,stroke-width:3px
     focus_session_core["Focus<br/>Session core<br/>85%<br/>веха 2026-07-01"]
@@ -154,8 +157,8 @@ gantt
 - Rebuild macOS app for regular personal use [done] (1 focus-blocks) {100%}
 - Write dogfood release notes and known limitations [done] (1 focus-blocks) {100%}
 - Session replacement dogfood baseline [done] {100%}
-- App entry UX [in_progress] (8 focus-blocks) {96%}
-- Reduce the path from intent to tracked work [in_progress] (2 focus-blocks) {85%}
+- App entry UX [in_progress] (8 focus-blocks) {98%}
+- Reduce the path from intent to tracked work [in_progress] (2 focus-blocks) {90%}
 - Focus Session core [in_progress] (17 focus-blocks) {85%}
 - Add FocusSession and SessionEvent persistence [in_progress] (3 focus-blocks) {70%}
 - Implement start, pause, resume, stop, cancel [in_progress] (3 focus-blocks) {45%}

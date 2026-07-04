@@ -79,7 +79,7 @@ x:
         mgmt:
           health: yellow
           owner: a.sukhodko
-          next_sync_goal: Make the app easy to show, hide, move, and invoke.
+          next_sync_goal: Verify that the start and continue gates keep opening and returning to Timeskein cheap during a real dogfood day.
       focus-session-core:
         title: Focus Session core
         scope_nodes:
@@ -115,7 +115,7 @@ x:
         mgmt:
           health: green
           owner: a.sukhodko
-          sync_note: macOS Session replacement dogfood baseline accepted on 2026-07-03; post-factum correction covers missed-block creation, edit, and split, and window request telemetry is ready for the next entry-polish dogfood gate.
+          sync_note: macOS Session replacement dogfood baseline accepted on 2026-07-03; post-factum correction covers missed-block creation, edit, and split, window request telemetry is ready for the next entry-polish dogfood gate, and dogfood:continue now reopens an existing day through the guarded launch path.
       future-directions:
         title: Future directions
         scope_nodes:

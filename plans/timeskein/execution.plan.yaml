@@ -43,7 +43,7 @@ execution:
       actual_finish: "2026-07-03"
       updated_at: "2026-07-03T21:35:00+03:00"
       confidence: 0.85
-      note: Left-click and Show/Hide toggle the window; the main window no longer uses always-on-top or skip-taskbar, macOS Reopen restores a hidden window, the native shell refreshes the menu bar title through the local API while showing active focus or today's total, and show-hide requests are logged for the next dogfood gate.
+      note: Left-click and Show/Hide toggle the window; the main window no longer uses always-on-top or skip-taskbar, macOS Reopen restores a hidden window, the native shell refreshes the menu bar title through the local API while showing active focus or today's total, show-hide requests are logged for the next dogfood gate, and dogfood:continue reopens an already started dogfood day through readiness continue mode plus the normal process/preflight/app-open gate.
     ts.ux_entry.monitor_policy:
       progress: 1.0
       actual_start: "2026-07-03"
@@ -52,11 +52,11 @@ execution:
       confidence: 0.9
       note: Documentation states that Timeskein creates one macOS status item and macOS controls which menu bar displays it; alternate entrypoints are tray Show/Hide, global shortcut, and normal app switching.
     ts.ux_entry.fast_track_flow:
-      progress: 0.85
+      progress: 0.9
       actual_start: "2026-06-30"
-      updated_at: "2026-07-03T23:35:00+03:00"
+      updated_at: "2026-07-04T04:15:00+03:00"
       confidence: 0.85
-      note: A focus session can start from text or selected Work Item. First dogfood day found that C/С opened Create while typing; palette shortcuts now ignore editable fields. Multi-day inventory modes now reduce list clutter when continuing old work.
+      note: A focus session can start from text or selected Work Item. First dogfood day found that C/С opened Create while typing; palette shortcuts now ignore editable fields. Multi-day inventory modes reduce list clutter when continuing old work, and dogfood:continue provides a guarded return path after Timeskein was quit during an already started dogfood day. The next dogfood day should verify that this keeps return-to-tracking cheap in real use.
     ts.ux_entry.inventory_modes:
       progress: 1.0
       actual_start: "2026-07-03"
@@ -211,7 +211,7 @@ execution:
       actual_start: "2026-06-30"
       updated_at: "2026-07-03T23:45:00+03:00"
       confidence: 0.9
-      note: "Added pnpm test as a fast regression suite: contracts build, TypeScript typecheck, Rust agent integration tests against temporary SQLite, mock-store unit tests, Work Item list mode tests, mock API smoke, and key SQLite/report smoke. Export and RC-check smokes now cover legacy focus-session schemas without Activity Zone columns. dogfood:preflight also runs cargo test, mock-store tests, and Work Item list mode tests before the macOS packaged-app smoke. Browser UI smoke is still manual."
+      note: "Added pnpm test as a fast regression suite: contracts build, TypeScript typecheck, Rust agent integration tests against temporary SQLite, mock-store unit tests, Work Item list mode tests, mock API smoke, and key SQLite/report smoke. Export and RC-check smokes now cover legacy focus-session schemas without Activity Zone columns. dogfood:preflight also runs cargo test, mock-store tests, Work Item list mode tests, dogfood start/continue readiness coverage, and packaged macOS smoke. Browser UI smoke is still manual."
     ts.hardening.release_notes:
       progress: 1.0
       actual_start: "2026-07-01"
@@ -224,7 +224,7 @@ execution:
       actual_start: "2026-07-01"
       confidence: 0.85
       updated_at: "2026-07-03T23:58:00+03:00"
-      note: Fixed C/С shortcut capture while typing, active Work Item creation, visible create errors, ambiguous last-seen labels, Work Item notes in reports, minimal Capture Inbox, Work Item basic editing, post-factum focus-block correction including missed-block creation, per-block Activity Zone snapshots/overrides, Activity Zone totals, Work Item today/total list metrics, Work Item list modes for accumulated multi-day inventories, resizable Today/Work Item split, timestamped Work Item Events with edit/delete cleanup, timestamped Day Events with explicit zones and gap/open-gap Explain shortcuts, capture-to-event promotion, capture edit/delete for open items, Command+Tab/Dock restore, non-always-on-top window policy, native menu-bar status refresh, show/hide request telemetry, and separate Total tracked / Work focus / Non-work tracked report totals. Remaining friction is mostly richer correction/review UI.
+      note: Fixed C/С shortcut capture while typing, active Work Item creation, visible create errors, ambiguous last-seen labels, Work Item notes in reports, minimal Capture Inbox, Work Item basic editing, post-factum focus-block correction including missed-block creation, per-block Activity Zone snapshots/overrides, Activity Zone totals, Work Item today/total list metrics, Work Item list modes for accumulated multi-day inventories, resizable Today/Work Item split, timestamped Work Item Events with edit/delete cleanup, timestamped Day Events with explicit zones and gap/open-gap Explain shortcuts, capture-to-event promotion, capture edit/delete for open items, Command+Tab/Dock restore, non-always-on-top window policy, native menu-bar status refresh, show/hide request telemetry, guarded dogfood:continue for reopening an existing day, and separate Total tracked / Work focus / Non-work tracked report totals. Remaining friction is mostly richer correction/review UI.
     ts.hardening.backup_reset:
       progress: 1.0
       actual_start: "2026-07-03"

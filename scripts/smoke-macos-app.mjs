@@ -194,9 +194,34 @@ try {
   assert(appEventSummary.by_kind.capture_created >= 1, "app_event.summary did not count capture_created");
   assertSessionsOldestFirst(day.sessions);
 
-  const inventoryAfterFirstStart = await rpc(port, "inventory.list");
+  const historicalStop = new Date();
+  historicalStop.setDate(historicalStop.getDate() - 1);
+  historicalStop.setHours(10, 20, 0, 0);
+  const historicalStart = new Date(historicalStop.getTime() - 20 * 60 * 1000);
+  const historical = await rpc(port, "focus.create_stopped", {
+    work_item_id: started.work_item_id,
+    started_at: historicalStart.toISOString(),
+    stopped_at: historicalStop.toISOString(),
+    note: "packaged historical inventory total smoke",
+  });
+
+  const inventoryAfterFirstStart = await rpc(port, "inventory.list", {
+    focus_window: todayWindow(),
+  });
   const matchingItems = inventoryAfterFirstStart.items.filter((item) => item.title === title);
   assert(matchingItems.length === 1, "focus.start created duplicate work items");
+  assert(
+    matchingItems[0].today_active_seconds >= stopped.active_seconds,
+    "inventory.list did not include today's focus seconds for the Work Item"
+  );
+  assert(
+    matchingItems[0].total_active_seconds >= matchingItems[0].today_active_seconds + historical.active_seconds,
+    "inventory.list did not include historical focus seconds in the Work Item total"
+  );
+  assert(
+    matchingItems[0].total_active_seconds > matchingItems[0].today_active_seconds,
+    "inventory.list did not keep Work Item today and total time distinct"
+  );
 
   const continued = await rpc(port, "focus.start", {
     title,

@@ -420,6 +420,8 @@ export class MockDataStore {
       start_requests: count("focus_start_requested"),
       switch_requests: count("focus_switch_requested"),
       stop_requests: count("focus_stop_requested"),
+      typed_entry_requests: this.countEntryRequestsByControls(events, ["typed"]),
+      selected_entry_requests: this.countEntryRequestsByControls(events, ["selected_item", "selected_shortcut", "double_click"]),
       start_failures: count("focus_start_failed"),
       stop_failures: count("focus_stop_failed"),
       correction_requests: count("focus_correction_requested"),
@@ -455,6 +457,19 @@ export class MockDataStore {
       slow_window_to_focus_count: slowWindowToFocusCount,
       updated_at: new Date().toISOString(),
     };
+  }
+
+  private countEntryRequestsByControls(events: AppEventView[], controls: string[]): number {
+    const allowedControls = new Set(controls);
+
+    return events.filter((event) => {
+      if (event.kind !== "focus_start_requested" && event.kind !== "focus_switch_requested") {
+        return false;
+      }
+
+      const control = event.payload?.control;
+      return typeof control === "string" && allowedControls.has(control);
+    }).length;
   }
 
   // Inventory methods

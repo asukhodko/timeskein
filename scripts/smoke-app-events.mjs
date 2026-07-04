@@ -51,6 +51,7 @@ try {
   assert(metricsStdout.includes("## App Telemetry"), "metrics did not include App Telemetry header");
   assert(metricsStdout.includes("Total events: 23"), "metrics did not count events");
   assert(metricsStdout.includes("Start requests: 1"), "metrics did not count start requests");
+  assert(metricsStdout.includes("Typed/selected entry requests: 1/0"), "metrics did not count entry request controls");
   assert(metricsStdout.includes("Manual copy fallbacks: 1"), "metrics did not count manual copy fallbacks");
   assert(metricsStdout.includes("Window show/hide requests: 1/1"), "metrics did not count window requests");
   assert(metricsStdout.includes("Capture created/resolved/converted: 1/1/0"), "metrics did not count capture outcomes");

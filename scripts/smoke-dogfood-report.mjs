@@ -46,6 +46,9 @@ try {
 
     INSERT INTO app_events (id, ts, source, kind, focus_session_id, payload)
     VALUES
+      ('ae0', '2026-06-30T05:59:59Z', 'ui', 'focus_start_requested', NULL, '{"action_id":"a1","control":"typed"}'),
+      ('ae00', '2026-06-30T06:00:01Z', 'ui', 'focus_start_requested', NULL, '{"action_id":"a2","control":"selected_item"}'),
+      ('ae000', '2026-06-30T07:45:01Z', 'ui', 'focus_stop_requested', 's3', '{"action_id":"a3","control":"stop_button_or_enter"}'),
       ('ae1', '2026-06-30T07:50:00Z', 'ui', 'focus_correction_requested', 's1', '{"action_id":"k1","control":"edit_block"}'),
       ('ae2', '2026-06-30T07:50:01Z', 'ui', 'focus_corrected', 's1', '{"action_id":"k1","control":"edit_block"}'),
       ('ae3', '2026-06-30T07:51:00Z', 'ui', 'window_show_requested', NULL, '{"control":"tray_click"}'),
@@ -73,6 +76,7 @@ try {
   assert(stdout.includes("| Focus blocks visible | pass |"), "report daily-control audit did not pass focus blocks");
   assert(stdout.includes("| Activity Zones separated | pass |"), "report daily-control audit did not pass zones");
   assert(stdout.includes("| Window and menubar friction evidenced | pass |"), "report daily-control audit did not pass window evidence");
+  assert(stdout.includes("| Start and continue paths evidenced | pass |"), "report daily-control audit did not pass entry-path evidence");
   assert(stdout.includes("| Tracking correction or review evidenced | pass |"), "report daily-control audit did not pass correction evidence");
   assert(stdout.includes("| Local gates | manual |"), "report daily-control audit did not include local gates");
   assert(stdout.includes("pnpm dogfood:goal-check"), "report daily-control audit did not mention goal-check");
@@ -162,6 +166,10 @@ try {
   assert(
     thinEvidenceStdout.includes("Confirm tracking accuracy or test correction"),
     "report review checklist did not flag missing correction evidence"
+  );
+  assert(
+    thinEvidenceStdout.includes("Exercise start and continue paths"),
+    "report review checklist did not flag missing entry-path evidence"
   );
 
   await runSql(`

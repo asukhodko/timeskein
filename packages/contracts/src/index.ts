@@ -205,6 +205,8 @@ export interface AppEventSummary {
   start_requests: number;
   switch_requests: number;
   stop_requests: number;
+  typed_entry_requests: number;
+  selected_entry_requests: number;
   start_failures: number;
   stop_failures: number;
   correction_requests: number;

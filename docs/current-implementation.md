@@ -133,7 +133,7 @@ Runtime smoke on macOS:
 - `pnpm smoke:macos-app` also verifies startup normalization of legacy active Work Items, orphan active focus sessions, stale `agent.lock` / `agent.port` recovery, and migration of older `app_events` kind constraints
 - `pnpm smoke:export-focus-day` verifies fallback Markdown export, including Day Events, Work Item notes, timestamped Work Item Events for touched items, and legacy focus-session schemas without Activity Zone columns, against temporary SQLite databases
 - `pnpm smoke:app-events` verifies the local app-event migration, metrics summary, and Markdown export against a temporary SQLite database
-- `pnpm smoke:dogfood-report` verifies the evening dogfood report wrapper, Review Checklist, Daily Control Goal Audit, Activity Zone evidence warnings, correction evidence prompts and accepted correction review, Day Events, Work Item notes, Work Item Events, Capture Activity, open captures, analysis prompts, and App Telemetry section, including window show/hide request evidence
+- `pnpm smoke:dogfood-report` verifies the evening dogfood report wrapper, Review Checklist, Daily Control Goal Audit, Activity Zone evidence warnings, entry-path evidence prompts, correction evidence prompts and accepted correction review, Day Events, Work Item notes, Work Item Events, Capture Activity, open captures, analysis prompts, and App Telemetry section, including typed/selected entry and window show/hide request evidence
 - `pnpm smoke:dogfood-finish` verifies the end-of-day gate: no active focus session, no active Work Item, at least one focus block, and `--save` writing both the day report and RC check
 - `pnpm smoke:dogfood-status` verifies the embedded-agent status checker against healthy and unhealthy temporary HTTP agents
 - `pnpm smoke:dogfood-ready` verifies the real-database readiness checker against clean and contaminated temporary SQLite databases, including running-process visibility and the actionable next commands
@@ -369,7 +369,7 @@ Tracked event groups:
 
 - app and embedded-agent startup, reuse, and stale runtime recovery;
 - window show, hide, and drag start;
-- focus start, switch, stop requests and outcomes;
+- focus start, switch, stop requests and outcomes, including whether start came from typed text or selected/list continuation;
 - Capture Inbox create, update, delete, resolve, convert requests and outcomes;
 - report copy attempts, clipboard failures, and manual copy fallback;
 - Local API errors.

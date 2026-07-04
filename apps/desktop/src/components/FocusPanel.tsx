@@ -1125,6 +1125,18 @@ function buildDayReviewItems({
   }
 
   if (sessions.length > 0 && appTelemetry) {
+    if (
+      appTelemetry.typed_entry_requests === 0 ||
+      appTelemetry.selected_entry_requests === 0 ||
+      appTelemetry.stop_requests === 0
+    ) {
+      items.push({
+        level: 'review',
+        title: 'Exercise start and continue paths',
+        detail: `${appTelemetry.typed_entry_requests} typed, ${appTelemetry.selected_entry_requests} selected/list, ${appTelemetry.stop_requests} stop request(s)`,
+      })
+    }
+
     if (appTelemetry.window_show_requested + appTelemetry.window_hide_requested === 0) {
       items.push({
         level: 'review',
@@ -1264,6 +1276,8 @@ function formatDailyControlGoalAuditMarkdown({
   const apiErrors = parseLeadingNumber(extractLineValue(appTelemetryMarkdown, 'API errors'))
   const copyFailures = parseLeadingNumber(extractLineValue(appTelemetryMarkdown, 'Copy failures'))
   const startStopFailures = extractLineValue(appTelemetryMarkdown, 'Start/stop failures') ?? 'n/a'
+  const entryPathEvidence = extractLineValue(appTelemetryMarkdown, 'Typed/selected entry requests') ?? 'n/a'
+  const entryTelemetry = parseEntryTelemetryMarkdown(appTelemetryMarkdown)
   const correctionEvidence =
     extractLineValue(appTelemetryMarkdown, 'Corrections requested/applied/reviewed/failed') ?? 'n/a'
   const telemetryAvailable = appTelemetryMarkdown.includes('Total events:')
@@ -1317,6 +1331,20 @@ function formatDailyControlGoalAuditMarkdown({
       evidence: `window shown/hidden ${windowEvidence}, requests ${windowRequestEvidence}, API errors ${apiErrors}, start/stop failures ${startStopFailures}`,
     },
     {
+      requirement: 'Start and continue paths evidenced',
+      status:
+        !telemetryAvailable ||
+        !entryTelemetry ||
+        entryTelemetry.typedEntryRequests === 0 ||
+        entryTelemetry.selectedEntryRequests === 0 ||
+        entryTelemetry.stopRequests === 0 ||
+        hasReview('Exercise start and continue paths') ||
+        entryPathEvidence === 'n/a'
+          ? 'review'
+          : 'pass',
+      evidence: `${entryPathEvidence} typed/selected, ${entryTelemetry?.stopRequests ?? 'n/a'} stop request(s)`,
+    },
+    {
       requirement: 'Tracking correction or review evidenced',
       status: hasReview('Confirm tracking accuracy or test correction') ? 'review' : 'pass',
       evidence: correctionEvidence,
@@ -1355,6 +1383,18 @@ function parseLeadingNumber(value?: string) {
   if (!value) return 0
   const match = value.match(/^\d+/)
   return match ? Number(match[0]) : 0
+}
+
+function parseEntryTelemetryMarkdown(markdown: string) {
+  const entryMatch = markdown.match(/Typed\/selected entry requests:\s*(\d+)\/(\d+)/)
+  const stopMatch = markdown.match(/Stop requests:\s*(\d+)/)
+  if (!entryMatch || !stopMatch) return undefined
+
+  return {
+    typedEntryRequests: Number(entryMatch[1]),
+    selectedEntryRequests: Number(entryMatch[2]),
+    stopRequests: Number(stopMatch[1]),
+  }
 }
 
 function capturesForLocalDay(captures: CaptureView[], now: Date) {
@@ -1826,6 +1866,7 @@ function formatAppTelemetryMarkdown(summary: AppEventSummary) {
     `Start requests: ${summary.start_requests}`,
     `Switch requests: ${summary.switch_requests}`,
     `Stop requests: ${summary.stop_requests}`,
+    `Typed/selected entry requests: ${summary.typed_entry_requests}/${summary.selected_entry_requests}`,
     `Start/stop failures: ${summary.start_failures}/${summary.stop_failures}`,
     `Window shown/hidden: ${summary.window_shown}/${summary.window_hidden}`,
     `Window show/hide requests: ${summary.window_show_requested}/${summary.window_hide_requested}`,

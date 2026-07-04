@@ -111,6 +111,7 @@ function buildTelemetryMarkdown(events) {
     `Start requests: ${summary.startRequests}`,
     `Switch requests: ${summary.switchRequests}`,
     `Stop requests: ${summary.stopRequests}`,
+    `Typed/selected entry requests: ${summary.typedEntryRequests}/${summary.selectedEntryRequests}`,
     `Start/stop failures: ${summary.startFailures}/${summary.stopFailures}`,
     `Window shown/hidden: ${summary.windowShown}/${summary.windowHidden}`,
     `Window show/hide requests: ${summary.windowShowRequested}/${summary.windowHideRequested}`,
@@ -195,6 +196,8 @@ function summarizeEvents(events) {
     startRequests: count("focus_start_requested"),
     switchRequests: count("focus_switch_requested"),
     stopRequests: count("focus_stop_requested"),
+    typedEntryRequests: countEntryRequestsByControls(events, ["typed"]),
+    selectedEntryRequests: countEntryRequestsByControls(events, ["selected_item", "selected_shortcut", "double_click"]),
     startFailures: count("focus_start_failed"),
     stopFailures: count("focus_stop_failed"),
     windowShown: count("window_shown"),
@@ -229,6 +232,19 @@ function summarizeEvents(events) {
     averageStartLatencyMs,
     slowWindowToFocusCount,
   };
+}
+
+function countEntryRequestsByControls(events, controls) {
+  const allowedControls = new Set(controls);
+
+  return events.filter((event) => {
+    if (event.kind !== "focus_start_requested" && event.kind !== "focus_switch_requested") {
+      return false;
+    }
+
+    const control = event.payload?.control;
+    return typeof control === "string" && allowedControls.has(control);
+  }).length;
 }
 
 function parsePayload(value) {

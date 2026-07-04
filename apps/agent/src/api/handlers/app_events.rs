@@ -181,6 +181,8 @@ fn build_summary(events: Vec<AppEvent>) -> serde_json::Value {
         "start_requests": count(&by_kind, "focus_start_requested"),
         "switch_requests": count(&by_kind, "focus_switch_requested"),
         "stop_requests": count(&by_kind, "focus_stop_requested"),
+        "typed_entry_requests": count_entry_requests_by_controls(&events, &["typed"]),
+        "selected_entry_requests": count_entry_requests_by_controls(&events, &["selected_item", "selected_shortcut", "double_click"]),
         "start_failures": count(&by_kind, "focus_start_failed"),
         "stop_failures": count(&by_kind, "focus_stop_failed"),
         "correction_requests": count(&by_kind, "focus_correction_requested"),
@@ -238,6 +240,30 @@ fn event_action_id(event: &AppEvent) -> Option<String> {
         .and_then(|payload| payload.get("action_id"))
         .and_then(|value| value.as_str())
         .map(str::to_string)
+}
+
+fn count_entry_requests_by_controls(events: &[AppEvent], controls: &[&str]) -> usize {
+    events
+        .iter()
+        .filter(|event| {
+            if event.kind != AppEventKind::FocusStartRequested
+                && event.kind != AppEventKind::FocusSwitchRequested
+            {
+                return false;
+            }
+
+            let Some(control) = event
+                .payload
+                .as_ref()
+                .and_then(|payload| payload.get("control"))
+                .and_then(|value| value.as_str())
+            else {
+                return false;
+            };
+
+            controls.contains(&control)
+        })
+        .count()
 }
 
 fn sanitize_payload(value: &serde_json::Value) -> Option<serde_json::Value> {

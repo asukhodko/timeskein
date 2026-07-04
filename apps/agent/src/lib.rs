@@ -1,3 +1,5 @@
+#![recursion_limit = "256"]
+
 //! Timeskein Agent Library
 //!
 //! Exposes modules for testing and embedding.

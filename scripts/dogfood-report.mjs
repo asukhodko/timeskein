@@ -447,6 +447,17 @@ function buildReviewChecklistItems({
     }
   }
 
+  const entryTelemetry = parseEntryTelemetry(telemetryMarkdown);
+  if (focusMarkdown.includes("| Time | Duration | Zone | Work Item | Note |") && entryTelemetry) {
+    if (entryTelemetry.typedEntryRequests === 0 || entryTelemetry.selectedEntryRequests === 0 || entryTelemetry.stopRequests === 0) {
+      items.push({
+        level: "review",
+        title: "Exercise start and continue paths",
+        detail: `${entryTelemetry.typedEntryRequests} typed, ${entryTelemetry.selectedEntryRequests} selected/list, ${entryTelemetry.stopRequests} stop request(s)`,
+      });
+    }
+  }
+
   const windowTelemetry = parseWindowTelemetry(telemetryMarkdown);
   if (focusMarkdown.includes("| Time | Duration | Zone | Work Item | Note |") && windowTelemetry) {
     if (windowTelemetry.showRequests + windowTelemetry.hideRequests === 0) {
@@ -499,6 +510,8 @@ function formatDailyControlGoalAuditMarkdown({
   const apiErrors = parseLeadingNumber(extractLineValue(telemetryMarkdown, "API errors"));
   const copyFailures = parseLeadingNumber(extractLineValue(telemetryMarkdown, "Copy failures"));
   const startStopFailures = extractLineValue(telemetryMarkdown, "Start/stop failures") ?? "n/a";
+  const entryPathEvidence = extractLineValue(telemetryMarkdown, "Typed/selected entry requests") ?? "n/a";
+  const entryTelemetry = parseEntryTelemetry(telemetryMarkdown);
   const correctionEvidence =
     extractLineValue(telemetryMarkdown, "Corrections requested/applied/reviewed/failed") ?? "n/a";
   const telemetryAvailable = telemetryMarkdown.includes("Total events:");
@@ -554,6 +567,19 @@ function formatDailyControlGoalAuditMarkdown({
       evidence: `window shown/hidden ${windowEvidence}, requests ${windowRequestEvidence}, API errors ${apiErrors}, start/stop failures ${startStopFailures}`,
     },
     {
+      requirement: "Start and continue paths evidenced",
+      status:
+        !telemetryAvailable ||
+        !entryTelemetry ||
+        entryTelemetry.typedEntryRequests === 0 ||
+        entryTelemetry.selectedEntryRequests === 0 ||
+        entryTelemetry.stopRequests === 0 ||
+        hasReview("Exercise start and continue paths")
+          ? "review"
+          : "pass",
+      evidence: `${entryPathEvidence} typed/selected, ${entryTelemetry?.stopRequests ?? "n/a"} stop request(s)`,
+    },
+    {
       requirement: "Tracking correction or review evidenced",
       status: hasReview("Confirm tracking accuracy or test correction") ? "review" : "pass",
       evidence: correctionEvidence,
@@ -603,6 +629,18 @@ function parseCorrectionTelemetry(markdown) {
     applied: Number(match[2]),
     reviewed: Number(match[3]),
     failures: Number(match[4]),
+  };
+}
+
+function parseEntryTelemetry(markdown) {
+  const entryMatch = markdown.match(/Typed\/selected entry requests:\s*(\d+)\/(\d+)/);
+  const stopMatch = markdown.match(/Stop requests:\s*(\d+)/);
+  if (!entryMatch || !stopMatch) return undefined;
+
+  return {
+    typedEntryRequests: Number(entryMatch[1]),
+    selectedEntryRequests: Number(entryMatch[2]),
+    stopRequests: Number(stopMatch[1]),
   };
 }
 

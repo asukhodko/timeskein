@@ -160,7 +160,7 @@ At the end of the day, export the analysis note:
 pnpm dogfood:finish:save
 ```
 
-This writes `timeskein-dogfood-report-YYYY-MM-DD.md` in the current directory. The report includes focus blocks, Work Item totals, Activity Zone totals, Day Events, Work Item notes and timestamped Work Item Events for items touched that day, Capture Activity for the day, open Capture Inbox entries, Review Checklist, Daily Control Goal Audit, and local app telemetry: starts, switches, stops, start/stop failures, Capture Inbox actions, focus corrections or accepted correction review, API errors, show/hide events, show/hide requests from window entrypoints, copy failures, and likely friction points.
+This writes `timeskein-dogfood-report-YYYY-MM-DD.md` in the current directory. The report includes focus blocks, Work Item totals, Activity Zone totals, Day Events, Work Item notes and timestamped Work Item Events for items touched that day, Capture Activity for the day, open Capture Inbox entries, Review Checklist, Daily Control Goal Audit, and local app telemetry: starts, switches, stops, typed and selected/list entry paths, start/stop failures, Capture Inbox actions, focus corrections or accepted correction review, API errors, show/hide events, show/hide requests from window entrypoints, copy failures, and likely friction points.
 It also writes `timeskein-dogfood-rc-check-YYYY-MM-DD.md`, so the evening evidence package contains both the readable day report and the requirement-by-requirement RC audit.
 Saved dogfood reports and RC checks can contain personal or internal work context, so they are ignored by git.
 To print the report to stdout instead:

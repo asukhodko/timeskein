@@ -1,17 +1,18 @@
 #!/usr/bin/env node
 
 import { spawn } from "node:child_process";
+import { readFile } from "node:fs/promises";
 
 const options = parseArgs(process.argv.slice(2));
+const date = options.date ?? formatLocalDate(new Date());
 const rcArgs = ["scripts/dogfood-rc-check.mjs", "--strict"];
+const shouldCheckSavedEvidence = !options.db && !options.skipSavedEvidenceCheck;
 
 if (options.db) {
   rcArgs.push("--db", options.db);
 }
 
-if (options.date) {
-  rcArgs.push("--date", options.date);
-}
+rcArgs.push("--date", date);
 
 if (options.minFocusMinutes !== undefined) {
   rcArgs.push("--min-focus-minutes", String(options.minFocusMinutes));
@@ -26,10 +27,19 @@ if (options.out) {
 }
 
 const steps = [
+  ...(shouldCheckSavedEvidence
+    ? [["node", ["scripts/dogfood-goal-check.mjs", "--check-saved-evidence-only", "--date", date]]]
+    : []),
   ["pnpm", ["test"]],
   ["pnpm", ["dogfood:preflight"]],
   [process.execPath, rcArgs],
 ];
+
+if (options.checkSavedEvidenceOnly) {
+  await checkSavedEvidence(date);
+  console.log(`Saved dogfood evidence found for ${date}.`);
+  process.exit(0);
+}
 
 if (options.dryRun) {
   console.log("# Timeskein dogfood goal check - dry run");
@@ -66,6 +76,10 @@ function parseArgs(args) {
       result.save = true;
     } else if (arg === "--out") {
       result.out = args[++index];
+    } else if (arg === "--skip-saved-evidence-check") {
+      result.skipSavedEvidenceCheck = true;
+    } else if (arg === "--check-saved-evidence-only") {
+      result.checkSavedEvidenceOnly = true;
     } else if (arg === "--dry-run") {
       result.dryRun = true;
     } else if (arg === "--help" || arg === "-h") {
@@ -88,15 +102,88 @@ function parseArgs(args) {
 }
 
 function printHelp() {
-  console.log(`Usage: pnpm dogfood:goal-check [--date YYYY-MM-DD] [--db path/to/timeskein.db] [--min-focus-minutes N] [--save | --out path.md] [--dry-run]
+  console.log(`Usage: pnpm dogfood:goal-check [--date YYYY-MM-DD] [--db path/to/timeskein.db] [--min-focus-minutes N] [--save | --out path.md] [--skip-saved-evidence-check] [--dry-run]
 
 Runs the final local gate for the active daily-control goal:
 
-1. pnpm test
-2. pnpm dogfood:preflight
-3. dogfood:rc-check --strict for the selected dogfood day
+1. saved dogfood report and RC evidence exist for the selected date
+2. pnpm test
+3. pnpm dogfood:preflight
+4. dogfood:rc-check --strict for the selected dogfood day
 
 Use this after a real dogfood day, before marking the goal complete.`);
+}
+
+async function checkSavedEvidence(date) {
+  const reportPath = `timeskein-dogfood-report-${date}.md`;
+  const rcPath = `timeskein-dogfood-rc-check-${date}.md`;
+  const missing = [];
+
+  const report = await readEvidenceFile(reportPath, missing);
+  const rcCheck = await readEvidenceFile(rcPath, missing);
+
+  if (missing.length > 0) {
+    throw new Error(
+      [
+        `Saved dogfood evidence is missing for ${date}:`,
+        ...missing.map((item) => `- ${item}`),
+        "",
+        `Run: pnpm dogfood:finish:save -- --date ${date}`,
+      ].join("\n")
+    );
+  }
+
+  const weak = [];
+  const reportRequirements = [
+    "# Timeskein dogfood report",
+    "## Focus Data",
+    "## Daily Control Goal Audit",
+    "## App Telemetry",
+  ];
+  const rcRequirements = [
+    "# Timeskein dogfood RC check",
+    "## Evidence Summary",
+    "## Daily Control Goal Audit",
+  ];
+
+  for (const needle of reportRequirements) {
+    if (!report.includes(needle)) {
+      weak.push(`${reportPath} does not include ${needle}`);
+    }
+  }
+  for (const needle of rcRequirements) {
+    if (!rcCheck.includes(needle)) {
+      weak.push(`${rcPath} does not include ${needle}`);
+    }
+  }
+
+  if (weak.length > 0) {
+    throw new Error(
+      [
+        `Saved dogfood evidence is incomplete for ${date}:`,
+        ...weak.map((item) => `- ${item}`),
+        "",
+        `Regenerate it with: pnpm dogfood:finish:save -- --date ${date}`,
+      ].join("\n")
+    );
+  }
+}
+
+async function readEvidenceFile(path, missing) {
+  try {
+    const text = await readFile(path, "utf8");
+    if (text.trim().length === 0) {
+      missing.push(`${path} is empty`);
+      return "";
+    }
+    return text;
+  } catch (error) {
+    if (error?.code === "ENOENT") {
+      missing.push(path);
+      return "";
+    }
+    throw error;
+  }
 }
 
 function run(command, args) {
@@ -129,6 +216,13 @@ function run(command, args) {
 function formatCommand(command, args) {
   const displayCommand = command === process.execPath ? "node" : command;
   return [displayCommand, ...args].map(shellQuote).join(" ");
+}
+
+function formatLocalDate(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 function shellQuote(value) {

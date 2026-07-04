@@ -366,7 +366,7 @@ nodes:
     deps:
       - id: ts.day_review.app_telemetry
       - id: ts.day_review.review_checklist
-    notes: The UI/CLI dogfood report and RC evidence check summarize focus totals, Activity Zones, Day Events, Work Item notes/events, Capture Inbox coverage, window telemetry including show/hide request counts, and product-friction counters. They include a Daily Control Goal Audit table. dogfood:goal-check runs pnpm test, dogfood:preflight, and strict RC evidence on the same code, so the next dogfood day can be judged requirement by requirement against report usefulness rather than memory reconstruction.
+    notes: The UI/CLI dogfood report and RC evidence check summarize focus totals, Activity Zones, Day Events, Work Item notes/events, Capture Inbox coverage, window telemetry including show/hide request counts, and product-friction counters. They include a Daily Control Goal Audit table. dogfood:goal-check requires saved evidence for the real local database, then runs pnpm test, dogfood:preflight, and strict RC evidence on the same code, so the next dogfood day can be judged requirement by requirement against report usefulness rather than memory reconstruction.
     x:
       ops:
         attention_class: current
@@ -528,7 +528,7 @@ nodes:
     milestone: true
     deps:
       - id: ts.daily_control.real_day
-    notes: "`pnpm dogfood:finish:save` must save the day report and RC evidence, and `pnpm dogfood:goal-check` must pass for the selected dogfood date before the active goal can be marked complete."
+    notes: "`pnpm dogfood:finish:save` must save the day report and RC evidence, and `pnpm dogfood:goal-check` must verify those files plus pass for the selected dogfood date before the active goal can be marked complete."
     x:
       ops:
         attention_class: current

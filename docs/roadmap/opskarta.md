@@ -22,8 +22,9 @@ reopens it through readiness continue mode and the same process/preflight/app-op
 guard as the normal start path.
 `pnpm dogfood:finish:save` now saves both the readable day report and the
 RC-check evidence file, so the evening package is collected in one step.
-For final goal closure, `pnpm dogfood:goal-check` runs `pnpm test`,
-`pnpm dogfood:preflight`, and strict RC evidence on the same code.
+For final goal closure, `pnpm dogfood:goal-check` first requires the saved
+dogfood report and RC evidence for the real local database, then runs
+`pnpm test`, `pnpm dogfood:preflight`, and strict RC evidence on the same code.
 
 ## Executive view
 

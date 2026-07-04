@@ -386,7 +386,7 @@ pnpm dogfood:rc-check:save
 ```
 
 The command prints hard blockers and review items for the Session replacement gate. Its evidence summary includes total tracked time, work focus, non-work tracked time, Activity Zone coverage, Work Item notes/events, Capture Inbox coverage, typed entry and selected/list continuation evidence, correction telemetry, window telemetry with both show and hide request counts, and product-friction counters. The same `Daily Control Goal Audit` framing maps the day to the active daily-control goal: focus blocks, Work Item totals, Activity Zones, notes/events, gaps/captures, entry-path evidence, window friction evidence, tracking correction evidence, hard blockers, and the manual local gates. The gaps/captures audit row moves to `review` when significant gaps are unexplained, captures remain open without explicit follow-up acceptance, no captures were created, or captures were not linked to active focus.
-Before marking the daily-control goal complete, run the final gate. It runs `pnpm test`, `pnpm dogfood:preflight`, and the strict RC check on the same code:
+Before marking the daily-control goal complete, run the final gate after `pnpm dogfood:finish:save`. For the real local database it first checks that both saved evidence files exist, then runs `pnpm test`, `pnpm dogfood:preflight`, and the strict RC check on the same code:
 
 ```bash
 pnpm dogfood:goal-check

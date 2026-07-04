@@ -83,8 +83,10 @@ pnpm dogfood:rc-check:save
 `dogfood:rc-check` does not replace the human verdict. It catches hard blockers
 and prints review items that must be resolved or consciously accepted before the
 milestone can be marked done.
-Use the final goal gate before marking the daily-control goal complete. It runs
-`pnpm test`, `pnpm dogfood:preflight`, and the strict RC check on the same code:
+Use the final goal gate before marking the daily-control goal complete. Run it
+after `pnpm dogfood:finish:save`; for the real local database it checks that the
+saved dogfood report and RC evidence exist, then runs `pnpm test`,
+`pnpm dogfood:preflight`, and the strict RC check on the same code:
 
 ```bash
 pnpm dogfood:goal-check

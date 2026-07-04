@@ -25,7 +25,9 @@ During the day:
 - add day-level review notes in `Add day note...` when the observation is about the day, a gap, a buffer, or recovery rather than one Work Item;
 - stop with optional note by pressing `Enter` in the stop-note field;
 - watch the short `12m Focus` counter in the macOS menu bar while a block is running;
-- hide/show the app from the menu bar item, global shortcut, or `Esc` when no dialog is open.
+- hide/show the app from the menu bar item, the registered global shortcut
+  (`Ctrl+Shift+Space`, fallback `Ctrl+Option+Space` or `Cmd+Option+Space`),
+  or `Esc` when no dialog is open.
 
 End of day:
 
@@ -166,9 +168,11 @@ The next dogfood day must verify the post-baseline daily-control loop, not only
 that the timer still works. During the day, deliberately exercise these paths
 when the real situation appears:
 
-- open, hide, and restore Timeskein through the menu bar, `Esc`, Command+Tab,
-  and the normal app entrypoint; the final telemetry should include non-zero
-  show and hide requests from window entrypoints;
+- open, hide, and restore Timeskein through the menu bar, the registered global
+  shortcut (`Ctrl+Shift+Space`, fallback `Ctrl+Option+Space` or
+  `Cmd+Option+Space`), `Esc`, Command+Tab, and the normal app entrypoint; the
+  final telemetry should include non-zero show and hide requests from window
+  entrypoints;
 - start one new Work Item by typed title and continue one existing Work Item
   from the list;
 - after a touched Work Item has focus time, check that its card shows today's

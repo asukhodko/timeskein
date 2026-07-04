@@ -264,6 +264,10 @@ The smoke refuses to run if there is already an active focus session.
 
 All shortcuts work regardless of keyboard layout (Russian, etc.):
 
+The macOS app also tries to register one global show/hide shortcut, in this
+order: `Ctrl+Shift+Space`, then `Ctrl+Option+Space`, then `Cmd+Option+Space`.
+If macOS rejects all three, use the menu bar item or normal app switching.
+
 | Key | Action |
 |-----|--------|
 | `↑` / `↓` | Navigate items |

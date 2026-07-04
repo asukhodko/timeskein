@@ -37,6 +37,10 @@ try {
     "ready output did not include window entrypoint reminder"
   );
   assert(
+    ready.stdout.includes("Ctrl+Shift+Space") && ready.stdout.includes("Cmd+Option+Space"),
+    "ready output did not include concrete global shortcut candidates"
+  );
+  assert(
     ready.stdout.includes("card shows today and total time"),
     "ready output did not include Work Item time-total UI reminder"
   );

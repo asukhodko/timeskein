@@ -77,6 +77,7 @@ try {
   assert(good.stdout.includes("## Daily Control Goal Audit"), "good day goal audit section is missing");
   assert(good.stdout.includes("| Focus blocks visible | pass |"), "good day focus-block audit row is missing");
   assert(good.stdout.includes("| Activity Zones separated | pass |"), "good day activity-zone audit row is missing");
+  assert(good.stdout.includes("| Gaps and captures visible | pass |"), "good day gap/capture audit row is missing");
   assert(good.stdout.includes("| Start and continue paths evidenced | pass |"), "good day entry-path audit row is missing");
   assert(good.stdout.includes("| Tracking correction or review evidenced | pass |"), "good day correction audit row is missing");
   assert(good.stdout.includes("| Local gates | manual |"), "good day local-gates audit row is missing");
@@ -99,6 +100,10 @@ try {
   await runSql(unexplainedGapDb, "UPDATE day_events SET text = 'Meeting buffer was costly' WHERE id = 'de1';");
   const unexplainedGapStrict = await runRcCheck(unexplainedGapDb, ["--strict"]);
   assert(unexplainedGapStrict.code !== 0, "strict RC check should fail when significant gaps are not explained");
+  assert(
+    unexplainedGapStrict.stdout.includes("| Gaps and captures visible | review |"),
+    "unexplained gaps should mark gap/capture audit for review"
+  );
   assert(
     unexplainedGapStrict.stdout.includes("significant gap(s) lack a Day Event explanation"),
     "strict RC check should explain missing gap explanation"
@@ -187,6 +192,10 @@ try {
   const openCapture = await runRcCheck(openCaptureDb);
   assert(openCapture.code === 0, "open capture should be a review item, not a hard blocker");
   assert(openCapture.stdout.includes("Open captures: 1"), "open capture count is missing");
+  assert(
+    openCapture.stdout.includes("| Gaps and captures visible | review |"),
+    "open capture should mark gap/capture audit for review"
+  );
   assert(openCapture.stdout.includes("Review Items"), "open capture review section is missing");
   const openCaptureStrict = await runRcCheck(openCaptureDb, ["--strict"]);
   assert(openCaptureStrict.code !== 0, "strict RC check should fail on review items");
@@ -205,8 +214,29 @@ try {
     "active-focus capture count should show zero"
   );
   assert(
+    noActiveFocusCapture.stdout.includes("| Gaps and captures visible | review |"),
+    "capture without active focus should mark gap/capture audit for review"
+  );
+  assert(
     noActiveFocusCapture.stdout.includes("none were linked to an active focus session"),
     "missing active-focus capture review item"
+  );
+  const noActiveFocusCaptureStrict = await runRcCheck(noActiveFocusCaptureDb, ["--strict"]);
+  assert(noActiveFocusCaptureStrict.code !== 0, "strict RC check should fail without active-focus capture evidence");
+
+  const noCaptureDb = join(tempDir, "no-capture.db");
+  await copyDb(goodDb, noCaptureDb);
+  await runSql(noCaptureDb, "DELETE FROM captures;");
+  const noCapture = await runRcCheck(noCaptureDb);
+  assert(noCapture.code === 0, "missing captures should be a review item, not a hard blocker");
+  assert(noCapture.stdout.includes("Captures created today: 0"), "missing capture count should show zero");
+  assert(
+    noCapture.stdout.includes("| Gaps and captures visible | review |"),
+    "missing captures should mark gap/capture audit for review"
+  );
+  assert(
+    noCapture.stdout.includes("Capture Inbox was not tested in battle"),
+    "missing captures review item is missing"
   );
 
   const captureFailureDb = join(tempDir, "capture-failure.db");

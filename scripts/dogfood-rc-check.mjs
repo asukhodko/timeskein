@@ -669,6 +669,15 @@ function buildRcReport(date, path, evidence, assessment, minFocusSeconds, strict
 }
 
 function formatGoalAuditMarkdown(evidence, assessment, minFocusSeconds) {
+  const gapCaptureStatus = evidence.sessions.length === 0
+    ? "block"
+    : evidence.unexplainedGapCount > 0 ||
+        evidence.openCaptures.length > 0 ||
+        evidence.capturesCreatedToday.length === 0 ||
+        (evidence.capturesCreatedToday.length > 0 && evidence.capturesDuringActiveFocus === 0)
+      ? "review"
+      : "pass";
+
   const rows = [
     {
       requirement: "Final state clean",
@@ -707,8 +716,8 @@ function formatGoalAuditMarkdown(evidence, assessment, minFocusSeconds) {
     },
     {
       requirement: "Gaps and captures visible",
-      status: "pass",
-      evidence: `${evidence.gaps.length} significant gap(s), ${Math.min(evidence.gapExplanationEvents, evidence.gaps.length)} explained, ${evidence.openCaptures.length} open capture(s), ${evidence.capturesCreatedToday.length} capture(s) today`,
+      status: gapCaptureStatus,
+      evidence: `${evidence.gaps.length} significant gap(s), ${Math.min(evidence.gapExplanationEvents, evidence.gaps.length)} explained, ${evidence.openCaptures.length} open capture(s), ${evidence.capturesDuringActiveFocus}/${evidence.capturesCreatedToday.length} capture(s) during active focus`,
     },
     {
       requirement: "Window and menubar friction evidenced",

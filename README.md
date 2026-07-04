@@ -96,7 +96,7 @@ pnpm dogfood:start
 
 The start gate first checks the real local SQLite database for active sessions, active Work Items, duplicate titles, and existing blocks for today. If the real day is clean, it checks that no old `timeskein-desktop` process is running, runs the dogfood preflight, opens `Timeskein.app`, and waits for the embedded agent to respond.
 It refuses to open the app if `timeskein-desktop` is already running, so the dogfood day does not accidentally reuse an older process after a rebuild.
-When readiness is clean, `dogfood:ready` also prints the daily-control checklist for the next dogfood day: window entrypoints, new and existing Work Item starts, Activity Zones, Day Events, Work Item Events, Capture Inbox, tracking correction/review, and final strict RC check.
+When readiness is clean, `dogfood:ready` also prints the next start command and the daily-control checklist for the next dogfood day: window entrypoints, new and existing Work Item starts, Activity Zones, Day Events, Work Item Events, Capture Inbox, tracking correction/review, and the final goal check.
 
 For a clean trial that moves the current SQLite database aside first:
 

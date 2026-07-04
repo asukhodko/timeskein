@@ -59,6 +59,7 @@ appendSection(lines, "Blockers", blockers);
 appendSection(lines, "Warnings", warnings);
 
 if (blockers.length === 0) {
+  appendReadyNext(lines, mode);
   appendDailyControlChecklist(lines);
 } else {
   lines.push("## Next", "");
@@ -85,6 +86,19 @@ function appendDailyControlChecklist(lines) {
   lines.push("- Capture at least one incoming interruption during an active focus block and resolve, convert, or explicitly leave it open.");
   lines.push("- Before final report, correct one safe tracking detail or accept tracking accuracy in the review checklist.");
   lines.push("- Close the day with `pnpm dogfood:finish:save`; before completing the goal, run `pnpm dogfood:goal-check`.");
+}
+
+function appendReadyNext(lines, mode) {
+  lines.push("## Next", "");
+  if (mode === "continue") {
+    lines.push("- Continue the current dogfood day in Timeskein.");
+    lines.push("- If the app is not open, use `pnpm dogfood:macos` to rebuild and open the packaged app.");
+  } else {
+    lines.push("- Start the dogfood day with `pnpm dogfood:start`.");
+    lines.push("- If warnings mention an already running app or agent, quit Timeskein first so the fresh packaged app is used.");
+    lines.push("- If you intentionally want a clean trial database, preview with `pnpm dogfood:start:clean:preview`, then use `pnpm dogfood:start:clean`.");
+  }
+  lines.push("");
 }
 
 function parseArgs(args) {

@@ -25,6 +25,12 @@ try {
   assert(ready.stdout.includes("Mode: start"), "ready output did not report start mode");
   assert(ready.stdout.includes("Agent responsive: no"), "ready output did not report agent responsiveness");
   assert(ready.stdout.includes("Running app PIDs: none"), "ready output did not report running app PIDs");
+  assert(ready.stdout.includes("## Next"), "ready output did not include next section");
+  assert(ready.stdout.includes("pnpm dogfood:start"), "ready output did not include start command");
+  assert(
+    ready.stdout.includes("pnpm dogfood:start:clean:preview"),
+    "ready output did not include clean-start preview command"
+  );
   assert(ready.stdout.includes("## Daily-Control Checklist"), "ready output did not include daily-control checklist");
   assert(
     ready.stdout.includes("Exercise window entrypoints"),
@@ -98,6 +104,10 @@ try {
   assert(
     continuing.stdout.includes("Dogfood day is already in progress: Dogfood Dirty"),
     "continue output did not identify the active coherent focus"
+  );
+  assert(
+    continuing.stdout.includes("Continue the current dogfood day in Timeskein"),
+    "continue output did not include continue next action"
   );
   assert(
     continuing.stdout.includes("## Daily-Control Checklist"),

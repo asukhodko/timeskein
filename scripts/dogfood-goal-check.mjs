@@ -145,6 +145,19 @@ async function checkSavedEvidence(date) {
     "## Evidence Summary",
     "## Daily Control Goal Audit",
   ];
+  const dailyControlRows = [
+    "Final state clean",
+    "Focus blocks visible",
+    "Work Item totals available",
+    "Activity Zones separated",
+    "Day and Work Item context present",
+    "Gaps and captures visible",
+    "Window and menubar friction evidenced",
+    "Start and continue paths evidenced",
+    "Tracking correction or review evidenced",
+    "Hard blockers absent",
+    "Local gates",
+  ];
 
   for (const needle of reportRequirements) {
     if (!report.includes(needle)) {
@@ -154,6 +167,14 @@ async function checkSavedEvidence(date) {
   for (const needle of rcRequirements) {
     if (!rcCheck.includes(needle)) {
       weak.push(`${rcPath} does not include ${needle}`);
+    }
+  }
+  for (const row of dailyControlRows) {
+    if (!report.includes(row)) {
+      weak.push(`${reportPath} Daily Control Goal Audit does not include ${row}`);
+    }
+    if (!rcCheck.includes(row)) {
+      weak.push(`${rcPath} Daily Control Goal Audit does not include ${row}`);
     }
   }
 

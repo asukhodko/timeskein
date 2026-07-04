@@ -78,6 +78,55 @@ try {
     ].join("\n")
   );
 
+  const weakEvidence = await runGoalCheck(["--check-saved-evidence-only", "--date", "2026-06-30"], tempDir);
+  assert(weakEvidence.code !== 0, "saved evidence without audit rows should fail");
+  assert(
+    `${weakEvidence.stdout}${weakEvidence.stderr}`.includes("Daily Control Goal Audit does not include Final state clean"),
+    "weak saved evidence error did not mention missing audit rows"
+  );
+
+  const auditRows = [
+    "| Final state clean | pass | 0 active focus block(s), 0 active Work Item(s) |",
+    "| Focus blocks visible | pass | 3 entrance(s), 2:00 tracked |",
+    "| Work Item totals available | pass | By Work Item section present, 1 UI badge review(s) |",
+    "| Activity Zones separated | pass | 1:30 work, 0:30 non-work |",
+    "| Day and Work Item context present | pass | Day Events, Work Item Events |",
+    "| Gaps and captures visible | pass | gaps section present, 0 open capture(s) |",
+    "| Window and menubar friction evidenced | pass | window shown/hidden 2/2 |",
+    "| Start and continue paths evidenced | pass | 1/1 typed/selected, 2 stop request(s) |",
+    "| Tracking correction or review evidenced | pass | 0/0/1/0 requested/applied/reviewed/failed |",
+    "| Hard blockers absent | pass | 0 blocker(s) |",
+    "| Local gates | manual | Run pnpm dogfood:goal-check on the same code before closing the goal |",
+  ];
+  const auditMarkdown = [
+    "## Daily Control Goal Audit",
+    "",
+    "| Requirement | Status | Evidence |",
+    "| --- | --- | --- |",
+    ...auditRows,
+    "",
+  ].join("\n");
+
+  await writeFile(
+    join(tempDir, "timeskein-dogfood-report-2026-06-30.md"),
+    [
+      "# Timeskein dogfood report - 2026-06-30",
+      "## Focus Data",
+      auditMarkdown,
+      "## App Telemetry",
+      "",
+    ].join("\n")
+  );
+  await writeFile(
+    join(tempDir, "timeskein-dogfood-rc-check-2026-06-30.md"),
+    [
+      "# Timeskein dogfood RC check - 2026-06-30",
+      "## Evidence Summary",
+      auditMarkdown,
+      "",
+    ].join("\n")
+  );
+
   const savedEvidence = await runGoalCheck(["--check-saved-evidence-only", "--date", "2026-06-30"], tempDir);
   assert(savedEvidence.code === 0, "saved evidence check should pass with both evidence files");
   assert(

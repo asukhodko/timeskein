@@ -98,6 +98,14 @@ The start gate first checks the real local SQLite database for active sessions, 
 It refuses to open the app if `timeskein-desktop` is already running, so the dogfood day does not accidentally reuse an older process after a rebuild.
 When readiness is clean, `dogfood:ready` also prints the next start command and the daily-control checklist for the next dogfood day: window entrypoints, new and existing Work Item starts, Activity Zones, Day Events, Work Item Events, Capture Inbox, tracking correction/review, and the final goal check.
 
+If Timeskein was quit during an already started dogfood day, reopen it through the continue gate:
+
+```bash
+pnpm dogfood:continue
+```
+
+This uses readiness continue mode, so existing blocks for today and one coherent active focus block are allowed, while duplicate titles and active-state split brain still block reopening.
+
 For a clean trial that moves the current SQLite database aside first:
 
 ```bash

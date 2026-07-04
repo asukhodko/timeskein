@@ -38,6 +38,12 @@ try {
   assert(dirty.stdout.includes("Status: NOT READY"), "dirty start gate did not report NOT READY");
   assert(dirty.stdout.includes("Active focus session"), "dirty start gate did not mention active focus");
 
+  const continuing = await runStart({ mode: "continue" });
+  assert(continuing.code === 0, "coherent active dogfood day should pass the continue gate");
+  assert(continuing.stdout.includes("Mode: continue"), "continue start gate did not use continue readiness");
+  assert(continuing.stdout.includes("Status: READY"), "continue start gate did not report READY");
+  assert(continuing.stdout.includes("Dry run: app was not opened"), "continue start gate did not stay dry-run");
+
   const fakeBin = join(tempDir, "fake-bin");
   await mkdir(fakeBin);
   await writeFile(join(fakeBin, "pnpm"), "#!/bin/sh\necho preflight should not run >&2\nexit 42\n");
@@ -88,7 +94,7 @@ try {
   await rm(tempDir, { recursive: true, force: true });
 }
 
-async function runStart({ resetDb = false, skipPreflight = true, env = process.env } = {}) {
+async function runStart({ resetDb = false, skipPreflight = true, env = process.env, mode } = {}) {
   const args = [
     join(repoRoot, "scripts/dogfood-start.mjs"),
     "--dry-run",
@@ -104,6 +110,10 @@ async function runStart({ resetDb = false, skipPreflight = true, env = process.e
 
   if (resetDb) {
     args.splice(1, 0, "--reset-db");
+  }
+
+  if (mode) {
+    args.splice(1, 0, "--mode", mode);
   }
 
   try {

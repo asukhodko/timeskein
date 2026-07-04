@@ -146,6 +146,7 @@ Runtime smoke on macOS:
 Dogfood launch helper:
 
 - `pnpm dogfood:start` checks the real local database and running-process guard first, then runs preflight, opens the macOS app when all gates pass, and waits for the embedded agent to respond
+- `pnpm dogfood:continue` runs the same guarded app-opening path with readiness continue mode, so an already started dogfood day can be reopened without resetting the database or bypassing duplicate-title and active-state checks
 - `pnpm dogfood:start:clean` moves the current local SQLite files aside through the same guarded reset path, then runs the normal dogfood start gate; `pnpm dogfood:start:clean:preview` prints the reset plan and checks non-mutating gates
 - `pnpm dogfood:status` waits for the local embedded-agent port file and verifies `agent.status`
 - `pnpm dogfood:finish` checks that the day can be closed with no active focus session or active Work Item, then prints the Markdown dogfood report

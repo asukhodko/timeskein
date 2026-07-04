@@ -12,6 +12,7 @@
     "dogfood:finish": "node scripts/dogfood-finish.mjs",
     "dogfood:finish:save": "node scripts/dogfood-finish.mjs --save",
     "dogfood:goal-check": "node scripts/dogfood-goal-check.mjs",
+    "dogfood:continue": "node scripts/dogfood-start.mjs --mode continue",
     "dogfood:metrics": "node scripts/dogfood-metrics.mjs",
     "dogfood:preflight": "node scripts/dogfood-preflight.mjs",
     "dogfood:ready": "node scripts/dogfood-ready.mjs",

@@ -114,6 +114,10 @@ try {
     "continue output did not include continue next action"
   );
   assert(
+    continuing.stdout.includes("pnpm dogfood:continue"),
+    "continue output did not include guarded continue command"
+  );
+  assert(
     continuing.stdout.includes("## Daily-Control Checklist"),
     "continue output did not include daily-control checklist"
   );

@@ -93,7 +93,7 @@ function appendReadyNext(lines, mode) {
   lines.push("## Next", "");
   if (mode === "continue") {
     lines.push("- Continue the current dogfood day in Timeskein.");
-    lines.push("- If the app is not open, use `pnpm dogfood:macos` to rebuild and open the packaged app.");
+    lines.push("- If the app is not open, use `pnpm dogfood:continue` to run the continue gate and open the packaged app.");
   } else {
     lines.push("- Start the dogfood day with `pnpm dogfood:start`.");
     lines.push("- If warnings mention an already running app or agent, quit Timeskein first so the fresh packaged app is used.");

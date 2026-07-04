@@ -29,6 +29,9 @@ try {
   }
 
   const readyArgs = [resolve(repoRoot, "scripts/dogfood-ready.mjs")];
+  if (options.mode) {
+    readyArgs.push("--mode", options.mode);
+  }
   if (options.db) {
     readyArgs.push("--db", options.db);
   }
@@ -72,6 +75,14 @@ function parseArgs(args) {
       result.db = args[++index];
     } else if (arg === "--date") {
       result.date = args[++index];
+    } else if (arg === "--mode") {
+      const mode = args[++index];
+      if (mode !== "start" && mode !== "continue") {
+        throw new Error(`Invalid --mode value, expected start or continue: ${mode}`);
+      }
+      result.mode = mode;
+    } else if (arg === "--continue") {
+      result.mode = "continue";
     } else if (arg === "--dry-run") {
       result.dryRun = true;
     } else if (arg === "--reset-db") {
@@ -90,11 +101,11 @@ function parseArgs(args) {
 }
 
 function printHelp() {
-  console.log(`Usage: pnpm dogfood:start [--skip-preflight] [--dry-run] [--reset-db] [--date YYYY-MM-DD] [--db path/to/timeskein.db]
+  console.log(`Usage: pnpm dogfood:start [--mode start|continue] [--skip-preflight] [--dry-run] [--reset-db] [--date YYYY-MM-DD] [--db path/to/timeskein.db]
 
 Runs the dogfood start gate:
 1. optional database backup reset when --reset-db is passed;
-2. real local database readiness check;
+2. real local database readiness check, in start mode by default or continue mode for an existing dogfood day;
 3. running-process check;
 4. dogfood preflight, unless --skip-preflight is passed;
 5. opens the macOS app, unless --dry-run is passed;

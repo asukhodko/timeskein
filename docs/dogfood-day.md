@@ -92,6 +92,14 @@ pnpm dogfood:ready -- --mode continue
 
 Continue mode allows existing focus blocks and one coherent active focus block linked to exactly one active Work Item. It still rejects duplicate titles and active-state split brain.
 
+If Timeskein was quit during an already started dogfood day, reopen it through the continue gate:
+
+```bash
+pnpm dogfood:continue
+```
+
+This runs readiness in continue mode, checks for an already running app process, runs preflight, opens the packaged app, and waits for the embedded agent to respond.
+
 If the readiness report shows existing blocks for today and you want a clean trial, prefer resetting the trial database. If it shows only an old active focus block and no existing day blocks, close only that active block:
 
 ```bash

@@ -294,7 +294,7 @@ Post-factum correction is implemented for stopped focus sessions. `focus.create_
 
 ## Dogfood Findings
 
-The 2026-07-01, 2026-07-02, and 2026-07-03 dogfood days showed that the core timer loop works, and that Capture Inbox can preserve incoming events without switching away from the current focus. The first post-baseline slice added post-factum correction; the next useful product slice is entry/window polish and richer day review.
+The 2026-07-01, 2026-07-02, and 2026-07-03 dogfood days showed that the core timer loop works, and that Capture Inbox can preserve incoming events without switching away from the current focus. The first post-baseline slice added post-factum correction, entry/window fixes, Day Events, Work Item Events, Activity Zones, and strict report evidence. The next useful product slice is proving that whole daily-control loop in one real dogfood day.
 
 High-signal findings:
 

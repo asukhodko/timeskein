@@ -22,7 +22,7 @@ A desktop application for quickly tracking focus sessions and work items with re
 
 **What works now:** Focus Session tracking, Capture Inbox, and Work Item inventory in browser mock mode and in the macOS `.app` with an embedded Rust agent.
 
-**Current focus:** The macOS dogfood release baseline was accepted on 2026-07-03 after three real tracked days, including one day with Capture Inbox used during active focus. Post-factum focus correction is now implemented; the next slice is entry/window polish and richer day review. Windows packaging is deferred.
+**Current focus:** The macOS dogfood release baseline was accepted on 2026-07-03 after three real tracked days, including one day with Capture Inbox used during active focus. The next slice is proving the post-baseline daily-control loop in one real dogfood day and closing it with `pnpm dogfood:goal-check`. Windows packaging is deferred.
 
 See [Current Implementation](docs/current-implementation.md) for the exact state of what runs today.
 Use [Dogfood Day Protocol](docs/dogfood-day.md) when testing Timeskein as a Session replacement for a real workday.

@@ -87,3 +87,9 @@ schedule:
     ts.hardening.release_notes:
       duration: 1d
     ts.hardening.dogfood_release: {}
+
+    ts.daily_control.real_day:
+      start: "2026-07-06"
+      duration: 1d
+    ts.daily_control.goal_check:
+      start: "2026-07-06"

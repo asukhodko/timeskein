@@ -14,7 +14,7 @@ views:
         - future
     order_by: title
   current-gantt:
-    title: Timeskein Focus Session dogfood slice
+    title: Timeskein daily-control dogfood slice
     where:
       has_schedule: true
     window_start: "2026-06-30"
@@ -47,12 +47,17 @@ views:
         nodes:
           - ts.hardening
         expand_descendants: leaves
+      daily-control:
+        title: Daily Control Gate
+        nodes:
+          - ts.daily_control
+        expand_descendants: leaves
 
 x:
   exec:
     program:
       committed_date: "2026-06-30"
-      note: Focus Session dogfood is the next useful product slice after the macOS recovery baseline.
+      note: The Session replacement baseline is accepted; the next useful product slice is proving the daily-control loop on one real day.
     defaults:
       weight_strategy: effort_effective
       status_progress:
@@ -77,18 +82,18 @@ x:
           - ts.ux_entry
         target_gate: ts.ux_entry.fast_track_flow
         mgmt:
-          health: yellow
+          health: green
           owner: a.sukhodko
-          next_sync_goal: Verify that the start and continue gates keep opening and returning to Timeskein cheap during a real dogfood day.
+          sync_note: Entry and return paths are implemented; the daily-control gate will verify their real-day cost through show and hide request telemetry.
       focus-session-core:
         title: Focus Session core
         scope_nodes:
           - ts.focus_core
         target_gate: ts.focus_core.dogfood_gate
         mgmt:
-          health: yellow
+          health: green
           owner: a.sukhodko
-          next_sync_goal: Track one real focus session with overflow and manual stop.
+          sync_note: Manual start, switch, stop, restore, overflow, and stop notes are accepted as the Session replacement baseline. Pause/resume/cancel are deferred.
       day-review-export:
         title: Day review and export
         scope_nodes:
@@ -116,6 +121,15 @@ x:
           health: green
           owner: a.sukhodko
           sync_note: macOS Session replacement dogfood baseline accepted on 2026-07-03; post-factum correction covers missed-block creation, edit, and split, window request telemetry is ready for the next entry-polish dogfood gate, and dogfood:continue now reopens an existing day through the guarded launch path.
+      daily-control-gate:
+        title: Daily Control Gate
+        scope_nodes:
+          - ts.daily_control
+        target_gate: ts.daily_control.goal_check
+        mgmt:
+          health: yellow
+          owner: a.sukhodko
+          next_sync_goal: Run one post-baseline dogfood day and close it with saved report, saved RC evidence, and strict dogfood:goal-check.
       future-directions:
         title: Future directions
         scope_nodes:
@@ -140,7 +154,10 @@ x:
       - from: capture-inbox
         to: dogfood-hardening
         type: required
-      - from: focus-session-core
+      - from: dogfood-hardening
+        to: daily-control-gate
+        type: required
+      - from: daily-control-gate
         to: future-directions
         type: context
         label: later
@@ -153,6 +170,7 @@ x:
           - day-review-export
           - capture-inbox
           - dogfood-hardening
+          - daily-control-gate
           - future-directions
         direction: LR
         color_mode: mgmt_hybrid
@@ -162,13 +180,14 @@ x:
         show_owner: false
         wrap_title_lines: 2
         reduce_transitive_required_edges: true
-        caption: "Near-term plan is intentionally narrow: make Timeskein replace Session before reopening sync, Evidence Mode, or platform expansion."
+        caption: "Near-term plan is intentionally narrow: prove the daily-control loop before reopening sync, Evidence Mode, or platform expansion."
       exec-active-tracks:
         blocks:
           - app-entry-ux
-          - focus-session-core
           - day-review-export
           - capture-inbox
+          - dogfood-hardening
+          - daily-control-gate
         direction: TD
         color_mode: mgmt_hybrid
         highlight_current: true

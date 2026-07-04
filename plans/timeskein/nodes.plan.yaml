@@ -5,7 +5,7 @@ nodes:
     title: Timeskein
     kind: product
     status: in_progress
-    notes: Manual-first, local-first work inventory with the nearest product push toward Focus Session tracking.
+    notes: Manual-first, local-first work inventory. The current push is to prove the post-baseline daily-control loop in one real dogfood day.
     x:
       ops:
         attention_class: overview
@@ -149,20 +149,20 @@ nodes:
     title: Focus Session core
     kind: phase
     parent: ts
-    status: in_progress
-    notes: "Replace the useful part of Session: a 25-minute focus target that continues counting real contact time until manual stop."
+    status: done
+    notes: "Accepted manual Session replacement baseline: a 25-minute focus target that continues counting real contact time until manual stop."
     x:
       ops:
         attention_class: current
   ts.focus_core.model_migrations:
-    title: Add FocusSession and SessionEvent persistence
+    title: Add FocusSession persistence
     kind: task
     parent: ts.focus_core
-    status: in_progress
+    status: done
     effort: 3
     deps:
       - id: ts.ux_entry.fast_track_flow
-    notes: Initial FocusSession table is implemented. SessionEvent and pause accounting are not implemented yet.
+    notes: FocusSession persistence is implemented. SessionEvent and pause accounting are intentionally deferred beyond the daily-control gate.
     x:
       ops:
         attention_class: current
@@ -191,13 +191,14 @@ nodes:
       ops:
         attention_class: current
   ts.focus_core.session_lifecycle:
-    title: Implement start, pause, resume, stop, cancel
+    title: Implement manual start and stop lifecycle
     kind: task
     parent: ts.focus_core
-    status: in_progress
+    status: done
     effort: 3
     deps:
       - id: ts.focus_core.timer_ui
+    notes: Start, switch, stop, and active-session restore are implemented. Pause, resume, and cancel are deferred because they are not needed for the accepted Session replacement baseline.
     x:
       ops:
         attention_class: current
@@ -498,6 +499,40 @@ nodes:
       ops:
         attention_class: current
 
+  ts.daily_control:
+    title: Daily Control Dogfood Gate
+    kind: phase
+    parent: ts
+    status: in_progress
+    notes: Prove that Timeskein is a reliable daily control loop, not only a working timer, by running one real post-baseline dogfood day and closing the strict evidence gate.
+    x:
+      ops:
+        attention_class: current
+  ts.daily_control.real_day:
+    title: Run post-baseline daily-control dogfood day
+    kind: task
+    parent: ts.daily_control
+    status: in_progress
+    effort: 1
+    deps:
+      - id: ts.hardening.dogfood_release
+    notes: The day must exercise show and hide window entrypoints, typed start, selected/list continuation, Work Item today/total badges, at least two Activity Zones, Day Events, Work Item Events or accepted absence, Capture Inbox, and correction or accepted correction review.
+    x:
+      ops:
+        attention_class: current
+  ts.daily_control.goal_check:
+    title: Close daily-control goal with strict evidence
+    kind: milestone
+    parent: ts.daily_control
+    status: planned
+    milestone: true
+    deps:
+      - id: ts.daily_control.real_day
+    notes: "`pnpm dogfood:finish:save` must save the day report and RC evidence, and `pnpm dogfood:goal-check` must pass for the selected dogfood date before the active goal can be marked complete."
+    x:
+      ops:
+        attention_class: current
+
   ts.future:
     title: Future directions
     kind: phase
@@ -570,6 +605,16 @@ nodes:
     status: deferred
     effort: 8
     notes: Explore only after the manual timer and post-factum correction loop is reliable. Future sources include active apps, browser tabs and URLs, messenger channels/chats, screenshots or screen chunks, and AI-assisted interpretation of activity, all behind explicit opt-in privacy controls.
+    x:
+      ops:
+        attention_class: future
+  ts.future.pause_resume:
+    title: Pause, resume, and cancel focus sessions
+    kind: epic
+    parent: ts.future
+    status: deferred
+    effort: 5
+    notes: SessionEvent-style pause accounting may become useful after the daily-control loop is proven, but it is not required for the current manual contact-time baseline.
     x:
       ops:
         attention_class: future

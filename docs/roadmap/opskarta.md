@@ -5,9 +5,9 @@ This is the current machine-checkable roadmap for Timeskein. The source files li
 `tools/opskarta`.
 
 The macOS dogfood release baseline was accepted on 2026-07-03 after three real
-tracked workdays. The near-term focus now stays narrow: improve post-factum
-correction and entry polish before widening scope to sync, Evidence Mode,
-automation, or new platforms.
+tracked workdays. The near-term focus now stays narrow: prove the post-baseline
+daily-control loop in one real dogfood day before widening scope to sync,
+Evidence Mode, automation, or new platforms.
 
 The current post-baseline gate is the Daily Control Goal Audit in the UI/CLI
 dogfood report and in `pnpm dogfood:rc-check`: it checks whether a real day has
@@ -47,9 +47,8 @@ flowchart LR
     recovered_baseline["Recovered<br/>baseline<br/>100%<br/>веха 2026-06-30"]
     class recovered_baseline exec_done
     app_entry_ux["App<br/>entry UX<br/>100%<br/>веха 2026-07-03"]
-    class app_entry_ux exec_mgmt_yellow
-    style app_entry_ux stroke:#111827,stroke-width:3px
-    focus_session_core["Focus<br/>Session core<br/>85%<br/>веха 2026-07-01"]
+    class app_entry_ux exec_mgmt_green
+    focus_session_core["Focus<br/>Session core<br/>100%<br/>веха 2026-07-01"]
     class focus_session_core exec_done
     day_review_export["Day review<br/>and export<br/>95%<br/>веха 2026-07-01"]
     class day_review_export exec_done
@@ -57,6 +56,9 @@ flowchart LR
     class capture_inbox exec_done
     dogfood_hardening["Dogfood<br/>hardening<br/>100%<br/>веха 2026-07-06"]
     class dogfood_hardening exec_done
+    daily_control_gate["Daily<br/>Control Gate<br/>0%<br/>веха 2026-07-06"]
+    class daily_control_gate exec_mgmt_yellow
+    style daily_control_gate stroke:#111827,stroke-width:3px
     future_directions["Future<br/>directions<br/>n/a"]
     class future_directions exec_mgmt_neutral
 
@@ -65,10 +67,11 @@ flowchart LR
     focus_session_core --> day_review_export
     day_review_export --> capture_inbox
     capture_inbox --> dogfood_hardening
-    focus_session_core -. later .-> future_directions
+    dogfood_hardening --> daily_control_gate
+    daily_control_gate -. later .-> future_directions
 ```
 
-Near-term plan is intentionally narrow: make Timeskein replace Session before reopening sync, Evidence Mode, or platform expansion.
+Near-term plan is intentionally narrow: prove the daily-control loop before reopening sync, Evidence Mode, or platform expansion.
 
 ## Current schedule
 
@@ -81,7 +84,7 @@ Near-term plan is intentionally narrow: make Timeskein replace Session before re
 %%{init: {"theme": "base", "themeVariables": {"taskBkgColor": "#9ca3af", "taskBorderColor": "#4b5563", "taskTextColor": "#000000", "taskTextDarkColor": "#000000", "taskTextLightColor": "#000000", "activeTaskBkgColor": "#0ea5e9", "activeTaskBorderColor": "#0ea5e9", "doneTaskBkgColor": "#22c55e", "doneTaskBorderColor": "#16a34a", "critBkgColor": "#fecaca", "critBorderColor": "#fecaca", "todayLineColor": "#ef4444"}} }%%
 
 gantt
-    title Timeskein Focus Session dogfood slice
+    title Timeskein daily-control dogfood slice
     dateFormat YYYY-MM-DD
     axisFormat %d.%m
     excludes weekends
@@ -95,10 +98,10 @@ gantt
     ✅ Keep the multi-day Work Item list navigable  :done, ts_ux_entry_inventory_modes,    2026-07-03, 1d
     ✅ Resize Today versus Work Item inventory  :done, ts_ux_entry_resizable_today_split,    2026-07-03, 1d
     section Focus Session core
-    🔄 Add FocusSession and SessionEvent persistence  :active, ts_focus_core_model_migrations,    2026-06-30, 2d
+    ✅ Add FocusSession persistence  :done, ts_focus_core_model_migrations,    2026-06-30, 2d
     ✅ Add contracts and Local API for focus sessions  :done, ts_focus_core_contracts_api,    2026-07-02, 2d
     ✅ Build focus timer UI with overflow  :done, ts_focus_core_timer_ui,    2026-07-06, 2d
-    🔄 Implement start, pause, resume, stop, cancel  :active, ts_focus_core_session_lifecycle,    2026-07-08, 2d
+    ✅ Implement manual start and stop lifecycle  :done, ts_focus_core_session_lifecycle,    2026-07-08, 2d
     ✅ Restore running focus session after app restart  :done, ts_focus_core_restart_restore,    2026-07-10, 1d
     ✅ Bind focus sessions to Work Items or free intentions  :done, ts_focus_core_work_item_binding,    2026-07-06, 1d
     ✅ Capture a note at the end of a focus session  :done, ts_focus_core_session_notes,    2026-07-10, 1d
@@ -123,6 +126,9 @@ gantt
     ✅ Rebuild macOS app for regular personal use  :done, ts_hardening_package_app,    2026-07-03, 1d
     ✅ Write dogfood release notes and known limitations  :done, ts_hardening_release_notes,    2026-07-06, 1d
     ✅ Session replacement dogfood baseline  :milestone, done, ts_hardening_dogfood_release,    2026-07-06, 0d
+    section Daily Control Gate
+    🔄 Run post-baseline daily-control dogfood day  :active, ts_daily_control_real_day,    2026-07-06, 1d
+    Close daily-control goal with strict evidence  :milestone, ts_daily_control_goal_check,    2026-07-06, 0d
 ```
 
 ## Current work list
@@ -139,8 +145,11 @@ gantt
 - Document macOS multi-monitor status item limits [done] (1 focus-blocks) {100%}
 - Keep the multi-day Work Item list navigable [done] (1 focus-blocks) {100%}
 - Resize Today versus Work Item inventory [done] (1 focus-blocks) {100%}
+- Focus Session core [done] (17 focus-blocks) {100%}
+- Add FocusSession persistence [done] (3 focus-blocks) {100%}
 - Add contracts and Local API for focus sessions [done] (3 focus-blocks) {100%}
 - Build focus timer UI with overflow [done] (3 focus-blocks) {100%}
+- Implement manual start and stop lifecycle [done] (3 focus-blocks) {100%}
 - Restore running focus session after app restart [done] (2 focus-blocks) {100%}
 - Bind focus sessions to Work Items or free intentions [done] (2 focus-blocks) {100%}
 - Capture a note at the end of a focus session [done] (1 focus-blocks) {100%}
@@ -161,9 +170,6 @@ gantt
 - Session replacement dogfood baseline [done] {100%}
 - App entry UX [in_progress] (8 focus-blocks) {98%}
 - Reduce the path from intent to tracked work [in_progress] (2 focus-blocks) {90%}
-- Focus Session core [in_progress] (17 focus-blocks) {85%}
-- Add FocusSession and SessionEvent persistence [in_progress] (3 focus-blocks) {70%}
-- Implement start, pause, resume, stop, cancel [in_progress] (3 focus-blocks) {45%}
 - Day review and export [in_progress] (16 focus-blocks) {93%}
 - Show focus blocks on a daily timeline [in_progress] (3 focus-blocks) {65%}
 - Compute totals, gaps, and entry count [in_progress] (2 focus-blocks) {98%}
@@ -171,6 +177,9 @@ gantt
 - Dogfood hardening [in_progress] (8 focus-blocks) {100%}
 - Add smoke checks for focus-session flows [in_progress] (2 focus-blocks) {99%}
 - Fix first dogfood friction [in_progress] (2 focus-blocks) {100%}
+- Daily Control Dogfood Gate [in_progress] (1 focus-blocks) {0%}
+- Run post-baseline daily-control dogfood day [in_progress] (1 focus-blocks) {0%}
+- Close daily-control goal with strict evidence [planned] {0%}
 <!-- GENERATED:END -->
 
 ## Deferred directions
@@ -186,7 +195,8 @@ gantt
 - Complete broader Manual Inventory UX [deferred] (8 focus-blocks)
 - Evidence Mode [deferred] (20 focus-blocks)
 - Explicit context capture and SourceNodes [deferred] (13 focus-blocks)
-- Future directions [deferred] (78 focus-blocks)
+- Future directions [deferred] (83 focus-blocks)
+- Pause, resume, and cancel focus sessions [deferred] (5 focus-blocks)
 - Sync and multi-device continuity [deferred] (13 focus-blocks)
 - Windows packaging and tray behavior [deferred] (8 focus-blocks)
 <!-- GENERATED:END -->

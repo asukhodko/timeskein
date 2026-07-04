@@ -82,6 +82,7 @@ pnpm dogfood:status
 ```
 
 If readiness reports active focus, active Work Items, duplicate titles, or existing blocks for today, fix that before treating Timeskein as the source of truth for the day. The readiness report includes exact next commands and shows whether the embedded agent or app process is already alive.
+When readiness is clean, the same report prints the Daily-Control Checklist for the next dogfood day. Use it as the morning reminder for the paths that must be intentionally exercised before the final strict RC check.
 
 The default readiness mode is a clean start gate. After the day already has real focus blocks, use continue mode for a health check:
 

@@ -58,7 +58,9 @@ lines.push(`Status: ${blockers.length === 0 ? "READY" : "NOT READY"}`, "");
 appendSection(lines, "Blockers", blockers);
 appendSection(lines, "Warnings", warnings);
 
-if (blockers.length > 0) {
+if (blockers.length === 0) {
+  appendDailyControlChecklist(lines);
+} else {
   lines.push("## Next", "");
   for (const action of unique(nextActions)) {
     lines.push(`- ${action}`);
@@ -71,6 +73,18 @@ process.stdout.write(`${lines.join("\n")}\n`);
 
 if (blockers.length > 0) {
   process.exitCode = 1;
+}
+
+function appendDailyControlChecklist(lines) {
+  lines.push("## Daily-Control Checklist", "");
+  lines.push("- Exercise native window entrypoints: tray/menu, global shortcut, macOS reopen, hide with Esc or close.");
+  lines.push("- Start one new Work Item by typed title and continue one existing Work Item from the list.");
+  lines.push("- Use at least two Activity Zones, including one non-work zone such as coordination/recovery/idle/personal.");
+  lines.push("- Add one Day Event for a buffer, gap, recovery note, or tracking correction.");
+  lines.push("- Add or promote one timestamped Work Item Event when a task-specific detail matters.");
+  lines.push("- Capture at least one incoming interruption during an active focus block and resolve, convert, or explicitly leave it open.");
+  lines.push("- Before final report, correct one safe tracking detail or accept tracking accuracy in the review checklist.");
+  lines.push("- Close the day with `pnpm dogfood:finish:save` and then `pnpm dogfood:rc-check:strict`.");
 }
 
 function parseArgs(args) {

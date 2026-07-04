@@ -25,6 +25,15 @@ try {
   assert(ready.stdout.includes("Mode: start"), "ready output did not report start mode");
   assert(ready.stdout.includes("Agent responsive: no"), "ready output did not report agent responsiveness");
   assert(ready.stdout.includes("Running app PIDs: none"), "ready output did not report running app PIDs");
+  assert(ready.stdout.includes("## Daily-Control Checklist"), "ready output did not include daily-control checklist");
+  assert(
+    ready.stdout.includes("Exercise native window entrypoints"),
+    "ready output did not include native window entrypoint reminder"
+  );
+  assert(
+    ready.stdout.includes("pnpm dogfood:rc-check:strict"),
+    "ready output did not include strict RC reminder"
+  );
 
   const dummyApp = spawnDummyTimeskein();
   try {
@@ -67,6 +76,10 @@ try {
   assert(dirty.stdout.includes("pnpm dogfood:stop-active"), "dirty output did not suggest stop-active");
   assert(dirty.stdout.includes("pnpm dogfood:reset-db"), "dirty output did not suggest reset-db");
   assert(
+    !dirty.stdout.includes("## Daily-Control Checklist"),
+    "dirty output should not show daily-control checklist before readiness blockers are fixed"
+  );
+  assert(
     dirty.stdout.includes("prefer reset over stop-active"),
     "dirty output did not prioritize reset for a contaminated clean trial"
   );
@@ -85,6 +98,10 @@ try {
   assert(
     continuing.stdout.includes("Dogfood day is already in progress: Dogfood Dirty"),
     "continue output did not identify the active coherent focus"
+  );
+  assert(
+    continuing.stdout.includes("## Daily-Control Checklist"),
+    "continue output did not include daily-control checklist"
   );
 
   await runSql(`

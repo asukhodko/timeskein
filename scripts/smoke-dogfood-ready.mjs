@@ -31,8 +31,8 @@ try {
     "ready output did not include window entrypoint reminder"
   );
   assert(
-    ready.stdout.includes("pnpm dogfood:rc-check:strict"),
-    "ready output did not include strict RC reminder"
+    ready.stdout.includes("pnpm dogfood:goal-check"),
+    "ready output did not include final goal-check reminder"
   );
 
   const dummyApp = spawnDummyTimeskein();

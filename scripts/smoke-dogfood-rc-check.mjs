@@ -72,6 +72,7 @@ try {
   assert(good.stdout.includes("| Activity Zones separated | pass |"), "good day activity-zone audit row is missing");
   assert(good.stdout.includes("| Tracking correction or review evidenced | pass |"), "good day correction audit row is missing");
   assert(good.stdout.includes("| Local gates | manual |"), "good day local-gates audit row is missing");
+  assert(good.stdout.includes("pnpm dogfood:goal-check"), "good day local-gates audit did not mention goal-check");
   assert(good.stdout.includes("## By Activity Zone"), "good day zone section is missing");
   assert(good.stdout.includes("## Day Events"), "good day Day Events section is missing");
   assert(good.stdout.includes("Meeting buffer was costly"), "good day Day Event text is missing");

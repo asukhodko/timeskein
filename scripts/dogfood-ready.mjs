@@ -84,7 +84,7 @@ function appendDailyControlChecklist(lines) {
   lines.push("- Add or promote one timestamped Work Item Event when a task-specific detail matters.");
   lines.push("- Capture at least one incoming interruption during an active focus block and resolve, convert, or explicitly leave it open.");
   lines.push("- Before final report, correct one safe tracking detail or accept tracking accuracy in the review checklist.");
-  lines.push("- Close the day with `pnpm dogfood:finish:save` and then `pnpm dogfood:rc-check:strict`.");
+  lines.push("- Close the day with `pnpm dogfood:finish:save`; before completing the goal, run `pnpm dogfood:goal-check`.");
 }
 
 function parseArgs(args) {

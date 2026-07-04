@@ -13,6 +13,7 @@ const steps = [
   ["pnpm", ["smoke:app-events"]],
   ["pnpm", ["smoke:dogfood-report"]],
   ["pnpm", ["smoke:dogfood-finish"]],
+  ["pnpm", ["smoke:dogfood-goal-check"]],
   ["pnpm", ["smoke:dogfood-rc-check"]],
 ];
 

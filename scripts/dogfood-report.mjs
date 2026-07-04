@@ -566,7 +566,7 @@ function formatDailyControlGoalAuditMarkdown({
     {
       requirement: "Local gates",
       status: "manual",
-      evidence: "Run pnpm test and pnpm dogfood:preflight on the same code before closing the goal",
+      evidence: "Run pnpm dogfood:goal-check on the same code before closing the goal",
     },
   ];
 

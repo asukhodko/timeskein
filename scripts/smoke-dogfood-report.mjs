@@ -75,6 +75,7 @@ try {
   assert(stdout.includes("| Window and menubar friction evidenced | pass |"), "report daily-control audit did not pass window evidence");
   assert(stdout.includes("| Tracking correction or review evidenced | pass |"), "report daily-control audit did not pass correction evidence");
   assert(stdout.includes("| Local gates | manual |"), "report daily-control audit did not include local gates");
+  assert(stdout.includes("pnpm dogfood:goal-check"), "report daily-control audit did not mention goal-check");
   assert(
     stdout.includes("Resolve or convert open captures"),
     "report review checklist did not include open capture cleanup"

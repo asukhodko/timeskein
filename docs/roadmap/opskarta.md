@@ -17,8 +17,8 @@ friction evidence now includes show/hide request counts, so window entrypoints
 must be exercised rather than inferred from passive visibility events.
 `pnpm dogfood:finish:save` now saves both the readable day report and the
 RC-check evidence file, so the evening package is collected in one step.
-For final goal closure, `pnpm dogfood:rc-check:strict` makes unresolved review
-items fail instead of only printing them.
+For final goal closure, `pnpm dogfood:goal-check` runs `pnpm test`,
+`pnpm dogfood:preflight`, and strict RC evidence on the same code.
 
 ## Executive view
 

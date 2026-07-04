@@ -697,7 +697,7 @@ function formatGoalAuditMarkdown(evidence, assessment, minFocusSeconds) {
           0
           ? "review"
           : "pass",
-      evidence: `${evidence.telemetry.windowShown}/${evidence.telemetry.windowHidden} show/hide, ${evidence.telemetry.windowShowRequested}/${evidence.telemetry.windowHideRequested} native requests, ${evidence.telemetry.windowDragStarted} drag start(s), ${evidence.telemetry.apiErrors} API error(s)`,
+      evidence: `${evidence.telemetry.windowShown}/${evidence.telemetry.windowHidden} show/hide, ${evidence.telemetry.windowShowRequested}/${evidence.telemetry.windowHideRequested} show/hide request(s), ${evidence.telemetry.windowDragStarted} drag start(s), ${evidence.telemetry.apiErrors} API error(s)`,
     },
     {
       requirement: "Tracking correction or review evidenced",
@@ -716,7 +716,7 @@ function formatGoalAuditMarkdown(evidence, assessment, minFocusSeconds) {
     {
       requirement: "Local gates",
       status: "manual",
-      evidence: "Run pnpm test and pnpm dogfood:preflight on the same code before closing the goal",
+      evidence: "Run pnpm dogfood:goal-check on the same code before closing the goal",
     },
   ];
 

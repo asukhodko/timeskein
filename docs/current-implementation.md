@@ -155,6 +155,7 @@ Dogfood launch helper:
 - `pnpm dogfood:rc-check` prints the release-candidate evidence summary, `Daily Control Goal Audit`, hard blockers, review items, and manual verdict prompts for the saved dogfood day; the summary includes total tracked time, work focus, non-work tracked time, Activity Zone coverage, Work Item notes/events, Capture Inbox coverage, correction telemetry, window telemetry with show/hide request counts, and product-friction counters
 - `pnpm dogfood:rc-check:save` saves the same RC evidence again when it needs to be inspected without regenerating the day report
 - `pnpm dogfood:rc-check:strict` uses the same evidence but exits with code 1 when any review item remains, for the final daily-control goal closure check
+- `pnpm dogfood:goal-check` runs the final closure gate for the active daily-control goal: `pnpm test`, `pnpm dogfood:preflight`, and strict RC evidence for the selected dogfood day
 - `pnpm dogfood:reset-db` moves the real local SQLite database and sidecar files aside only when `--apply` is passed; it refuses while the agent or app process appears alive unless `--force` is passed
 - `pnpm dogfood:stop-active` stops active focus sessions, writes a stop note, and clears active Work Items only when `--apply` is passed; it uses the running agent API when available and direct SQLite only when neither agent nor app process is alive, unless `--force` is passed
 - `pnpm dogfood:macos` rebuilds and opens the packaged app for a real Session replacement day
@@ -381,6 +382,7 @@ pnpm dogfood:metrics
 pnpm export:app-events
 pnpm dogfood:report
 pnpm dogfood:finish:save
+pnpm dogfood:goal-check
 ```
 
 The report telemetry section includes action counts, start/switch/stop failures, Capture Inbox action counts and failures, API errors, window show/hide counts, show/hide request counts, copy fallback counts, average start latency, likely show-to-start friction gaps, attempts to start the already active Work Item, and stale runtime recovery events.

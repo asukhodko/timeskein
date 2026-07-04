@@ -33,6 +33,7 @@ const steps = [
   ["node", ["--check", "scripts/smoke-dogfood-stop-active.mjs"]],
   ["node", ["--check", "scripts/smoke-open-macos-app.mjs"]],
   ["node", ["--check", "scripts/smoke-macos-app.mjs"]],
+  ["pnpm", ["roadmap:validate"]],
   ["pnpm", ["--filter", "@timeskein/contracts", "build"]],
   ["pnpm", ["--filter", "@timeskein/desktop", "typecheck"]],
   ["cargo", ["test", "-p", "timeskein-agent"]],

@@ -194,10 +194,10 @@ The local SQLite database also stores `captures`, the small inbox for incoming e
 python3 -m pip install -r tools/opskarta/specs/v3/tools/requirements.txt
 
 # Validate the roadmap plan set
-cd tools/opskarta
-python3 -m specs.v3.tools.cli validate ../../plans/timeskein/*.plan.yaml
+pnpm roadmap:validate
 
 # Render the current Gantt view
+cd tools/opskarta
 python3 -m specs.v3.tools.cli render gantt ../../plans/timeskein/*.plan.yaml --view current-gantt
 ```
 
@@ -213,7 +213,7 @@ This runs contracts build, TypeScript typecheck, Rust agent tests, mock-store
 tests, Work Item list mode tests, mock API smoke, and key SQLite/report smoke
 checks.
 
-Full dogfood preflight, including macOS `.app` build and packaged-app smoke:
+Full dogfood preflight, including roadmap validation, macOS `.app` build, and packaged-app smoke:
 
 ```bash
 pnpm test:full

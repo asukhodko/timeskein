@@ -27,6 +27,7 @@
     "dogfood:stop-active": "node scripts/dogfood-stop-active.mjs",
     "export:focus-day": "node scripts/export-focus-day.mjs",
     "export:app-events": "node scripts/export-app-events.mjs",
+    "roadmap:validate": "PYTHONPATH=tools/opskarta python3 -m specs.v3.tools.cli validate plans/timeskein/*.plan.yaml",
     "mock-server": "pnpm --filter @timeskein/mock-server start",
     "smoke:focus-api": "node scripts/smoke-focus-api.mjs",
     "smoke:inventory-modes": "tsx --test scripts/smoke-inventory-modes.test.ts",

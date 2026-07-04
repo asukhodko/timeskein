@@ -182,7 +182,7 @@ Current status: the macOS dogfood release baseline was accepted on 2026-07-03. T
 
 | Requirement | Evidence before dogfood | Dogfood check |
 | --- | --- | --- |
-| Fast automated regression suite | `pnpm test` runs contracts build, TypeScript typecheck, Rust agent tests, mock-store tests, mock API smoke, and key SQLite/report smoke checks | The local baseline is green before the day starts |
+| Fast automated regression suite | `pnpm test` runs contracts build, TypeScript typecheck, Rust agent tests, mock-store tests, mock API smoke, and key SQLite/report smoke checks; `pnpm dogfood:preflight` also validates opskarta roadmap state | The local baseline and roadmap are green before the day starts |
 | Fast start by title | `pnpm smoke:focus-api` and `pnpm smoke:macos-app` verify `focus.start` creates or reuses a Work Item | Starting a block feels cheap enough during real work |
 | No duplicate Work Items by title | Smoke checks `focus.start` and `work_item.create` title reuse | No duplicate Work Items appear from normal typing |
 | One active timer and one active Work Item | Smoke checks switching by title, by Work Item state, deleting the active Work Item, SQLite single-active guards, and startup normalization | No visible split brain while switching tasks |

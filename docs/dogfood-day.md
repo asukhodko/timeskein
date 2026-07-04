@@ -385,6 +385,7 @@ For a previous date:
 pnpm export:focus-day --date 2026-06-30 > timeskein-day.md
 pnpm dogfood:finish -- --date 2026-06-30 > timeskein-dogfood-report.md
 pnpm dogfood:rc-check -- --date 2026-06-30 --save
+pnpm dogfood:goal-check -- --date 2026-06-30
 ```
 
 The dogfood report includes the focus-day export and prompts for:

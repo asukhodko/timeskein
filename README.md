@@ -177,6 +177,13 @@ Before marking the daily-control goal complete, run the final gate. It runs `pnp
 pnpm dogfood:goal-check
 ```
 
+If you close yesterday's dogfood day after midnight, pass the date explicitly:
+
+```bash
+pnpm dogfood:finish:save -- --date YYYY-MM-DD
+pnpm dogfood:goal-check -- --date YYYY-MM-DD
+```
+
 ### macOS Data Path
 
 ```text

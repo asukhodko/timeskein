@@ -91,6 +91,12 @@ pnpm dogfood:goal-check
 ```
 
 The strict RC step means review items also make the command fail.
+If the dogfood day is closed after midnight, pass the date explicitly:
+
+```bash
+pnpm dogfood:goal-check -- --date YYYY-MM-DD
+```
+
 Both saved files can contain personal or internal work context and are ignored by git.
 The RC evidence summary also checks the post-baseline review data: work focus vs
 non-work tracked time, Activity Zone coverage, Work Item notes/events, Capture

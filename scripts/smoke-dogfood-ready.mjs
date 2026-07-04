@@ -40,6 +40,10 @@ try {
     ready.stdout.includes("pnpm dogfood:goal-check"),
     "ready output did not include final goal-check reminder"
   );
+  assert(
+    ready.stdout.includes("pnpm dogfood:goal-check -- --date YYYY-MM-DD"),
+    "ready output did not include after-midnight goal-check date reminder"
+  );
 
   const dummyApp = spawnDummyTimeskein();
   try {

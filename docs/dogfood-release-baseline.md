@@ -62,8 +62,8 @@ These were accepted limitations for the dogfood baseline, not blockers:
   `Work focus`, non-work tracked time, and per-zone totals.
 - macOS window restore and menu bar status refresh were known baseline
   limitations; both have been fixed in code after acceptance. The next dogfood
-  day should confirm them in real use, and native show/hide request telemetry
-  should prove that tray/menu/shortcut/reopen entrypoints were exercised.
+  day should confirm them in real use, and show/hide request telemetry should
+  prove that window entrypoints were exercised.
 - The Work Item list shows today/total time spent per item when available.
 - The Work Item list now has `Recent`, `Today`, `Pinned`, and `All` modes; the
   next dogfood day should verify that the accumulated multi-day inventory stays
@@ -95,7 +95,7 @@ Post-dogfood correction and first review enrichment are now partly implemented:
 - Today and copied reports include an automatic Review Checklist for active-state
   blockers, open captures, significant gaps, open gaps, Activity Zone coverage,
   non-work tracking, capture coverage, and Work Item context coverage.
-- App Telemetry and RC checks include native show/hide request counts, so the
+- App Telemetry and RC checks include show/hide request counts, so the
   next dogfood day can distinguish real window entrypoint tests from passive
   visibility changes.
 - Work Items can be viewed through `Recent`, `Today`, `Pinned`, and `All` modes,

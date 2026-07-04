@@ -1126,7 +1126,7 @@ function buildDayReviewItems({
     if (appTelemetry.window_show_requested + appTelemetry.window_hide_requested === 0) {
       items.push({
         level: 'review',
-        title: 'Test native window entrypoints',
+        title: 'Test window entrypoints',
         detail: 'No tray/menu/shortcut/reopen show-hide request telemetry found',
       })
     }
@@ -1309,7 +1309,7 @@ function formatDailyControlGoalAuditMarkdown({
         apiErrors > 0 ||
         copyFailures > 0 ||
         startStopFailures !== '0/0' ||
-        hasReview('Test native window entrypoints')
+        hasReview('Test window entrypoints')
           ? 'review'
           : 'pass',
       evidence: `window shown/hidden ${windowEvidence}, requests ${windowRequestEvidence}, API errors ${apiErrors}, start/stop failures ${startStopFailures}`,

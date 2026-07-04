@@ -77,7 +77,7 @@ if (blockers.length > 0) {
 
 function appendDailyControlChecklist(lines) {
   lines.push("## Daily-Control Checklist", "");
-  lines.push("- Exercise native window entrypoints: tray/menu, global shortcut, macOS reopen, hide with Esc or close.");
+  lines.push("- Exercise window entrypoints: tray/menu, global shortcut, macOS reopen, hide with Esc or close.");
   lines.push("- Start one new Work Item by typed title and continue one existing Work Item from the list.");
   lines.push("- Use at least two Activity Zones, including one non-work zone such as coordination/recovery/idle/personal.");
   lines.push("- Add one Day Event for a buffer, gap, recovery note, or tracking correction.");

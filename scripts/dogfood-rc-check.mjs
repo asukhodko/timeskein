@@ -467,7 +467,7 @@ function assessEvidence(evidence, minFocusSeconds) {
   }
 
   if (evidence.telemetry.total > 0 && evidence.telemetry.windowShowRequested + evidence.telemetry.windowHideRequested === 0) {
-    reviewItems.push("No native window show/hide request telemetry found. Test tray/menu/shortcut/reopen entry before closing the goal.");
+    reviewItems.push("No window show/hide request telemetry found. Test tray/menu/shortcut/reopen/Esc entry before closing the goal.");
   }
 
   if (evidence.telemetry.apiErrors > 0) {

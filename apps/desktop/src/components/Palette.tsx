@@ -76,6 +76,13 @@ export default function Palette() {
     try {
       void logAppEvent({
         source: 'ui',
+        kind: 'window_hide_requested',
+        payload: {
+          control: 'hide_button',
+        },
+      })
+      void logAppEvent({
+        source: 'ui',
         kind: 'window_hidden',
         payload: {
           control: 'hide_button',

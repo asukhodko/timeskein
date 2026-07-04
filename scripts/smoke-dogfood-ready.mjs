@@ -27,8 +27,8 @@ try {
   assert(ready.stdout.includes("Running app PIDs: none"), "ready output did not report running app PIDs");
   assert(ready.stdout.includes("## Daily-Control Checklist"), "ready output did not include daily-control checklist");
   assert(
-    ready.stdout.includes("Exercise native window entrypoints"),
-    "ready output did not include native window entrypoint reminder"
+    ready.stdout.includes("Exercise window entrypoints"),
+    "ready output did not include window entrypoint reminder"
   );
   assert(
     ready.stdout.includes("pnpm dogfood:rc-check:strict"),

@@ -13,9 +13,8 @@ The current post-baseline gate is the Daily Control Goal Audit in the UI/CLI
 dogfood report and in `pnpm dogfood:rc-check`: it checks whether a real day has
 enough evidence for focus blocks, Work Item totals, Activity Zones,
 notes/events, captures, gaps, corrections, and app-friction review. Window
-friction evidence now includes native show/hide request counts, so tray, menu,
-global-shortcut, and macOS-reopen entrypoints must be exercised rather than
-inferred from passive visibility events.
+friction evidence now includes show/hide request counts, so window entrypoints
+must be exercised rather than inferred from passive visibility events.
 `pnpm dogfood:finish:save` now saves both the readable day report and the
 RC-check evidence file, so the evening package is collected in one step.
 For final goal closure, `pnpm dogfood:rc-check:strict` makes unresolved review

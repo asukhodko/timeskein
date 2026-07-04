@@ -52,7 +52,7 @@ try {
   assert(metricsStdout.includes("Total events: 23"), "metrics did not count events");
   assert(metricsStdout.includes("Start requests: 1"), "metrics did not count start requests");
   assert(metricsStdout.includes("Manual copy fallbacks: 1"), "metrics did not count manual copy fallbacks");
-  assert(metricsStdout.includes("Window show/hide requests: 1/1"), "metrics did not count native window requests");
+  assert(metricsStdout.includes("Window show/hide requests: 1/1"), "metrics did not count window requests");
   assert(metricsStdout.includes("Capture created/resolved/converted: 1/1/0"), "metrics did not count capture outcomes");
   assert(metricsStdout.includes("Capture updated/deleted: 1/1"), "metrics did not count capture cleanup");
   assert(metricsStdout.includes("Capture failures create/resolve/update/delete/convert: 0/0/0/0/1"), "metrics did not count capture failures");
@@ -67,7 +67,7 @@ try {
   );
   assert(exportStdout.includes("# Timeskein app events"), "event export did not include title");
   assert(exportStdout.includes("focus_start_requested"), "event export did not include start request");
-  assert(exportStdout.includes("window_show_requested"), "event export did not include native window request");
+  assert(exportStdout.includes("window_show_requested"), "event export did not include window request");
   assert(exportStdout.includes("capture_created"), "event export did not include capture event");
   assert(exportStdout.includes("focus_corrected"), "event export did not include correction event");
   assert(exportStdout.includes("manual_copy_fallback_shown"), "event export did not include copy fallback");

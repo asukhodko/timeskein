@@ -48,6 +48,13 @@ function App() {
         e.preventDefault()
         void logAppEvent({
           source: 'ui',
+          kind: 'window_hide_requested',
+          payload: {
+            control: 'escape',
+          },
+        })
+        void logAppEvent({
+          source: 'ui',
           kind: 'window_hidden',
           payload: {
             control: 'escape',

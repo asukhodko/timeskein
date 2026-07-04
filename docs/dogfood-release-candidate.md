@@ -94,7 +94,7 @@ Both saved files can contain personal or internal work context and are ignored b
 The RC evidence summary also checks the post-baseline review data: work focus vs
 non-work tracked time, Activity Zone coverage, Work Item notes/events, Capture
 Inbox coverage, focus correction/review telemetry, and window/show-hide telemetry,
-including native show/hide request counts from tray/menu/shortcut/reopen entrypoints.
+including show/hide request counts from window entrypoints.
 The `Daily Control Goal Audit` section maps that evidence to the current
 daily-control goal, so the next dogfood day can be judged requirement by
 requirement instead of by memory. The same audit is included in the normal UI
@@ -114,7 +114,7 @@ The final evidence must include:
 - significant gaps and open gap, if any;
 - open captures, if any;
 - App Telemetry;
-- native window show/hide request evidence for tray/menu/shortcut/reopen entrypoints;
+- window show/hide request evidence for window entrypoints;
 - `dogfood:rc-check` output;
 - a short written review of missing blocks, wrong Work Items, unresolved
   captures, and product friction.

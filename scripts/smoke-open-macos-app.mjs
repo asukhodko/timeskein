@@ -143,6 +143,8 @@ async function assertMacosWindowPolicy() {
   assert(mainWindow.skipTaskbar === false, "main window must be restorable through normal macOS app switching");
 
   const mainSource = await readFile(tauriMainPath, "utf8");
+  const appSource = await readFile(resolve(repoRoot, "apps/desktop/src/App.tsx"), "utf8");
+  const paletteSource = await readFile(resolve(repoRoot, "apps/desktop/src/components/Palette.tsx"), "utf8");
   assert(
     mainSource.includes("RunEvent::Reopen"),
     "Tauri main.rs must handle macOS Reopen so hidden windows can be restored"
@@ -153,6 +155,14 @@ async function assertMacosWindowPolicy() {
   );
   assert(
     mainSource.includes("WindowShowRequested") && mainSource.includes("WindowHideRequested"),
-    "Tauri main.rs must log native window show/hide requests for dogfood friction analysis"
+    "Tauri main.rs must log shell window show/hide requests for dogfood friction analysis"
+  );
+  assert(
+    appSource.includes("kind: 'window_hide_requested'") && appSource.includes("control: 'escape'"),
+    "App.tsx must log Esc hide requests for dogfood friction analysis"
+  );
+  assert(
+    paletteSource.includes("kind: 'window_hide_requested'") && paletteSource.includes("control: 'hide_button'"),
+    "Palette.tsx must log hide-button requests for dogfood friction analysis"
   );
 }

@@ -66,7 +66,7 @@ try {
   assert(good.stdout.includes("Work Item Events: 1"), "good day Work Item Events count is missing");
   assert(good.stdout.includes("Corrections requested/applied/reviewed/failed: 1/1/0/0"), "good day correction telemetry is missing");
   assert(good.stdout.includes("Window shown/hidden: 1/1"), "good day window telemetry is missing");
-  assert(good.stdout.includes("Window show/hide requests: 1/1"), "good day native window request telemetry is missing");
+  assert(good.stdout.includes("Window show/hide requests: 1/1"), "good day window request telemetry is missing");
   assert(good.stdout.includes("## Daily Control Goal Audit"), "good day goal audit section is missing");
   assert(good.stdout.includes("| Focus blocks visible | pass |"), "good day focus-block audit row is missing");
   assert(good.stdout.includes("| Activity Zones separated | pass |"), "good day activity-zone audit row is missing");
@@ -89,10 +89,10 @@ try {
   await copyDb(goodDb, noWindowRequestDb);
   await runSql(noWindowRequestDb, "DELETE FROM app_events WHERE kind IN ('window_show_requested', 'window_hide_requested');");
   const noWindowRequestStrict = await runRcCheck(noWindowRequestDb, ["--strict"]);
-  assert(noWindowRequestStrict.code !== 0, "strict RC check should fail without native window request evidence");
+  assert(noWindowRequestStrict.code !== 0, "strict RC check should fail without window request evidence");
   assert(
-    noWindowRequestStrict.stdout.includes("No native window show/hide request telemetry found"),
-    "strict RC check should explain missing native window request evidence"
+    noWindowRequestStrict.stdout.includes("No window show/hide request telemetry found"),
+    "strict RC check should explain missing window request evidence"
   );
 
   const savedPath = join(tempDir, "rc-check.md");

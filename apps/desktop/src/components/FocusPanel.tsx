@@ -11,6 +11,7 @@ import { useCaptureActivity, useOpenCaptures } from '../hooks/useCaptures'
 import { useAddDayEvent, useDayEvents, useDeleteDayEvent, useUpdateDayEvent } from '../hooks/useDayEvents'
 import { appEventApi, logAppEvent, shellApi } from '../api/client'
 import { formatClockTime, formatDuration, truncate } from '../utils/formatTime'
+import { isFinalDayClosureReport } from '../utils/dayClosure'
 import CaptureInbox from './CaptureInbox'
 import FocusCorrectionDialog from './FocusCorrectionDialog'
 import MissedFocusBlockDialog from './MissedFocusBlockDialog'
@@ -106,7 +107,11 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
     }),
     [sessions, current, activeWorkItems, inventoryItems, openCaptures, captureActivity, workItemEvents, dayEvents, openGap, appEventSummary]
   )
-  const reportIsDraft = current?.state === 'active' || activeWorkItems.length > 0
+  const reportIsFinal = isFinalDayClosureReport({
+    activeFocus: current?.state === 'active',
+    activeWorkItemCount: activeWorkItems.length,
+  })
+  const reportIsDraft = !reportIsFinal
   const trayStatusTitle = useMemo(
     () => buildTrayStatusTitle(current, now, activeSecondsTotal),
     [current, now, activeSecondsTotal]
@@ -408,6 +413,10 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
   const copyDogfoodReport = async () => {
     if (sessions.length === 0) return
 
+    const isFinalReport = isFinalDayClosureReport({
+      activeFocus: current?.state === 'active',
+      activeWorkItemCount: activeWorkItems.length,
+    })
     const closureActionId = await ensureDayClosureStarted('copy_report')
 
     void logAppEvent({
@@ -417,7 +426,9 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
         report_kind: 'dogfood',
       },
     })
-    await ensureDayClosureCompleted(closureActionId, 'copy_report')
+    if (isFinalReport) {
+      await ensureDayClosureCompleted(closureActionId, 'copy_report')
+    }
 
     const freshAppEventSummary = await loadAppEventSummary(now)
     const reportReviewItems = buildDayReviewItems({

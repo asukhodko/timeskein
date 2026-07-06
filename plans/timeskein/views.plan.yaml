@@ -180,7 +180,7 @@ x:
         show_owner: false
         wrap_title_lines: 2
         reduce_transitive_required_edges: true
-        caption: "Near-term plan is intentionally narrow: prove the daily-control loop before reopening sync, Evidence Mode, or platform expansion."
+        caption: "Near-term plan should stay narrow: reduce daily-review friction and choose the next measurable gate before reopening sync, Evidence Mode, or platform expansion."
       exec-active-tracks:
         blocks:
           - app-entry-ux

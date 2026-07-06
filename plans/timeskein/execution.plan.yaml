@@ -249,13 +249,16 @@ execution:
       confidence: 0.85
       note: Accepted the macOS Session replacement dogfood baseline on 2026-07-03. Evidence includes three real dogfood days, a Capture Inbox day with four active-focus captures, zero API/copy/capture/start-stop failures, zero duplicate titles, and no active-state split brain. Post-factum correction and window/list polish remain next-slice work.
     ts.daily_control.real_day:
-      progress: 0.0
-      actual_start: "2026-07-04"
-      updated_at: "2026-07-04T05:35:00+03:00"
-      confidence: 0.8
-      note: Waiting for the next real dogfood day. Readiness is green, but the daily-control goal needs real evidence for window entrypoints, typed and selected/list starts, accepted Work Item today/total badge review, zones, notes/events, captures, correction/review, and evening report usefulness.
+      progress: 1.0
+      actual_start: "2026-07-06"
+      actual_finish: "2026-07-06"
+      updated_at: "2026-07-06T22:09:00+03:00"
+      confidence: 0.9
+      note: Completed a full post-baseline dogfood day on 2026-07-06 with 7:30:36 tracked, 7:29:18 work focus, 1:18 non-work tracked, 19 entrances, Activity Zones, Day Events, Work Item Events, Capture Inbox conversion, Work Item today/total badge review, typed and selected/list starts, and window show/hide request evidence.
     ts.daily_control.goal_check:
-      progress: 0.0
-      updated_at: "2026-07-04T05:35:00+03:00"
-      confidence: 0.8
-      note: The goal-check milestone remains open until `pnpm dogfood:finish:save` saves both evidence files and strict `pnpm dogfood:goal-check` verifies those files plus passes for the post-baseline dogfood date.
+      progress: 1.0
+      actual_start: "2026-07-06"
+      actual_finish: "2026-07-06"
+      updated_at: "2026-07-06T22:09:00+03:00"
+      confidence: 0.95
+      note: "`pnpm dogfood:finish:save -- --date 2026-07-06` saved the report and RC evidence. `pnpm dogfood:goal-check -- --date 2026-07-06` passed after running pnpm test, dogfood:preflight, packaged macOS smoke, and strict RC evidence."

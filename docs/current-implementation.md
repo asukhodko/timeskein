@@ -294,7 +294,7 @@ Post-factum correction is implemented for stopped focus sessions. `focus.create_
 
 ## Dogfood Findings
 
-The 2026-07-01, 2026-07-02, and 2026-07-03 dogfood days showed that the core timer loop works, and that Capture Inbox can preserve incoming events without switching away from the current focus. The first post-baseline slice added post-factum correction, entry/window fixes, Day Events, Work Item Events, Activity Zones, explicit Work Item time-badge review evidence, and strict report evidence. The next useful product slice is proving that whole daily-control loop in one real dogfood day.
+The 2026-07-01, 2026-07-02, and 2026-07-03 dogfood days showed that the core timer loop works, and that Capture Inbox can preserve incoming events without switching away from the current focus. The first post-baseline slice added post-factum correction, entry/window fixes, Day Events, Work Item Events, Activity Zones, explicit Work Item time-badge review evidence, and strict report evidence. The 2026-07-06 dogfood day proved the whole daily-control loop in real use: 7:30:36 tracked, 19 entrances, Activity Zones, Day Events, Work Item Events, Capture Inbox conversion, Work Item today/total badge evidence, zero API/copy/start-stop failures, and a green `pnpm dogfood:goal-check`.
 
 High-signal findings:
 
@@ -308,7 +308,7 @@ High-signal findings:
 - Some observations belong to the whole day rather than one Work Item. Day Events now cover buffers before heavy meetings, recovery notes, tracking corrections, and similar review context.
 - Wrong Work Item assignment happened during dogfood; stopped blocks can now be corrected and split after the fact.
 - Activity Zones are now available on Work Items and copied into each focus block as a snapshot. Stopped blocks can be corrected independently, so changing a Work Item later does not rewrite past day reports. The UI and Markdown separate total tracked time, work focus, non-work tracked time, and per-zone totals for work, coordination, recovery, idle, and personal.
-- macOS window restore and the menu bar counter were newly fixed after the third dogfood day; the next dogfood day should verify that Command+Tab/Dock return and status refresh feel reliable in real use, with both show and hide request telemetry proving window entrypoints were exercised.
+- macOS window restore and the menu bar counter were verified in the 2026-07-06 daily-control dogfood day with non-zero show/hide request telemetry.
 
 ## Capture Inbox Data
 
@@ -413,7 +413,7 @@ On multi-monitor macOS setups, the tray/status item is controlled by the system 
 - Capture Inbox is still compact: open captures can be edited or deleted, but there is no separate capture history screen beyond the open list and dogfood report.
 - Work Item Events are report-visible. User-authored `note_added` events can be edited or deleted; generated system events remain internal history.
 - Work Item notes are included in day reports for touched items, but they remain mutable descriptions rather than dated observations.
-- macOS window restore and menu bar status refresh were newly fixed after the third dogfood day, but still need one real dogfood pass with both show and hide request telemetry before being considered fully proven.
+- macOS window restore and menu bar status refresh have one real dogfood pass with show/hide request telemetry. Further polish is still possible, but the daily-control gate no longer treats this as unproven.
 - Activity Zones have per-focus-block snapshots and overrides; there is no bulk zone correction UI yet.
 - Automated e2e tests are not implemented yet.
 - Cross-platform CI is not implemented yet.
@@ -423,7 +423,7 @@ On multi-monitor macOS setups, the tray/status item is controlled by the system 
 
 ## Next Engineering Steps
 
-1. Verify the new macOS window return and native menu bar status refresh in the next dogfood day, including non-zero show and hide request counts for window entrypoints.
-2. Add a clearer correction workflow if split + update + zone correction is not enough after the next dogfood day.
-3. Verify capture-to-Work-Item-event promotion in the next dogfood day.
-4. Decide whether the current per-block zone override is enough, or whether day review needs a faster bulk editor.
+1. Reduce evening review friction: make `Review before report` less noisy, localize the remaining English labels, and separate hard blockers from optional checks.
+2. Improve correction and event-entry UX: clearer missed-block naming, safer timestamped event entry, and easier review of changed day context.
+3. Preserve capture origin when converting a capture to a Work Item, so the report keeps the original incoming-event text without forcing it into the Work Item title.
+4. Decide whether the next product gate should focus on review ergonomics, richer activity zoning, or passive evidence collection.

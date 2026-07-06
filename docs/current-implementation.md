@@ -133,7 +133,7 @@ Runtime smoke on macOS:
 - `pnpm smoke:macos-app` also verifies startup normalization of legacy active Work Items, orphan active focus sessions, stale `agent.lock` / `agent.port` recovery, and migration of older `app_events` kind constraints
 - `pnpm smoke:export-focus-day` verifies fallback Markdown export, including Day Events, Work Item notes, timestamped Work Item Events for touched items, and legacy focus-session schemas without Activity Zone columns, against temporary SQLite databases
 - `pnpm smoke:app-events` verifies the local app-event migration, metrics summary, and Markdown export against a temporary SQLite database
-- `pnpm smoke:dogfood-report` verifies the evening dogfood report wrapper, Review Checklist, Daily Control Goal Audit, Activity Zone evidence warnings, entry-path evidence prompts, Work Item today/total badge review prompts, correction evidence prompts, accepted correction review, accepted open-capture follow-up review, Day Events, Work Item notes, Work Item Events, Capture Activity, open captures, analysis prompts, and App Telemetry section, including typed/selected entry and both window show and hide request evidence
+- `pnpm smoke:dogfood-report` verifies the evening dogfood report wrapper, Russian review checklist, Russian daily-closure audit, Activity Zone evidence warnings, entry-path evidence prompts, Work Item today/total badge review prompts, correction evidence prompts, accepted correction review, accepted open-capture follow-up review, Day Events, Work Item notes, Work Item Events, interruption history, open captures, analysis prompts, and app telemetry section, including typed/selected entry and both window show and hide request evidence
 - `pnpm smoke:dogfood-finish` verifies the end-of-day gate: no active focus session, no active Work Item, at least one focus block, and `--save` writing both the day report and RC check
 - `pnpm smoke:dogfood-status` verifies the embedded-agent status checker against healthy and unhealthy temporary HTTP agents
 - `pnpm smoke:dogfood-ready` verifies the real-database readiness checker against clean and contaminated temporary SQLite databases, including running-process visibility and the actionable next commands
@@ -165,7 +165,7 @@ Dogfood launch helper:
 - `pnpm export:focus-day` prints a Markdown day report from the local SQLite database as a fallback to UI copy
 - `pnpm dogfood:metrics` prints dogfood telemetry aggregates from the local SQLite app-event journal, including start/stop failure counts and accepted open-capture follow-up reviews
 - `pnpm export:app-events` prints a Markdown event table for deeper inspection of show/hide/start/switch/stop/copy/API behavior
-- `pnpm dogfood:report` prints a Markdown dogfood report with focus data, Review Checklist, Daily Control Goal Audit, Day Events, Capture Activity, open captures, app telemetry, and evening review prompts, marked as a draft if a focus block or Work Item is still active
+- `pnpm dogfood:report` prints a Markdown dogfood report with focus data, a Russian review checklist, a Russian daily-closure audit, Day Events, interruption history, open captures, app telemetry, and evening review prompts, marked as a draft if a focus block or Work Item is still active
 
 Runtime smoke in browser/mock mode:
 
@@ -232,10 +232,10 @@ Third real dogfood day and release baseline:
 - Day views include focus blocks that overlap the selected local day; duration totals are clipped to the selected day window
 - Today and Markdown export show an `Open Gap` when no focus block is running and the interval after the last stopped block is at least 20 minutes
 - Markdown reports use the corrected focus-session rows, so post-factum edits are reflected in copied day data
-- Today shows a `Review before report` checklist for active-state blockers, open captures, significant gaps, open gaps, Activity Zone coverage, non-work tracking, Work Item today/total badge visibility, capture coverage, Work Item context coverage, and focus-correction evidence. If the Work Item cards show today's and total tracked time for touched items, the user can explicitly accept that from the checklist, which writes `work_item_time_badges_reviewed` telemetry. If no correction is needed, the user can explicitly accept tracking accuracy from the checklist, which writes `focus_correction_reviewed` telemetry. If open captures are intentionally left as follow-up, the user can explicitly accept them from the checklist, which writes `capture_followup_reviewed` telemetry. Copied UI dogfood reports include the same Daily Control Goal Audit as the CLI report.
+- Today shows a Russian `Проверка перед отчётом` checklist for active-state blockers, open captures, significant gaps, open gaps, Activity Zone coverage, non-work tracking, Work Item today/total badge visibility, capture coverage, Work Item context coverage, and focus-correction evidence. If the Work Item cards show today's and total tracked time for touched items, the user can explicitly accept that from the checklist, which writes `work_item_time_badges_reviewed` telemetry. If no correction is needed, the user can explicitly accept tracking accuracy from the checklist, which writes `focus_correction_reviewed` telemetry. If open captures are intentionally left as follow-up, the user can explicitly accept them from the checklist, which writes `capture_followup_reviewed` telemetry. Copied UI dogfood reports include the same Russian daily-closure audit as the CLI report.
 - Today's focus picture can be copied as Markdown from the focus panel, including per-Work-Item totals, Activity Zone totals, and significant gaps
 - Today's focus picture can also be exported from SQLite with `pnpm export:focus-day`
-- Evening dogfood report can be copied from the focus panel, shown as selected Markdown if clipboard access fails, or generated with `pnpm dogfood:report`; UI and CLI reports include the same `Review Checklist`
+- Evening dogfood report can be copied from the focus panel, shown as selected Markdown if clipboard access fails, or generated with `pnpm dogfood:report`; UI and CLI reports include the same Russian review checklist and daily-closure audit
 - Day reports include a `Work Item Notes` section for touched Work Items that have non-empty notes
 - Day reports include a `Day Events` section for timestamped notes that belong to the day rather than one Work Item
 - Day reports include a `Work Item Events` section for timestamped Work Item observations created during the selected day
@@ -245,7 +245,7 @@ Third real dogfood day and release baseline:
 - Open captures are visible in the focus panel
 - Open captures can be edited, deleted, resolved as done, or converted into Work Items
 - Captures can be appended as timestamped Work Item Events, using the linked focus session's Work Item or the currently selected Work Item as the target
-- The dogfood report shows Capture Activity for captures created during the day, including captures that were already resolved or converted
+- The dogfood report shows a Russian interruption-history table for captures created during the day, including captures that were already resolved or converted
 - Open captures appear separately in the UI and CLI dogfood report for evening review
 - Manual Work Item inventory UI
 - Search
@@ -323,7 +323,7 @@ The current baseline stores:
 - optional link to a Work Item after conversion;
 - created, updated, resolved, and converted timestamps.
 
-Capture is intentionally separate from focus sessions. Creating, editing, deleting, resolving, or converting a capture must not stop or switch the active timer. Open captures can be edited or deleted during review; processed captures stay as day history. Converting a capture creates or reuses a Work Item by normalized title, but does not start focus on that Work Item. The dogfood report includes a `Capture Activity` table for all captures created during the selected day, with state, focus context, and outcome. The RC checker also counts how many captures were linked to an active focus session, because that is the real evidence for interruption handling during focus.
+Capture is intentionally separate from focus sessions. Creating, editing, deleting, resolving, or converting a capture must not stop or switch the active timer. Open captures can be edited or deleted during review; processed captures stay as day history. Converting a capture creates or reuses a Work Item by normalized title, but does not start focus on that Work Item. The dogfood report includes a Russian interruption-history table for all captures created during the selected day, with state, focus context, and outcome. The RC checker also counts how many captures were linked to an active focus session, because that is the real evidence for interruption handling during focus.
 
 ## Work Item Events
 

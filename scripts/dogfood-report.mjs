@@ -36,6 +36,26 @@ const REVIEW_TITLE_LABELS = {
   "Confirm tracking accuracy or test correction": "Подтвердить точность трекинга",
   "Ready to copy final report": "Можно копировать финальный отчёт",
 };
+const DAILY_CONTROL_REQUIREMENT_LABELS = {
+  "Final state clean": "Финальное состояние чистое",
+  "Focus blocks visible": "Фокус-блоки видны",
+  "Work Item totals available": "Итоги по Work Item есть",
+  "Activity Zones separated": "Зоны активности разделены",
+  "Day and Work Item context present": "Контекст дня и Work Item сохранён",
+  "Gaps and captures visible": "Разрывы и отвлечения видны",
+  "Window and menubar friction evidenced": "Окно и menu bar проверены",
+  "Start and continue paths evidenced": "Старт и продолжение проверены",
+  "Tracking correction or review evidenced": "Коррекция трекинга проверена",
+  "Day closure duration measured": "Длительность закрытия измерена",
+  "Hard blockers absent": "Жёстких блокеров нет",
+  "Local gates": "Локальные проверки",
+};
+const DAILY_CONTROL_STATUS_LABELS = {
+  block: "блокер",
+  pass: "ок",
+  review: "проверить",
+  manual: "вручную",
+};
 
 if (options.date) {
   exportArgs.push("--date", options.date);
@@ -241,6 +261,7 @@ function buildDogfoodReport(
   focusMarkdown = dayMarkdown
 ) {
   const hasActiveWorkItems = activeWorkItems.length > 0;
+  const humanTelemetryMarkdown = formatTelemetryForReport(telemetryMarkdown);
   const reportState = activeFocus
     ? "черновик — фокус-блок ещё активен"
     : hasActiveWorkItems
@@ -270,7 +291,7 @@ function buildDogfoodReport(
     lines.push(
       "## Блокер финального отчёта",
       "",
-      ...activeWorkItems.map((item) => `- Active Work Item: ${item.title}`),
+      ...activeWorkItems.map((item) => `- Work Item в active: ${item.title}`),
       "- Сними active с Work Item перед финальным отчётом.",
       ""
     );
@@ -311,11 +332,11 @@ function buildDogfoodReport(
   }).trim(), "");
 
   lines.push(
-    "## Focus Data",
+    "## Данные фокуса",
     "",
     dayMarkdown.trim(),
     "",
-    telemetryMarkdown.trim(),
+    humanTelemetryMarkdown.trim(),
     "",
     "## Вечерний разбор",
     "",
@@ -352,6 +373,12 @@ function buildDogfoodReport(
   );
 
   return `${lines.join("\n")}\n`;
+}
+
+function formatTelemetryForReport(markdown) {
+  return markdown
+    .replace(/^## App Telemetry$/m, "## Телеметрия приложения")
+    .replace(/^### Events By Kind$/m, "### События по типам");
 }
 
 function buildReviewChecklistItems({
@@ -647,15 +674,23 @@ function formatDailyControlGoalAuditMarkdown({
   ];
 
   return [
-    "## Daily Control Goal Audit",
+    "## Аудит закрытия дня",
     "",
-    "| Requirement | Status | Evidence |",
+    "| Проверка | Статус | Доказательство |",
     "| --- | --- | --- |",
     ...rows.map(
       (row) =>
-        `| ${escapeMarkdownTable(row.requirement)} | ${escapeMarkdownTable(row.status)} | ${escapeMarkdownTable(row.evidence)} |`
+        `| ${escapeMarkdownTable(formatDailyControlRequirement(row.requirement))} | ${escapeMarkdownTable(formatDailyControlStatus(row.status))} | ${escapeMarkdownTable(row.evidence)} |`
     ),
   ].join("\n");
+}
+
+function formatDailyControlRequirement(requirement) {
+  return DAILY_CONTROL_REQUIREMENT_LABELS[requirement] ?? requirement;
+}
+
+function formatDailyControlStatus(status) {
+  return DAILY_CONTROL_STATUS_LABELS[status] ?? status;
 }
 
 function extractLineValue(markdown, label) {
@@ -756,15 +791,15 @@ function formatReviewChecklistMarkdown(items) {
 
 function formatCaptureActivityMarkdown(captures) {
   const lines = [
-    "## Capture Activity",
+    "## История отвлечений",
     "",
-    "| Time | State | Capture | During | Outcome |",
+    "| Время | Статус | Отвлечение | Во время | Итог |",
     "| --- | --- | --- | --- | --- |",
   ];
 
   for (const capture of captures) {
     lines.push(
-      `| ${escapeMarkdownTable(formatClockTime(capture.created_at))} | ${escapeMarkdownTable(capture.state)} | ${escapeMarkdownTable(capture.text)} | ${escapeMarkdownTable(formatCaptureDuring(capture))} | ${escapeMarkdownTable(formatCaptureOutcome(capture))} |`
+      `| ${escapeMarkdownTable(formatClockTime(capture.created_at))} | ${escapeMarkdownTable(formatCaptureState(capture.state))} | ${escapeMarkdownTable(capture.text)} | ${escapeMarkdownTable(formatCaptureDuring(capture))} | ${escapeMarkdownTable(formatCaptureOutcome(capture))} |`
     );
   }
 
@@ -773,23 +808,32 @@ function formatCaptureActivityMarkdown(captures) {
 
 function formatCaptureDuring(capture) {
   if (!capture.focus_session_id) {
-    return "no active focus";
+    return "без активного фокуса";
   }
 
-  return capture.focus_work_item_title ?? capture.focus_title ?? "linked focus block";
+  return capture.focus_work_item_title ?? capture.focus_title ?? "связанный фокус-блок";
 }
 
 function formatCaptureOutcome(capture) {
   if (capture.state === "resolved") {
-    return `resolved ${formatClockTime(capture.resolved_at ?? capture.updated_at)}`;
+    return `закрыто ${formatClockTime(capture.resolved_at ?? capture.updated_at)}`;
   }
 
   if (capture.state === "converted") {
     const itemTitle = capture.work_item_title ? ` -> ${capture.work_item_title}` : "";
-    return `converted ${formatClockTime(capture.converted_at ?? capture.updated_at)}${itemTitle}`;
+    return `создано ${formatClockTime(capture.converted_at ?? capture.updated_at)}${itemTitle}`;
   }
 
-  return "open";
+  return "открыто";
+}
+
+function formatCaptureState(state) {
+  const labels = {
+    open: "открыто",
+    resolved: "закрыто",
+    converted: "превращено",
+  };
+  return labels[state] ?? state;
 }
 
 function formatClockTime(value) {

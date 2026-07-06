@@ -72,18 +72,18 @@ try {
     stdout.includes("Статус отчёта: финальный — активных фокус-блоков и active Work Item нет"),
     "final report state is missing"
   );
-  assert(stdout.includes("## Focus Data"), "report did not include focus data section");
-  assert(stdout.includes("## App Telemetry"), "report did not include app telemetry section");
+  assert(stdout.includes("## Данные фокуса"), "report did not include focus data section");
+  assert(stdout.includes("## Телеметрия приложения"), "report did not include app telemetry section");
   assert(stdout.includes("## Проверка перед отчётом"), "report did not include review checklist section");
-  assert(stdout.includes("## Daily Control Goal Audit"), "report did not include daily-control audit section");
-  assert(stdout.includes("| Focus blocks visible | pass |"), "report daily-control audit did not pass focus blocks");
-  assert(stdout.includes("| Work Item totals available | pass |"), "report daily-control audit did not pass Work Item totals");
-  assert(stdout.includes("| Activity Zones separated | pass |"), "report daily-control audit did not pass zones");
-  assert(stdout.includes("| Window and menubar friction evidenced | pass |"), "report daily-control audit did not pass window evidence");
-  assert(stdout.includes("| Start and continue paths evidenced | pass |"), "report daily-control audit did not pass entry-path evidence");
-  assert(stdout.includes("| Tracking correction or review evidenced | pass |"), "report daily-control audit did not pass correction evidence");
-  assert(stdout.includes("| Day closure duration measured | pass |"), "report daily-control audit did not pass closure duration");
-  assert(stdout.includes("| Local gates | manual |"), "report daily-control audit did not include local gates");
+  assert(stdout.includes("## Аудит закрытия дня"), "report did not include daily-control audit section");
+  assert(stdout.includes("| Фокус-блоки видны | ок |"), "report daily-control audit did not pass focus blocks");
+  assert(stdout.includes("| Итоги по Work Item есть | ок |"), "report daily-control audit did not pass Work Item totals");
+  assert(stdout.includes("| Зоны активности разделены | ок |"), "report daily-control audit did not pass zones");
+  assert(stdout.includes("| Окно и menu bar проверены | ок |"), "report daily-control audit did not pass window evidence");
+  assert(stdout.includes("| Старт и продолжение проверены | ок |"), "report daily-control audit did not pass entry-path evidence");
+  assert(stdout.includes("| Коррекция трекинга проверена | ок |"), "report daily-control audit did not pass correction evidence");
+  assert(stdout.includes("| Длительность закрытия измерена | ок |"), "report daily-control audit did not pass closure duration");
+  assert(stdout.includes("| Локальные проверки | вручную |"), "report daily-control audit did not include local gates");
   assert(stdout.includes("Day closure started/completed: 1/1"), "report telemetry did not include day closure counts");
   assert(stdout.includes("Last day closure duration: 7:00"), "report telemetry did not include day closure duration");
   assert(stdout.includes("pnpm dogfood:goal-check"), "report daily-control audit did not mention goal-check");
@@ -92,7 +92,7 @@ try {
     "report review checklist did not include open capture cleanup"
   );
   assert(
-    stdout.includes("| Gaps and captures visible | review |"),
+    stdout.includes("| Разрывы и отвлечения видны | проверить |"),
     "report daily-control audit should review unaccepted open captures"
   );
   assert(
@@ -121,11 +121,11 @@ try {
   );
   assert(stdout.includes("## Открытые отвлечения"), "report did not include open captures section");
   assert(stdout.includes("Reply to incoming thread after focus"), "report did not include open capture text");
-  assert(stdout.includes("## Capture Activity"), "report did not include Capture Activity section");
-  assert(stdout.includes("| open | Reply to incoming thread after focus |"), "report did not include open capture activity");
-  assert(stdout.includes("| resolved | Already handled interruption |"), "report did not include resolved capture activity");
-  assert(stdout.includes("| converted | Turn into follow-up |"), "report did not include converted capture activity");
-  assert(stdout.includes("converted") && stdout.includes("Meetings"), "report did not include converted capture target");
+  assert(stdout.includes("## История отвлечений"), "report did not include Capture Activity section");
+  assert(stdout.includes("| открыто | Reply to incoming thread after focus |"), "report did not include open capture activity");
+  assert(stdout.includes("| закрыто | Already handled interruption |"), "report did not include resolved capture activity");
+  assert(stdout.includes("| превращено | Turn into follow-up |"), "report did not include converted capture activity");
+  assert(stdout.includes("создано") && stdout.includes("Meetings"), "report did not include converted capture target");
   assert(stdout.includes("Total tracked: 1:05:00"), "report did not include exported tracked total");
   assert(stdout.includes("Work focus: 35:00"), "report did not include exported work focus total");
   assert(stdout.includes("Non-work tracked: 30:00"), "report did not include exported non-work total");
@@ -199,7 +199,7 @@ try {
     "report review checklist did not show missing window request counts"
   );
   assert(
-    thinEvidenceStdout.includes("| Day closure duration measured | review |"),
+    thinEvidenceStdout.includes("| Длительность закрытия измерена | проверить |"),
     "report daily-control audit should review missing day closure duration"
   );
 
@@ -262,7 +262,7 @@ try {
     "stuck active item report did not include active Work Item warning"
   );
   assert(
-    stuckItemDraftStdout.includes("Active Work Item: Stuck Active Item"),
+    stuckItemDraftStdout.includes("Work Item в active: Stuck Active Item"),
     "stuck active item report did not name active Work Item"
   );
   assert(

@@ -70,7 +70,7 @@ try {
   const defaultReportMarkdown = await readFile(defaultReportPath, "utf8");
   const defaultRcMarkdown = await readFile(defaultRcPath, "utf8");
   assert(
-    defaultReportMarkdown.includes("## Daily Control Goal Audit"),
+    defaultReportMarkdown.includes("## Аудит закрытия дня"),
     "saved default report did not include daily control audit"
   );
   assert(

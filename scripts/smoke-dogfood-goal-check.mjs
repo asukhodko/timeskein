@@ -81,7 +81,7 @@ try {
   const weakEvidence = await runGoalCheck(["--check-saved-evidence-only", "--date", "2026-06-30"], tempDir);
   assert(weakEvidence.code !== 0, "saved evidence without audit rows should fail");
   assert(
-    `${weakEvidence.stdout}${weakEvidence.stderr}`.includes("Daily Control Goal Audit does not include Final state clean"),
+    `${weakEvidence.stdout}${weakEvidence.stderr}`.includes("Daily Control Goal Audit does not include Финальное состояние чистое"),
     "weak saved evidence error did not mention missing audit rows"
   );
 

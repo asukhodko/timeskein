@@ -135,47 +135,63 @@ async function checkSavedEvidence(date) {
 
   const weak = [];
   const reportRequirements = [
-    "# Timeskein dogfood report",
-    "## Focus Data",
-    "## Daily Control Goal Audit",
-    "## App Telemetry",
+    ["# Timeskein dogfood report"],
+    ["## Данные фокуса", "## Focus Data"],
+    ["## Аудит закрытия дня", "## Daily Control Goal Audit"],
+    ["## Телеметрия приложения", "## App Telemetry"],
   ];
   const rcRequirements = [
-    "# Timeskein dogfood RC check",
-    "## Evidence Summary",
-    "## Daily Control Goal Audit",
+    ["# Timeskein dogfood RC check"],
+    ["## Evidence Summary"],
+    ["## Daily Control Goal Audit"],
   ];
-  const dailyControlRows = [
-    "Final state clean",
-    "Focus blocks visible",
-    "Work Item totals available",
-    "Activity Zones separated",
-    "Day and Work Item context present",
-    "Gaps and captures visible",
-    "Window and menubar friction evidenced",
-    "Start and continue paths evidenced",
-    "Tracking correction or review evidenced",
-    "Day closure duration measured",
-    "Hard blockers absent",
-    "Local gates",
+  const reportDailyControlRows = [
+    ["Финальное состояние чистое", "Final state clean"],
+    ["Фокус-блоки видны", "Focus blocks visible"],
+    ["Итоги по Work Item есть", "Work Item totals available"],
+    ["Зоны активности разделены", "Activity Zones separated"],
+    ["Контекст дня и Work Item сохранён", "Day and Work Item context present"],
+    ["Разрывы и отвлечения видны", "Gaps and captures visible"],
+    ["Окно и menu bar проверены", "Window and menubar friction evidenced"],
+    ["Старт и продолжение проверены", "Start and continue paths evidenced"],
+    ["Коррекция трекинга проверена", "Tracking correction or review evidenced"],
+    ["Длительность закрытия измерена", "Day closure duration measured"],
+    ["Жёстких блокеров нет", "Hard blockers absent"],
+    ["Локальные проверки", "Local gates"],
+  ];
+  const rcDailyControlRows = [
+    ["Final state clean"],
+    ["Focus blocks visible"],
+    ["Work Item totals available"],
+    ["Activity Zones separated"],
+    ["Day and Work Item context present"],
+    ["Gaps and captures visible"],
+    ["Window and menubar friction evidenced"],
+    ["Start and continue paths evidenced"],
+    ["Tracking correction or review evidenced"],
+    ["Day closure duration measured"],
+    ["Hard blockers absent"],
+    ["Local gates"],
   ];
 
-  for (const needle of reportRequirements) {
-    if (!report.includes(needle)) {
-      weak.push(`${reportPath} does not include ${needle}`);
+  for (const aliases of reportRequirements) {
+    if (!includesAny(report, aliases)) {
+      weak.push(`${reportPath} does not include ${aliases[0]}`);
     }
   }
-  for (const needle of rcRequirements) {
-    if (!rcCheck.includes(needle)) {
-      weak.push(`${rcPath} does not include ${needle}`);
+  for (const aliases of rcRequirements) {
+    if (!includesAny(rcCheck, aliases)) {
+      weak.push(`${rcPath} does not include ${aliases[0]}`);
     }
   }
-  for (const row of dailyControlRows) {
-    if (!report.includes(row)) {
-      weak.push(`${reportPath} Daily Control Goal Audit does not include ${row}`);
+  for (const aliases of reportDailyControlRows) {
+    if (!includesAny(report, aliases)) {
+      weak.push(`${reportPath} Daily Control Goal Audit does not include ${aliases[0]}`);
     }
-    if (!rcCheck.includes(row)) {
-      weak.push(`${rcPath} Daily Control Goal Audit does not include ${row}`);
+  }
+  for (const aliases of rcDailyControlRows) {
+    if (!includesAny(rcCheck, aliases)) {
+      weak.push(`${rcPath} Daily Control Goal Audit does not include ${aliases[0]}`);
     }
   }
 
@@ -189,6 +205,10 @@ async function checkSavedEvidence(date) {
       ].join("\n")
     );
   }
+}
+
+function includesAny(text, aliases) {
+  return aliases.some((needle) => text.includes(needle));
 }
 
 async function readEvidenceFile(path, missing) {

@@ -160,7 +160,7 @@ At the end of the day, export the analysis note:
 pnpm dogfood:finish:save
 ```
 
-This writes `timeskein-dogfood-report-YYYY-MM-DD.md` in the current directory. The report includes focus blocks, Work Item totals, Activity Zone totals, Day Events, Work Item notes and timestamped Work Item Events for items touched that day, Capture Activity for the day, open Capture Inbox entries, Review Checklist, Daily Control Goal Audit, and local app telemetry: starts, switches, stops, typed and selected/list entry paths, start/stop failures, Capture Inbox actions, Work Item today/total badge review acceptance, focus corrections or accepted correction review, measured day-closure duration, API errors, show/hide events, show/hide requests from window entrypoints, copy failures, and likely friction points.
+This writes `timeskein-dogfood-report-YYYY-MM-DD.md` in the current directory. The report includes focus blocks, Work Item totals, Activity Zone totals, Day Events, Work Item notes and timestamped Work Item Events for items touched that day, Russian interruption history for the day, open Capture Inbox entries, a Russian review checklist, a Russian daily-closure audit, and local app telemetry: starts, switches, stops, typed and selected/list entry paths, start/stop failures, Capture Inbox actions, Work Item today/total badge review acceptance, focus corrections or accepted correction review, measured day-closure duration, API errors, show/hide events, show/hide requests from window entrypoints, copy failures, and likely friction points.
 It also writes `timeskein-dogfood-rc-check-YYYY-MM-DD.md`, so the evening evidence package contains both the readable day report and the requirement-by-requirement RC audit.
 Saved dogfood reports and RC checks can contain personal or internal work context, so they are ignored by git.
 To print the report to stdout instead:
@@ -322,8 +322,8 @@ Focus Session controls:
 - Day panel with focus blocks, total tracked time, work focus, non-work tracked time, entrance count, zones, and gaps
 - Open gap warning when no focus block is running and the time since the last stopped block is significant
 - Day totals count the part of each focus block that overlaps the selected local day
-- Review checklist in Today and copied dogfood reports: active-state blockers, open captures, significant gaps, open gap, Activity Zone coverage, non-work tracking, capture coverage, Work Item context coverage, and explicit accept actions for tracking accuracy and open-capture follow-up
-- Markdown dogfood report from the Today panel or CLI, with focus data, Work Item totals, Activity Zone totals, Day Events, Work Item notes and timestamped events for touched items, significant gaps, Capture Activity, open captures, review checklist/prompts, and draft warning while a focus block or Work Item is active
+- Russian review checklist in Today and copied dogfood reports: active-state blockers, open captures, significant gaps, open gap, Activity Zone coverage, non-work tracking, capture coverage, Work Item context coverage, and explicit accept actions for tracking accuracy and open-capture follow-up
+- Markdown dogfood report from the Today panel or CLI, with focus data, Work Item totals, Activity Zone totals, Day Events, Work Item notes and timestamped events for touched items, significant gaps, Russian interruption history, open captures, review checklist/prompts, and draft warning while a focus block or Work Item is active
 - macOS menu bar item shows the active focus duration as a short `12m Focus` status while a block is running, and today's total when no block is active
 - Work item states: active, waiting, blocked, done, someday, unknown
 - Work Item activity zones: work, coordination, recovery, idle, personal; focus blocks keep their own zone snapshot for report correction

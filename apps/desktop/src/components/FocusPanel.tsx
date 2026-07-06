@@ -385,7 +385,7 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
       })
     } catch {
       setCopyDayState('failed')
-      setManualCopy({ label: 'Day Markdown', text: todayMarkdown })
+      setManualCopy({ label: 'Дневной Markdown', text: todayMarkdown })
       void logAppEvent({
         source: 'ui',
         kind: 'report_copy_failed',
@@ -457,7 +457,7 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
       })
     } catch {
       setCopyReportState('failed')
-      setManualCopy({ label: 'Dogfood Report', text: reportMarkdown })
+      setManualCopy({ label: 'Отчёт Timeskein', text: reportMarkdown })
       void logAppEvent({
         source: 'ui',
         kind: 'report_copy_failed',
@@ -720,7 +720,7 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
                 disabled={sessions.length === 0}
                 className="rounded border border-gray-700 px-2 py-0.5 text-[11px] font-medium text-gray-300 transition-colors hover:border-gray-500 hover:text-gray-100 disabled:cursor-not-allowed disabled:border-gray-800 disabled:text-gray-600"
               >
-                {copyDayState === 'copied' ? 'Скопировано' : copyDayState === 'failed' ? 'Ошибка' : 'Copy MD'}
+                {copyDayState === 'copied' ? 'Скопировано' : copyDayState === 'failed' ? 'Ошибка' : 'Копировать день'}
               </button>
               <button
                 type="button"
@@ -978,7 +978,7 @@ async function buildDogfoodReportMarkdown(
     lines.push(
       '## Блокер финального отчёта',
       '',
-      ...activeWorkItems.map((item) => `- Active Work Item: ${item.title}`),
+      ...activeWorkItems.map((item) => `- Work Item в active: ${item.title}`),
       '- Сними active с Work Item перед финальным отчётом.',
       ''
     )
@@ -1016,7 +1016,7 @@ async function buildDogfoodReportMarkdown(
       reviewItems,
     }).trim(),
     '',
-    '## Focus Data',
+    '## Данные фокуса',
     '',
     todayMarkdown.trim(),
     '',
@@ -1385,6 +1385,26 @@ const REVIEW_TITLE_LABELS: Record<string, string> = {
   'No focus blocks yet': 'Пока нет фокус-блоков',
   'Ready to copy final report': 'Можно копировать финальный отчёт',
 }
+const DAILY_CONTROL_REQUIREMENT_LABELS: Record<string, string> = {
+  'Final state clean': 'Финальное состояние чистое',
+  'Focus blocks visible': 'Фокус-блоки видны',
+  'Work Item totals available': 'Итоги по Work Item есть',
+  'Activity Zones separated': 'Зоны активности разделены',
+  'Day and Work Item context present': 'Контекст дня и Work Item сохранён',
+  'Gaps and captures visible': 'Разрывы и отвлечения видны',
+  'Window and menubar friction evidenced': 'Окно и menu bar проверены',
+  'Start and continue paths evidenced': 'Старт и продолжение проверены',
+  'Tracking correction or review evidenced': 'Коррекция трекинга проверена',
+  'Day closure duration measured': 'Длительность закрытия измерена',
+  'Hard blockers absent': 'Жёстких блокеров нет',
+  'Local gates': 'Локальные проверки',
+}
+const DAILY_CONTROL_STATUS_LABELS: Record<string, string> = {
+  block: 'блокер',
+  pass: 'ок',
+  review: 'проверить',
+  manual: 'вручную',
+}
 
 function pluralRu(value: number, one: string, few: string, many: string) {
   const abs = Math.abs(value)
@@ -1542,15 +1562,23 @@ function formatDailyControlGoalAuditMarkdown({
   ]
 
   return [
-    '## Daily Control Goal Audit',
+    '## Аудит закрытия дня',
     '',
-    '| Requirement | Status | Evidence |',
+    '| Проверка | Статус | Доказательство |',
     '| --- | --- | --- |',
     ...rows.map(
       (row) =>
-        `| ${escapeMarkdownTable(row.requirement)} | ${escapeMarkdownTable(row.status)} | ${escapeMarkdownTable(row.evidence)} |`
+        `| ${escapeMarkdownTable(formatDailyControlRequirement(row.requirement))} | ${escapeMarkdownTable(formatDailyControlStatus(row.status))} | ${escapeMarkdownTable(row.evidence)} |`
     ),
   ].join('\n')
+}
+
+function formatDailyControlRequirement(requirement: string) {
+  return DAILY_CONTROL_REQUIREMENT_LABELS[requirement] ?? requirement
+}
+
+function formatDailyControlStatus(status: string) {
+  return DAILY_CONTROL_STATUS_LABELS[status] ?? status
 }
 
 function extractLineValue(markdown: string, label: string) {
@@ -1993,15 +2021,15 @@ function formatCaptureActivityMarkdown(
   const sessionsById = new Map(sessions.map((session) => [session.id, session]))
   const workItemsById = new Map(workItems.map((item) => [item.id, item]))
   const lines = [
-    '## Capture Activity',
+    '## История отвлечений',
     '',
-    '| Time | State | Capture | During | Outcome |',
+    '| Время | Статус | Отвлечение | Во время | Итог |',
     '| --- | --- | --- | --- | --- |',
   ]
 
   for (const capture of captures) {
     lines.push(
-      `| ${escapeMarkdownTable(formatClockTime(capture.created_at))} | ${escapeMarkdownTable(capture.state)} | ${escapeMarkdownTable(capture.text)} | ${escapeMarkdownTable(formatCaptureDuring(capture, sessionsById))} | ${escapeMarkdownTable(formatCaptureOutcome(capture, workItemsById))} |`
+      `| ${escapeMarkdownTable(formatClockTime(capture.created_at))} | ${escapeMarkdownTable(formatCaptureState(capture.state))} | ${escapeMarkdownTable(capture.text)} | ${escapeMarkdownTable(formatCaptureDuring(capture, sessionsById))} | ${escapeMarkdownTable(formatCaptureOutcome(capture, workItemsById))} |`
     )
   }
 
@@ -2010,25 +2038,34 @@ function formatCaptureActivityMarkdown(
 
 function formatCaptureDuring(capture: CaptureView, sessionsById: Map<string, FocusSessionView>) {
   if (!capture.focus_session_id) {
-    return 'no active focus'
+    return 'без активного фокуса'
   }
 
   const session = sessionsById.get(capture.focus_session_id)
-  return session?.work_item_title ?? session?.title ?? 'linked focus block'
+  return session?.work_item_title ?? session?.title ?? 'связанный фокус-блок'
 }
 
 function formatCaptureOutcome(capture: CaptureView, workItemsById: Map<string, WorkItemView>) {
   if (capture.state === 'resolved') {
-    return `resolved ${formatClockTime(capture.resolved_at ?? capture.updated_at)}`
+    return `закрыто ${formatClockTime(capture.resolved_at ?? capture.updated_at)}`
   }
 
   if (capture.state === 'converted') {
     const item = capture.work_item_id ? workItemsById.get(capture.work_item_id) : undefined
     const itemTitle = item ? ` -> ${item.title}` : ''
-    return `converted ${formatClockTime(capture.converted_at ?? capture.updated_at)}${itemTitle}`
+    return `создано ${formatClockTime(capture.converted_at ?? capture.updated_at)}${itemTitle}`
   }
 
-  return 'open'
+  return 'открыто'
+}
+
+function formatCaptureState(state: CaptureView['state']) {
+  const labels: Record<CaptureView['state'], string> = {
+    open: 'открыто',
+    resolved: 'закрыто',
+    converted: 'превращено',
+  }
+  return labels[state] ?? state
 }
 
 async function buildAppTelemetryMarkdown(now: Date) {
@@ -2043,9 +2080,9 @@ async function buildAppTelemetryMarkdown(now: Date) {
     return formatAppTelemetryMarkdown(summary)
   } catch {
     return [
-      '## App Telemetry',
+      '## Телеметрия приложения',
       '',
-      'Telemetry unavailable in UI report. Run `pnpm dogfood:metrics` after the day.',
+      'Телеметрия недоступна в UI-отчёте. После дня запусти `pnpm dogfood:metrics`.',
     ].join('\n')
   }
 }
@@ -2065,7 +2102,7 @@ async function loadAppEventSummary(now: Date) {
 
 function formatAppTelemetryMarkdown(summary: AppEventSummary) {
   const lines = [
-    '## App Telemetry',
+    '## Телеметрия приложения',
     '',
     `Total events: ${summary.total}`,
     `Start requests: ${summary.start_requests}`,
@@ -2095,7 +2132,7 @@ function formatAppTelemetryMarkdown(summary: AppEventSummary) {
 
   const byKind = Object.entries(summary.by_kind)
   if (byKind.length > 0) {
-    lines.push('', '### Events By Kind', '', '| Count | Kind |', '| ---: | --- |')
+    lines.push('', '### События по типам', '', '| Count | Kind |', '| ---: | --- |')
     for (const [kind, count] of byKind.sort(
       (left, right) => right[1] - left[1] || left[0].localeCompare(right[0])
     )) {

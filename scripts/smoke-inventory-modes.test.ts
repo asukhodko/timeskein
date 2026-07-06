@@ -10,6 +10,11 @@ import {
   isTodayInventoryItem,
 } from '../apps/desktop/src/utils/inventoryModes'
 import { getWorkItemTimeBadges } from '../apps/desktop/src/utils/workItemCardMeta'
+import {
+  formatActivityZoneBadge,
+  formatWorkItemStateBadge,
+  formatWorkItemStateLabel,
+} from '../apps/desktop/src/utils/workItemLabels'
 
 const now = Date.parse('2026-07-03T12:00:00.000Z')
 
@@ -103,8 +108,8 @@ test('work item card metadata exposes today and total tracked time badges', () =
       total_active_seconds: 3725,
     })),
     [
-      { kind: 'today', label: 'today', value: '1:15' },
-      { kind: 'total', label: 'total', value: '1:02:05' },
+      { kind: 'today', label: 'сегодня', value: '1:15' },
+      { kind: 'total', label: 'всего', value: '1:02:05' },
     ]
   )
 
@@ -113,10 +118,17 @@ test('work item card metadata exposes today and total tracked time badges', () =
       today_active_seconds: 0,
       total_active_seconds: 600,
     })),
-    [{ kind: 'total', label: 'total', value: '10:00' }]
+    [{ kind: 'total', label: 'всего', value: '10:00' }]
   )
 
   assert.deepEqual(getWorkItemTimeBadges(item('untracked')), [])
+})
+
+test('work item labels keep the daily inventory readable in Russian', () => {
+  assert.equal(formatWorkItemStateBadge('unknown'), 'неясно')
+  assert.equal(formatWorkItemStateBadge('active'), 'активно')
+  assert.equal(formatWorkItemStateLabel('waiting'), 'Ждёт')
+  assert.equal(formatActivityZoneBadge('recovery'), 'Восстановление')
 })
 
 function titles(items: WorkItemView[]) {

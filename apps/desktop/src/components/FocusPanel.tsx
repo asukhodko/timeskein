@@ -745,7 +745,7 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
 
         {mutationError && (
           <div className="mt-2 text-xs text-red-300">
-            {mutationError instanceof Error ? mutationError.message : 'Focus action failed'}
+            {mutationError instanceof Error ? mutationError.message : 'Не удалось выполнить действие фокуса'}
           </div>
         )}
       </div>
@@ -789,7 +789,7 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
             </div>
           </div>
           <span className="shrink-0 text-gray-400">
-            {formatDuration(workFocusSeconds)} work · {formatDuration(activeSecondsTotal)} всего · {sessions.length} входов
+            {formatDuration(workFocusSeconds)} рабочего фокуса · {formatDuration(activeSecondsTotal)} всего · {sessions.length} входов
           </span>
         </div>
 

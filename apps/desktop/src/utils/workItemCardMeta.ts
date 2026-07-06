@@ -15,7 +15,7 @@ export function getWorkItemTimeBadges(item: WorkItemTimeFields): WorkItemTimeBad
   if (item.today_active_seconds > 0) {
     badges.push({
       kind: 'today',
-      label: 'today',
+      label: 'сегодня',
       value: formatDuration(item.today_active_seconds),
     })
   }
@@ -23,7 +23,7 @@ export function getWorkItemTimeBadges(item: WorkItemTimeFields): WorkItemTimeBad
   if (item.total_active_seconds > 0) {
     badges.push({
       kind: 'total',
-      label: 'total',
+      label: 'всего',
       value: formatDuration(item.total_active_seconds),
     })
   }

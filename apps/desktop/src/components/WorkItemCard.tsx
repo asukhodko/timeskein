@@ -2,6 +2,7 @@ import clsx from 'clsx'
 import type { ActivityZone, WorkItemView, WorkItemState } from '@timeskein/contracts'
 import { formatRelativeTime, truncate } from '../utils/formatTime'
 import { getWorkItemTimeBadges } from '../utils/workItemCardMeta'
+import { formatActivityZoneBadge, formatWorkItemStateBadge } from '../utils/workItemLabels'
 
 interface WorkItemCardProps {
   item: WorkItemView
@@ -34,7 +35,7 @@ export default function WorkItemCard({
   onDoubleClick,
 }: WorkItemCardProps) {
   const lastSeen = formatRelativeTime(item.last_seen_at)
-  const lastSeenLabel = lastSeen === '—' || lastSeen === 'now' ? lastSeen : `${lastSeen} ago`
+  const lastSeenLabel = lastSeen === '—' ? lastSeen : lastSeen === 'now' ? 'сейчас' : `${lastSeen} назад`
   const timeBadges = getWorkItemTimeBadges(item)
 
   return (
@@ -63,7 +64,7 @@ export default function WorkItemCard({
             stateColorClasses[item.state as WorkItemState] || stateColorClasses.unknown
           )}
         >
-          {item.state}
+          {formatWorkItemStateBadge(item.state as WorkItemState)}
         </div>
 
         {/* Content */}
@@ -84,7 +85,7 @@ export default function WorkItemCard({
                 zoneColorClasses[item.activity_zone] || zoneColorClasses.work
               )}
             >
-              {item.activity_zone}
+              {formatActivityZoneBadge(item.activity_zone)}
             </span>
             {timeBadges.map((badge) => (
               <span
@@ -112,7 +113,7 @@ export default function WorkItemCard({
           )}
 
           {/* Last seen */}
-          <span className="w-14 text-right" title={item.last_seen_at || 'Never seen'}>
+          <span className="w-14 text-right" title={item.last_seen_at || 'Нет касаний'}>
             {lastSeenLabel}
           </span>
         </div>

@@ -32,6 +32,7 @@ import {
   modeTitle,
   type InventoryMode,
 } from '../utils/inventoryModes'
+import { formatWorkItemStateLabel } from '../utils/workItemLabels'
 
 const todayListHeightStorageKey = 'timeskein.todayListHeightPx'
 const defaultTodayListHeightPx = 288
@@ -374,13 +375,13 @@ export default function Palette() {
         </div>
         <div className="flex items-center gap-3">
           <span className="text-xs text-gray-500">
-            {visibleItems.length}{visibleItems.length === items.length ? '' : `/${items.length}`} items
+            {formatItemCounter(visibleItems.length, items.length)}
           </span>
           <button
             data-no-drag
             onClick={handleHideWindow}
             className="w-6 h-6 flex items-center justify-center rounded bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm font-bold transition-colors"
-            title="Hide window (Esc)"
+            title="Скрыть окно (Esc)"
           >
             −
           </button>
@@ -388,7 +389,7 @@ export default function Palette() {
             data-no-drag
             onClick={() => setShowCreate(true)}
             className="w-6 h-6 flex items-center justify-center rounded bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold transition-colors"
-            title="Create new (Alt+N or C)"
+            title="Создать новое дело (Alt+N или C)"
           >
             +
           </button>
@@ -403,7 +404,7 @@ export default function Palette() {
         onMouseDown={handleStartTodayResize}
         onDoubleClick={resetTodayHeight}
         className="group flex h-2 cursor-row-resize items-center justify-center border-b border-gray-700 bg-gray-950/80 hover:bg-gray-800/80"
-        title="Drag to resize Today. Double-click to reset."
+        title="Потяни, чтобы изменить высоту дневного журнала. Двойной клик сбросит высоту."
       >
         <span className="h-0.5 w-12 rounded bg-gray-700 transition-colors group-hover:bg-blue-500/70" />
       </button>
@@ -427,26 +428,26 @@ export default function Palette() {
       <div className="flex-1 overflow-auto">
         {isLoading ? (
           <div className="flex items-center justify-center h-32 text-gray-500">
-            Loading...
+            Загружаю...
           </div>
         ) : error ? (
           <div className="flex flex-col items-center justify-center h-32 text-gray-500">
-            <div className="text-red-400">Agent offline</div>
-            <div className="text-xs mt-1">Start the mock server or agent</div>
+            <div className="text-red-400">Агент недоступен</div>
+            <div className="text-xs mt-1">Запусти агент или mock server</div>
           </div>
         ) : items.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-32 text-gray-500">
-            <div>{search ? 'No matching items' : 'No work items yet'}</div>
-            <div className="text-xs mt-1">Press C or Alt+N to create one</div>
+            <div>{search ? 'Нет подходящих дел' : 'Дел пока нет'}</div>
+            <div className="text-xs mt-1">Нажми C или Alt+N, чтобы создать первое</div>
           </div>
         ) : visibleItems.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-32 text-gray-500">
-            <div>No items in {inventoryMode}</div>
+            <div>В этом режиме нет дел</div>
             <button
               className="mt-2 rounded border border-gray-700 px-2 py-1 text-xs text-gray-400 hover:border-blue-500/50 hover:text-blue-300"
               onClick={() => setInventoryMode('all')}
             >
-              Show all
+              Показать все
             </button>
           </div>
         ) : (
@@ -497,22 +498,22 @@ export default function Palette() {
             <kbd className="px-1 bg-gray-700 rounded">R</kbd><span>ссылки</span>
           </button>
           <span className="text-gray-600">|</span>
-          <button onClick={() => selectedItem && handleStateSelect('active')} className="flex items-center gap-1 hover:text-green-400 transition-colors" title="Сделать active">
+          <button onClick={() => selectedItem && handleStateSelect('active')} className="flex items-center gap-1 hover:text-green-400 transition-colors" title={`Сделать «${formatWorkItemStateLabel('active')}»`}>
             <kbd className="px-1 bg-gray-700 rounded">1</kbd>
           </button>
-          <button onClick={() => selectedItem && handleStateSelect('blocked')} className="flex items-center gap-1 hover:text-red-400 transition-colors" title="Сделать blocked">
+          <button onClick={() => selectedItem && handleStateSelect('blocked')} className="flex items-center gap-1 hover:text-red-400 transition-colors" title={`Сделать «${formatWorkItemStateLabel('blocked')}»`}>
             <kbd className="px-1 bg-gray-700 rounded">2</kbd>
           </button>
-          <button onClick={() => selectedItem && handleStateSelect('waiting')} className="flex items-center gap-1 hover:text-amber-400 transition-colors" title="Сделать waiting">
+          <button onClick={() => selectedItem && handleStateSelect('waiting')} className="flex items-center gap-1 hover:text-amber-400 transition-colors" title={`Сделать «${formatWorkItemStateLabel('waiting')}»`}>
             <kbd className="px-1 bg-gray-700 rounded">3</kbd>
           </button>
-          <button onClick={() => selectedItem && handleStateSelect('someday')} className="flex items-center gap-1 hover:text-purple-400 transition-colors" title="Сделать someday">
+          <button onClick={() => selectedItem && handleStateSelect('someday')} className="flex items-center gap-1 hover:text-purple-400 transition-colors" title={`Сделать «${formatWorkItemStateLabel('someday')}»`}>
             <kbd className="px-1 bg-gray-700 rounded">4</kbd>
           </button>
-          <button onClick={() => selectedItem && handleStateSelect('unknown')} className="flex items-center gap-1 hover:text-gray-400 transition-colors" title="Сделать unknown">
+          <button onClick={() => selectedItem && handleStateSelect('unknown')} className="flex items-center gap-1 hover:text-gray-400 transition-colors" title={`Сделать «${formatWorkItemStateLabel('unknown')}»`}>
             <kbd className="px-1 bg-gray-700 rounded">5</kbd>
           </button>
-          <button onClick={() => selectedItem && handleStateSelect('done')} className="flex items-center gap-1 hover:text-blue-400 transition-colors" title="Сделать done">
+          <button onClick={() => selectedItem && handleStateSelect('done')} className="flex items-center gap-1 hover:text-blue-400 transition-colors" title={`Сделать «${formatWorkItemStateLabel('done')}»`}>
             <kbd className="px-1 bg-gray-700 rounded">6</kbd>
           </button>
           <span className="text-gray-600">|</span>
@@ -616,6 +617,21 @@ function writeTodayListHeight(height: number) {
 
 function clampTodayListHeight(height: number) {
   return Math.max(minTodayListHeightPx, Math.min(maxTodayListHeightPx, Math.round(height)))
+}
+
+function formatItemCounter(visible: number, total: number) {
+  const value = visible === total ? String(visible) : `${visible}/${total}`
+  return `${value} ${pluralRu(total, 'дело', 'дела', 'дел')}`
+}
+
+function pluralRu(value: number, one: string, few: string, many: string) {
+  const abs = Math.abs(value)
+  const mod10 = abs % 10
+  const mod100 = abs % 100
+
+  if (mod10 === 1 && mod100 !== 11) return one
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return few
+  return many
 }
 
 function InventoryModeTabs({

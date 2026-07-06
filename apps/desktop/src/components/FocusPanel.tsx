@@ -1074,6 +1074,8 @@ async function buildDogfoodReportMarkdown(
   }
 
   const appTelemetryMarkdown = await buildAppTelemetryMarkdown(now)
+  const reportFocusMarkdown = formatFocusMarkdownForReport(todayMarkdown)
+  const reportTelemetryMarkdown = formatTelemetryForReport(appTelemetryMarkdown)
 
   lines.push(
     formatReviewChecklistMarkdown(reviewItems).trim(),
@@ -1090,9 +1092,9 @@ async function buildDogfoodReportMarkdown(
     '',
     '## Данные фокуса',
     '',
-    todayMarkdown.trim(),
+    reportFocusMarkdown.trim(),
     '',
-    appTelemetryMarkdown.trim(),
+    reportTelemetryMarkdown.trim(),
     '',
     '## Вечерний разбор',
     '',
@@ -1129,6 +1131,65 @@ async function buildDogfoodReportMarkdown(
   )
 
   return `${lines.join('\n')}\n`
+}
+
+function formatFocusMarkdownForReport(markdown: string) {
+  return markdown
+    .replace(/^# Timeskein focus day - (.+)$/m, '# Фокус-день Timeskein — $1')
+    .replace(/^Total tracked:/gm, 'Всего учтено:')
+    .replace(/^Work focus:/gm, 'Рабочий фокус:')
+    .replace(/^Non-work tracked:/gm, 'Нерабочее учтено:')
+    .replace(/^Entrances:/gm, 'Входов:')
+    .replace(/^\| Time \| Duration \| Zone \| Work Item \| Note \|$/gm, '| Время | Длительность | Зона | Work Item | Заметка |')
+    .replace(/^## Day-Boundary Blocks$/gm, '## Блоки на границе дня')
+    .replace(/: counted as ([^\n]+) inside this day/g, ': учтено как $1 внутри этого дня')
+    .replace(/^## By Work Item$/gm, '## По Work Item')
+    .replace(/^\| Duration \| Entrances \| Work Item \|$/gm, '| Длительность | Входов | Work Item |')
+    .replace(/^## By Activity Zone$/gm, '## По зонам активности')
+    .replace(/^\| Duration \| Entrances \| Zone \|$/gm, '| Длительность | Входов | Зона |')
+    .replace(/^## Work Item Notes$/gm, '## Заметки Work Item')
+    .replace(/^## Day Events$/gm, '## События дня')
+    .replace(/^\| Time \| Zone \| During \| Event \|$/gm, '| Время | Зона | Во время | Событие |')
+    .replace(/^## Work Item Events$/gm, '## События Work Item')
+    .replace(/^\| Time \| Work Item \| During \| Event \|$/gm, '| Время | Work Item | Во время | Событие |')
+    .replace(/^## Gaps >=/gm, '## Разрывы >=')
+    .replace(/^## Open Gap$/gm, '## Текущий открытый разрыв')
+    .replace(/ since last stopped block$/gm, ' после последнего остановленного блока')
+}
+
+function formatTelemetryForReport(markdown: string) {
+  return markdown
+    .replace(/^## App Telemetry$/m, '## Телеметрия приложения')
+    .replace(/^Total events:/gm, 'Всего событий:')
+    .replace(/^Start requests:/gm, 'Запросов старта:')
+    .replace(/^Switch requests:/gm, 'Запросов переключения:')
+    .replace(/^Stop requests:/gm, 'Запросов остановки:')
+    .replace(/^Typed\/selected entry requests:/gm, 'Входы typed/selected:')
+    .replace(/^Start\/stop failures:/gm, 'Ошибки старта/остановки:')
+    .replace(/^Window shown\/hidden:/gm, 'Окно показано/скрыто:')
+    .replace(/^Window show\/hide requests:/gm, 'Запросы показать/скрыть окно:')
+    .replace(/^Window drag starts:/gm, 'Стартов перетаскивания окна:')
+    .replace(/^Copy failures:/gm, 'Ошибок копирования:')
+    .replace(/^Manual copy fallbacks:/gm, 'Ручных fallback-копирований:')
+    .replace(/^Capture created\/resolved\/converted:/gm, 'Отвлечений создано/закрыто/превращено:')
+    .replace(/^Capture follow-up reviews:/gm, 'Проверок follow-up по отвлечениям:')
+    .replace(/^Work Item time badge reviews:/gm, 'Проверок бейджей времени Work Item:')
+    .replace(/^Activity Zone reviews:/gm, 'Проверок зон активности:')
+    .replace(/^Capture usage reviews:/gm, 'Проверок использования Inbox:')
+    .replace(/^Entry path reviews:/gm, 'Проверок путей входа:')
+    .replace(/^Window entrypoint reviews:/gm, 'Проверок входа в окно:')
+    .replace(/^Capture updated\/deleted:/gm, 'Отвлечений изменено/удалено:')
+    .replace(/^Capture failures create\/resolve\/update\/delete\/convert:/gm, 'Ошибок отвлечений create/resolve/update/delete/convert:')
+    .replace(/^Corrections requested\/applied\/reviewed\/failed:/gm, 'Коррекций запрошено/применено/проверено/ошибок:')
+    .replace(/^Day closure started\/completed:/gm, 'Закрытий дня начато/завершено:')
+    .replace(/^Last day closure duration:/gm, 'Последняя длительность закрытия дня:')
+    .replace(/^API errors:/gm, 'Ошибок API:')
+    .replace(/^Already-active start attempts:/gm, 'Попыток старта уже активного Work Item:')
+    .replace(/^Stale runtime recoveries:/gm, 'Восстановлений устаревшего runtime:')
+    .replace(/^Average start latency:/gm, 'Средняя задержка старта:')
+    .replace(/^Slow window-to-focus gaps:/gm, 'Медленных разрывов окно->фокус:')
+    .replace(/^### Events By Kind$/m, '### События по типам')
+    .replace(/^\| Count \| Kind \|$/gm, '| Кол-во | Тип |')
 }
 
 type Gap = {

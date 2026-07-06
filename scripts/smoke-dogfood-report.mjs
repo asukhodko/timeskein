@@ -84,8 +84,8 @@ try {
   assert(stdout.includes("| Коррекция трекинга проверена | ок |"), "report daily-control audit did not pass correction evidence");
   assert(stdout.includes("| Длительность закрытия измерена | ок |"), "report daily-control audit did not pass closure duration");
   assert(stdout.includes("| Локальные проверки | вручную |"), "report daily-control audit did not include local gates");
-  assert(stdout.includes("Day closure started/completed: 1/1"), "report telemetry did not include day closure counts");
-  assert(stdout.includes("Last day closure duration: 7:00"), "report telemetry did not include day closure duration");
+  assert(stdout.includes("Закрытий дня начато/завершено: 1/1"), "report telemetry did not include day closure counts");
+  assert(stdout.includes("Последняя длительность закрытия дня: 7:00"), "report telemetry did not include day closure duration");
   assert(stdout.includes("pnpm dogfood:goal-check"), "report daily-control audit did not mention goal-check");
   assert(
     stdout.includes("Разобрать открытые отвлечения"),
@@ -126,29 +126,29 @@ try {
   assert(stdout.includes("| закрыто | Already handled interruption |"), "report did not include resolved capture activity");
   assert(stdout.includes("| превращено | Turn into follow-up |"), "report did not include converted capture activity");
   assert(stdout.includes("создано") && stdout.includes("Meetings"), "report did not include converted capture target");
-  assert(stdout.includes("Total tracked: 1:05:00"), "report did not include exported tracked total");
-  assert(stdout.includes("Work focus: 35:00"), "report did not include exported work focus total");
-  assert(stdout.includes("Non-work tracked: 30:00"), "report did not include exported non-work total");
-  assert(stdout.includes("## By Work Item"), "report did not include work item totals");
-  assert(stdout.includes("## By Activity Zone"), "report did not include activity zone totals");
+  assert(stdout.includes("Всего учтено: 1:05:00"), "report did not include exported tracked total");
+  assert(stdout.includes("Рабочий фокус: 35:00"), "report did not include exported work focus total");
+  assert(stdout.includes("Нерабочее учтено: 30:00"), "report did not include exported non-work total");
+  assert(stdout.includes("## По Work Item"), "report did not include work item totals");
+  assert(stdout.includes("## По зонам активности"), "report did not include activity zone totals");
   assert(stdout.includes("| 35:00 | 2 | Work |"), "report did not include Work zone total");
   assert(stdout.includes("| 30:00 | 1 | Coordination |"), "report did not include Coordination zone total");
-  assert(stdout.includes("## Work Item Notes"), "report did not include Work Item Notes section");
+  assert(stdout.includes("## Заметки Work Item"), "report did not include Work Item Notes section");
   assert(
     stdout.includes("- Deep Work: Keep the implementation context here."),
     "report did not include Work Item note"
   );
-  assert(stdout.includes("## Work Item Events"), "report did not include Work Item Events section");
+  assert(stdout.includes("## События Work Item"), "report did not include Work Item Events section");
   assert(
     stdout.includes("| Deep Work | Deep Work | implementation checkpoint |"),
     "report did not include timestamped Work Item event"
   );
-  assert(stdout.includes("## Day Events"), "report did not include Day Events section");
+  assert(stdout.includes("## События дня"), "report did not include Day Events section");
   assert(
     stdout.includes("| Work | Deep Work | buffer before meeting felt expensive |"),
     "report did not include day event"
   );
-  assert(stdout.includes("## Gaps >= 20:00"), "report did not include significant gaps");
+  assert(stdout.includes("## Разрывы >= 20:00"), "report did not include significant gaps");
   assert(stdout.includes("### Цена входа"), "report did not include entry cost prompts");
   assert(stdout.includes("Данных достаточно для разговора о дне: да/нет"), "report did not include verdict prompts");
 
@@ -245,9 +245,9 @@ try {
     acceptedOptionalStdout.includes("| Старт и продолжение проверены | ок |"),
     "report daily-control audit should pass entry paths after explicit review"
   );
-  assert(acceptedOptionalStdout.includes("Activity Zone reviews: 1"), "report telemetry should include Activity Zone review");
-  assert(acceptedOptionalStdout.includes("Entry path reviews: 1"), "report telemetry should include entry path review");
-  assert(acceptedOptionalStdout.includes("Window entrypoint reviews: 1"), "report telemetry should include window entrypoint review");
+  assert(acceptedOptionalStdout.includes("Проверок зон активности: 1"), "report telemetry should include Activity Zone review");
+  assert(acceptedOptionalStdout.includes("Проверок путей входа: 1"), "report telemetry should include entry path review");
+  assert(acceptedOptionalStdout.includes("Проверок входа в окно: 1"), "report telemetry should include window entrypoint review");
 
   await runSql(`
     INSERT INTO app_events (id, ts, source, kind, payload)
@@ -281,7 +281,7 @@ try {
     "report review checklist should not flag open captures after explicit follow-up review"
   );
   assert(
-    reviewedCaptureStdout.includes("Capture follow-up reviews: 1"),
+    reviewedCaptureStdout.includes("Проверок follow-up по отвлечениям: 1"),
     "report telemetry should include capture follow-up review"
   );
 
@@ -302,7 +302,7 @@ try {
     "report review checklist should not flag missing captures after explicit usage review"
   );
   assert(
-    acceptedCaptureUsageStdout.includes("Capture usage reviews: 1"),
+    acceptedCaptureUsageStdout.includes("Проверок использования Inbox: 1"),
     "report telemetry should include capture usage review"
   );
 

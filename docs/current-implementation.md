@@ -133,7 +133,7 @@ Runtime smoke on macOS:
 - `pnpm smoke:macos-app` also verifies startup normalization of legacy active Work Items, orphan active focus sessions, stale `agent.lock` / `agent.port` recovery, and migration of older `app_events` kind constraints
 - `pnpm smoke:export-focus-day` verifies fallback Markdown export, including Day Events, Work Item notes, timestamped Work Item Events for touched items, and legacy focus-session schemas without Activity Zone columns, against temporary SQLite databases
 - `pnpm smoke:app-events` verifies the local app-event migration, metrics summary, and Markdown export against a temporary SQLite database
-- `pnpm smoke:dogfood-report` verifies the evening dogfood report wrapper, Russian review checklist, Russian daily-closure audit, Activity Zone evidence warnings, entry-path evidence prompts, Work Item today/total badge review prompts, correction evidence prompts, accepted correction review, accepted open-capture follow-up review, Day Events, Work Item notes, Work Item Events, interruption history, open captures, analysis prompts, and app telemetry section, including typed/selected entry and both window show and hide request evidence
+- `pnpm smoke:dogfood-report` verifies the evening dogfood report wrapper, Russian focus-data labels, Russian review checklist, Russian daily-closure audit, Activity Zone evidence warnings, entry-path evidence prompts, Work Item today/total badge review prompts, correction evidence prompts, accepted correction review, accepted open-capture follow-up review, Day Events, Work Item notes, Work Item Events, interruption history, open captures, analysis prompts, and human-readable app telemetry section, including typed/selected entry and both window show and hide request evidence
 - `pnpm smoke:dogfood-finish` verifies the end-of-day gate: no active focus session, no active Work Item, at least one focus block, and `--save` writing both the day report and RC check
 - `pnpm smoke:dogfood-status` verifies the embedded-agent status checker against healthy and unhealthy temporary HTTP agents
 - `pnpm smoke:dogfood-ready` verifies the real-database readiness checker against clean and contaminated temporary SQLite databases, including running-process visibility and the actionable next commands
@@ -165,7 +165,7 @@ Dogfood launch helper:
 - `pnpm export:focus-day` prints a Markdown day report from the local SQLite database as a fallback to UI copy
 - `pnpm dogfood:metrics` prints dogfood telemetry aggregates from the local SQLite app-event journal, including start/stop failure counts and accepted open-capture follow-up reviews
 - `pnpm export:app-events` prints a Markdown event table for deeper inspection of show/hide/start/switch/stop/copy/API behavior
-- `pnpm dogfood:report` prints a Markdown dogfood report with focus data, a Russian review checklist, a Russian daily-closure audit, Day Events, interruption history, open captures, app telemetry, and evening review prompts, marked as a draft if a focus block or Work Item is still active
+- `pnpm dogfood:report` prints a Markdown dogfood report with Russian focus data, a Russian review checklist, a Russian daily-closure audit, Day Events, interruption history, open captures, human-readable app telemetry, and evening review prompts, marked as a draft if a focus block or Work Item is still active
 
 Runtime smoke in browser/mock mode:
 
@@ -237,9 +237,9 @@ Third real dogfood day and release baseline:
 - Today's focus picture can also be exported from SQLite with `pnpm export:focus-day`
 - Evening dogfood report can be copied from the focus panel, shown as selected Markdown if clipboard access fails, or generated with `pnpm dogfood:report`; UI and CLI reports include the same Russian review checklist and daily-closure audit
 - Copying a draft report or a report with pending review items does not write `day_closure_completed`; the measured closure completes only when the report is final and review-clean, so an early copy cannot hide the real evening closure duration
-- Day reports include a `Work Item Notes` section for touched Work Items that have non-empty notes
-- Day reports include a `Day Events` section for timestamped notes that belong to the day rather than one Work Item
-- Day reports include a `Work Item Events` section for timestamped Work Item observations created during the selected day
+- Dogfood reports include a `Заметки Work Item` section for touched Work Items that have non-empty notes
+- Dogfood reports include a `События дня` section for timestamped notes that belong to the day rather than one Work Item
+- Dogfood reports include a `События Work Item` section for timestamped Work Item observations created during the selected day
 - The UI and CLI label the report as a draft while a focus block or Work Item is still active and include an active-state warning in the Markdown
 - Capture Inbox for incoming events that should not interrupt the current focus block
 - Captures link to the active focus session when one exists
@@ -341,7 +341,7 @@ The current API surface is:
 - `work_item.delete_event` to delete user-authored `note_added` events;
 - `work_item.events` to list events by Work Item and/or time window.
 
-The note editor can append a timestamped event without replacing the Work Item description. Its entry rule is intentionally conservative: typed event text is cleared only after a successful append, and it stays in the field after an API failure. Capture Inbox can also append a capture as a Work Item Event, preserving the capture text and focus-session link. The focus panel shows Work Item Events for the day and lets user-authored note events be edited or deleted before the final report. UI/CLI Markdown exports include a `Work Item Events` section.
+The note editor can append a timestamped event without replacing the Work Item description. Its entry rule is intentionally conservative: typed event text is cleared only after a successful append, and it stays in the field after an API failure. Capture Inbox can also append a capture as a Work Item Event, preserving the capture text and focus-session link. The focus panel shows Work Item Events for the day and lets user-authored note events be edited or deleted before the final report. UI/CLI dogfood reports include a `События Work Item` section.
 
 ## Day Events
 
@@ -360,7 +360,7 @@ The current API surface is:
 - `day_event.delete` to remove a user-authored day note;
 - `day_event.list` to list day notes by time window.
 
-The focus panel has a compact `Add day note...` input with an optional Activity Zone selector. Adding, editing, re-zoning, or deleting a Day Event must not stop or switch the active timer. Significant gaps and the current open gap have an `Explain` shortcut that prepares a Day Event with the gap range and duration. UI/CLI Markdown exports and the RC checker include a `Day Events` section.
+The focus panel has a compact `Add day note...` input with an optional Activity Zone selector. Adding, editing, re-zoning, or deleting a Day Event must not stop or switch the active timer. Significant gaps and the current open gap have an `Explain` shortcut that prepares a Day Event with the gap range and duration. UI/CLI dogfood reports include a `События дня` section, and the RC checker includes Day Events in its evidence model.
 
 ## App Event Telemetry
 

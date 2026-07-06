@@ -225,8 +225,8 @@ Current status: the macOS dogfood release baseline was accepted on 2026-07-03. T
 | Post-factum correction | `cargo test -p timeskein-agent`, `pnpm smoke:corrections-api`, and `pnpm smoke:macos-app` verify missed-block creation, update, split, reassignment, Work Item edit, and corrected day-list data | Wrong or missing Work Item intervals can be fixed before copying the final report |
 | Significant gaps | UI and Markdown show gap ranges of 20+ minutes | Long breaks and lost intervals are visible enough |
 | Capture Inbox | `pnpm smoke:capture-api`, `pnpm smoke:mock-api`, and `pnpm smoke:macos-app` verify capture create/list/update/delete/resolve/convert/append-event without interrupting focus | Incoming events can be remembered and cleaned up without switching away from the current block |
-| Markdown export | `Copy Report` exports timeline, `By Work Item`, Activity Zone totals, Day Events, Work Item Events, gaps, Capture Activity, open captures, Review Checklist, app telemetry, and review prompts; `Copy MD` exports the raw day picture; failed clipboard writes show selected Markdown; `pnpm smoke:export-focus-day` and `pnpm smoke:dogfood-report` verify SQLite fallbacks | Copied note is enough for evening analysis |
-| App friction telemetry | `app_events` stores local technical events, `pnpm smoke:app-events` verifies metrics/export, and `pnpm dogfood:report` includes `App Telemetry` with both window show and hide request counts | Start/switch/stop/copy/API/window friction is visible without relying only on memory |
+| Markdown export | `Copy Report` exports timeline, `По Work Item`, zone totals, `События дня`, `События Work Item`, gaps, interruption history, open captures, review checklist, app telemetry, and review prompts; `Copy MD` exports the raw day picture; failed clipboard writes show selected Markdown; `pnpm smoke:export-focus-day` and `pnpm smoke:dogfood-report` verify SQLite fallbacks | Copied note is enough for evening analysis |
+| App friction telemetry | `app_events` stores local technical events, `pnpm smoke:app-events` verifies metrics/export, and `pnpm dogfood:report` includes `Телеметрия приложения` with both window show and hide request counts | Start/switch/stop/copy/API/window friction is visible without relying only on memory |
 | Evening closure duration | `day_closure_started` and `day_closure_completed` telemetry is included in UI/CLI reports, RC check, and final goal check | Closing the day takes at most 10 minutes and does not require Codex to interpret the review panel |
 | macOS app with embedded agent and SQLite | `pnpm smoke:macos-app` verifies app launch, SQLite health, focus flow, stale lock/port recovery, and active focus restore after app restart | The real app survives normal workday use |
 
@@ -238,7 +238,7 @@ The first real dogfood day met this gate:
 - 20 entrances
 - seven Work Items
 - four significant gaps
-- usable Work Item totals and App Telemetry
+- usable Work Item totals and `Телеметрия приложения`
 
 Product friction found during the day is tracked in the roadmap. The most important next dogfood check is whether Capture Inbox makes incoming events cheap to remember without interrupting the current focus block.
 
@@ -379,12 +379,12 @@ pnpm dogfood:finish > timeskein-dogfood-report.md
 ```
 
 `dogfood:finish` refuses to produce a final report while a focus block or Work Item is still active, or when there are no focus blocks for the selected date.
-The focus-day export includes a `Work Item Notes` section for touched Work Items that have a non-empty note. This is for current Work Item context. Use timestamped Work Item Events for observations tied to a concrete moment in the day; those appear separately in `Work Item Events`. If a timestamped event was written with a typo or in the wrong form, edit or delete it from the Work Item Events panel before copying the final report.
-Use `Add day note...` for observations that explain the day but do not belong to one Work Item: buffer before a heavy meeting, recovery debt, tracking correction reminders, or why a gap happened. Choose a zone explicitly when the observation is really about `coordination`, `recovery`, `idle`, or `personal`; otherwise Timeskein uses the current focus or selected Work Item context. Significant gaps and the current open gap have an `Explain` shortcut that prepares a Day Event with the gap range, duration, and `Recovery` as the initial zone. These notes appear in `Day Events` and can be edited, re-zoned, or deleted before copying the final report.
-The dogfood report also includes `Capture Activity` for every capture created during the selected day, including captures that were already resolved or converted. `Open Captures` remains a separate action list for unresolved inbox entries.
-For the release-candidate verdict, inspect whether `Capture Activity` rows were created during a real focus block. A capture made after stopping all work proves the inbox can store text, but it does not prove interruption handling during focus.
+The focus-day report includes a `Заметки Work Item` section for touched Work Items that have a non-empty note. This is for current Work Item context. Use timestamped Work Item Events for observations tied to a concrete moment in the day; those appear separately in `События Work Item`. If a timestamped event was written with a typo or in the wrong form, edit or delete it from the Work Item Events panel before copying the final report.
+Use `Add day note...` for observations that explain the day but do not belong to one Work Item: buffer before a heavy meeting, recovery debt, tracking correction reminders, or why a gap happened. Choose a zone explicitly when the observation is really about `coordination`, `recovery`, `idle`, or `personal`; otherwise Timeskein uses the current focus or selected Work Item context. Significant gaps and the current open gap have an `Explain` shortcut that prepares a Day Event with the gap range, duration, and `Recovery` as the initial zone. These notes appear in `События дня` and can be edited, re-zoned, or deleted before copying the final report.
+The dogfood report also includes `История отвлечений` for every capture created during the selected day, including captures that were already resolved or converted. `Открытые отвлечения` remains a separate action list for unresolved inbox entries.
+For the release-candidate verdict, inspect whether `История отвлечений` rows were created during a real focus block. A capture made after stopping all work proves the inbox can store text, but it does not prove interruption handling during focus.
 
-The dogfood report includes an `App Telemetry` section. Use it to check whether Timeskein caused tracking friction:
+The dogfood report includes a `Телеметрия приложения` section. Use it to check whether Timeskein caused tracking friction:
 
 - start, switch, and stop request counts;
 - start/stop/copy/API errors;
@@ -430,14 +430,14 @@ pnpm dogfood:goal-check -- --date 2026-06-30
 The dogfood report includes the focus-day export and prompts for:
 
 - Is every real focus block represented?
-- Does `By Work Item` match where the day actually went?
+- Does `По Work Item` match where the day actually went?
 - Are the Work Item titles understandable the next day?
 - Are there duplicate Work Items that should have been reused?
 - Are long gaps visible and plausible?
 - Did stopping and continuing the same Work Item feel cheap enough?
 - Did the app itself create friction that pushed tracking away?
 - Where did entry cost appear before starting the next block?
-- Does `App Telemetry` confirm the remembered friction, or show hidden friction such as repeated show-without-start attempts?
+- Does `Телеметрия приложения` confirm the remembered friction, or show hidden friction such as repeated show-without-start attempts?
 - Did Capture Inbox prevent interruption, or did captures become another unresolved pile?
 
 ## Success Criteria
@@ -467,7 +467,7 @@ The dogfood day fails if any of these happens often enough to break trust:
 - There is no pause/resume/cancel model yet. Stop and start again instead.
 - Stopped focus blocks can be edited, re-zoned, reassigned, or split from the Today list. The correction workflow is basic: there is no drag timeline or bulk edit yet.
 - Capture Inbox is compact. It can create, edit/delete open captures, resolve, convert captures, and append them as Work Item Events, but it has no separate capture history screen yet.
-- Activity Zones are copied from the Work Item into each focus block. A Work Item named `Break` should default to `recovery` or `idle`; an individual stopped block can still be corrected later. Non-work zones contribute to `Total tracked`, but not to `Work focus`.
+- Activity Zones are copied from the Work Item into each focus block. A Work Item named `Break` should default to `recovery` or `idle`; an individual stopped block can still be corrected later. Non-work zones contribute to `Всего учтено`, but not to `Рабочий фокус`.
 - Work Item notes are a single mutable field; timestamped observations are separate Work Item Events. Day-level observations are separate Day Events. User-authored Day Events and Work Item Events can be edited or deleted, while generated system history is not exposed as an editable log.
 - There is no automatic active-window detection.
 - There is no synchronization between devices.

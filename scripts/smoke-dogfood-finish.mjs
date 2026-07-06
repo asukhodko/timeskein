@@ -38,7 +38,7 @@ try {
   assert(clean.code === 0, "stopped day should finish");
   assert(clean.stdout.includes("# Timeskein dogfood report - 2026-06-30"), "finish did not output dogfood report");
   assert(clean.stdout.includes("started before day"), "finish did not include overlapping focus session");
-  assert(clean.stdout.includes("## Day-Boundary Blocks"), "finish did not flag day-boundary blocks");
+  assert(clean.stdout.includes("## Блоки на границе дня"), "finish did not flag day-boundary blocks");
   assert(clean.stdout.includes("finished block"), "finish did not include focus session note");
   assert(clean.stdout.includes("### Цена входа"), "finish did not include review prompts");
 

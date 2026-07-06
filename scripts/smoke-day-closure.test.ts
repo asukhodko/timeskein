@@ -5,6 +5,7 @@ import {
   getDayClosureStage,
   isDayClosureReadyForFinalReport,
   isFinalDayClosureReport,
+  shouldSummarizeReadyReviewItems,
 } from '../apps/desktop/src/utils/dayClosure'
 
 test('day closure completes only for a final report', () => {
@@ -66,5 +67,24 @@ test('day closure stage guides the evening review ritual', () => {
       pendingReviewItemCount: 0,
     }),
     'ready'
+  )
+})
+
+test('ready review items stay compact while unresolved checks remain', () => {
+  assert.equal(
+    shouldSummarizeReadyReviewItems({ blockerCount: 1, reviewCount: 0, readyCount: 2 }),
+    true
+  )
+  assert.equal(
+    shouldSummarizeReadyReviewItems({ blockerCount: 0, reviewCount: 1, readyCount: 2 }),
+    true
+  )
+  assert.equal(
+    shouldSummarizeReadyReviewItems({ blockerCount: 0, reviewCount: 0, readyCount: 1 }),
+    false
+  )
+  assert.equal(
+    shouldSummarizeReadyReviewItems({ blockerCount: 1, reviewCount: 1, readyCount: 0 }),
+    false
   )
 })

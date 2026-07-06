@@ -11,7 +11,13 @@ import { useCaptureActivity, useOpenCaptures } from '../hooks/useCaptures'
 import { useAddDayEvent, useDayEvents, useDeleteDayEvent, useUpdateDayEvent } from '../hooks/useDayEvents'
 import { appEventApi, logAppEvent, shellApi } from '../api/client'
 import { formatClockTime, formatDuration, truncate } from '../utils/formatTime'
-import { getDayClosureStage, isDayClosureReadyForFinalReport, isFinalDayClosureReport, type DayClosureStage } from '../utils/dayClosure'
+import {
+  getDayClosureStage,
+  isDayClosureReadyForFinalReport,
+  isFinalDayClosureReport,
+  shouldSummarizeReadyReviewItems,
+  type DayClosureStage,
+} from '../utils/dayClosure'
 import CaptureInbox from './CaptureInbox'
 import FocusCorrectionDialog from './FocusCorrectionDialog'
 import MissedFocusBlockDialog from './MissedFocusBlockDialog'
@@ -1435,6 +1441,11 @@ function DayReviewPanel({
   const blockers = items.filter((item) => item.level === 'blocker')
   const reviews = items.filter((item) => item.level === 'review')
   const readyItems = items.filter((item) => item.level === 'ok')
+  const summarizedReadyItems = shouldSummarizeReadyReviewItems({
+    blockerCount: blockers.length,
+    reviewCount: reviews.length,
+    readyCount: readyItems.length,
+  })
   const statusClass = blockers.length > 0
     ? 'border-red-900/70 bg-red-950/20'
     : reviews.length > 0
@@ -1485,7 +1496,12 @@ function DayReviewPanel({
       {reviews.length > 0 && (
         <DayReviewGroup title="Проверить перед финалом" items={reviews} onAction={onAction} />
       )}
-      {readyItems.length > 0 && (
+      {summarizedReadyItems && (
+        <div className="text-[11px] text-gray-500">
+          Уже чисто: {readyItems.length} {pluralRu(readyItems.length, 'пункт', 'пункта', 'пунктов')}.
+        </div>
+      )}
+      {!summarizedReadyItems && readyItems.length > 0 && blockers.length === 0 && reviews.length === 0 && (
         <DayReviewGroup title="Готово" items={readyItems} onAction={onAction} />
       )}
     </div>

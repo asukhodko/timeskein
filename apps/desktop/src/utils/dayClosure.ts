@@ -11,6 +11,12 @@ export interface DayClosureFlowState extends DayClosureState {
   hasFocusBlocks?: boolean
 }
 
+export interface DayClosureReviewCounts {
+  blockerCount: number
+  reviewCount: number
+  readyCount: number
+}
+
 export function isFinalDayClosureReport(state: DayClosureState) {
   return !state.activeFocus && (state.activeWorkItemCount ?? 0) === 0
 }
@@ -26,4 +32,8 @@ export function getDayClosureStage(state: DayClosureFlowState): DayClosureStage 
   if ((state.pendingReviewItemCount ?? 0) > 0) return 'review'
 
   return 'ready'
+}
+
+export function shouldSummarizeReadyReviewItems(counts: DayClosureReviewCounts) {
+  return counts.readyCount > 0 && (counts.blockerCount > 0 || counts.reviewCount > 0)
 }

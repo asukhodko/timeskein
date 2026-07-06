@@ -37,6 +37,7 @@ End of day:
 - consciously accept optional review items that are intentionally left as-is: Activity Zones, Capture usage, entry paths, window entrypoints, Work Item today/total badges, tracking accuracy, or open-capture follow-up;
 - click `Copy Report` in Today and paste the dogfood report into the day note;
 - if the button says `Copy Draft`, stop the active focus block or clear the active Work Item before treating the report as final; draft copy can start the closure timer, but only a final report completes it;
+- if the button says `Копировать с проверками`, finish or consciously accept the remaining review items before treating the report as closed;
 - use `Copy MD` when only the raw day picture is needed;
 - if clipboard access is unavailable, copy the selected Markdown from the fallback text box;
 - if you want saved Markdown evidence, run `pnpm dogfood:finish:save`; it writes both the day report and the RC check;

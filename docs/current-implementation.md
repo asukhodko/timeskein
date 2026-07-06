@@ -236,7 +236,7 @@ Third real dogfood day and release baseline:
 - Today's focus picture can be copied as Markdown from the focus panel, including per-Work-Item totals, Activity Zone totals, and significant gaps
 - Today's focus picture can also be exported from SQLite with `pnpm export:focus-day`
 - Evening dogfood report can be copied from the focus panel, shown as selected Markdown if clipboard access fails, or generated with `pnpm dogfood:report`; UI and CLI reports include the same Russian review checklist and daily-closure audit
-- Copying a draft report does not write `day_closure_completed`; the measured closure completes only when the report is final, so an early draft copy cannot hide the real evening closure duration
+- Copying a draft report or a report with pending review items does not write `day_closure_completed`; the measured closure completes only when the report is final and review-clean, so an early copy cannot hide the real evening closure duration
 - Day reports include a `Work Item Notes` section for touched Work Items that have non-empty notes
 - Day reports include a `Day Events` section for timestamped notes that belong to the day rather than one Work Item
 - Day reports include a `Work Item Events` section for timestamped Work Item observations created during the selected day

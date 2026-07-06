@@ -11,7 +11,7 @@ import { useCaptureActivity, useOpenCaptures } from '../hooks/useCaptures'
 import { useAddDayEvent, useDayEvents, useDeleteDayEvent, useUpdateDayEvent } from '../hooks/useDayEvents'
 import { appEventApi, logAppEvent, shellApi } from '../api/client'
 import { formatClockTime, formatDuration, truncate } from '../utils/formatTime'
-import { isFinalDayClosureReport } from '../utils/dayClosure'
+import { isDayClosureReadyForFinalReport, isFinalDayClosureReport } from '../utils/dayClosure'
 import CaptureInbox from './CaptureInbox'
 import FocusCorrectionDialog from './FocusCorrectionDialog'
 import MissedFocusBlockDialog from './MissedFocusBlockDialog'
@@ -112,6 +112,8 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
     activeWorkItemCount: activeWorkItems.length,
   })
   const reportIsDraft = !reportIsFinal
+  const pendingReviewItemCount = countPendingReviewItems(reviewItems)
+  const reportHasPendingReview = pendingReviewItemCount > 0
   const trayStatusTitle = useMemo(
     () => buildTrayStatusTitle(current, now, activeSecondsTotal),
     [current, now, activeSecondsTotal]
@@ -413,10 +415,10 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
   const copyDogfoodReport = async () => {
     if (sessions.length === 0) return
 
-    const isFinalReport = isFinalDayClosureReport({
+    const reportState = {
       activeFocus: current?.state === 'active',
       activeWorkItemCount: activeWorkItems.length,
-    })
+    }
     const closureActionId = await ensureDayClosureStarted('copy_report')
 
     void logAppEvent({
@@ -426,10 +428,6 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
         report_kind: 'dogfood',
       },
     })
-    if (isFinalReport) {
-      await ensureDayClosureCompleted(closureActionId, 'copy_report')
-    }
-
     const freshAppEventSummary = await loadAppEventSummary(now)
     const reportReviewItems = buildDayReviewItems({
       sessions,
@@ -443,6 +441,14 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
       openGap,
       appTelemetry: freshAppEventSummary,
     })
+    if (
+      isDayClosureReadyForFinalReport({
+        ...reportState,
+        pendingReviewItemCount: countPendingReviewItems(reportReviewItems),
+      })
+    ) {
+      await ensureDayClosureCompleted(closureActionId, 'copy_report')
+    }
     const reportMarkdown = await buildDogfoodReportMarkdown(
       todayMarkdown,
       current,
@@ -752,7 +758,15 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
                 disabled={sessions.length === 0}
                 className="rounded border border-emerald-800 px-2 py-0.5 text-[11px] font-medium text-emerald-200 transition-colors hover:border-emerald-500 hover:text-emerald-100 disabled:cursor-not-allowed disabled:border-gray-800 disabled:text-gray-600"
               >
-                {copyReportState === 'copied' ? 'Скопировано' : copyReportState === 'failed' ? 'Ошибка' : reportIsDraft ? 'Копировать черновик' : 'Копировать отчёт'}
+                {copyReportState === 'copied'
+                  ? 'Скопировано'
+                  : copyReportState === 'failed'
+                    ? 'Ошибка'
+                    : reportIsDraft
+                      ? 'Копировать черновик'
+                      : reportHasPendingReview
+                        ? 'Копировать с проверками'
+                        : 'Копировать отчёт'}
               </button>
             </div>
           </div>
@@ -1128,6 +1142,10 @@ type DayReviewAction =
   | 'accept_window_entrypoints'
   | 'stage_significant_gap'
   | 'stage_open_gap'
+
+function countPendingReviewItems(items: DayReviewItem[]) {
+  return items.filter((item) => item.level !== 'ok').length
+}
 
 function buildDayReviewItems({
   sessions,

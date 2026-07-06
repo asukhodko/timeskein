@@ -264,7 +264,7 @@ export class MockDataStore {
     return this.captures.delete(id);
   }
 
-  convertCaptureToWorkItem(id: string, title?: string): { capture?: CaptureView; workItemId?: string; reused?: boolean } {
+  convertCaptureToWorkItem(id: string, title?: string): { capture?: CaptureView; event?: WorkItemEventView; workItemId?: string; reused?: boolean } {
     const capture = this.captures.get(id);
     if (!capture) return {};
     if (capture.state !== "open") return { capture };
@@ -280,8 +280,17 @@ export class MockDataStore {
     capture.converted_at = now;
     this.captures.set(id, capture);
 
+    const event = this.addWorkItemEvent({
+      id: item.id,
+      text: capture.text,
+      focus_session_id: capture.focus_session_id,
+      source_capture_id: capture.id,
+      origin: "capture_convert_to_work_item",
+    });
+
     return {
       capture,
+      event,
       workItemId: item.id,
       reused: Boolean(existing),
     };
@@ -299,6 +308,7 @@ export class MockDataStore {
       id: targetWorkItemId,
       text: capture.text,
       focus_session_id: capture.focus_session_id,
+      source_capture_id: capture.id,
     });
     if (!event) return { capture };
 
@@ -643,7 +653,13 @@ export class MockDataStore {
     return true;
   }
 
-  addWorkItemEvent(params: { id: string; text: string; focus_session_id?: string }): WorkItemEventView | undefined {
+  addWorkItemEvent(params: {
+    id: string;
+    text: string;
+    focus_session_id?: string;
+    source_capture_id?: string;
+    origin?: string;
+  }): WorkItemEventView | undefined {
     const item = this.workItems.get(params.id);
     const text = params.text.trim();
     if (!item || !text) return undefined;
@@ -655,6 +671,12 @@ export class MockDataStore {
     const payload: Record<string, unknown> = { text };
     if (params.focus_session_id) {
       payload.focus_session_id = params.focus_session_id;
+    }
+    if (params.source_capture_id) {
+      payload.source_capture_id = params.source_capture_id;
+    }
+    if (params.origin) {
+      payload.origin = params.origin;
     }
 
     const event: WorkItemEventView = {

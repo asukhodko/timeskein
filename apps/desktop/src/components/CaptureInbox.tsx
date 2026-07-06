@@ -89,7 +89,7 @@ export default function CaptureInbox({ focusSessionId, targetWorkItemId }: Captu
               createCapture()
             }
           }}
-          placeholder="Capture interruption..."
+          placeholder="Зафиксировать отвлечение..."
           className="min-w-0 flex-1 rounded border border-gray-700 bg-gray-950 px-2 py-1.5 text-xs text-gray-100 placeholder-gray-500 focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
         />
         <button
@@ -98,26 +98,26 @@ export default function CaptureInbox({ focusSessionId, targetWorkItemId }: Captu
           disabled={!trimmed || createMutation.isPending}
           className="rounded border border-amber-700 px-2 py-1.5 text-xs font-semibold text-amber-100 transition-colors hover:border-amber-500 disabled:cursor-not-allowed disabled:border-gray-800 disabled:text-gray-600"
         >
-          Capture
+          Записать
         </button>
       </div>
 
       {createMutation.error && (
         <div className="text-[11px] text-red-300">
-          {createMutation.error instanceof Error ? createMutation.error.message : 'Capture failed'}
+          {createMutation.error instanceof Error ? createMutation.error.message : 'Не удалось записать capture'}
         </div>
       )}
 
       {(updateMutation.error || deleteMutation.error) && (
         <div className="text-[11px] text-red-300">
-          {formatMutationError(updateMutation.error || deleteMutation.error, 'Capture cleanup failed')}
+          {formatMutationError(updateMutation.error || deleteMutation.error, 'Не удалось обработать capture')}
         </div>
       )}
 
       {captures.length > 0 && (
         <div className="grid gap-1">
           <div className="text-[11px] font-medium uppercase text-gray-500">
-            Inbox · {captures.length}
+            Инбокс · {captures.length}
           </div>
           <div className="grid max-h-28 gap-1 overflow-auto pr-1">
             {captures.map((capture) => (
@@ -422,14 +422,14 @@ function CaptureRow({
               }}
               className="rounded border border-gray-700 px-1.5 py-0.5 text-[11px] text-gray-300 hover:border-gray-500"
             >
-              Cancel
+              Отмена
             </button>
             <button
               type="submit"
               disabled={!trimmedDraft || busy}
               className="rounded border border-amber-700 px-1.5 py-0.5 text-[11px] font-semibold text-amber-100 hover:border-amber-500 disabled:cursor-not-allowed disabled:border-gray-800 disabled:text-gray-600"
             >
-              Save
+              Сохранить
             </button>
           </div>
         </div>
@@ -452,7 +452,7 @@ function CaptureRow({
         disabled={busy}
         className="shrink-0 rounded border border-amber-800 px-1.5 py-0.5 text-[11px] text-amber-200 hover:border-amber-500 disabled:cursor-not-allowed disabled:border-gray-800 disabled:text-gray-600"
       >
-        Edit
+        Править
       </button>
       <button
         type="button"
@@ -460,7 +460,7 @@ function CaptureRow({
         disabled={busy}
         className="shrink-0 rounded border border-red-900 px-1.5 py-0.5 text-[11px] text-red-200 hover:border-red-600 disabled:cursor-not-allowed disabled:border-gray-800 disabled:text-gray-600"
       >
-        Del
+        Удалить
       </button>
       <button
         type="button"
@@ -468,7 +468,7 @@ function CaptureRow({
         disabled={busy}
         className="shrink-0 rounded border border-blue-800 px-1.5 py-0.5 text-[11px] text-blue-200 hover:border-blue-500 disabled:cursor-not-allowed disabled:border-gray-800 disabled:text-gray-600"
       >
-        Make Item
+        В дело
       </button>
       <button
         type="button"
@@ -476,7 +476,7 @@ function CaptureRow({
         disabled={busy}
         className="shrink-0 rounded border border-emerald-800 px-1.5 py-0.5 text-[11px] text-emerald-200 hover:border-emerald-500 disabled:cursor-not-allowed disabled:border-gray-800 disabled:text-gray-600"
       >
-        Event
+        В событие
       </button>
       <button
         type="button"
@@ -484,7 +484,7 @@ function CaptureRow({
         disabled={busy}
         className="shrink-0 rounded border border-gray-700 px-1.5 py-0.5 text-[11px] text-gray-300 hover:border-gray-500 disabled:cursor-not-allowed disabled:border-gray-800 disabled:text-gray-600"
       >
-        Done
+        Готово
       </button>
     </div>
   )

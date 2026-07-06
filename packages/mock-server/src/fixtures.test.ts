@@ -49,6 +49,11 @@ test("capture inbox does not interrupt active focus", async () => {
 
   const converted = store.convertCaptureToWorkItem(capture.id);
   assert.equal(converted.capture?.state, "converted");
+  assert.equal(converted.event?.kind, "note_added");
+  assert.equal(converted.event?.text, capture.text);
+  assert.equal(converted.event?.focus_session_id, focus.id);
+  assert.equal(converted.event?.payload?.source_capture_id, capture.id);
+  assert.equal(converted.event?.payload?.origin, "capture_convert_to_work_item");
   assert.equal(store.getActiveFocusSession()?.id, focus.id);
 
   const eventCapture = store.createCapture({
@@ -59,6 +64,7 @@ test("capture inbox does not interrupt active focus", async () => {
   assert.equal(appended.workItemId, focus.work_item_id);
   assert.equal(appended.event?.text, eventCapture.text);
   assert.equal(appended.event?.focus_session_id, focus.id);
+  assert.equal(appended.event?.payload?.source_capture_id, eventCapture.id);
   assert.equal(store.getActiveFocusSession()?.id, focus.id);
 
   const deleteCapture = store.createCapture({

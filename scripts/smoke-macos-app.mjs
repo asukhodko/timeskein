@@ -289,6 +289,22 @@ try {
     convertedCapture.capture.work_item_id === convertedCapture.work_item_id,
     "converted capture is not linked to returned work item"
   );
+  assert(
+    convertedCapture.event?.kind === "note_added",
+    "capture.convert_to_work_item did not create an origin Work Item event"
+  );
+  assert(
+    convertedCapture.event?.text === convertCapture.text,
+    "capture.convert_to_work_item did not preserve capture text"
+  );
+  assert(
+    convertedCapture.event?.payload?.source_capture_id === convertCapture.id,
+    "capture.convert_to_work_item did not keep source capture id"
+  );
+  assert(
+    convertedCapture.event?.payload?.origin === "capture_convert_to_work_item",
+    "capture.convert_to_work_item did not mark capture origin"
+  );
 
   const inventoryAfterDuplicateCreate = await rpc(port, "inventory.list");
   const matchingCreatedItems = inventoryAfterDuplicateCreate.items.filter(

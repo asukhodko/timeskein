@@ -320,6 +320,7 @@ export interface CaptureConvertResponse {
   capture: CaptureView;
   work_item_id: string;
   reused: boolean;
+  event?: WorkItemEventView;
 }
 
 export interface CaptureAppendEventResponse {

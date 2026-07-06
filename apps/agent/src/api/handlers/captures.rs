@@ -178,7 +178,7 @@ pub async fn handle_capture_convert_to_work_item(
     let title = title_override.unwrap_or(capture.text.as_str()).to_string();
 
     let mut reused = false;
-    let item = if let Some(item) =
+    let mut item = if let Some(item) =
         state
             .db
             .find_work_item_by_title(&title)
@@ -202,6 +202,27 @@ pub async fn handle_capture_convert_to_work_item(
         item
     };
 
+    if reused {
+        item.touch();
+        state.db.update_work_item(&item).await.map_err(|error| {
+            RpcResponse::error(request_id.to_string(), "internal_error", &error.to_string())
+        })?;
+    }
+
+    let mut payload = serde_json::json!({
+        "text": capture.text.clone(),
+        "source_capture_id": capture.id.to_string(),
+        "origin": "capture_convert_to_work_item",
+    });
+    if let Some(focus_session_id) = capture.focus_session_id {
+        payload["focus_session_id"] = serde_json::Value::String(focus_session_id.to_string());
+    }
+
+    let event = WorkItemEvent::new(item.id, WorkItemEventKind::NoteAdded, Some(payload));
+    state.db.log_event(&event).await.map_err(|error| {
+        RpcResponse::error(request_id.to_string(), "internal_error", &error.to_string())
+    })?;
+
     capture.convert_to_work_item(item.id);
     state.db.update_capture(&capture).await.map_err(|error| {
         RpcResponse::error(request_id.to_string(), "internal_error", &error.to_string())
@@ -211,6 +232,7 @@ pub async fn handle_capture_convert_to_work_item(
         "capture": crate::domain::CaptureView::from(capture),
         "work_item_id": item.id.to_string(),
         "reused": reused,
+        "event": WorkItemEventView::from_event(event),
     }))
 }
 

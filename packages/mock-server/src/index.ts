@@ -293,6 +293,7 @@ function handleMethod(
 
       return successResponse(requestId, {
         capture: result.capture,
+        event: result.event,
         work_item_id: result.workItemId,
         reused: result.reused,
       });

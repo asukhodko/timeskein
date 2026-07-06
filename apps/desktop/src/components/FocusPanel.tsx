@@ -555,7 +555,7 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
                   startSelectedSession()
                 }
               }}
-              placeholder={current ? 'Switch to...' : 'What are you focusing on?'}
+              placeholder={current ? 'Переключиться на...' : 'На чём сейчас фокус?'}
               className="min-w-0 flex-1 rounded-md border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
             />
             <button
@@ -564,13 +564,13 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
               disabled={!title.trim() || startMutation.isPending}
               className="rounded-md bg-emerald-600 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-emerald-500 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-500"
             >
-              {current ? 'Switch' : 'Start'}
+              {current ? 'Переключить' : 'Старт'}
             </button>
           </div>
           {selectedItem && selectedItem.id !== current?.work_item_id && (
             <div className="flex items-center justify-between gap-2 rounded-md border border-gray-800 bg-gray-900/60 px-3 py-2">
               <div className="min-w-0">
-                <div className="text-[11px] uppercase tracking-wide text-gray-500">Selected item</div>
+                <div className="text-[11px] uppercase tracking-wide text-gray-500">Выбранный Work Item</div>
                 <div className="truncate text-xs font-medium text-gray-200">
                   {truncate(selectedItem.title, 80)}
                 </div>
@@ -581,7 +581,7 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
                 disabled={startMutation.isPending}
                 className="shrink-0 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-blue-500 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-500"
               >
-                {current ? 'Switch Item' : 'Start Item'}
+                {current ? 'Переключиться' : 'Начать'}
               </button>
             </div>
           )}
@@ -600,16 +600,16 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
                 addDayEvent()
               }
             }}
-            placeholder="Add day note..."
+            placeholder="Добавить событие дня..."
             className="min-w-0 flex-1 rounded border border-gray-800 bg-gray-950 px-2 py-1.5 text-xs text-gray-100 placeholder-gray-600 focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600"
           />
           <select
             value={dayEventZone}
             onChange={(event) => setDayEventZone(event.target.value as ActivityZone | '')}
             className="w-32 rounded border border-gray-800 bg-gray-950 px-2 py-1.5 text-xs text-gray-200 focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600"
-            title="Day event zone"
+            title="Зона события дня"
           >
-            <option value="">Context</option>
+            <option value="">Контекст</option>
             {ACTIVITY_ZONES.map((zone) => (
               <option key={zone} value={zone}>
                 {formatActivityZoneLabel(zone)}
@@ -622,7 +622,7 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
             disabled={!dayEventText.trim() || addDayEventMutation.isPending}
             className="rounded border border-emerald-800 px-2 py-1.5 text-xs font-medium text-emerald-200 hover:border-emerald-500 hover:text-emerald-100 disabled:cursor-not-allowed disabled:border-gray-800 disabled:text-gray-600"
           >
-            Note
+            Добавить
           </button>
         </div>
 
@@ -650,14 +650,14 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
       <div className="border-t border-gray-800 px-4 py-2">
         <div className="mb-2 flex items-center justify-between text-xs">
           <div className="flex min-w-0 items-center gap-2">
-            <span className="font-medium text-gray-300">Today</span>
+            <span className="font-medium text-gray-300">Сегодня</span>
             <div className="flex items-center gap-1">
               <button
                 type="button"
                 onClick={() => setAddingMissedBlock(true)}
                 className="rounded border border-gray-700 px-2 py-0.5 text-[11px] font-medium text-gray-300 transition-colors hover:border-gray-500 hover:text-gray-100"
               >
-                Add Block
+                Добавить пропущенный блок
               </button>
               <button
                 type="button"
@@ -665,7 +665,7 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
                 disabled={sessions.length === 0}
                 className="rounded border border-gray-700 px-2 py-0.5 text-[11px] font-medium text-gray-300 transition-colors hover:border-gray-500 hover:text-gray-100 disabled:cursor-not-allowed disabled:border-gray-800 disabled:text-gray-600"
               >
-                {copyDayState === 'copied' ? 'Copied' : copyDayState === 'failed' ? 'Failed' : 'Copy MD'}
+                {copyDayState === 'copied' ? 'Скопировано' : copyDayState === 'failed' ? 'Ошибка' : 'Copy MD'}
               </button>
               <button
                 type="button"
@@ -673,17 +673,17 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
                 disabled={sessions.length === 0}
                 className="rounded border border-emerald-800 px-2 py-0.5 text-[11px] font-medium text-emerald-200 transition-colors hover:border-emerald-500 hover:text-emerald-100 disabled:cursor-not-allowed disabled:border-gray-800 disabled:text-gray-600"
               >
-                {copyReportState === 'copied' ? 'Copied' : copyReportState === 'failed' ? 'Failed' : reportIsDraft ? 'Copy Draft' : 'Copy Report'}
+                {copyReportState === 'copied' ? 'Скопировано' : copyReportState === 'failed' ? 'Ошибка' : reportIsDraft ? 'Copy Draft' : 'Copy Report'}
               </button>
             </div>
           </div>
           <span className="shrink-0 text-gray-400">
-            {formatDuration(workFocusSeconds)} work · {formatDuration(activeSecondsTotal)} tracked · {sessions.length} entrances
+            {formatDuration(workFocusSeconds)} work · {formatDuration(activeSecondsTotal)} всего · {sessions.length} входов
           </span>
         </div>
 
         {todayQuery.isLoading ? (
-          <div className="text-xs text-gray-500">Loading focus blocks...</div>
+          <div className="text-xs text-gray-500">Загружаю фокус-блоки...</div>
         ) : manualCopy ? (
           <div className="mb-2 grid gap-1 rounded border border-amber-700/50 bg-amber-950/20 p-2 text-xs">
             <div className="flex items-center justify-between gap-2">
@@ -1063,7 +1063,7 @@ function buildDayReviewItems({
     items.push({
       level: 'blocker',
       title: 'Clear active Work Item state',
-      detail: `${activeWorkItems.length} active item${activeWorkItems.length === 1 ? '' : 's'}`,
+      detail: `${activeWorkItems.length} active Work Item`,
     })
   }
 
@@ -1071,7 +1071,7 @@ function buildDayReviewItems({
     items.push({
       level: 'review',
       title: 'Resolve, convert, or accept open captures',
-      detail: `${openCaptures.length} open`,
+      detail: `${openCaptures.length} открыто`,
       action: 'accept_open_captures',
     })
   }
@@ -1080,7 +1080,7 @@ function buildDayReviewItems({
     items.push({
       level: 'review',
       title: 'Classify significant gaps',
-      detail: `${unexplainedGapCount}/${gaps.length} gap${gaps.length === 1 ? '' : 's'} still need Day Event explanation`,
+      detail: `${unexplainedGapCount}/${gaps.length} больших разрывов без Day Event`,
     })
   }
 
@@ -1088,7 +1088,7 @@ function buildDayReviewItems({
     items.push({
       level: 'review',
       title: 'Explain current open gap',
-      detail: `${formatDuration(openGap.seconds)} since last stopped block`,
+      detail: `${formatDuration(openGap.seconds)} после последнего остановленного блока`,
     })
   }
 
@@ -1096,7 +1096,7 @@ function buildDayReviewItems({
     items.push({
       level: 'review',
       title: 'Review Activity Zone coverage',
-      detail: 'Only one zone appears in the report',
+      detail: 'В отчёте видна только одна зона',
     })
   }
 
@@ -1104,7 +1104,7 @@ function buildDayReviewItems({
     items.push({
       level: 'review',
       title: 'Confirm non-work tracked time',
-      detail: 'Breaks, recovery, coordination, and personal blocks may be missing',
+      detail: 'Перерывы, recovery, coordination или personal могли потеряться',
     })
   }
 
@@ -1112,7 +1112,7 @@ function buildDayReviewItems({
     items.push({
       level: 'review',
       title: 'Confirm Work Item today/total badges',
-      detail: `${touchedWorkItemIds.size} touched Work Item${touchedWorkItemIds.size === 1 ? '' : 's'}`,
+      detail: `${touchedWorkItemIds.size} Work Item были в работе сегодня`,
       action: 'accept_work_item_time_badges',
     })
   }
@@ -1121,7 +1121,7 @@ function buildDayReviewItems({
     items.push({
       level: 'review',
       title: 'Capture Inbox untested today',
-      detail: 'No captures created during this day',
+      detail: 'За день не было ни одного capture',
     })
   }
 
@@ -1129,7 +1129,7 @@ function buildDayReviewItems({
     items.push({
       level: 'review',
       title: 'Captures were not linked to active focus',
-      detail: 'Interruption handling is not proven for this day',
+      detail: 'Обработка отвлечений в фокусе сегодня не проверена',
     })
   }
 
@@ -1137,7 +1137,7 @@ function buildDayReviewItems({
     items.push({
       level: 'review',
       title: 'No day or Work Item notes/events',
-      detail: 'Add context if the report still needs memory reconstruction',
+      detail: 'Добавь контекст, если отчёт всё ещё требует памяти',
     })
   }
 
@@ -1150,7 +1150,7 @@ function buildDayReviewItems({
       items.push({
         level: 'review',
         title: 'Exercise start and continue paths',
-        detail: `${appTelemetry.typed_entry_requests} typed, ${appTelemetry.selected_entry_requests} selected/list, ${appTelemetry.stop_requests} stop request(s)`,
+        detail: `${appTelemetry.typed_entry_requests} вводом, ${appTelemetry.selected_entry_requests} из списка, ${appTelemetry.stop_requests} stop`,
       })
     }
 
@@ -1158,7 +1158,7 @@ function buildDayReviewItems({
       items.push({
         level: 'review',
         title: 'Test window entrypoints',
-        detail: `${appTelemetry.window_show_requested} show request(s), ${appTelemetry.window_hide_requested} hide request(s)`,
+        detail: `${appTelemetry.window_show_requested} show, ${appTelemetry.window_hide_requested} hide`,
       })
     }
 
@@ -1166,13 +1166,13 @@ function buildDayReviewItems({
       items.push({
         level: 'review',
         title: 'Review failed focus corrections',
-        detail: `${appTelemetry.correction_failures} failure${appTelemetry.correction_failures === 1 ? '' : 's'}`,
+        detail: `${appTelemetry.correction_failures} ошибок коррекции`,
       })
     } else if (appTelemetry.corrections === 0 && appTelemetry.correction_reviews === 0) {
       items.push({
         level: 'review',
         title: 'Confirm tracking accuracy or test correction',
-        detail: 'No focus corrections applied today',
+        detail: 'Сегодня не было коррекций фокус-блоков',
         action: 'accept_tracking_accuracy',
       })
     }
@@ -1182,7 +1182,7 @@ function buildDayReviewItems({
     items.push({
       level: 'review',
       title: 'No focus blocks yet',
-      detail: 'Start the first block before the day can be reviewed',
+      detail: 'Сначала запусти хотя бы один блок',
     })
   }
 
@@ -1190,7 +1190,7 @@ function buildDayReviewItems({
     items.push({
       level: 'ok',
       title: 'Ready to copy final report',
-      detail: 'No automatic review items detected',
+      detail: 'Автоматических замечаний нет',
     })
   }
 
@@ -1204,29 +1204,60 @@ function DayReviewPanel({
   items: DayReviewItem[]
   onAction?: (action: DayReviewAction) => void
 }) {
-  const blockers = items.filter((item) => item.level === 'blocker').length
-  const reviews = items.filter((item) => item.level === 'review').length
-  const statusClass = blockers > 0
+  const blockers = items.filter((item) => item.level === 'blocker')
+  const reviews = items.filter((item) => item.level === 'review')
+  const readyItems = items.filter((item) => item.level === 'ok')
+  const statusClass = blockers.length > 0
     ? 'border-red-900/70 bg-red-950/20'
-    : reviews > 0
+    : reviews.length > 0
       ? 'border-amber-900/70 bg-amber-950/20'
       : 'border-emerald-900/70 bg-emerald-950/20'
+  const statusText = blockers.length > 0
+    ? `${blockers.length} ${pluralRu(blockers.length, 'блокер', 'блокера', 'блокеров')}`
+    : reviews.length > 0
+      ? `${reviews.length} ${pluralRu(reviews.length, 'проверка', 'проверки', 'проверок')}`
+      : 'готово'
 
   return (
-    <div className={`grid gap-1 rounded-md border px-3 py-2 text-xs ${statusClass}`}>
+    <div className={`grid gap-2 rounded-md border px-3 py-2 text-xs ${statusClass}`}>
       <div className="flex items-center justify-between gap-2">
-        <span className="font-medium text-gray-200">Review before report</span>
-        <span className="text-gray-500">
-          {blockers > 0 ? `${blockers} blocker${blockers === 1 ? '' : 's'}` : reviews > 0 ? `${reviews} item${reviews === 1 ? '' : 's'}` : 'ready'}
-        </span>
+        <span className="font-medium text-gray-200">Проверка перед отчётом</span>
+        <span className="text-gray-500">{statusText}</span>
       </div>
-      <div className="grid gap-1">
-        {items.map((item) => (
+      {blockers.length > 0 && (
+        <DayReviewGroup title="Сначала закрыть" items={blockers} onAction={onAction} />
+      )}
+      {reviews.length > 0 && (
+        <DayReviewGroup title="Проверить перед финалом" items={reviews} onAction={onAction} />
+      )}
+      {readyItems.length > 0 && (
+        <DayReviewGroup title="Готово" items={readyItems} onAction={onAction} />
+      )}
+    </div>
+  )
+}
+
+function DayReviewGroup({
+  title,
+  items,
+  onAction,
+}: {
+  title: string
+  items: DayReviewItem[]
+  onAction?: (action: DayReviewAction) => void
+}) {
+  return (
+    <div className="grid gap-1">
+      <div className="text-[11px] font-medium uppercase tracking-wide text-gray-500">{title}</div>
+      {items.map((item) => {
+        const label = formatDayReviewItem(item)
+
+        return (
           <div key={`${item.level}:${item.title}:${item.detail ?? ''}`} className="grid grid-cols-[auto_minmax(0,1fr)_auto] gap-2">
             <span className={reviewItemDotClass(item.level)} />
             <span className="min-w-0 text-gray-300">
-              <span className="font-medium text-gray-200">{item.title}</span>
-              {item.detail && <span className="text-gray-500"> · {truncate(item.detail, 100)}</span>}
+              <span className="font-medium text-gray-200">{label.title}</span>
+              {label.detail && <span className="text-gray-500"> · {truncate(label.detail, 100)}</span>}
             </span>
             {item.action && (
               <button
@@ -1234,12 +1265,12 @@ function DayReviewPanel({
                 onClick={() => onAction?.(item.action!)}
                 className="rounded border border-amber-800 px-1.5 py-0.5 text-[11px] font-medium text-amber-100 hover:border-amber-500"
               >
-                Accept
+                Принять
               </button>
             )}
           </div>
-        ))}
-      </div>
+        )
+      })}
     </div>
   )
 }
@@ -1254,12 +1285,50 @@ function reviewItemDotClass(level: DayReviewItem['level']) {
   return `mt-1.5 h-1.5 w-1.5 rounded-full ${color}`
 }
 
+function formatDayReviewItem(item: DayReviewItem) {
+  return {
+    title: REVIEW_TITLE_LABELS[item.title] ?? item.title,
+    detail: item.detail,
+  }
+}
+
+const REVIEW_TITLE_LABELS: Record<string, string> = {
+  'Stop the active focus block': 'Остановить активный фокус-блок',
+  'Clear active Work Item state': 'Снять active с Work Item',
+  'Resolve, convert, or accept open captures': 'Разобрать открытые captures',
+  'Classify significant gaps': 'Объяснить большие разрывы',
+  'Explain current open gap': 'Объяснить текущий открытый разрыв',
+  'Review Activity Zone coverage': 'Проверить зоны активности',
+  'Confirm non-work tracked time': 'Проверить нерабочее время',
+  'Confirm Work Item today/total badges': 'Проверить today/total у Work Item',
+  'Capture Inbox untested today': 'Capture Inbox сегодня не проверен',
+  'Captures were not linked to active focus': 'Captures не были связаны с активным фокусом',
+  'No day or Work Item notes/events': 'Нет дневных или Work Item событий',
+  'Exercise start and continue paths': 'Проверить старт и продолжение',
+  'Test window entrypoints': 'Проверить входы в окно',
+  'Review failed focus corrections': 'Проверить ошибки коррекции фокуса',
+  'Confirm tracking accuracy or test correction': 'Подтвердить точность трекинга',
+  'No focus blocks yet': 'Пока нет фокус-блоков',
+  'Ready to copy final report': 'Можно копировать финальный отчёт',
+}
+
+function pluralRu(value: number, one: string, few: string, many: string) {
+  const abs = Math.abs(value)
+  const mod10 = abs % 10
+  const mod100 = abs % 100
+
+  if (mod10 === 1 && mod100 !== 11) return one
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return few
+  return many
+}
+
 function formatReviewChecklistMarkdown(items: DayReviewItem[]) {
-  const lines = ['## Review Checklist', '']
+  const lines = ['## Проверка перед отчётом', '']
   for (const item of items) {
     const marker = item.level === 'ok' ? '[x]' : '[ ]'
-    const suffix = item.detail ? ` - ${formatMarkdownListText(item.detail)}` : ''
-    lines.push(`- ${marker} ${formatMarkdownListText(item.title)}${suffix}`)
+    const label = formatDayReviewItem(item)
+    const suffix = label.detail ? ` - ${formatMarkdownListText(label.detail)}` : ''
+    lines.push(`- ${marker} ${formatMarkdownListText(label.title)}${suffix}`)
   }
 
   return `${lines.join('\n')}\n`
@@ -1506,7 +1575,7 @@ function DayEventsPanel({
   return (
     <div className="grid gap-1 rounded-md border border-gray-800 bg-gray-900/50 px-3 py-2 text-xs">
       <div className="flex items-center justify-between text-gray-400">
-        <span className="font-medium text-gray-300">Day Events</span>
+        <span className="font-medium text-gray-300">События дня</span>
         <span>{events.length}</span>
       </div>
       <div className="grid max-h-28 gap-1 overflow-auto pr-1">
@@ -1522,7 +1591,7 @@ function DayEventsPanel({
                   <span>{truncate(event.text, 90)}</span>
                   <span className="text-gray-500"> · </span>
                   <span className="text-gray-500">
-                    {event.activity_zone ? formatActivityZoneLabel(event.activity_zone) : 'No zone'}
+                    {event.activity_zone ? formatActivityZoneLabel(event.activity_zone) : 'Без зоны'}
                   </span>
                   <span className="text-gray-500"> · </span>
                   <span className="text-gray-500">{truncate(formatDayEventDuring(event, sessionsById), 40)}</span>
@@ -1533,7 +1602,7 @@ function DayEventsPanel({
                     onClick={() => startEditing(event)}
                     className="rounded border border-gray-700 px-1.5 py-0.5 text-[11px] text-gray-300 hover:border-gray-500 hover:text-gray-100"
                   >
-                    Edit
+                    Править
                   </button>
                   <button
                     type="button"
@@ -1543,7 +1612,7 @@ function DayEventsPanel({
                     }}
                     className="rounded border border-red-900/80 px-1.5 py-0.5 text-[11px] text-red-200 hover:border-red-600"
                   >
-                    Del
+                    Удалить
                   </button>
                 </span>
               </div>
@@ -1572,7 +1641,7 @@ function DayEventsPanel({
                     onChange={(event) => setEditingZone(event.target.value as ActivityZone | '')}
                     className="w-full rounded border border-gray-700 bg-gray-950 px-2 py-1 text-xs text-gray-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
                   >
-                    <option value="">No zone</option>
+                    <option value="">Без зоны</option>
                     {ACTIVITY_ZONES.map((zone) => (
                       <option key={zone} value={zone}>
                         {formatActivityZoneLabel(zone)}
@@ -1589,7 +1658,7 @@ function DayEventsPanel({
                       }}
                       className="rounded px-2 py-0.5 text-[11px] text-gray-400 hover:bg-gray-800 hover:text-gray-200"
                     >
-                      Cancel
+                      Отмена
                     </button>
                     <button
                       type="button"
@@ -1597,7 +1666,7 @@ function DayEventsPanel({
                       disabled={!editingText.trim() || updateEventMutation.isPending}
                       className="rounded bg-emerald-700 px-2 py-0.5 text-[11px] font-medium text-white hover:bg-emerald-600 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-500"
                     >
-                      Save
+                      Сохранить
                     </button>
                   </div>
                 </div>
@@ -1605,13 +1674,13 @@ function DayEventsPanel({
 
               {isDeleteConfirming && (
                 <div className="flex items-center justify-end gap-1 text-[11px] text-red-200">
-                  <span>Delete this day event?</span>
+                  <span>Удалить событие дня?</span>
                   <button
                     type="button"
                     onClick={() => setDeleteConfirmId(null)}
                     className="rounded border border-gray-700 px-1.5 py-0.5 text-gray-300 hover:border-gray-500"
                   >
-                    Cancel
+                    Отмена
                   </button>
                   <button
                     type="button"
@@ -1619,7 +1688,7 @@ function DayEventsPanel({
                     disabled={deleteEventMutation.isPending}
                     className="rounded border border-red-700 px-1.5 py-0.5 text-red-100 hover:border-red-500 disabled:cursor-not-allowed disabled:border-gray-700 disabled:text-gray-500"
                   >
-                    Delete
+                    Удалить
                   </button>
                 </div>
               )}
@@ -1629,7 +1698,7 @@ function DayEventsPanel({
       </div>
       {mutationError && (
         <div className="text-[11px] text-red-300">
-          {mutationError instanceof Error ? mutationError.message : 'Day event update failed'}
+          {mutationError instanceof Error ? mutationError.message : 'Не удалось обновить событие дня'}
         </div>
       )}
     </div>
@@ -1694,7 +1763,7 @@ function WorkItemEventsPanel({
   return (
     <div className="grid gap-1 rounded-md border border-gray-800 bg-gray-900/50 px-3 py-2 text-xs">
       <div className="flex items-center justify-between text-gray-400">
-        <span className="font-medium text-gray-300">Work Item Events</span>
+        <span className="font-medium text-gray-300">События Work Item</span>
         <span>{events.length}</span>
       </div>
       <div className="grid max-h-32 gap-1 overflow-auto pr-1">
@@ -1717,7 +1786,7 @@ function WorkItemEventsPanel({
                     onClick={() => startEditing(event)}
                     className="rounded border border-gray-700 px-1.5 py-0.5 text-[11px] text-gray-300 hover:border-gray-500 hover:text-gray-100"
                   >
-                    Edit
+                    Править
                   </button>
                   <button
                     type="button"
@@ -1727,7 +1796,7 @@ function WorkItemEventsPanel({
                     }}
                     className="rounded border border-red-900/80 px-1.5 py-0.5 text-[11px] text-red-200 hover:border-red-600"
                   >
-                    Del
+                    Удалить
                   </button>
                 </span>
               </div>
@@ -1760,7 +1829,7 @@ function WorkItemEventsPanel({
                       }}
                       className="rounded px-2 py-0.5 text-[11px] text-gray-400 hover:bg-gray-800 hover:text-gray-200"
                     >
-                      Cancel
+                      Отмена
                     </button>
                     <button
                       type="button"
@@ -1768,7 +1837,7 @@ function WorkItemEventsPanel({
                       disabled={!editingText.trim() || updateEventMutation.isPending}
                       className="rounded bg-emerald-700 px-2 py-0.5 text-[11px] font-medium text-white hover:bg-emerald-600 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-500"
                     >
-                      Save
+                      Сохранить
                     </button>
                   </div>
                 </div>
@@ -1776,13 +1845,13 @@ function WorkItemEventsPanel({
 
               {isDeleteConfirming && (
                 <div className="flex items-center justify-end gap-1 text-[11px] text-red-200">
-                  <span>Delete this event?</span>
+                  <span>Удалить событие?</span>
                   <button
                     type="button"
                     onClick={() => setDeleteConfirmId(null)}
                     className="rounded border border-gray-700 px-1.5 py-0.5 text-gray-300 hover:border-gray-500"
                   >
-                    Cancel
+                    Отмена
                   </button>
                   <button
                     type="button"
@@ -1790,7 +1859,7 @@ function WorkItemEventsPanel({
                     disabled={deleteEventMutation.isPending}
                     className="rounded border border-red-700 px-1.5 py-0.5 text-red-100 hover:border-red-500 disabled:cursor-not-allowed disabled:border-gray-700 disabled:text-gray-500"
                   >
-                    Delete
+                    Удалить
                   </button>
                 </div>
               )}
@@ -1800,7 +1869,7 @@ function WorkItemEventsPanel({
       </div>
       {mutationError && (
         <div className="text-[11px] text-red-300">
-          {mutationError instanceof Error ? mutationError.message : 'Work Item event update failed'}
+          {mutationError instanceof Error ? mutationError.message : 'Не удалось обновить событие Work Item'}
         </div>
       )}
     </div>

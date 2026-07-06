@@ -145,11 +145,33 @@ assert(
   converted.capture.work_item_id === converted.work_item_id,
   "converted capture is not linked to returned work item"
 );
+assert(converted.event?.kind === "note_added", "capture.convert_to_work_item did not create a note_added Work Item event");
+assert(converted.event?.text === convertCandidate.text, "capture.convert_to_work_item did not preserve capture text");
+assert(
+  converted.event?.focus_session_id === focus.id,
+  "capture.convert_to_work_item did not preserve focus-session link"
+);
+assert(
+  converted.event?.payload?.source_capture_id === convertCandidate.id,
+  "capture.convert_to_work_item did not keep source capture id"
+);
+assert(
+  converted.event?.payload?.origin === "capture_convert_to_work_item",
+  "capture.convert_to_work_item did not mark capture origin"
+);
 
 const inventory = await rpc("inventory.list");
 assert(
   inventory.items.some((item) => item.id === converted.work_item_id),
   "converted capture work item is absent from inventory"
+);
+
+const convertedEvents = await rpc("work_item.events", {
+  id: converted.work_item_id,
+});
+assert(
+  convertedEvents.events.some((event) => event.id === converted.event.id),
+  "converted-capture Work Item event is absent from work_item.events"
 );
 
 const currentAfterConvert = await rpc("focus.current");

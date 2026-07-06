@@ -4,12 +4,13 @@ use chrono::{Duration, Utc};
 use serde_json::json;
 use tempfile::tempdir;
 use timeskein_agent::api::{
-    handle_capture_append_to_work_item_event, handle_capture_create, handle_capture_delete,
-    handle_capture_update, handle_day_event_add, handle_day_event_delete, handle_day_event_list,
-    handle_day_event_update, handle_focus_create_stopped, handle_focus_list, handle_focus_split,
-    handle_focus_start, handle_focus_stop, handle_focus_update, handle_inventory_list,
-    handle_work_item_add_event, handle_work_item_delete_event, handle_work_item_events,
-    handle_work_item_update, handle_work_item_update_event,
+    handle_capture_append_to_work_item_event, handle_capture_convert_to_work_item,
+    handle_capture_create, handle_capture_delete, handle_capture_update, handle_day_event_add,
+    handle_day_event_delete, handle_day_event_list, handle_day_event_update,
+    handle_focus_create_stopped, handle_focus_list, handle_focus_split, handle_focus_start,
+    handle_focus_stop, handle_focus_update, handle_inventory_list, handle_work_item_add_event,
+    handle_work_item_delete_event, handle_work_item_events, handle_work_item_update,
+    handle_work_item_update_event,
 };
 use timeskein_agent::{db::Database, AppState};
 use tokio::sync::RwLock;
@@ -27,6 +28,92 @@ async fn test_state() -> Arc<RwLock<AppState>> {
         db,
         start_time: std::time::Instant::now(),
     }))
+}
+
+#[tokio::test]
+async fn capture_conversion_preserves_origin_as_work_item_event() {
+    let state = test_state().await;
+
+    let started = handle_focus_start(
+        &state,
+        json!({
+            "title": "Capture Convert Origin Focus",
+            "target_seconds": 60,
+        }),
+        "start",
+    )
+    .await
+    .expect("start");
+    let session_id = started["id"].as_str().expect("session id").to_string();
+
+    let capture = handle_capture_create(
+        &state,
+        json!({
+            "text": "convert me without losing origin",
+        }),
+        "capture",
+    )
+    .await
+    .expect("capture");
+    let capture_id = capture["id"].as_str().expect("capture id").to_string();
+
+    let converted = handle_capture_convert_to_work_item(
+        &state,
+        json!({
+            "id": capture_id,
+        }),
+        "convert",
+    )
+    .await
+    .expect("convert");
+    let work_item_id = converted["work_item_id"]
+        .as_str()
+        .expect("work item id")
+        .to_string();
+    let event_id = converted["event"]["id"]
+        .as_str()
+        .expect("event id")
+        .to_string();
+
+    assert_eq!(converted["capture"]["state"].as_str(), Some("converted"));
+    assert_eq!(
+        converted["capture"]["work_item_id"].as_str(),
+        Some(work_item_id.as_str())
+    );
+    assert_eq!(converted["event"]["kind"].as_str(), Some("note_added"));
+    assert_eq!(
+        converted["event"]["text"].as_str(),
+        Some("convert me without losing origin")
+    );
+    assert_eq!(
+        converted["event"]["focus_session_id"].as_str(),
+        Some(session_id.as_str())
+    );
+    assert_eq!(
+        converted["event"]["payload"]["source_capture_id"].as_str(),
+        Some(capture_id.as_str())
+    );
+    assert_eq!(
+        converted["event"]["payload"]["origin"].as_str(),
+        Some("capture_convert_to_work_item")
+    );
+
+    let listed_events = handle_work_item_events(
+        &state,
+        json!({
+            "id": work_item_id,
+            "from": (Utc::now() - Duration::minutes(1)).to_rfc3339(),
+            "to": (Utc::now() + Duration::minutes(1)).to_rfc3339(),
+        }),
+        "list-events",
+    )
+    .await
+    .expect("list events");
+    let events = listed_events["events"].as_array().expect("events");
+    assert!(events.iter().any(|event| {
+        event["id"].as_str() == Some(event_id.as_str())
+            && event["text"].as_str() == Some("convert me without losing origin")
+    }));
 }
 
 #[tokio::test]

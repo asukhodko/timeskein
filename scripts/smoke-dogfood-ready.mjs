@@ -31,9 +31,9 @@ try {
     ready.stdout.includes("pnpm dogfood:start:clean:preview"),
     "ready output did not include clean-start preview command"
   );
-  assert(ready.stdout.includes("## Daily-Control Checklist"), "ready output did not include daily-control checklist");
+  assert(ready.stdout.includes("## Памятка Daily-Control"), "ready output did not include daily-control checklist");
   assert(
-    ready.stdout.includes("Exercise window entrypoints"),
+    ready.stdout.includes("Проверь входы в окно"),
     "ready output did not include window entrypoint reminder"
   );
   assert(
@@ -41,11 +41,11 @@ try {
     "ready output did not include concrete global shortcut candidates"
   );
   assert(
-    ready.stdout.includes("card shows today and total time"),
+    ready.stdout.includes("проверь бейджи `today` и `total`"),
     "ready output did not include Work Item time-total UI reminder"
   );
   assert(
-    ready.stdout.includes("Начать закрытие дня") && ready.stdout.includes("10 minutes or less"),
+    ready.stdout.includes("Начать закрытие дня") && ready.stdout.includes("10 минут или меньше"),
     "ready output did not include measured day-closure reminder"
   );
   assert(
@@ -131,7 +131,7 @@ try {
     "continue output did not include guarded continue command"
   );
   assert(
-    continuing.stdout.includes("## Daily-Control Checklist"),
+    continuing.stdout.includes("## Памятка Daily-Control"),
     "continue output did not include daily-control checklist"
   );
 

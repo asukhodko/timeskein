@@ -77,18 +77,18 @@ if (blockers.length > 0) {
 }
 
 function appendDailyControlChecklist(lines) {
-  lines.push("## Daily-Control Checklist", "");
-  lines.push("- Exercise window entrypoints: tray/menu, global shortcut (`Ctrl+Shift+Space`, fallback `Ctrl+Option+Space` or `Cmd+Option+Space`), macOS reopen, hide with Esc or close.");
-  lines.push("- Start one new Work Item by typed title and continue one existing Work Item from the list.");
-  lines.push("- After a touched Work Item has focus time, confirm its card shows today and total time in the Work Item list, then accept that review item.");
-  lines.push("- Use at least two Activity Zones, including one non-work zone such as coordination/recovery/idle/personal.");
-  lines.push("- Add one Day Event for a buffer, gap, recovery note, or tracking correction.");
-  lines.push("- Add or promote one timestamped Work Item Event when a task-specific detail matters.");
-  lines.push("- Capture at least one incoming interruption during an active focus block and resolve, convert, or explicitly accept it as follow-up.");
-  lines.push("- Before final report, correct one safe tracking detail or accept tracking accuracy in the review checklist.");
-  lines.push("- At evening review, click `Начать закрытие дня`, clear hard blockers, accept intentional review items, and reach final `Copy Report` in 10 minutes or less.");
-  lines.push("- Close the day with `pnpm dogfood:finish:save`; before completing the goal, run `pnpm dogfood:goal-check`.");
-  lines.push("- If the day is closed after midnight, pass the dogfood date explicitly: `pnpm dogfood:finish:save -- --date YYYY-MM-DD` and `pnpm dogfood:goal-check -- --date YYYY-MM-DD`.");
+  lines.push("## Памятка Daily-Control", "");
+  lines.push("- Проверь входы в окно: menu bar, глобальный хоткей (`Ctrl+Shift+Space`, fallback `Ctrl+Option+Space` или `Cmd+Option+Space`), возврат через macOS, скрытие через Esc или закрытие окна.");
+  lines.push("- Начни один новый Work Item вводом названия и продолжи один существующий Work Item из списка.");
+  lines.push("- Когда у затронутого Work Item появится фокус-время, проверь бейджи `today` и `total` в списке дел, затем нажми `Принять` в соответствующей проверке.");
+  lines.push("- Используй минимум две зоны активности, включая одну нерабочую: coordination/recovery/idle/personal.");
+  lines.push("- Добавь одно событие дня через `Добавить событие дня...` для буфера, разрыва, recovery или коррекции трекинга.");
+  lines.push("- Добавь или продвинь одно timestamped-событие Work Item, если для задачи важна конкретная подробность.");
+  lines.push("- Во время активного фокуса зафиксируй хотя бы одно входящее отвлечение через `Зафиксировать отвлечение...`, затем закрой его, преврати `В дело`/`В событие` или явно прими как follow-up.");
+  lines.push("- Перед финальным отчётом поправь одну безопасную деталь трекинга или нажми `Принять` у проверки точности трекинга.");
+  lines.push("- Вечером нажми `Начать закрытие дня`, убери красные блокеры, прими осознанно оставленные жёлтые проверки и дойди до финального `Копировать отчёт` за 10 минут или меньше.");
+  lines.push("- Закрой день командой `pnpm dogfood:finish:save`; перед завершением цели запусти `pnpm dogfood:goal-check`.");
+  lines.push("- Если закрываешь день после полуночи, явно передай дату dogfood-дня: `pnpm dogfood:finish:save -- --date YYYY-MM-DD` и `pnpm dogfood:goal-check -- --date YYYY-MM-DD`.");
 }
 
 function appendReadyNext(lines, mode) {

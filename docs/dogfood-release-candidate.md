@@ -47,7 +47,7 @@ Track every intentional block of contact with work:
 
 1. Start or switch focus through the main input, selected Work Item, or state
    change to `Active`.
-2. Use `Capture interruption...` for incoming events that should be remembered
+2. Use `Зафиксировать отвлечение...` for incoming events that should be remembered
    without switching away from the current block.
 3. Stop the focus block when real contact with the work stops.
 4. Use stop notes for facts that help evening review.
@@ -63,8 +63,8 @@ pnpm dogfood:finish:save
 ```
 
 If you close the day from the app UI first, start the measured closure from
-`Review before report` by clicking `Начать закрытие дня`, then clear hard
-blockers, consciously accept optional review items, and click `Copy Report`.
+`Проверка перед отчётом` by clicking `Начать закрытие дня`, then clear hard
+blockers, consciously accept optional review items, and click `Копировать отчёт`.
 The active daily-control goal expects that measured closure to take at most
 10 minutes and to be understandable without Codex guidance.
 

@@ -165,7 +165,7 @@ Dogfood launch helper:
 - `pnpm export:focus-day` prints a Markdown day report from the local SQLite database as a fallback to UI copy
 - `pnpm dogfood:metrics` prints dogfood telemetry aggregates from the local SQLite app-event journal, including start/stop failure counts and accepted open-capture follow-up reviews
 - `pnpm export:app-events` prints a Markdown event table for deeper inspection of show/hide/start/switch/stop/copy/API behavior
-- `pnpm dogfood:report` prints a Markdown dogfood report with Russian focus data, a Russian review checklist, a Russian daily-closure audit, Day Events, interruption history, open captures, human-readable app telemetry, and evening review prompts, marked as a draft if a focus block or Work Item is still active
+- `pnpm dogfood:report` prints a Markdown dogfood report with Russian focus data, a Russian review checklist, a Russian daily-closure audit, Day Events, interruption history, open captures, human-readable app telemetry, and evening review prompts, marked as a draft if a focus block or Work Item still has an active status
 
 Runtime smoke in browser/mock mode:
 
@@ -180,7 +180,7 @@ Runtime smoke in browser/mock mode:
 - `pnpm smoke:day-events-api` verifies Day Event create/list/update/delete without interrupting focus
 - `pnpm smoke:mock-api` starts an isolated mock server, runs `smoke:focus-api`, `smoke:corrections-api`, `smoke:capture-api`, and `smoke:day-events-api`, and stops it
 - mock API also exposes `app_event.log`, `app_event.list`, and `app_event.summary`, including correction and correction-review telemetry counters
-- manual browser UI smoke was checked on 2026-06-30: start by typed title, switch by typed title, stop with note, Today list, totals, and `Copy Report` Markdown with both Work Items
+- manual browser UI smoke was checked on 2026-06-30: start by typed title, switch by typed title, stop with note, Today list, totals, and dogfood report Markdown with both Work Items
 
 First real dogfood day:
 
@@ -230,7 +230,7 @@ Third real dogfood day and release baseline:
 - Active focus session restored from SQLite after frontend/app restart
 - Today's focus blocks with total tracked time, work focus, non-work tracked time, entrance count, Activity Zone, stop notes, and significant gap ranges of 20+ minutes
 - Day views include focus blocks that overlap the selected local day; duration totals are clipped to the selected day window
-- Today and Markdown export show an `Open Gap` when no focus block is running and the interval after the last stopped block is at least 20 minutes
+- Today and Markdown export show an `Открытый разрыв` when no focus block is running and the interval after the last stopped block is at least 20 minutes
 - Markdown reports use the corrected focus-session rows, so post-factum edits are reflected in copied day data
 - Today shows a Russian `Проверка перед отчётом` checklist for active-state blockers, open captures, significant gaps, open gaps, Activity Zone coverage, non-work tracking, Work Item today/total badge visibility, capture coverage, Work Item context coverage, entry paths, window entrypoints, and focus-correction evidence. Gap items can stage a Day Event through a `Записать` action. Optional checks can be explicitly accepted from the checklist: Work Item today/total badges, tracking accuracy, open-capture follow-up, Activity Zone coverage, Capture usage, entry paths, and window entrypoints each write their own review telemetry. While unresolved blockers or checks remain, already-clean items are collapsed into a short summary so the panel stays focused on the next decision. Copied UI dogfood reports include the same Russian daily-closure audit as the CLI report.
 - Today's focus picture can be copied as Markdown from the focus panel, including per-Work-Item totals, Activity Zone totals, and significant gaps
@@ -250,7 +250,7 @@ Third real dogfood day and release baseline:
 - Open captures appear separately in the UI and CLI dogfood report for evening review
 - Manual Work Item inventory UI
 - Search
-- `Recent`, `Today`, `Pinned`, and `All` Work Item list modes for a multi-day inventory, with `Alt+1..4` shortcuts
+- `Недавние`, `Сегодня`, `Закреплённые`, and `Все` Work Item list modes for a multi-day inventory, with `Alt+1..4` shortcuts
 - Resizable divider between the Today list and Work Item inventory search/list area
 - Create Work Item
 - Edit Work Item title, type, Activity Zone, and note
@@ -360,7 +360,7 @@ The current API surface is:
 - `day_event.delete` to remove a user-authored day note;
 - `day_event.list` to list day notes by time window.
 
-The focus panel has a compact `Add day note...` input with an optional Activity Zone selector. Adding, editing, re-zoning, or deleting a Day Event must not stop or switch the active timer. Significant gaps and the current open gap have an `Explain` shortcut that prepares a Day Event with the gap range and duration. UI/CLI dogfood reports include a `События дня` section, and the RC checker includes Day Events in its evidence model.
+The focus panel has a compact `Добавить событие дня...` input with an optional Activity Zone selector. Adding, editing, re-zoning, or deleting a Day Event must not stop or switch the active timer. Significant gaps and the current open gap have a `Записать` shortcut that prepares a Day Event with the gap range and duration. UI/CLI dogfood reports include a `События дня` section, and the RC checker includes Day Events in its evidence model.
 
 ## App Event Telemetry
 

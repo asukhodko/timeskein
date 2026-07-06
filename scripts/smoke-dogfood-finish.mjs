@@ -40,7 +40,7 @@ try {
   assert(clean.stdout.includes("started before day"), "finish did not include overlapping focus session");
   assert(clean.stdout.includes("## Day-Boundary Blocks"), "finish did not flag day-boundary blocks");
   assert(clean.stdout.includes("finished block"), "finish did not include focus session note");
-  assert(clean.stdout.includes("### Entry Cost"), "finish did not include review prompts");
+  assert(clean.stdout.includes("### Цена входа"), "finish did not include review prompts");
 
   const cleanReportPath = join(tempDir, "clean-report.md");
   const cleanSaved = await runFinish(cleanDb, ["--out", cleanReportPath]);
@@ -51,7 +51,7 @@ try {
     cleanSavedMarkdown.includes("# Timeskein dogfood report - 2026-06-30"),
     "saved report did not include dogfood report title"
   );
-  assert(cleanSavedMarkdown.includes("### Entry Cost"), "saved report did not include review prompts");
+  assert(cleanSavedMarkdown.includes("### Цена входа"), "saved report did not include review prompts");
 
   const cleanSavedDefault = await runFinish(cleanDb, ["--save"], tempDir);
   assert(cleanSavedDefault.code === 0, "stopped day should save default report and RC check");

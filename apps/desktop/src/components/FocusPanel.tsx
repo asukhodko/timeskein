@@ -673,7 +673,7 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
                 disabled={sessions.length === 0}
                 className="rounded border border-emerald-800 px-2 py-0.5 text-[11px] font-medium text-emerald-200 transition-colors hover:border-emerald-500 hover:text-emerald-100 disabled:cursor-not-allowed disabled:border-gray-800 disabled:text-gray-600"
               >
-                {copyReportState === 'copied' ? 'Скопировано' : copyReportState === 'failed' ? 'Ошибка' : reportIsDraft ? 'Copy Draft' : 'Copy Report'}
+                {copyReportState === 'copied' ? 'Скопировано' : copyReportState === 'failed' ? 'Ошибка' : reportIsDraft ? 'Копировать черновик' : 'Копировать отчёт'}
               </button>
             </div>
           </div>
@@ -895,46 +895,46 @@ async function buildDogfoodReportMarkdown(
 ) {
   const hasActiveWorkItems = activeWorkItems.length > 0
   const reportState = activeFocus
-    ? 'draft - focus block still active'
+    ? 'черновик — фокус-блок ещё активен'
     : hasActiveWorkItems
-      ? 'draft - active Work Item still marked active'
-      : 'final - no active focus block or active Work Item'
+      ? 'черновик — Work Item всё ещё помечен active'
+      : 'финальный — активных фокус-блоков и active Work Item нет'
 
   const lines = [
     `# Timeskein dogfood report - ${formatLocalDate(now)}`,
     '',
-    `Report state: ${reportState}`,
+    `Статус отчёта: ${reportState}`,
     '',
   ]
 
   if (activeFocus) {
     lines.push(
-      '## Active Block Warning',
+      '## Блокер финального отчёта',
       '',
-      `- Active Work Item: ${activeFocus.work_item_title ?? activeFocus.title}`,
-      `- Started: ${formatClockTime(activeFocus.started_at)}`,
-      `- Current duration: ${formatDuration(activeFocus.active_seconds)}`,
-      '- Stop the active block before treating this as the final day report.',
+      `- Активный Work Item: ${activeFocus.work_item_title ?? activeFocus.title}`,
+      `- Старт: ${formatClockTime(activeFocus.started_at)}`,
+      `- Текущая длительность: ${formatDuration(activeFocus.active_seconds)}`,
+      '- Останови активный блок перед финальным отчётом.',
       ''
     )
   }
 
   if (!activeFocus && hasActiveWorkItems) {
     lines.push(
-      '## Active Work Item Warning',
+      '## Блокер финального отчёта',
       '',
       ...activeWorkItems.map((item) => `- Active Work Item: ${item.title}`),
-      '- Clear active Work Items before treating this as the final day report.',
+      '- Сними active с Work Item перед финальным отчётом.',
       ''
     )
   }
 
   if (openCaptures.length > 0) {
     lines.push(
-      '## Open Captures',
+      '## Открытые captures',
       '',
       ...openCaptures.map((capture) => `- ${formatClockTime(capture.created_at)} ${formatMarkdownListText(capture.text)}`),
-      '- Resolve, convert, or explicitly accept these captures as follow-up during review.',
+      '- Разбери их: закрыть, превратить в Work Item, добавить событием или явно принять как follow-up.',
       ''
     )
   }
@@ -967,37 +967,38 @@ async function buildDogfoodReportMarkdown(
     '',
     appTelemetryMarkdown.trim(),
     '',
-    '## Review',
+    '## Вечерний разбор',
     '',
-    '### Coverage',
+    '### Доверие к данным',
     '',
-    '- Missing focus blocks:',
-    '- Blocks with unclear or wrong Work Item:',
-    '- Duplicate or too-broad Work Items:',
+    '- Что поправлено вручную:',
+    '- Что осталось спорным:',
+    '- Где Work Item слишком широкий или неверный:',
     '',
-    '### Gaps and Switching',
+    '### Разрывы и восстановление',
     '',
-    '- Long gaps explained by real breaks:',
-    '- Long gaps that look like lost tracking:',
-    '- Switches that felt expensive:',
+    '- Разрывы, объяснённые реальными перерывами:',
+    '- Разрывы, похожие на потерянный трекинг:',
+    '- Переключения, которые ощущались дорогими:',
     '',
-    '### Entry Cost',
+    '### Цена входа',
     '',
-    '- Where starting the next block required noticeable effort:',
-    '- What made the effort easier to pay:',
-    '- What Timeskein should make cheaper before daily use:',
+    '- Где вход в следующий блок требовал заметного усилия:',
+    '- Что помогло вернуться:',
+    '- Что Timeskein должен удешевить:',
     '',
-    '### Product Friction',
+    '### Трения Timeskein',
     '',
-    '- Start/switch/stop friction:',
-    '- Window/tray friction:',
-    '- Data trust issues:',
+    '- Старт/переключение/остановка:',
+    '- Окно/menu bar:',
+    '- Доверие к данным:',
     '',
-    '## Verdict',
+    '## Вердикт',
     '',
-    '- Enough data to discuss the day: yes/no',
-    '- Good enough to replace Session tomorrow: yes/no',
-    '- Next product fix:',
+    '- Данных достаточно для разговора о дне: да/нет',
+    '- Отчёту можно доверять без пересборки по памяти: да/нет',
+    '- Закрытие заняло не больше 10 минут: да/нет',
+    '- Следующая правка продукта:',
   )
 
   return `${lines.join('\n')}\n`

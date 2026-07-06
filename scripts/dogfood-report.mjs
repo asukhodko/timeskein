@@ -18,6 +18,24 @@ const dbPath = options.db
   : join(homedir(), "Library/Application Support/Timeskein/timeskein.db");
 const exportArgs = [resolve(repoRoot, "scripts/export-focus-day.mjs"), "--db", dbPath];
 const metricsArgs = [resolve(repoRoot, "scripts/dogfood-metrics.mjs"), "--db", dbPath];
+const REVIEW_TITLE_LABELS = {
+  "Stop the active focus block": "Остановить активный фокус-блок",
+  "Clear active Work Item state": "Снять active с Work Item",
+  "Resolve, convert, or accept open captures": "Разобрать открытые captures",
+  "Classify significant gaps": "Объяснить большие разрывы",
+  "Explain current open gap": "Объяснить текущий открытый разрыв",
+  "Review Activity Zone coverage": "Проверить зоны активности",
+  "Confirm non-work tracked time": "Проверить нерабочее время",
+  "Confirm Work Item today/total badges": "Проверить today/total у Work Item",
+  "Capture Inbox untested today": "Capture Inbox сегодня не проверен",
+  "Captures were not linked to active focus": "Captures не были связаны с активным фокусом",
+  "No day or Work Item notes/events": "Нет дневных или Work Item событий",
+  "Exercise start and continue paths": "Проверить старт и продолжение",
+  "Test window entrypoints": "Проверить входы в окно",
+  "Review failed focus corrections": "Проверить ошибки коррекции фокуса",
+  "Confirm tracking accuracy or test correction": "Подтвердить точность трекинга",
+  "Ready to copy final report": "Можно копировать финальный отчёт",
+};
 
 if (options.date) {
   exportArgs.push("--date", options.date);
@@ -224,46 +242,46 @@ function buildDogfoodReport(
 ) {
   const hasActiveWorkItems = activeWorkItems.length > 0;
   const reportState = activeFocus
-    ? "draft - focus block still active"
+    ? "черновик — фокус-блок ещё активен"
     : hasActiveWorkItems
-      ? "draft - active Work Item still marked active"
-      : "final - no active focus block or active Work Item";
+      ? "черновик — Work Item всё ещё помечен active"
+      : "финальный — активных фокус-блоков и active Work Item нет";
 
   const lines = [
     `# Timeskein dogfood report - ${date}`,
     "",
-    `Report state: ${reportState}`,
+    `Статус отчёта: ${reportState}`,
     "",
   ];
 
   if (activeFocus) {
     lines.push(
-      "## Active Block Warning",
+      "## Блокер финального отчёта",
       "",
-      `- Active Work Item: ${activeFocus.title}`,
-      `- Started: ${formatClockTime(activeFocus.started_at)}`,
-      `- Current duration: ${formatDuration(activeFocus.active_seconds)}`,
-      "- Stop the active block before treating this as the final day report.",
+      `- Активный Work Item: ${activeFocus.title}`,
+      `- Старт: ${formatClockTime(activeFocus.started_at)}`,
+      `- Текущая длительность: ${formatDuration(activeFocus.active_seconds)}`,
+      "- Останови активный блок перед финальным отчётом.",
       ""
     );
   }
 
   if (!activeFocus && hasActiveWorkItems) {
     lines.push(
-      "## Active Work Item Warning",
+      "## Блокер финального отчёта",
       "",
       ...activeWorkItems.map((item) => `- Active Work Item: ${item.title}`),
-      "- Clear active Work Items before treating this as the final day report.",
+      "- Сними active с Work Item перед финальным отчётом.",
       ""
     );
   }
 
   if (openCaptures.length > 0) {
     lines.push(
-      "## Open Captures",
+      "## Открытые captures",
       "",
       ...openCaptures.map((capture) => `- ${formatClockTime(capture.created_at)} ${formatMarkdownListText(capture.text)}`),
-      "- Resolve, convert, or explicitly accept these captures as follow-up during review.",
+      "- Разбери их: закрыть, превратить в Work Item, добавить событием или явно принять как follow-up.",
       ""
     );
   }
@@ -299,37 +317,38 @@ function buildDogfoodReport(
     "",
     telemetryMarkdown.trim(),
     "",
-    "## Review",
+    "## Вечерний разбор",
     "",
-    "### Coverage",
+    "### Доверие к данным",
     "",
-    "- Missing focus blocks:",
-    "- Blocks with unclear or wrong Work Item:",
-    "- Duplicate or too-broad Work Items:",
+    "- Что поправлено вручную:",
+    "- Что осталось спорным:",
+    "- Где Work Item слишком широкий или неверный:",
     "",
-    "### Gaps and Switching",
+    "### Разрывы и восстановление",
     "",
-    "- Long gaps explained by real breaks:",
-    "- Long gaps that look like lost tracking:",
-    "- Switches that felt expensive:",
+    "- Разрывы, объяснённые реальными перерывами:",
+    "- Разрывы, похожие на потерянный трекинг:",
+    "- Переключения, которые ощущались дорогими:",
     "",
-    "### Entry Cost",
+    "### Цена входа",
     "",
-    "- Where starting the next block required noticeable effort:",
-    "- What made the effort easier to pay:",
-    "- What Timeskein should make cheaper before daily use:",
+    "- Где вход в следующий блок требовал заметного усилия:",
+    "- Что помогло вернуться:",
+    "- Что Timeskein должен удешевить:",
     "",
-    "### Product Friction",
+    "### Трения Timeskein",
     "",
-    "- Start/switch/stop friction:",
-    "- Window/tray friction:",
-    "- Data trust issues:",
+    "- Старт/переключение/остановка:",
+    "- Окно/menu bar:",
+    "- Доверие к данным:",
     "",
-    "## Verdict",
+    "## Вердикт",
     "",
-    "- Enough data to discuss the day: yes/no",
-    "- Good enough to replace Session tomorrow: yes/no",
-    "- Next product fix:",
+    "- Данных достаточно для разговора о дне: да/нет",
+    "- Отчёту можно доверять без пересборки по памяти: да/нет",
+    "- Закрытие заняло не больше 10 минут: да/нет",
+    "- Следующая правка продукта:",
   );
 
   return `${lines.join("\n")}\n`;
@@ -357,7 +376,7 @@ function buildReviewChecklistItems({
     items.push({
       level: "blocker",
       title: "Clear active Work Item state",
-      detail: `${activeWorkItems.length} active item${activeWorkItems.length === 1 ? "" : "s"}`,
+      detail: `${activeWorkItems.length} active Work Item`,
     });
   }
 
@@ -367,7 +386,7 @@ function buildReviewChecklistItems({
     items.push({
       level: "review",
       title: "Resolve, convert, or accept open captures",
-      detail: `${openCaptures.length} open`,
+      detail: `${openCaptures.length} открыто`,
     });
   }
 
@@ -375,7 +394,7 @@ function buildReviewChecklistItems({
     items.push({
       level: "review",
       title: "Classify significant gaps",
-      detail: "Review Gaps section",
+      detail: "Проверь секцию больших разрывов",
     });
   }
 
@@ -383,7 +402,7 @@ function buildReviewChecklistItems({
     items.push({
       level: "review",
       title: "Explain current open gap",
-      detail: "Tracking is idle after the last stopped block",
+      detail: "После последнего блока идёт открытый разрыв",
     });
   }
 
@@ -391,7 +410,7 @@ function buildReviewChecklistItems({
     items.push({
       level: "review",
       title: "Review Activity Zone coverage",
-      detail: "Only one zone appears in the report",
+      detail: "В отчёте видна только одна зона",
     });
   }
 
@@ -399,7 +418,7 @@ function buildReviewChecklistItems({
     items.push({
       level: "review",
       title: "Confirm non-work tracked time",
-      detail: "Breaks, recovery, coordination, and personal blocks may be missing",
+      detail: "Перерывы, recovery, coordination или personal могли потеряться",
     });
   }
 
@@ -408,7 +427,7 @@ function buildReviewChecklistItems({
     items.push({
       level: "review",
       title: "Confirm Work Item today/total badges",
-      detail: "Check touched Work Item cards show today and total time",
+      detail: "Проверь, что карточки показывают today и total",
     });
   }
 
@@ -416,7 +435,7 @@ function buildReviewChecklistItems({
     items.push({
       level: "review",
       title: "Capture Inbox untested today",
-      detail: "No captures created during this day",
+      detail: "За день не было ни одного capture",
     });
   }
 
@@ -424,7 +443,7 @@ function buildReviewChecklistItems({
     items.push({
       level: "review",
       title: "Captures were not linked to active focus",
-      detail: "Interruption handling is not proven for this day",
+      detail: "Обработка отвлечений в фокусе сегодня не проверена",
     });
   }
 
@@ -437,7 +456,7 @@ function buildReviewChecklistItems({
     items.push({
       level: "review",
       title: "No day or Work Item notes/events",
-      detail: "Add context if the report still needs memory reconstruction",
+      detail: "Добавь контекст, если отчёт всё ещё требует памяти",
     });
   }
 
@@ -447,13 +466,13 @@ function buildReviewChecklistItems({
       items.push({
         level: "review",
         title: "Review failed focus corrections",
-        detail: `${correctionTelemetry.failures} failure${correctionTelemetry.failures === 1 ? "" : "s"}`,
+        detail: `${correctionTelemetry.failures} ошибок коррекции`,
       });
     } else if (correctionTelemetry.applied === 0 && correctionTelemetry.reviewed === 0) {
       items.push({
         level: "review",
         title: "Confirm tracking accuracy or test correction",
-        detail: "No focus corrections applied today",
+        detail: "Сегодня не было коррекций фокус-блоков",
       });
     }
   }
@@ -464,7 +483,7 @@ function buildReviewChecklistItems({
       items.push({
         level: "review",
         title: "Exercise start and continue paths",
-        detail: `${entryTelemetry.typedEntryRequests} typed, ${entryTelemetry.selectedEntryRequests} selected/list, ${entryTelemetry.stopRequests} stop request(s)`,
+        detail: `${entryTelemetry.typedEntryRequests} вводом, ${entryTelemetry.selectedEntryRequests} из списка, ${entryTelemetry.stopRequests} stop`,
       });
     }
   }
@@ -475,7 +494,7 @@ function buildReviewChecklistItems({
       items.push({
         level: "review",
         title: "Test window entrypoints",
-        detail: `${windowTelemetry.showRequests} show request(s), ${windowTelemetry.hideRequests} hide request(s)`,
+        detail: `${windowTelemetry.showRequests} show, ${windowTelemetry.hideRequests} hide`,
       });
     }
   }
@@ -484,7 +503,7 @@ function buildReviewChecklistItems({
     items.push({
       level: "ok",
       title: "Ready to copy final report",
-      detail: "No automatic review items detected",
+      detail: "Автоматических замечаний нет",
     });
   }
 
@@ -695,11 +714,12 @@ function extractMarkdownSection(markdown, title) {
 }
 
 function formatReviewChecklistMarkdown(items) {
-  const lines = ["## Review Checklist", ""];
+  const lines = ["## Проверка перед отчётом", ""];
   for (const item of items) {
     const marker = item.level === "ok" ? "[x]" : "[ ]";
+    const title = REVIEW_TITLE_LABELS[item.title] ?? item.title;
     const suffix = item.detail ? ` - ${formatMarkdownListText(item.detail)}` : "";
-    lines.push(`- ${marker} ${formatMarkdownListText(item.title)}${suffix}`);
+    lines.push(`- ${marker} ${formatMarkdownListText(title)}${suffix}`);
   }
 
   return `${lines.join("\n")}\n`;

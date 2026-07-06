@@ -1030,8 +1030,8 @@ async function buildDogfoodReportMarkdown(
   const reportState = activeFocus
     ? 'черновик — фокус-блок ещё активен'
     : hasActiveWorkItems
-      ? 'черновик — Work Item всё ещё помечен active'
-      : 'финальный — активных фокус-блоков и active Work Item нет'
+      ? 'черновик — у Work Item ещё стоит активный статус'
+      : 'финальный — нет активных фокус-блоков и активных Work Item'
 
   const lines = [
     `# Timeskein dogfood report - ${formatLocalDate(now)}`,
@@ -1056,8 +1056,8 @@ async function buildDogfoodReportMarkdown(
     lines.push(
       '## Блокер финального отчёта',
       '',
-      ...activeWorkItems.map((item) => `- Work Item в active: ${item.title}`),
-      '- Сними active с Work Item перед финальным отчётом.',
+      ...activeWorkItems.map((item) => `- Work Item с активным статусом: ${item.title}`),
+      '- Сними активный статус с Work Item перед финальным отчётом.',
       ''
     )
   }
@@ -1275,7 +1275,7 @@ function buildDayReviewItems({
     items.push({
       level: 'blocker',
       title: 'Clear active Work Item state',
-      detail: `${activeWorkItems.length} active Work Item`,
+      detail: `${activeWorkItems.length} Work Item с активным статусом`,
     })
   }
 
@@ -1292,7 +1292,7 @@ function buildDayReviewItems({
     items.push({
       level: 'review',
       title: 'Classify significant gaps',
-      detail: `${unexplainedGapCount}/${gaps.length} больших разрывов без Day Event`,
+      detail: `${unexplainedGapCount}/${gaps.length} больших разрывов без события дня`,
       action: 'stage_significant_gap',
     })
   }
@@ -1367,22 +1367,22 @@ function buildDayReviewItems({
     ) {
       if (!entryPathsReviewed) {
         items.push({
-          level: 'review',
-          title: 'Exercise start and continue paths',
-          detail: `${appTelemetry.typed_entry_requests} вводом, ${appTelemetry.selected_entry_requests} из списка, ${appTelemetry.stop_requests} stop`,
-          action: 'accept_entry_paths',
-        })
+      level: 'review',
+      title: 'Exercise start and continue paths',
+      detail: `${appTelemetry.typed_entry_requests} вводом, ${appTelemetry.selected_entry_requests} из списка, ${appTelemetry.stop_requests} остановок`,
+      action: 'accept_entry_paths',
+    })
       }
     }
 
     if (appTelemetry.window_show_requested === 0 || appTelemetry.window_hide_requested === 0) {
       if (!windowEntrypointsReviewed) {
-        items.push({
-          level: 'review',
-          title: 'Test window entrypoints',
-          detail: `${appTelemetry.window_show_requested} show, ${appTelemetry.window_hide_requested} hide`,
-          action: 'accept_window_entrypoints',
-        })
+      items.push({
+        level: 'review',
+        title: 'Test window entrypoints',
+        detail: `${appTelemetry.window_show_requested} запросов показа, ${appTelemetry.window_hide_requested} запросов скрытия`,
+        action: 'accept_window_entrypoints',
+      })
       }
     }
 
@@ -1605,7 +1605,7 @@ function formatDayReviewItem(item: DayReviewItem) {
 
 const REVIEW_TITLE_LABELS: Record<string, string> = {
   'Stop the active focus block': 'Остановить активный фокус-блок',
-  'Clear active Work Item state': 'Снять active с Work Item',
+  'Clear active Work Item state': 'Снять активный статус с Work Item',
   'Resolve, convert, or accept open captures': 'Разобрать открытые отвлечения',
   'Classify significant gaps': 'Объяснить большие разрывы',
   'Explain current open gap': 'Объяснить текущий открытый разрыв',
@@ -1714,7 +1714,7 @@ function formatDailyControlGoalAuditMarkdown({
     {
       requirement: 'Final state clean',
       status: activeFocus || activeWorkItems.length > 0 ? 'block' : 'pass',
-      evidence: `${activeFocus ? 1 : 0} активных фокус-блоков, ${activeWorkItems.length} Work Item в active`,
+      evidence: `${activeFocus ? 1 : 0} активных фокус-блоков, ${activeWorkItems.length} Work Item с активным статусом`,
     },
     {
       requirement: 'Focus blocks visible',

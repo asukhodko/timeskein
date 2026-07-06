@@ -20,7 +20,7 @@ const exportArgs = [resolve(repoRoot, "scripts/export-focus-day.mjs"), "--db", d
 const metricsArgs = [resolve(repoRoot, "scripts/dogfood-metrics.mjs"), "--db", dbPath];
 const REVIEW_TITLE_LABELS = {
   "Stop the active focus block": "Остановить активный фокус-блок",
-  "Clear active Work Item state": "Снять active с Work Item",
+  "Clear active Work Item state": "Снять активный статус с Work Item",
   "Resolve, convert, or accept open captures": "Разобрать открытые отвлечения",
   "Classify significant gaps": "Объяснить большие разрывы",
   "Explain current open gap": "Объяснить текущий открытый разрыв",
@@ -265,8 +265,8 @@ function buildDogfoodReport(
   const reportState = activeFocus
     ? "черновик — фокус-блок ещё активен"
     : hasActiveWorkItems
-      ? "черновик — Work Item всё ещё помечен active"
-      : "финальный — активных фокус-блоков и active Work Item нет";
+      ? "черновик — у Work Item ещё стоит активный статус"
+      : "финальный — нет активных фокус-блоков и активных Work Item";
 
   const lines = [
     `# Timeskein dogfood report - ${date}`,
@@ -291,8 +291,8 @@ function buildDogfoodReport(
     lines.push(
       "## Блокер финального отчёта",
       "",
-      ...activeWorkItems.map((item) => `- Work Item в active: ${item.title}`),
-      "- Сними active с Work Item перед финальным отчётом.",
+      ...activeWorkItems.map((item) => `- Work Item с активным статусом: ${item.title}`),
+      "- Сними активный статус с Work Item перед финальным отчётом.",
       ""
     );
   }
@@ -456,7 +456,7 @@ function buildReviewChecklistItems({
     items.push({
       level: "blocker",
       title: "Clear active Work Item state",
-      detail: `${activeWorkItems.length} active Work Item`,
+      detail: `${activeWorkItems.length} Work Item с активным статусом`,
     });
   }
 
@@ -566,7 +566,7 @@ function buildReviewChecklistItems({
       items.push({
         level: "review",
         title: "Exercise start and continue paths",
-        detail: `${entryTelemetry.typedEntryRequests} вводом, ${entryTelemetry.selectedEntryRequests} из списка, ${entryTelemetry.stopRequests} stop`,
+        detail: `${entryTelemetry.typedEntryRequests} вводом, ${entryTelemetry.selectedEntryRequests} из списка, ${entryTelemetry.stopRequests} остановок`,
       });
     }
   }
@@ -578,7 +578,7 @@ function buildReviewChecklistItems({
       items.push({
         level: "review",
         title: "Test window entrypoints",
-        detail: `${windowTelemetry.showRequests} show, ${windowTelemetry.hideRequests} hide`,
+        detail: `${windowTelemetry.showRequests} запросов показа, ${windowTelemetry.hideRequests} запросов скрытия`,
       });
     }
   }
@@ -647,7 +647,7 @@ function formatDailyControlGoalAuditMarkdown({
     {
       requirement: "Final state clean",
       status: activeFocus || activeWorkItems.length > 0 ? "block" : "pass",
-      evidence: `${activeFocus ? 1 : 0} активных фокус-блоков, ${activeWorkItems.length} Work Item в active`,
+      evidence: `${activeFocus ? 1 : 0} активных фокус-блоков, ${activeWorkItems.length} Work Item с активным статусом`,
     },
     {
       requirement: "Focus blocks visible",

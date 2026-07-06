@@ -69,7 +69,7 @@ try {
 
   assert(stdout.includes("# Timeskein dogfood report - 2026-06-30"), "report title is missing");
   assert(
-    stdout.includes("Статус отчёта: финальный — активных фокус-блоков и active Work Item нет"),
+    stdout.includes("Статус отчёта: финальный — нет активных фокус-блоков и активных Work Item"),
     "final report state is missing"
   );
   assert(stdout.includes("## Данные фокуса"), "report did not include focus data section");
@@ -78,7 +78,8 @@ try {
   assert(stdout.includes("## Аудит закрытия дня"), "report did not include daily-control audit section");
   assert(stdout.includes("| Фокус-блоки видны | ок |"), "report daily-control audit did not pass focus blocks");
   assert(
-    stdout.includes("0 активных фокус-блоков, 0 Work Item в active"),
+    stdout.includes("0 активных фокус-блоков, 0 Work Item с активным статусом") &&
+      stdout.includes("Статус отчёта: финальный — нет активных фокус-блоков и активных Work Item"),
     "report daily-control audit evidence did not localize final-state blockers"
   );
   assert(stdout.includes("3 входов, 1:05:00 учтено"), "report daily-control audit evidence did not localize focus blocks");
@@ -230,7 +231,7 @@ try {
     "report review checklist did not flag missing window request evidence"
   );
   assert(
-    thinEvidenceStdout.includes("0 show, 0 hide"),
+    thinEvidenceStdout.includes("0 запросов показа, 0 запросов скрытия"),
     "report review checklist did not show missing window request counts"
   );
   assert(
@@ -356,7 +357,7 @@ try {
   );
 
   assert(
-    stuckItemDraftStdout.includes("Статус отчёта: черновик — Work Item всё ещё помечен active"),
+    stuckItemDraftStdout.includes("Статус отчёта: черновик — у Work Item ещё стоит активный статус"),
     "stuck active item report state is missing"
   );
   assert(
@@ -364,11 +365,11 @@ try {
     "stuck active item report did not include active Work Item warning"
   );
   assert(
-    stuckItemDraftStdout.includes("Work Item в active: Stuck Active Item"),
+    stuckItemDraftStdout.includes("Work Item с активным статусом: Stuck Active Item"),
     "stuck active item report did not name active Work Item"
   );
   assert(
-    stuckItemDraftStdout.includes("Снять active с Work Item"),
+    stuckItemDraftStdout.includes("Снять активный статус с Work Item"),
     "stuck active item review checklist did not include active Work Item cleanup"
   );
 

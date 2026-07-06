@@ -11,7 +11,7 @@ import { useCaptureActivity, useOpenCaptures } from '../hooks/useCaptures'
 import { useAddDayEvent, useDayEvents, useDeleteDayEvent, useUpdateDayEvent } from '../hooks/useDayEvents'
 import { appEventApi, logAppEvent, shellApi } from '../api/client'
 import { formatClockTime, formatDuration, truncate } from '../utils/formatTime'
-import { isDayClosureReadyForFinalReport, isFinalDayClosureReport } from '../utils/dayClosure'
+import { getDayClosureStage, isDayClosureReadyForFinalReport, isFinalDayClosureReport, type DayClosureStage } from '../utils/dayClosure'
 import CaptureInbox from './CaptureInbox'
 import FocusCorrectionDialog from './FocusCorrectionDialog'
 import MissedFocusBlockDialog from './MissedFocusBlockDialog'
@@ -114,6 +114,16 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
   const reportIsDraft = !reportIsFinal
   const pendingReviewItemCount = countPendingReviewItems(reviewItems)
   const reportHasPendingReview = pendingReviewItemCount > 0
+  const dayClosureStage = getDayClosureStage({
+    activeFocus: current?.state === 'active',
+    activeWorkItemCount: activeWorkItems.length,
+    pendingReviewItemCount,
+    hasFocusBlocks: sessions.length > 0,
+    closureStarted: Boolean(dayClosureStartedAt),
+  })
+  const dayClosureElapsedSeconds = dayClosureStartedAt
+    ? Math.max(0, Math.floor((now.getTime() - dayClosureStartedAt.getTime()) / 1000))
+    : undefined
   const trayStatusTitle = useMemo(
     () => buildTrayStatusTitle(current, now, activeSecondsTotal),
     [current, now, activeSecondsTotal]
@@ -706,6 +716,8 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
         <DayReviewPanel
           items={reviewItems}
           closureStartedAt={dayClosureStartedAt}
+          closureElapsedSeconds={dayClosureElapsedSeconds}
+          closureStage={dayClosureStage}
           canStartClosure={sessions.length > 0}
           onAction={handleReviewAction}
           onStartClosure={() => {
@@ -1345,12 +1357,16 @@ function buildDayReviewItems({
 function DayReviewPanel({
   items,
   closureStartedAt,
+  closureElapsedSeconds,
+  closureStage,
   canStartClosure,
   onAction,
   onStartClosure,
 }: {
   items: DayReviewItem[]
   closureStartedAt?: Date | null
+  closureElapsedSeconds?: number
+  closureStage: DayClosureStage
   canStartClosure?: boolean
   onAction?: (action: DayReviewAction) => void
   onStartClosure?: () => void
@@ -1368,6 +1384,11 @@ function DayReviewPanel({
     : reviews.length > 0
       ? `${reviews.length} ${pluralRu(reviews.length, 'проверка', 'проверки', 'проверок')}`
       : 'готово'
+  const prompt = formatDayClosurePrompt(closureStage, {
+    blockers: blockers.length,
+    reviews: reviews.length,
+    closureElapsedSeconds,
+  })
 
   return (
     <div className={`grid gap-2 rounded-md border px-3 py-2 text-xs ${statusClass}`}>
@@ -1375,6 +1396,11 @@ function DayReviewPanel({
         <span className="font-medium text-gray-200">Проверка перед отчётом</span>
         <span className="flex items-center gap-2">
           <span className="text-gray-500">{statusText}</span>
+          {closureStartedAt && closureElapsedSeconds != null && (
+            <span className="rounded border border-gray-800 px-1.5 py-0.5 text-[11px] text-gray-400">
+              закрытие {formatDuration(closureElapsedSeconds)}
+            </span>
+          )}
           {onStartClosure && (
             <button
               type="button"
@@ -1387,6 +1413,11 @@ function DayReviewPanel({
           )}
         </span>
       </div>
+      {prompt && (
+        <div className="rounded border border-gray-800/80 bg-gray-950/30 px-2 py-1 text-[11px] text-gray-300">
+          {prompt}
+        </div>
+      )}
       {blockers.length > 0 && (
         <DayReviewGroup title="Сначала закрыть" items={blockers} onAction={onAction} />
       )}
@@ -1398,6 +1429,38 @@ function DayReviewPanel({
       )}
     </div>
   )
+}
+
+function formatDayClosurePrompt(
+  stage: DayClosureStage,
+  {
+    blockers,
+    reviews,
+    closureElapsedSeconds,
+  }: {
+    blockers: number
+    reviews: number
+    closureElapsedSeconds?: number
+  }
+) {
+  if (stage === 'no_data') {
+    return 'Сегодня ещё нет фокус-блоков. Когда появятся данные, здесь будет короткий ритуал закрытия.'
+  }
+
+  if (stage === 'not_started') {
+    return 'Когда рабочий день закончен, начни закрытие дня: Timeskein измерит, сколько занял вечерний разбор.'
+  }
+
+  if (stage === 'blocked') {
+    return `Сначала закрой красные пункты: ${blockers} ${pluralRu(blockers, 'блокер', 'блокера', 'блокеров')} мешает финальному отчёту.`
+  }
+
+  if (stage === 'review') {
+    return `Осталось ${reviews} ${pluralRu(reviews, 'проверка', 'проверки', 'проверок')}: запиши контекст или нажми «Принять», если данные уже достаточно честные.`
+  }
+
+  const elapsedText = closureElapsedSeconds == null ? '' : ` Закрытие идёт ${formatDuration(closureElapsedSeconds)}.`
+  return `Проверки чистые.${elapsedText} Кнопка «Копировать отчёт» завершит закрытие дня.`
 }
 
 function DayReviewGroup({

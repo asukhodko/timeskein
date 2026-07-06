@@ -32,11 +32,12 @@ During the day:
 End of day:
 
 - start the evening closure from `Review before report` by clicking `Начать закрытие дня`;
+- use the panel hint as the source of truth for the next step: close red blockers, then either handle or accept yellow checks, then copy the final report;
 - clear hard blockers first: stop active focus, clear stuck active Work Items, and resolve required review actions;
 - use `Записать` on gap review items when the right action is to add a Day Event explanation;
 - consciously accept optional review items that are intentionally left as-is: Activity Zones, Capture usage, entry paths, window entrypoints, Work Item today/total badges, tracking accuracy, or open-capture follow-up;
 - click `Copy Report` in Today and paste the dogfood report into the day note;
-- if the button says `Copy Draft`, stop the active focus block or clear the active Work Item before treating the report as final; draft copy can start the closure timer, but only a final report completes it;
+- if the button says `Копировать черновик`, stop the active focus block or clear the active Work Item before treating the report as final; draft copy can start the closure timer, but only a final report completes it;
 - if the button says `Копировать с проверками`, finish or consciously accept the remaining review items before treating the report as closed;
 - use `Copy MD` when only the raw day picture is needed;
 - if clipboard access is unavailable, copy the selected Markdown from the fallback text box;

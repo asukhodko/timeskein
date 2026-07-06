@@ -1715,19 +1715,19 @@ function formatDailyControlGoalAuditMarkdown({
     {
       requirement: 'Final state clean',
       status: activeFocus || activeWorkItems.length > 0 ? 'block' : 'pass',
-      evidence: `${activeFocus ? 1 : 0} active focus block(s), ${activeWorkItems.length} active Work Item(s)`,
+      evidence: `${activeFocus ? 1 : 0} активных фокус-блоков, ${activeWorkItems.length} Work Item в active`,
     },
     {
       requirement: 'Focus blocks visible',
       status: hasFocusBlocks ? 'pass' : 'block',
-      evidence: `${entrances} entrance(s), ${totalTracked} tracked`,
+      evidence: `${entrances} входов, ${totalTracked} учтено`,
     },
     {
       requirement: 'Work Item totals available',
       status: todayMarkdown.includes('## By Work Item') && !hasReview('Confirm Work Item today/total badges') ? 'pass' : 'review',
       evidence: todayMarkdown.includes('## By Work Item')
-        ? `By Work Item section present, ${workItemTimeBadgeReviews} UI badge review(s)`
-        : 'By Work Item section missing',
+        ? `Раздел «По Work Item» есть, проверок бейджей в UI: ${workItemTimeBadgeReviews}`
+        : 'Раздела «По Work Item» нет',
     },
     {
       requirement: 'Activity Zones separated',
@@ -1737,16 +1737,16 @@ function formatDailyControlGoalAuditMarkdown({
           activityZoneReviews > 0)
           ? 'pass'
           : 'review',
-      evidence: `${workFocus} work, ${nonWorkTracked} non-work, ${activityZoneReviews} review(s)`,
+      evidence: `${workFocus} рабочий фокус, ${nonWorkTracked} вне работы, проверок зон: ${activityZoneReviews}`,
     },
     {
       requirement: 'Day and Work Item context present',
       status: hasReview('No day or Work Item notes/events') ? 'review' : 'pass',
       evidence: [
-        todayMarkdown.includes('## Day Events') ? 'Day Events' : '',
-        todayMarkdown.includes('## Work Item Events') ? 'Work Item Events' : '',
-        todayMarkdown.includes('## Work Item Notes') ? 'Work Item Notes' : '',
-      ].filter(Boolean).join(', ') || 'no context sections',
+        todayMarkdown.includes('## Day Events') ? 'события дня' : '',
+        todayMarkdown.includes('## Work Item Events') ? 'события Work Item' : '',
+        todayMarkdown.includes('## Work Item Notes') ? 'заметки Work Item' : '',
+      ].filter(Boolean).join(', ') || 'контекстных секций нет',
     },
     {
       requirement: 'Gaps and captures visible',
@@ -1757,7 +1757,7 @@ function formatDailyControlGoalAuditMarkdown({
         hasReview('Resolve, convert, or accept open captures')
           ? 'review'
           : 'pass',
-      evidence: `${todayMarkdown.includes('## Gaps >=') ? 'gaps section present' : 'no significant gaps section'}, ${openCaptures.length} open capture(s), ${captureFollowupReviews} follow-up review(s), ${captureUsageReviews} usage review(s), ${captureActivity.length} capture(s) today`,
+      evidence: `${todayMarkdown.includes('## Gaps >=') ? 'раздел разрывов есть' : 'больших разрывов нет'}, открытых отвлечений: ${openCaptures.length}, проверок follow-up: ${captureFollowupReviews}, проверок Inbox: ${captureUsageReviews}, отвлечений за день: ${captureActivity.length}`,
     },
     {
       requirement: 'Window and menubar friction evidenced',
@@ -1769,7 +1769,7 @@ function formatDailyControlGoalAuditMarkdown({
         (hasReview('Test window entrypoints') && windowEntrypointReviews === 0)
           ? 'review'
           : 'pass',
-      evidence: `window shown/hidden ${windowEvidence}, requests ${windowRequestEvidence}, ${windowEntrypointReviews} review(s), API errors ${apiErrors}, start/stop failures ${startStopFailures}`,
+      evidence: `окно показано/скрыто: ${windowEvidence}, запросы показать/скрыть: ${windowRequestEvidence}, проверок окна: ${windowEntrypointReviews}, ошибок API: ${apiErrors}, ошибок старт/стоп: ${startStopFailures}`,
     },
     {
       requirement: 'Start and continue paths evidenced',
@@ -1780,7 +1780,7 @@ function formatDailyControlGoalAuditMarkdown({
         entryPathEvidence === 'n/a'
           ? 'review'
           : 'pass',
-      evidence: `${entryPathEvidence} typed/selected, ${entryTelemetry?.stopRequests ?? 'n/a'} stop request(s), ${entryPathReviews} review(s)`,
+      evidence: `входов вводом/из списка: ${entryPathEvidence}, запросов остановки: ${entryTelemetry?.stopRequests ?? 'нет данных'}, проверок входа: ${entryPathReviews}`,
     },
     {
       requirement: 'Tracking correction or review evidenced',
@@ -1793,17 +1793,17 @@ function formatDailyControlGoalAuditMarkdown({
         closureCounts?.right && lastClosureDuration != null && lastClosureDuration <= 10 * 60
           ? 'pass'
           : 'review',
-      evidence: `${closureCounts ? `${closureCounts.left}/${closureCounts.right}` : 'n/a'} started/completed, last duration ${lastClosureDuration == null ? 'n/a' : formatDuration(lastClosureDuration)}`,
+      evidence: `${closureCounts ? `${closureCounts.left}/${closureCounts.right}` : 'нет данных'} начато/завершено, последняя длительность: ${lastClosureDuration == null ? 'нет данных' : formatDuration(lastClosureDuration)}`,
     },
     {
       requirement: 'Hard blockers absent',
       status: activeFocus || activeWorkItems.length > 0 ? 'block' : 'pass',
-      evidence: `${reviewItems.filter((item) => item.level === 'blocker').length} blocker(s)`,
+      evidence: `${reviewItems.filter((item) => item.level === 'blocker').length} блокеров`,
     },
     {
       requirement: 'Local gates',
       status: 'manual',
-      evidence: 'Run pnpm test and pnpm dogfood:preflight on the same code before closing the goal',
+      evidence: 'Перед закрытием цели прогнать pnpm test и pnpm dogfood:preflight на этом же коде',
     },
   ]
 

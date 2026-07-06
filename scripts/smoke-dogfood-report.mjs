@@ -77,16 +77,49 @@ try {
   assert(stdout.includes("## Проверка перед отчётом"), "report did not include review checklist section");
   assert(stdout.includes("## Аудит закрытия дня"), "report did not include daily-control audit section");
   assert(stdout.includes("| Фокус-блоки видны | ок |"), "report daily-control audit did not pass focus blocks");
+  assert(
+    stdout.includes("0 активных фокус-блоков, 0 Work Item в active"),
+    "report daily-control audit evidence did not localize final-state blockers"
+  );
+  assert(stdout.includes("3 входов, 1:05:00 учтено"), "report daily-control audit evidence did not localize focus blocks");
   assert(stdout.includes("| Итоги по Work Item есть | ок |"), "report daily-control audit did not pass Work Item totals");
+  assert(
+    stdout.includes("Раздел «По Work Item» есть, проверок бейджей в UI: 1"),
+    "report daily-control audit evidence did not localize Work Item totals"
+  );
   assert(stdout.includes("| Зоны активности разделены | ок |"), "report daily-control audit did not pass zones");
+  assert(
+    stdout.includes("35:00 рабочий фокус, 30:00 вне работы, проверок зон: 0"),
+    "report daily-control audit evidence did not localize zone totals"
+  );
   assert(stdout.includes("| Окно и menu bar проверены | ок |"), "report daily-control audit did not pass window evidence");
+  assert(
+    stdout.includes("окно показано/скрыто"),
+    "report daily-control audit evidence did not localize window evidence"
+  );
   assert(stdout.includes("| Старт и продолжение проверены | ок |"), "report daily-control audit did not pass entry-path evidence");
+  assert(
+    stdout.includes("входов вводом/из списка: 1/1"),
+    "report daily-control audit evidence did not localize entry evidence"
+  );
   assert(stdout.includes("| Коррекция трекинга проверена | ок |"), "report daily-control audit did not pass correction evidence");
   assert(stdout.includes("| Длительность закрытия измерена | ок |"), "report daily-control audit did not pass closure duration");
+  assert(
+    stdout.includes("1/1 начато/завершено, последняя длительность: 7:00"),
+    "report daily-control audit evidence did not localize closure duration"
+  );
   assert(stdout.includes("| Локальные проверки | вручную |"), "report daily-control audit did not include local gates");
   assert(stdout.includes("Закрытий дня начато/завершено: 1/1"), "report telemetry did not include day closure counts");
   assert(stdout.includes("Последняя длительность закрытия дня: 7:00"), "report telemetry did not include day closure duration");
   assert(stdout.includes("pnpm dogfood:goal-check"), "report daily-control audit did not mention goal-check");
+  assert(
+    !stdout.includes("active focus block(s)") &&
+      !stdout.includes("entrance(s)") &&
+      !stdout.includes("tracked") &&
+      !stdout.includes("gaps section present") &&
+      !stdout.includes("started/completed"),
+    "report daily-control audit leaked old English evidence text"
+  );
   assert(
     stdout.includes("Разобрать открытые отвлечения"),
     "report review checklist did not include open capture cleanup"

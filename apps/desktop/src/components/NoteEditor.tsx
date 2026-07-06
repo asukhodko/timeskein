@@ -77,15 +77,15 @@ export default function NoteEditor({
         ref={modalRef}
         className="bg-gray-800 border border-gray-600 rounded-lg p-4 shadow-xl w-[400px] max-w-[90vw]"
       >
-        <div className="text-sm text-gray-400 mb-1">Edit note for:</div>
+        <div className="text-sm text-gray-400 mb-1">Править заметку для:</div>
         <div className="text-gray-200 font-medium mb-3 truncate">{itemTitle}</div>
 
-        <div className="mb-2 text-xs uppercase tracking-wide text-gray-500">Description</div>
+        <div className="mb-2 text-xs uppercase tracking-wide text-gray-500">Описание Work Item</div>
         <textarea
           ref={textareaRef}
           value={note}
           onChange={(e) => setNote(e.target.value)}
-          placeholder="Add a note..."
+          placeholder="Добавить описание..."
           rows={4}
           className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg 
                      text-gray-200 placeholder-gray-500 resize-none
@@ -94,7 +94,7 @@ export default function NoteEditor({
 
         {onAppendEvent && (
           <div className="mt-4 grid gap-2">
-            <div className="text-xs uppercase tracking-wide text-gray-500">Timestamped event</div>
+            <div className="text-xs uppercase tracking-wide text-gray-500">Событие с отметкой времени</div>
             <textarea
               value={eventText}
               onChange={(e) => setEventText(e.target.value)}
@@ -105,7 +105,7 @@ export default function NoteEditor({
                   void appendEvent()
                 }
               }}
-              placeholder="What changed or happened?"
+              placeholder="Что изменилось или произошло?"
               rows={3}
               className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg
                          text-gray-200 placeholder-gray-500 resize-none
@@ -121,7 +121,7 @@ export default function NoteEditor({
                 disabled={!eventText.trim() || appendPending}
                 className="px-3 py-1.5 text-sm bg-emerald-700 hover:bg-emerald-600 text-white rounded transition-colors disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-500"
               >
-                {appendPending ? 'Adding...' : 'Add Event'}
+                {appendPending ? 'Добавляю...' : 'Добавить событие'}
               </button>
             </div>
           </div>
@@ -129,14 +129,14 @@ export default function NoteEditor({
 
         <div className="flex justify-between items-center mt-3">
           <div className="text-xs text-gray-500">
-            Ctrl+Enter to save, Esc to cancel
+            Ctrl+Enter — сохранить, Esc — отменить
           </div>
           <div className="flex gap-2">
             <button
               onClick={onClose}
               className="px-3 py-1.5 text-sm text-gray-400 hover:text-gray-200 transition-colors"
             >
-              Cancel
+              Отмена
             </button>
             <button
               onClick={() => {
@@ -145,7 +145,7 @@ export default function NoteEditor({
               }}
               className="px-3 py-1.5 text-sm bg-blue-600 hover:bg-blue-500 text-white rounded transition-colors"
             >
-              Save
+              Сохранить
             </button>
           </div>
         </div>

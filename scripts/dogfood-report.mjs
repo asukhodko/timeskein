@@ -21,14 +21,14 @@ const metricsArgs = [resolve(repoRoot, "scripts/dogfood-metrics.mjs"), "--db", d
 const REVIEW_TITLE_LABELS = {
   "Stop the active focus block": "Остановить активный фокус-блок",
   "Clear active Work Item state": "Снять active с Work Item",
-  "Resolve, convert, or accept open captures": "Разобрать открытые captures",
+  "Resolve, convert, or accept open captures": "Разобрать открытые отвлечения",
   "Classify significant gaps": "Объяснить большие разрывы",
   "Explain current open gap": "Объяснить текущий открытый разрыв",
   "Review Activity Zone coverage": "Проверить зоны активности",
   "Confirm non-work tracked time": "Проверить нерабочее время",
   "Confirm Work Item today/total badges": "Проверить today/total у Work Item",
-  "Capture Inbox untested today": "Capture Inbox сегодня не проверен",
-  "Captures were not linked to active focus": "Captures не были связаны с активным фокусом",
+  "Capture Inbox untested today": "Инбокс отвлечений сегодня не проверен",
+  "Captures were not linked to active focus": "Отвлечения не были связаны с активным фокусом",
   "No day or Work Item notes/events": "Нет дневных или Work Item событий",
   "Exercise start and continue paths": "Проверить старт и продолжение",
   "Test window entrypoints": "Проверить входы в окно",
@@ -278,7 +278,7 @@ function buildDogfoodReport(
 
   if (openCaptures.length > 0) {
     lines.push(
-      "## Открытые captures",
+      "## Открытые отвлечения",
       "",
       ...openCaptures.map((capture) => `- ${formatClockTime(capture.created_at)} ${formatMarkdownListText(capture.text)}`),
       "- Разбери их: закрыть, превратить в Work Item, добавить событием или явно принять как follow-up.",

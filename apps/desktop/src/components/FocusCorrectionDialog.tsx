@@ -137,7 +137,7 @@ export default function FocusCorrectionDialog({ session, onClose }: FocusCorrect
       >
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
-            <div className="text-lg font-semibold text-gray-100">Correct Focus Block</div>
+            <div className="text-lg font-semibold text-gray-100">Исправить фокус-блок</div>
             <div className="text-xs text-gray-500">
               {formatClockTime(session.started_at)}-{formatClockTime(session.stopped_at)}
             </div>
@@ -159,7 +159,7 @@ export default function FocusCorrectionDialog({ session, onClose }: FocusCorrect
           </label>
 
           <label className="grid gap-1 text-sm text-gray-300">
-            <span>Start</span>
+            <span>Начало</span>
             <input
               type="datetime-local"
               step="1"
@@ -170,7 +170,7 @@ export default function FocusCorrectionDialog({ session, onClose }: FocusCorrect
           </label>
 
           <label className="grid gap-1 text-sm text-gray-300">
-            <span>End</span>
+            <span>Конец</span>
             <input
               type="datetime-local"
               step="1"
@@ -181,7 +181,7 @@ export default function FocusCorrectionDialog({ session, onClose }: FocusCorrect
           </label>
 
           <label className="grid gap-1 text-sm text-gray-300 md:col-span-2">
-            <span>Activity Zone</span>
+            <span>Зона активности</span>
             <select
               value={activityZone}
               onChange={(event) => setActivityZone(event.target.value as ActivityZone)}
@@ -196,7 +196,7 @@ export default function FocusCorrectionDialog({ session, onClose }: FocusCorrect
           </label>
 
           <label className="grid gap-1 text-sm text-gray-300 md:col-span-2">
-            <span>Note</span>
+            <span>Заметка</span>
             <input
               value={note}
               onChange={(event) => setNote(event.target.value)}
@@ -209,7 +209,7 @@ export default function FocusCorrectionDialog({ session, onClose }: FocusCorrect
 
         <div className="grid gap-3 md:grid-cols-[1fr_1fr_auto]">
           <label className="grid gap-1 text-sm text-gray-300">
-            <span>Split At</span>
+            <span>Разделить в</span>
             <input
               type="datetime-local"
               step="1"
@@ -220,7 +220,7 @@ export default function FocusCorrectionDialog({ session, onClose }: FocusCorrect
           </label>
 
           <label className="grid gap-1 text-sm text-gray-300">
-            <span>Right Item</span>
+            <span>Правый Work Item</span>
             <input
               value={rightTitle}
               onChange={(event) => setRightTitle(event.target.value)}
@@ -234,11 +234,11 @@ export default function FocusCorrectionDialog({ session, onClose }: FocusCorrect
             disabled={!splitAt || splitMutation.isPending}
             className="self-end rounded-md border border-amber-700 px-3 py-2 text-sm font-semibold text-amber-200 hover:border-amber-500 disabled:cursor-not-allowed disabled:border-gray-700 disabled:text-gray-500"
           >
-            Split
+            Разделить
           </button>
 
           <label className="grid gap-1 text-sm text-gray-300 md:col-span-3">
-            <span>Right Note</span>
+            <span>Заметка справа</span>
             <input
               value={rightNote}
               onChange={(event) => setRightNote(event.target.value)}
@@ -249,7 +249,7 @@ export default function FocusCorrectionDialog({ session, onClose }: FocusCorrect
 
         {mutationError && (
           <div className="mt-3 text-xs text-red-300">
-            {mutationError instanceof Error ? mutationError.message : 'Correction failed'}
+            {mutationError instanceof Error ? mutationError.message : 'Не удалось исправить блок'}
           </div>
         )}
 
@@ -259,14 +259,14 @@ export default function FocusCorrectionDialog({ session, onClose }: FocusCorrect
             onClick={onClose}
             className="rounded-md px-3 py-2 text-sm text-gray-300 hover:bg-gray-700"
           >
-            Cancel
+            Отмена
           </button>
           <button
             type="submit"
             disabled={!title.trim() || !startedAt || !stoppedAt || updateMutation.isPending}
             className="rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-500 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-500"
           >
-            Save
+            Сохранить
           </button>
         </div>
       </form>

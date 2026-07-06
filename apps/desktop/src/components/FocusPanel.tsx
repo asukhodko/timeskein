@@ -547,7 +547,7 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
     })
   }
 
-  const stageGapDayEvent = (gap: Gap, label = 'Gap') => {
+  const stageGapDayEvent = (gap: Gap, label = 'Разрыв') => {
     stageDayEvent(
       `${label} ${formatClockTime(gap.from)}-${formatClockTime(gap.to)} (${formatDuration(gap.seconds)}): `,
       'recovery'
@@ -748,7 +748,7 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
                 onClick={() => setManualCopy(null)}
                 className="rounded border border-amber-800 px-1.5 py-0.5 text-[11px] text-amber-200 hover:border-amber-500"
               >
-                Close
+                Закрыть
               </button>
             </div>
             <textarea
@@ -760,13 +760,13 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
             />
           </div>
         ) : sessionsWithGaps.length === 0 ? (
-          <div className="text-xs text-gray-500">No focus blocks today</div>
+          <div className="text-xs text-gray-500">Сегодня ещё нет фокус-блоков</div>
         ) : (
           <div
             className="grid gap-1.5 overflow-auto pr-1"
             style={{ maxHeight: `${todayListMaxHeightPx}px` }}
           >
-            {openGap && <OpenGapRow gap={openGap} onExplain={() => stageGapDayEvent(openGap, 'Open gap')} />}
+            {openGap && <OpenGapRow gap={openGap} onExplain={() => stageGapDayEvent(openGap, 'Открытый разрыв')} />}
             {sessionsWithGaps.map(({ session, gapBefore }) => (
               <FocusSessionRow
                 key={session.id}
@@ -986,7 +986,7 @@ async function buildDogfoodReportMarkdown(
 
   if (openCaptures.length > 0) {
     lines.push(
-      '## Открытые captures',
+      '## Открытые отвлечения',
       '',
       ...openCaptures.map((capture) => `- ${formatClockTime(capture.created_at)} ${formatMarkdownListText(capture.text)}`),
       '- Разбери их: закрыть, превратить в Work Item, добавить событием или явно принять как follow-up.',
@@ -1369,14 +1369,14 @@ function formatDayReviewItem(item: DayReviewItem) {
 const REVIEW_TITLE_LABELS: Record<string, string> = {
   'Stop the active focus block': 'Остановить активный фокус-блок',
   'Clear active Work Item state': 'Снять active с Work Item',
-  'Resolve, convert, or accept open captures': 'Разобрать открытые captures',
+  'Resolve, convert, or accept open captures': 'Разобрать открытые отвлечения',
   'Classify significant gaps': 'Объяснить большие разрывы',
   'Explain current open gap': 'Объяснить текущий открытый разрыв',
   'Review Activity Zone coverage': 'Проверить зоны активности',
   'Confirm non-work tracked time': 'Проверить нерабочее время',
   'Confirm Work Item today/total badges': 'Проверить today/total у Work Item',
-  'Capture Inbox untested today': 'Capture Inbox сегодня не проверен',
-  'Captures were not linked to active focus': 'Captures не были связаны с активным фокусом',
+  'Capture Inbox untested today': 'Инбокс отвлечений сегодня не проверен',
+  'Captures were not linked to active focus': 'Отвлечения не были связаны с активным фокусом',
   'No day or Work Item notes/events': 'Нет дневных или Work Item событий',
   'Exercise start and continue paths': 'Проверить старт и продолжение',
   'Test window entrypoints': 'Проверить входы в окно',
@@ -2404,7 +2404,7 @@ function ActiveFocusSession({
     <div className="grid gap-2">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <div className="text-xs uppercase tracking-wide text-emerald-300">Active focus</div>
+          <div className="text-xs uppercase tracking-wide text-emerald-300">Активный фокус</div>
           <div className="flex min-w-0 items-center gap-2">
             <div className="truncate text-sm font-semibold text-gray-100">{session.title}</div>
             {session.work_item_id && (
@@ -2422,7 +2422,7 @@ function ActiveFocusSession({
             {formatDuration(session.active_seconds)}
           </div>
           <div className="text-xs text-gray-500">
-            target {formatDuration(session.target_seconds)}
+            цель {formatDuration(session.target_seconds)}
             {isOverTarget ? ` +${formatDuration(session.over_target_seconds)}` : ''}
           </div>
         </div>
@@ -2445,7 +2445,7 @@ function ActiveFocusSession({
               onStop()
             }
           }}
-          placeholder="Optional stop note"
+          placeholder="Заметка при остановке"
           className="min-w-0 flex-1 rounded-md border border-gray-700 bg-gray-900 px-3 py-1.5 text-xs text-gray-100 placeholder-gray-500 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
         />
         <button
@@ -2454,7 +2454,7 @@ function ActiveFocusSession({
           disabled={stopping}
           className="rounded-md bg-red-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-red-500 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-500"
         >
-          Stop
+          Стоп
         </button>
       </div>
     </div>
@@ -2493,7 +2493,7 @@ function FocusSessionRow({
           <span className="min-w-0 truncate text-gray-200">{title}</span>
           {session.work_item_id && (
             <span className="shrink-0 rounded border border-gray-700 px-1 text-[10px] uppercase tracking-wide text-gray-400">
-              item
+              дело
             </span>
           )}
           <span className="shrink-0 rounded border border-gray-700 px-1 text-[10px] uppercase tracking-wide text-gray-500">
@@ -2507,7 +2507,7 @@ function FocusSessionRow({
           disabled={session.state === 'active'}
           className="rounded border border-gray-700 px-1.5 py-0.5 text-[10px] text-gray-400 hover:border-gray-500 hover:text-gray-200 disabled:cursor-not-allowed disabled:border-gray-800 disabled:text-gray-700"
         >
-          Edit
+          Править
         </button>
       </div>
       {detailTitle && (
@@ -2515,18 +2515,18 @@ function FocusSessionRow({
       )}
       {session.note && (
         <div className="mt-0.5 truncate pl-[3.25rem] text-[11px] text-gray-400">
-          note: {session.note}
+          заметка: {session.note}
         </div>
       )}
       {dayClipped && (
         <div className="mt-0.5 truncate pl-[3.25rem] text-[11px] text-amber-300/80">
-          day-boundary block: duration is this day's share
+          блок пересекает границу дня: показана доля этого дня
         </div>
       )}
       {gapBefore !== undefined && gapBefore.seconds >= SIGNIFICANT_GAP_SECONDS && (
         <div className="mt-0.5 flex items-center justify-end gap-2 text-[11px] text-gray-600">
           <span>
-            gap before: {formatClockTime(gapBefore.from)}-{formatClockTime(gapBefore.to)} · {formatDuration(gapBefore.seconds)}
+            разрыв до блока: {formatClockTime(gapBefore.from)}-{formatClockTime(gapBefore.to)} · {formatDuration(gapBefore.seconds)}
           </span>
           {onExplainGap && (
             <button
@@ -2534,7 +2534,7 @@ function FocusSessionRow({
               onClick={onExplainGap}
               className="rounded border border-amber-900/70 px-1.5 py-0.5 text-[10px] text-amber-300/80 hover:border-amber-600 hover:text-amber-200"
             >
-              Explain
+              Объяснить
             </button>
           )}
         </div>
@@ -2558,7 +2558,7 @@ function OpenGapRow({
     <div className="rounded border border-amber-800/50 bg-amber-950/20 px-2 py-1 text-xs">
       <div className="grid grid-cols-[auto_1fr_auto_auto] items-center gap-2">
         <span className="font-mono tabular-nums text-amber-200">{formatDuration(gap.seconds)}</span>
-        <span className="min-w-0 truncate text-amber-100">open gap since last stopped block</span>
+        <span className="min-w-0 truncate text-amber-100">открытый разрыв после последнего блока</span>
         <span className="text-amber-300/80">
           {formatClockTime(gap.from)}-{formatClockTime(gap.to)}
         </span>
@@ -2567,7 +2567,7 @@ function OpenGapRow({
           onClick={onExplain}
           className="rounded border border-amber-800 px-1.5 py-0.5 text-[10px] font-medium text-amber-200 hover:border-amber-500 hover:text-amber-100"
         >
-          Explain
+          Объяснить
         </button>
       </div>
     </div>

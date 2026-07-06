@@ -88,7 +88,7 @@ try {
   assert(stdout.includes("Last day closure duration: 7:00"), "report telemetry did not include day closure duration");
   assert(stdout.includes("pnpm dogfood:goal-check"), "report daily-control audit did not mention goal-check");
   assert(
-    stdout.includes("Разобрать открытые captures"),
+    stdout.includes("Разобрать открытые отвлечения"),
     "report review checklist did not include open capture cleanup"
   );
   assert(
@@ -119,7 +119,7 @@ try {
     stdout.includes("Проверить today/total у Work Item") === false,
     "report review checklist should not flag Work Item badge coverage when explicitly reviewed"
   );
-  assert(stdout.includes("## Открытые captures"), "report did not include open captures section");
+  assert(stdout.includes("## Открытые отвлечения"), "report did not include open captures section");
   assert(stdout.includes("Reply to incoming thread after focus"), "report did not include open capture text");
   assert(stdout.includes("## Capture Activity"), "report did not include Capture Activity section");
   assert(stdout.includes("| open | Reply to incoming thread after focus |"), "report did not include open capture activity");
@@ -231,7 +231,7 @@ try {
   );
 
   assert(
-    reviewedCaptureStdout.includes("Разобрать открытые captures") === false,
+    reviewedCaptureStdout.includes("Разобрать открытые отвлечения") === false,
     "report review checklist should not flag open captures after explicit follow-up review"
   );
   assert(

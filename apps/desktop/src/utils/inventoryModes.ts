@@ -3,10 +3,10 @@ import type { WorkItemView } from '@timeskein/contracts'
 export type InventoryMode = 'recent' | 'today' | 'pinned' | 'all'
 
 export const inventoryModes: Array<{ id: InventoryMode; label: string; shortcut: string; shortcutCode: string }> = [
-  { id: 'recent', label: 'Recent', shortcut: 'Alt+1', shortcutCode: 'Digit1' },
-  { id: 'today', label: 'Today', shortcut: 'Alt+2', shortcutCode: 'Digit2' },
-  { id: 'pinned', label: 'Pinned', shortcut: 'Alt+3', shortcutCode: 'Digit3' },
-  { id: 'all', label: 'All', shortcut: 'Alt+4', shortcutCode: 'Digit4' },
+  { id: 'recent', label: 'Недавние', shortcut: 'Alt+1', shortcutCode: 'Digit1' },
+  { id: 'today', label: 'Сегодня', shortcut: 'Alt+2', shortcutCode: 'Digit2' },
+  { id: 'pinned', label: 'Закреплённые', shortcut: 'Alt+3', shortcutCode: 'Digit3' },
+  { id: 'all', label: 'Все', shortcut: 'Alt+4', shortcutCode: 'Digit4' },
 ]
 
 const recentWindowMs = 72 * 60 * 60 * 1000
@@ -69,13 +69,13 @@ export function isRecentInventoryItem(item: WorkItemView, nowMs = Date.now()) {
 export function modeTitle(mode: InventoryMode) {
   switch (mode) {
     case 'today':
-      return 'Items touched by today focus blocks plus pinned and active items'
+      return 'Дела с сегодняшним фокусом, закреплённые и активные'
     case 'pinned':
-      return 'Pinned items'
+      return 'Закреплённые дела'
     case 'all':
-      return 'All items'
+      return 'Все дела'
     case 'recent':
     default:
-      return 'Pinned, active, today, and recently touched items'
+      return 'Закреплённые, активные, сегодняшние и недавно затронутые дела'
   }
 }

@@ -13,8 +13,8 @@ interface ConfirmDialogProps {
 export default function ConfirmDialog({
   title,
   message,
-  confirmLabel = 'Confirm',
-  cancelLabel = 'Cancel',
+  confirmLabel = 'Подтвердить',
+  cancelLabel = 'Отмена',
   danger = false,
   onConfirm,
   onCancel,
@@ -84,7 +84,7 @@ export default function ConfirmDialog({
         </div>
         
         <div className="text-xs text-gray-500 mt-3 text-center">
-          {danger ? 'Click Delete to confirm, Esc to cancel' : 'Enter to confirm, Esc to cancel'}
+          {danger ? 'Нажми удаление для подтверждения, Esc — отменить' : 'Enter — подтвердить, Esc — отменить'}
         </div>
       </div>
     </div>

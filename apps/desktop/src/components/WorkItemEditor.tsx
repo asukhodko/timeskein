@@ -10,6 +10,18 @@ interface WorkItemEditorProps {
 
 const itemTypes: WorkItemType[] = ['task', 'project', 'question']
 const activityZones: ActivityZone[] = ['work', 'coordination', 'recovery', 'idle', 'personal']
+const itemTypeLabels: Record<WorkItemType, string> = {
+  task: 'Задача',
+  project: 'Проект',
+  question: 'Вопрос',
+}
+const activityZoneLabels: Record<ActivityZone, string> = {
+  work: 'Работа',
+  coordination: 'Координация',
+  recovery: 'Восстановление',
+  idle: 'Простой',
+  personal: 'Личное',
+}
 
 export default function WorkItemEditor({ item, onClose }: WorkItemEditorProps) {
   const [title, setTitle] = useState(item.title)
@@ -48,10 +60,10 @@ export default function WorkItemEditor({ item, onClose }: WorkItemEditorProps) {
         onClick={(event) => event.stopPropagation()}
         onSubmit={handleSubmit}
       >
-        <div className="mb-4 text-lg font-semibold text-gray-100">Edit Work Item</div>
+        <div className="mb-4 text-lg font-semibold text-gray-100">Править Work Item</div>
 
         <label className="mb-3 grid gap-1 text-sm text-gray-300">
-          <span>Title</span>
+          <span>Название</span>
           <input
             autoFocus
             value={title}
@@ -61,7 +73,7 @@ export default function WorkItemEditor({ item, onClose }: WorkItemEditorProps) {
         </label>
 
         <label className="mb-3 grid gap-1 text-sm text-gray-300">
-          <span>Type</span>
+          <span>Тип</span>
           <select
             value={type}
             onChange={(event) => setType(event.target.value as WorkItemType)}
@@ -69,14 +81,14 @@ export default function WorkItemEditor({ item, onClose }: WorkItemEditorProps) {
           >
             {itemTypes.map((itemType) => (
               <option key={itemType} value={itemType}>
-                {itemType}
+                {itemTypeLabels[itemType]}
               </option>
             ))}
           </select>
         </label>
 
         <label className="mb-3 grid gap-1 text-sm text-gray-300">
-          <span>Zone</span>
+          <span>Зона</span>
           <select
             value={activityZone}
             onChange={(event) => setActivityZone(event.target.value as ActivityZone)}
@@ -84,14 +96,14 @@ export default function WorkItemEditor({ item, onClose }: WorkItemEditorProps) {
           >
             {activityZones.map((zone) => (
               <option key={zone} value={zone}>
-                {zone}
+                {activityZoneLabels[zone]}
               </option>
             ))}
           </select>
         </label>
 
         <label className="mb-4 grid gap-1 text-sm text-gray-300">
-          <span>Note</span>
+          <span>Заметка</span>
           <textarea
             value={note}
             onChange={(event) => setNote(event.target.value)}
@@ -101,7 +113,7 @@ export default function WorkItemEditor({ item, onClose }: WorkItemEditorProps) {
 
         {updateMutation.error && (
           <div className="mb-3 text-xs text-red-300">
-            {updateMutation.error instanceof Error ? updateMutation.error.message : 'Update failed'}
+            {updateMutation.error instanceof Error ? updateMutation.error.message : 'Не удалось сохранить изменения'}
           </div>
         )}
 
@@ -111,14 +123,14 @@ export default function WorkItemEditor({ item, onClose }: WorkItemEditorProps) {
             onClick={onClose}
             className="rounded-md px-3 py-2 text-sm text-gray-300 hover:bg-gray-700"
           >
-            Cancel
+            Отмена
           </button>
           <button
             type="submit"
             disabled={!title.trim() || updateMutation.isPending}
             className="rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-500 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-500"
           >
-            Save
+            Сохранить
           </button>
         </div>
       </form>

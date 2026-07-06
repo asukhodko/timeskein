@@ -462,62 +462,62 @@ export default function Palette() {
       {/* Footer with clickable shortcuts */}
       <div className="px-4 py-2 border-t border-gray-700 bg-gray-800/50">
         <div className="flex flex-wrap gap-2 text-xs text-gray-500">
-          <button onClick={handleMoveUp} className="flex items-center gap-1 hover:text-gray-300 transition-colors" title="Move up">
+          <button onClick={handleMoveUp} className="flex items-center gap-1 hover:text-gray-300 transition-colors" title="Выше">
             <kbd className="px-1 bg-gray-700 rounded">↑</kbd>
           </button>
-          <button onClick={handleMoveDown} className="flex items-center gap-1 hover:text-gray-300 transition-colors" title="Move down">
+          <button onClick={handleMoveDown} className="flex items-center gap-1 hover:text-gray-300 transition-colors" title="Ниже">
             <kbd className="px-1 bg-gray-700 rounded">↓</kbd>
           </button>
           <span className="text-gray-600">|</span>
-          <button onClick={() => setShowCreate(true)} className="flex items-center gap-1 hover:text-gray-300 transition-colors" title="Create new item">
-            <kbd className="px-1 bg-gray-700 rounded">C</kbd><span>create</span>
+          <button onClick={() => setShowCreate(true)} className="flex items-center gap-1 hover:text-gray-300 transition-colors" title="Создать дело">
+            <kbd className="px-1 bg-gray-700 rounded">C</kbd><span>создать</span>
           </button>
-          <button onClick={handleOpenPrimaryRef} className="flex items-center gap-1 hover:text-gray-300 transition-colors" title="Open primary ref">
-            <kbd className="px-1 bg-gray-700 rounded">Enter</kbd><span>open</span>
+          <button onClick={handleOpenPrimaryRef} className="flex items-center gap-1 hover:text-gray-300 transition-colors" title="Открыть основную ссылку">
+            <kbd className="px-1 bg-gray-700 rounded">Enter</kbd><span>открыть</span>
           </button>
-          <button onClick={() => selectedItem && setShowWorkItemEditor(true)} className="flex items-center gap-1 hover:text-gray-300 transition-colors" title="Edit work item">
-            <kbd className="px-1 bg-gray-700 rounded">E</kbd><span>edit</span>
+          <button onClick={() => selectedItem && setShowWorkItemEditor(true)} className="flex items-center gap-1 hover:text-gray-300 transition-colors" title="Править дело">
+            <kbd className="px-1 bg-gray-700 rounded">E</kbd><span>править</span>
           </button>
-          <button onClick={handleFocusSelected} className="flex items-center gap-1 hover:text-emerald-300 transition-colors" title="Start or switch focus to selected item">
-            <kbd className="px-1 bg-gray-700 rounded">Space</kbd><span>focus</span>
+          <button onClick={handleFocusSelected} className="flex items-center gap-1 hover:text-emerald-300 transition-colors" title="Начать или переключить фокус на выбранное дело">
+            <kbd className="px-1 bg-gray-700 rounded">Space</kbd><span>фокус</span>
           </button>
-          <button onClick={handleTouch} className="flex items-center gap-1 hover:text-gray-300 transition-colors" title="Touch (update last seen)">
-            <kbd className="px-1 bg-gray-700 rounded">T</kbd><span>touch</span>
+          <button onClick={handleTouch} className="flex items-center gap-1 hover:text-gray-300 transition-colors" title="Коснуться дела">
+            <kbd className="px-1 bg-gray-700 rounded">T</kbd><span>касание</span>
           </button>
-          <button onClick={() => selectedItem && setShowStateMenu(true)} className="flex items-center gap-1 hover:text-gray-300 transition-colors" title="Change state">
-            <kbd className="px-1 bg-gray-700 rounded">S</kbd><span>state</span>
+          <button onClick={() => selectedItem && setShowStateMenu(true)} className="flex items-center gap-1 hover:text-gray-300 transition-colors" title="Изменить состояние">
+            <kbd className="px-1 bg-gray-700 rounded">S</kbd><span>статус</span>
           </button>
-          <button onClick={() => selectedItem && setShowNoteEditor(true)} className="flex items-center gap-1 hover:text-gray-300 transition-colors" title="Edit note">
-            <kbd className="px-1 bg-gray-700 rounded">N</kbd><span>note</span>
+          <button onClick={() => selectedItem && setShowNoteEditor(true)} className="flex items-center gap-1 hover:text-gray-300 transition-colors" title="Править заметку">
+            <kbd className="px-1 bg-gray-700 rounded">N</kbd><span>заметка</span>
           </button>
-          <button onClick={handlePin} className="flex items-center gap-1 hover:text-gray-300 transition-colors" title="Toggle pin">
-            <kbd className="px-1 bg-gray-700 rounded">P</kbd><span>pin</span>
+          <button onClick={handlePin} className="flex items-center gap-1 hover:text-gray-300 transition-colors" title="Закрепить или открепить">
+            <kbd className="px-1 bg-gray-700 rounded">P</kbd><span>закрепить</span>
           </button>
-          <button onClick={() => selectedItem && setShowRefsPanel(true)} className="flex items-center gap-1 hover:text-gray-300 transition-colors" title="Manage refs">
-            <kbd className="px-1 bg-gray-700 rounded">R</kbd><span>refs</span>
+          <button onClick={() => selectedItem && setShowRefsPanel(true)} className="flex items-center gap-1 hover:text-gray-300 transition-colors" title="Управлять ссылками">
+            <kbd className="px-1 bg-gray-700 rounded">R</kbd><span>ссылки</span>
           </button>
           <span className="text-gray-600">|</span>
-          <button onClick={() => selectedItem && handleStateSelect('active')} className="flex items-center gap-1 hover:text-green-400 transition-colors" title="Set active">
+          <button onClick={() => selectedItem && handleStateSelect('active')} className="flex items-center gap-1 hover:text-green-400 transition-colors" title="Сделать active">
             <kbd className="px-1 bg-gray-700 rounded">1</kbd>
           </button>
-          <button onClick={() => selectedItem && handleStateSelect('blocked')} className="flex items-center gap-1 hover:text-red-400 transition-colors" title="Set blocked">
+          <button onClick={() => selectedItem && handleStateSelect('blocked')} className="flex items-center gap-1 hover:text-red-400 transition-colors" title="Сделать blocked">
             <kbd className="px-1 bg-gray-700 rounded">2</kbd>
           </button>
-          <button onClick={() => selectedItem && handleStateSelect('waiting')} className="flex items-center gap-1 hover:text-amber-400 transition-colors" title="Set waiting">
+          <button onClick={() => selectedItem && handleStateSelect('waiting')} className="flex items-center gap-1 hover:text-amber-400 transition-colors" title="Сделать waiting">
             <kbd className="px-1 bg-gray-700 rounded">3</kbd>
           </button>
-          <button onClick={() => selectedItem && handleStateSelect('someday')} className="flex items-center gap-1 hover:text-purple-400 transition-colors" title="Set someday">
+          <button onClick={() => selectedItem && handleStateSelect('someday')} className="flex items-center gap-1 hover:text-purple-400 transition-colors" title="Сделать someday">
             <kbd className="px-1 bg-gray-700 rounded">4</kbd>
           </button>
-          <button onClick={() => selectedItem && handleStateSelect('unknown')} className="flex items-center gap-1 hover:text-gray-400 transition-colors" title="Set unknown">
+          <button onClick={() => selectedItem && handleStateSelect('unknown')} className="flex items-center gap-1 hover:text-gray-400 transition-colors" title="Сделать unknown">
             <kbd className="px-1 bg-gray-700 rounded">5</kbd>
           </button>
-          <button onClick={() => selectedItem && handleStateSelect('done')} className="flex items-center gap-1 hover:text-blue-400 transition-colors" title="Set done">
+          <button onClick={() => selectedItem && handleStateSelect('done')} className="flex items-center gap-1 hover:text-blue-400 transition-colors" title="Сделать done">
             <kbd className="px-1 bg-gray-700 rounded">6</kbd>
           </button>
           <span className="text-gray-600">|</span>
-          <button onClick={handleDelete} className="flex items-center gap-1 hover:text-red-400 transition-colors" title="Delete item">
-            <kbd className="px-1 bg-gray-700 rounded">Shift+Del</kbd><span>delete</span>
+          <button onClick={handleDelete} className="flex items-center gap-1 hover:text-red-400 transition-colors" title="Удалить дело">
+            <kbd className="px-1 bg-gray-700 rounded">Shift+Del</kbd><span>удалить</span>
           </button>
         </div>
       </div>
@@ -575,10 +575,10 @@ export default function Palette() {
       {/* Delete Confirmation */}
       {showDeleteConfirm && selectedItem && (
         <ConfirmDialog
-          title="Delete work item"
-          message={`Are you sure you want to delete "${selectedItem.title}"?`}
-          confirmLabel="Delete"
-          cancelLabel="Cancel"
+          title="Удалить Work Item"
+          message={`Удалить "${selectedItem.title}"?`}
+          confirmLabel="Удалить"
+          cancelLabel="Отмена"
           danger={true}
           onConfirm={confirmDelete}
           onCancel={() => setShowDeleteConfirm(false)}

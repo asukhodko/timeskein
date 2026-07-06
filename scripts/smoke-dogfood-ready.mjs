@@ -45,6 +45,10 @@ try {
     "ready output did not include Work Item time-total UI reminder"
   );
   assert(
+    ready.stdout.includes("Начать закрытие дня") && ready.stdout.includes("10 minutes or less"),
+    "ready output did not include measured day-closure reminder"
+  );
+  assert(
     ready.stdout.includes("pnpm dogfood:goal-check"),
     "ready output did not include final goal-check reminder"
   );

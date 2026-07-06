@@ -372,6 +372,7 @@ Tracked event groups:
 - focus start, switch, stop requests and outcomes, including whether start came from typed text or selected/list continuation;
 - Capture Inbox create, update, delete, resolve, convert requests and outcomes;
 - report copy attempts, clipboard failures, and manual copy fallback;
+- day-closure start/completion and the measured duration from review start to final report copy;
 - Local API errors.
 
 Telemetry payloads are sanitized before storage. They can contain safe technical metadata such as control name, action id, duration, counters, and boolean flags. They must not contain raw Work Item titles, notes, URLs, search text, or other free-form user text. Analysis links events through `work_item_id` and `focus_session_id`, using the existing tables when names are needed.
@@ -386,7 +387,7 @@ pnpm dogfood:finish:save
 pnpm dogfood:goal-check
 ```
 
-The report telemetry section includes action counts, typed entry and selected/list continuation evidence, start/switch/stop failures, Capture Inbox action counts and failures, API errors, window show/hide counts, both show and hide request counts, copy fallback counts, average start latency, likely show-to-start friction gaps, attempts to start the already active Work Item, and stale runtime recovery events.
+The report telemetry section includes action counts, typed entry and selected/list continuation evidence, start/switch/stop failures, Capture Inbox action counts and failures, day-closure start/completion counts, last measured day-closure duration, API errors, window show/hide counts, both show and hide request counts, copy fallback counts, average start latency, likely show-to-start friction gaps, attempts to start the already active Work Item, and stale runtime recovery events.
 
 ## Global Shortcut and Tray
 
@@ -423,7 +424,7 @@ On multi-monitor macOS setups, the tray/status item is controlled by the system 
 
 ## Next Engineering Steps
 
-1. Reduce evening review friction: make `Review before report` less noisy, localize the remaining English labels, and separate hard blockers from optional checks.
-2. Improve correction and event-entry UX: clearer missed-block naming, safer timestamped event entry, and easier review of changed day context.
-3. Preserve capture origin when converting a capture to a Work Item, so the report keeps the original incoming-event text without forcing it into the Work Item title.
+1. Run one more real dogfood day and verify that evening closure takes at most 10 minutes without Codex guidance.
+2. Reduce remaining evening review friction found by that day, especially any review item that still feels like a separate task rather than a quick decision.
+3. Improve correction and event-entry UX: clearer missed-block naming, safer timestamped event entry, and easier review of changed day context.
 4. Decide whether the next product gate should focus on review ergonomics, richer activity zoning, or passive evidence collection.

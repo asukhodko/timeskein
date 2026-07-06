@@ -31,6 +31,9 @@ During the day:
 
 End of day:
 
+- start the evening closure from `Review before report` by clicking `Начать закрытие дня`;
+- clear hard blockers first: stop active focus, clear stuck active Work Items, and resolve required review actions;
+- consciously accept optional review items that are intentionally left as-is;
 - click `Copy Report` in Today and paste the dogfood report into the day note;
 - if the button says `Copy Draft`, stop the active focus block or clear the active Work Item before treating the report as final;
 - use `Copy MD` when only the raw day picture is needed;
@@ -39,6 +42,10 @@ End of day:
 - if UI copy fails, run `pnpm dogfood:finish > timeskein-dogfood-report.md`;
 - if only the raw day picture is needed, run `pnpm export:focus-day > timeskein-day.md`.
 - if Timeskein itself felt awkward, run `pnpm dogfood:metrics` and `pnpm export:app-events` to inspect the local app-event telemetry.
+
+The active daily-control goal requires the measured closure duration to be at most
+10 minutes. `Copy Report`, `pnpm dogfood:finish:save`, `pnpm dogfood:rc-check`,
+and `pnpm dogfood:goal-check` include a `Day closure duration measured` row.
 
 Saved dogfood reports and RC checks can contain personal or internal work context. They are local evidence files and are ignored by git.
 
@@ -189,6 +196,8 @@ when the real situation appears:
   convert, or explicitly accept it as follow-up in the review checklist;
 - intentionally correct one safe tracking detail before final copy, such as a
   stopped block note, Work Item assignment, split point, or Activity Zone.
+- at evening review, click `Начать закрытие дня`, then reach final `Copy Report`
+  in 10 minutes or less without needing Codex to explain the next action.
 
 At evening review, the goal is not a perfect day. The goal is a report that lets
 the day be discussed without reconstructing the timeline from memory. `Copy
@@ -215,6 +224,7 @@ Current status: the macOS dogfood release baseline was accepted on 2026-07-03. T
 | Capture Inbox | `pnpm smoke:capture-api`, `pnpm smoke:mock-api`, and `pnpm smoke:macos-app` verify capture create/list/update/delete/resolve/convert/append-event without interrupting focus | Incoming events can be remembered and cleaned up without switching away from the current block |
 | Markdown export | `Copy Report` exports timeline, `By Work Item`, Activity Zone totals, Day Events, Work Item Events, gaps, Capture Activity, open captures, Review Checklist, app telemetry, and review prompts; `Copy MD` exports the raw day picture; failed clipboard writes show selected Markdown; `pnpm smoke:export-focus-day` and `pnpm smoke:dogfood-report` verify SQLite fallbacks | Copied note is enough for evening analysis |
 | App friction telemetry | `app_events` stores local technical events, `pnpm smoke:app-events` verifies metrics/export, and `pnpm dogfood:report` includes `App Telemetry` with both window show and hide request counts | Start/switch/stop/copy/API/window friction is visible without relying only on memory |
+| Evening closure duration | `day_closure_started` and `day_closure_completed` telemetry is included in UI/CLI reports, RC check, and final goal check | Closing the day takes at most 10 minutes and does not require Codex to interpret the review panel |
 | macOS app with embedded agent and SQLite | `pnpm smoke:macos-app` verifies app launch, SQLite health, focus flow, stale lock/port recovery, and active focus restore after app restart | The real app survives normal workday use |
 
 The dogfood goal is complete only after a real day produces a copied Markdown day note that is useful for analysis.
@@ -248,6 +258,12 @@ The third real dogfood day on 2026-07-03 closed the Capture Inbox release-candid
 - no API errors, copy failures, capture failures, duplicate-title groups, or active-state split brain
 
 Remaining friction is tracked as post-baseline work. Post-factum focus correction, Work Item title/basic-field editing, today/total time columns, macOS window restore, native menu bar status refresh, and window show/hide request telemetry are implemented. The next dogfood day should verify the macOS entry fixes in real use through both show and hide request events.
+
+The 2026-07-06 post-baseline daily-control day passed the strict evidence gate,
+but it was closed with Codex help. The next dogfood day must specifically verify
+the evening closure ritual: start closure from the review panel, handle blockers
+and accepted review items, copy the final report, then pass `pnpm dogfood:goal-check`
+with `Day closure duration measured` at 10:00 or less.
 
 For the stricter daily-use gate, use [Dogfood Release Candidate](dogfood-release-candidate.md). The day protocol explains how to run the test; the release-candidate gate decides whether the current baseline is good enough to replace Session.
 

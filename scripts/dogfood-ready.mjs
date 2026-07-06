@@ -86,6 +86,7 @@ function appendDailyControlChecklist(lines) {
   lines.push("- Add or promote one timestamped Work Item Event when a task-specific detail matters.");
   lines.push("- Capture at least one incoming interruption during an active focus block and resolve, convert, or explicitly accept it as follow-up.");
   lines.push("- Before final report, correct one safe tracking detail or accept tracking accuracy in the review checklist.");
+  lines.push("- At evening review, click `Начать закрытие дня`, clear hard blockers, accept intentional review items, and reach final `Copy Report` in 10 minutes or less.");
   lines.push("- Close the day with `pnpm dogfood:finish:save`; before completing the goal, run `pnpm dogfood:goal-check`.");
   lines.push("- If the day is closed after midnight, pass the dogfood date explicitly: `pnpm dogfood:finish:save -- --date YYYY-MM-DD` and `pnpm dogfood:goal-check -- --date YYYY-MM-DD`.");
 }

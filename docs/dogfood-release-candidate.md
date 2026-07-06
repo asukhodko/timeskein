@@ -62,6 +62,12 @@ Save the end-of-day evidence:
 pnpm dogfood:finish:save
 ```
 
+If you close the day from the app UI first, start the measured closure from
+`Review before report` by clicking `Начать закрытие дня`, then clear hard
+blockers, consciously accept optional review items, and click `Copy Report`.
+The active daily-control goal expects that measured closure to take at most
+10 minutes and to be understandable without Codex guidance.
+
 This writes both local evidence files:
 
 - `timeskein-dogfood-report-YYYY-MM-DD.md`;
@@ -103,7 +109,8 @@ Both saved files can contain personal or internal work context and are ignored b
 The RC evidence summary also checks the post-baseline review data: work focus vs
 non-work tracked time, Activity Zone coverage, Work Item notes/events, Work Item
 today/total badge review acceptance, Capture Inbox coverage, typed entry and
-selected/list continuation evidence, focus correction/review telemetry, and
+selected/list continuation evidence, focus correction/review telemetry, measured
+day-closure duration, and
 window/show-hide telemetry, including both show and hide request counts from
 window entrypoints.
 The `Daily Control Goal Audit` section maps that evidence to the current
@@ -126,6 +133,7 @@ The final evidence must include:
 - significant gaps and open gap, if any;
 - open captures, if any;
 - App Telemetry;
+- measured day-closure duration, with the last closure at 10 minutes or less;
 - window show and hide request evidence for window entrypoints;
 - `dogfood:rc-check` output;
 - a short written review of missing blocks, wrong Work Items, unresolved
@@ -145,6 +153,8 @@ The RC passes only if all of these are true:
 - At most one active timer and one active Work Item exist during normal use.
 - Starting, switching, stopping, hiding, showing, and copying the report are
   cheap enough to keep tracking during the day.
+- Evening closure is measured, takes at most 10 minutes, and the review panel is
+  clear enough to finish without Codex explaining what to do next.
 - Open captures are resolved, converted, or explicitly accepted as remaining
   follow-up work through the review checklist.
 - Remaining limitations are documented and are not blockers for daily use.

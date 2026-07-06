@@ -138,6 +138,7 @@ Runtime smoke on macOS:
 - `pnpm smoke:dogfood-status` verifies the embedded-agent status checker against healthy and unhealthy temporary HTTP agents
 - `pnpm smoke:dogfood-ready` verifies the real-database readiness checker against clean and contaminated temporary SQLite databases, including running-process visibility and the actionable next commands
 - `pnpm smoke:dogfood-rc-check` verifies the release-candidate evidence checker against good, legacy-schema, open-capture, no-active-focus-capture, empty-day, duplicate-title, and active-session temporary databases, including Day Event evidence, strict review-item failure, and the `Daily Control Goal Audit`
+- `pnpm smoke:timestamped-event-entry` verifies that timestamped Work Item event entry clears text only after successful append, keeps typed text after API failure, and does not submit blank or pending drafts
 - `pnpm smoke:dogfood-reset-db` verifies dry-run, backup-reset behavior, and running-process refusal on temporary database files
 - `pnpm smoke:dogfood-start` verifies the start gate against clean and contaminated temporary SQLite databases, including clean-start reset, without opening the app
 - `pnpm smoke:dogfood-stop-active` verifies dry-run, direct SQLite fallback, running-process refusal, and running-agent API behavior for closing a stuck active focus block
@@ -169,7 +170,7 @@ Dogfood launch helper:
 Runtime smoke in browser/mock mode:
 
 - mock server starts on localhost
-- `pnpm test` runs the fast local suite: contracts build, TypeScript typecheck, Rust agent tests, mock-store tests, Work Item list mode tests, mock API smoke, and key SQLite/report smoke checks
+- `pnpm test` runs the fast local suite: contracts build, TypeScript typecheck, Rust agent tests, mock-store tests, Work Item list mode tests, timestamped-event entry tests, mock API smoke, and key SQLite/report smoke checks
 - `cargo test -p timeskein-agent` includes handler-level integration tests against a temporary SQLite database for focus start/switch coherence and post-factum correction, including adding a missed stopped block
 - `pnpm --filter @timeskein/mock-server test` covers mock-store invariants for one-active focus, Capture Inbox non-interruption and cleanup, and correction add/update/split/edit reflection
 - `focus.start`, `focus.stop`, `focus.list`, and Work Item focus switching work against the mock API
@@ -339,7 +340,7 @@ The current API surface is:
 - `work_item.delete_event` to delete user-authored `note_added` events;
 - `work_item.events` to list events by Work Item and/or time window.
 
-The note editor can append a timestamped event without replacing the Work Item description. Capture Inbox can also append a capture as a Work Item Event, preserving the capture text and focus-session link. The focus panel shows Work Item Events for the day and lets user-authored note events be edited or deleted before the final report. UI/CLI Markdown exports include a `Work Item Events` section.
+The note editor can append a timestamped event without replacing the Work Item description. Its entry rule is intentionally conservative: typed event text is cleared only after a successful append, and it stays in the field after an API failure. Capture Inbox can also append a capture as a Work Item Event, preserving the capture text and focus-session link. The focus panel shows Work Item Events for the day and lets user-authored note events be edited or deleted before the final report. UI/CLI Markdown exports include a `Work Item Events` section.
 
 ## Day Events
 

@@ -8,6 +8,7 @@ const steps = [
   ["cargo", ["test", "-p", "timeskein-agent"]],
   ["pnpm", ["--filter", "@timeskein/mock-server", "test"]],
   ["pnpm", ["smoke:inventory-modes"]],
+  ["pnpm", ["smoke:timestamped-event-entry"]],
   ["pnpm", ["smoke:mock-api"]],
   ["pnpm", ["smoke:export-focus-day"]],
   ["pnpm", ["smoke:app-events"]],

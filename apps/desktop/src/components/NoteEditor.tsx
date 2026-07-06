@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { appendTimestampedEventDraft } from '../utils/timestampedEventEntry'
 
 interface NoteEditorProps {
   itemTitle: string
@@ -60,12 +61,8 @@ export default function NoteEditor({
     const trimmed = eventText.trim()
     if (!trimmed || !onAppendEvent || appendPending) return
 
-    try {
-      await onAppendEvent(trimmed)
-      setEventText('')
-    } catch {
-      // The parent mutation exposes the error state; keep typed text intact.
-    }
+    const result = await appendTimestampedEventDraft(eventText, onAppendEvent, appendPending)
+    setEventText(result.nextDraft)
   }
 
   return (

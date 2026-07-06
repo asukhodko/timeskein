@@ -19,7 +19,11 @@ try {
   await migrate(emptyDb);
   const empty = await runFinish(emptyDb);
   assert(empty.code !== 0, "empty day should not finish");
-  assert(empty.stdout.includes("No focus blocks found"), "empty day did not explain missing blocks");
+  assert(empty.stdout.includes("# Закрытие dogfood-дня заблокировано - 2026-06-30"), "empty day did not show localized blocked title");
+  assert(empty.stdout.includes("## Что мешает"), "empty day did not show localized blocker section");
+  assert(empty.stdout.includes("За 2026-06-30 нет фокус-блоков"), "empty day did not explain missing blocks");
+  assert(empty.stdout.includes("## Что сделать дальше"), "empty day did not show localized next steps");
+  assert(!empty.stdout.includes("## Blockers") && !empty.stdout.includes("## Next"), "empty day leaked old English diagnostic headings");
 
   const cleanDb = join(tempDir, "clean.db");
   await migrate(cleanDb);
@@ -89,7 +93,8 @@ try {
   `);
   const active = await runFinish(activeDb);
   assert(active.code !== 0, "active day should not finish");
-  assert(active.stdout.includes("Active focus session is still running"), "active day did not explain active focus");
+  assert(active.stdout.includes("Активный фокус-блок ещё идёт"), "active day did not explain active focus");
+  assert(!active.stdout.includes("Active focus session is still running"), "active day leaked old English active-focus blocker");
 
   const splitBrainDb = join(tempDir, "split-brain.db");
   await migrate(splitBrainDb);
@@ -103,8 +108,12 @@ try {
   const splitBrain = await runFinish(splitBrainDb);
   assert(splitBrain.code !== 0, "split-brain active work item should not finish");
   assert(
-    splitBrain.stdout.includes("Active Work Item is still marked active"),
+    splitBrain.stdout.includes("У Work Item всё ещё активный статус"),
     "split-brain day did not explain active work item"
+  );
+  assert(
+    !splitBrain.stdout.includes("Active Work Item is still marked active"),
+    "split-brain day leaked old English active Work Item blocker"
   );
   assert(
     splitBrain.stdout.includes("pnpm dogfood:stop-active"),

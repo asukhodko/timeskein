@@ -19,25 +19,25 @@ const dbPath = options.db
 const blockers = [];
 
 if (!existsSync(dbPath)) {
-  blockers.push(`Timeskein database not found: ${dbPath}`);
+  blockers.push(`База Timeskein не найдена: ${dbPath}`);
 } else {
   const summary = await loadSummary(dbPath, date);
   if (summary.activeSessions.length > 0) {
     for (const session of summary.activeSessions) {
       blockers.push(
-        `Active focus session is still running: ${session.work_item_title ?? session.title} since ${formatClockTime(session.started_at)}`
+        `Активный фокус-блок ещё идёт: ${session.work_item_title ?? session.title}, с ${formatClockTime(session.started_at)}`
       );
     }
   }
 
   if (summary.activeWorkItems.length > 0) {
     for (const item of summary.activeWorkItems) {
-      blockers.push(`Active Work Item is still marked active: ${item.title}`);
+      blockers.push(`У Work Item всё ещё активный статус: ${item.title}`);
     }
   }
 
   if (summary.daySessionCount === 0) {
-    blockers.push(`No focus blocks found for ${dateArg}. There is no dogfood day to finish.`);
+    blockers.push(`За ${dateArg} нет фокус-блоков. Закрывать dogfood-день пока нечего.`);
   }
 }
 
@@ -92,10 +92,10 @@ function parseArgs(args) {
 function printHelp() {
   console.log(`Usage: pnpm dogfood:finish [--date YYYY-MM-DD] [--db path/to/timeskein.db] [--save | --out path.md]
 
-Finishes a dogfood day by checking that there is no active focus session or active Work Item and that the day has at least one focus block.
-On success, prints the Markdown dogfood report, or saves it to a file when --save or --out is passed.
-When --save is used, it also saves the dogfood RC check next to the day report.
-On failure, prints a Markdown diagnostic and exits with code 1.`);
+Закрывает dogfood-день: проверяет, что нет активного фокус-блока, нет Work Item с активным статусом, и за день есть хотя бы один фокус-блок.
+При успехе печатает Markdown-отчёт или сохраняет его в файл, если передан --save или --out.
+С --save рядом с дневным отчётом также сохраняется dogfood RC check.
+При блокировке печатает Markdown-диагностику с понятным следующим шагом и завершается с кодом 1.`);
 }
 
 function outputReportPath(options, date) {
@@ -202,11 +202,11 @@ function sqliteReadArgs(path, sql) {
 
 function buildNotReadyReport(date, path, items) {
   const lines = [
-    `# Timeskein dogfood finish blocked - ${date}`,
+    `# Закрытие dogfood-дня заблокировано - ${date}`,
     "",
     `DB: ${path}`,
     "",
-    "## Blockers",
+    "## Что мешает",
     "",
   ];
 
@@ -216,12 +216,12 @@ function buildNotReadyReport(date, path, items) {
 
   lines.push(
     "",
-    "## Next",
+    "## Что сделать дальше",
     "",
-    "- Stop the active focus block in Timeskein if one is running.",
-    "- If only an active Work Item is stuck, run `pnpm dogfood:stop-active` first and apply it if the plan looks right.",
-    "- If this is not the dogfood day, rerun with `--date YYYY-MM-DD`.",
-    "- If the database is wrong, rerun with `--db path/to/timeskein.db`."
+    "- Если идёт активный фокус-блок, останови его в Timeskein.",
+    "- Если застрял только активный статус Work Item, сначала выполни `pnpm dogfood:stop-active` и примени план, если он выглядит правильно.",
+    "- Если закрываешь другой день, повтори команду с `--date YYYY-MM-DD`.",
+    "- Если выбрана не та база, повтори команду с `--db path/to/timeskein.db`."
   );
 
   return `${lines.join("\n")}\n`;

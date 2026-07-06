@@ -150,7 +150,7 @@ Dogfood launch helper:
 - `pnpm dogfood:continue` runs the same guarded app-opening path with readiness continue mode, so an already started dogfood day can be reopened without resetting the database or bypassing duplicate-title and active-state checks
 - `pnpm dogfood:start:clean` moves the current local SQLite files aside through the same guarded reset path, then runs the normal dogfood start gate; `pnpm dogfood:start:clean:preview` prints the reset plan and checks non-mutating gates
 - `pnpm dogfood:status` waits for the local embedded-agent port file and verifies `agent.status`
-- `pnpm dogfood:finish` checks that the day can be closed with no active focus session or active Work Item, then prints the Markdown dogfood report
+- `pnpm dogfood:finish` checks that the day can be closed with no active focus session or active Work Item, then prints the Markdown dogfood report; when closing is blocked, its Markdown diagnostic uses Russian headings, blocker explanations, and next steps
 - `pnpm dogfood:finish:save` runs the same end-of-day gate and saves both `timeskein-dogfood-report-YYYY-MM-DD.md` and `timeskein-dogfood-rc-check-YYYY-MM-DD.md`
 - `pnpm dogfood:preflight` runs the local checks needed before trusting a real dogfood day, including opskarta roadmap validation, Work Item list mode tests, isolated mock API, export, and dogfood-report smoke checks
 - `pnpm dogfood:ready` inspects the real local SQLite database for active sessions, active Work Items, duplicate titles, existing focus blocks for today, agent responsiveness, and running app processes; when the day is not ready it prints exact stop/reset commands, and when the day is ready it prints the next start command plus the Daily-Control Checklist for the next dogfood pass

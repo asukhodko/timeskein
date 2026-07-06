@@ -2,6 +2,7 @@ import { strict as assert } from 'node:assert'
 import test from 'node:test'
 
 import {
+  getBulkAcceptableReviewActions,
   getDayClosureStage,
   isDayClosureReadyForFinalReport,
   isFinalDayClosureReport,
@@ -86,5 +87,51 @@ test('ready review items stay compact while unresolved checks remain', () => {
   assert.equal(
     shouldSummarizeReadyReviewItems({ blockerCount: 1, reviewCount: 1, readyCount: 0 }),
     false
+  )
+})
+
+test('bulk accept is only available for purely optional review checks', () => {
+  assert.deepEqual(
+    getBulkAcceptableReviewActions([
+      { level: 'review', action: 'accept_activity_zones' },
+      { level: 'review', action: 'accept_entry_paths' },
+      { level: 'ok' },
+    ]),
+    ['accept_activity_zones', 'accept_entry_paths']
+  )
+  assert.deepEqual(
+    getBulkAcceptableReviewActions([
+      { level: 'review', action: 'accept_activity_zones' },
+      { level: 'review', action: 'accept_activity_zones' },
+    ]),
+    ['accept_activity_zones']
+  )
+  assert.deepEqual(
+    getBulkAcceptableReviewActions([
+      { level: 'blocker' },
+      { level: 'review', action: 'accept_activity_zones' },
+      { level: 'review', action: 'accept_entry_paths' },
+    ]),
+    []
+  )
+  assert.deepEqual(
+    getBulkAcceptableReviewActions([
+      { level: 'review', action: 'accept_activity_zones' },
+      { level: 'review', action: 'stage_significant_gap' },
+    ]),
+    []
+  )
+  assert.deepEqual(
+    getBulkAcceptableReviewActions([
+      { level: 'review', action: 'accept_activity_zones' },
+      { level: 'review' },
+    ]),
+    []
+  )
+  assert.deepEqual(
+    getBulkAcceptableReviewActions([
+      { level: 'review', action: 'accept_activity_zones' },
+    ]),
+    []
   )
 })

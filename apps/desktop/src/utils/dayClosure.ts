@@ -17,6 +17,11 @@ export interface DayClosureReviewCounts {
   readyCount: number
 }
 
+export interface BulkAcceptableReviewItem {
+  level: string
+  action?: string
+}
+
 export function isFinalDayClosureReport(state: DayClosureState) {
   return !state.activeFocus && (state.activeWorkItemCount ?? 0) === 0
 }
@@ -36,4 +41,22 @@ export function getDayClosureStage(state: DayClosureFlowState): DayClosureStage 
 
 export function shouldSummarizeReadyReviewItems(counts: DayClosureReviewCounts) {
   return counts.readyCount > 0 && (counts.blockerCount > 0 || counts.reviewCount > 0)
+}
+
+export function getBulkAcceptableReviewActions(items: BulkAcceptableReviewItem[]) {
+  if (items.some((item) => item.level === 'blocker')) return []
+
+  const reviewItems = items.filter((item) => item.level === 'review')
+  if (reviewItems.length <= 1) return []
+
+  const actions = reviewItems.map((item) => item.action)
+  if (actions.some((action) => !isBulkAcceptableReviewAction(action))) {
+    return []
+  }
+
+  return [...new Set(actions)] as string[]
+}
+
+export function isBulkAcceptableReviewAction(action?: string) {
+  return Boolean(action?.startsWith('accept_'))
 }

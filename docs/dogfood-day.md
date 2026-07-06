@@ -36,6 +36,7 @@ End of day:
 - clear hard blockers first: stop active focus, clear stuck active Work Items, and resolve required review actions;
 - use `Записать` on gap review items when the right action is to add a Day Event explanation;
 - consciously accept optional review items that are intentionally left as-is: Activity Zones, Capture usage, entry paths, window entrypoints, Work Item today/total badges, tracking accuracy, or open-capture follow-up;
+- use `Принять всё` only when all remaining yellow checks are intentionally accepted as-is; Timeskein shows this shortcut only for purely optional review items;
 - click `Копировать отчёт` in Today and paste the dogfood report into the day note;
 - if the button says `Копировать черновик`, stop the active focus block or clear the active Work Item before treating the report as final; draft copy can start the closure timer, but only a final report completes it;
 - if the button says `Копировать с проверками`, finish or consciously accept the remaining review items before treating the report as closed;
@@ -357,6 +358,7 @@ If Today or the report shows `Открытый разрыв`, there was a signif
 If the report shows `Открытые отвлечения`, edit, delete, resolve, convert, or explicitly accept them as follow-up before considering the day fully reviewed.
 If Today or the report shows `Проверка перед отчётом`, use it as the minimal evening queue: active-state blockers must be cleared, review items should be classified or consciously accepted before treating the report as final.
 The checklist also flags weak day evidence, such as all blocks landing in one Activity Zone, zero non-work tracked time, no Work Item notes/events for context, or no focus correction evidence. If the timeline is already accurate, use `Принять` on the tracking-accuracy review item so the report records that the correction pass was consciously done.
+When every remaining yellow item is an optional accept-as-is check, Timeskein shows `Принять всё`. Use it only after a quick conscious pass; it never appears for gap items that need `Записать` or for review items without a safe automatic action.
 If a focus block is still active, or a Work Item is still marked active, the UI labels the report as `Копировать черновик` and the Markdown includes a warning. The CLI report uses the same draft warning. Stop the active block or clear the active Work Item before using the report as the final day artifact.
 If clipboard access is denied, Timeskein shows a selected text box with the Markdown. Copy it manually from there.
 

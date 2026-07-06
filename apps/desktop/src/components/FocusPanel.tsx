@@ -12,6 +12,7 @@ import { useAddDayEvent, useDayEvents, useDeleteDayEvent, useUpdateDayEvent } fr
 import { appEventApi, logAppEvent, shellApi } from '../api/client'
 import { formatClockTime, formatDuration, truncate } from '../utils/formatTime'
 import {
+  getBulkAcceptableReviewActions,
   getDayClosureStage,
   isDayClosureReadyForFinalReport,
   isFinalDayClosureReport,
@@ -1435,12 +1436,13 @@ function DayReviewPanel({
   closureElapsedSeconds?: number
   closureStage: DayClosureStage
   canStartClosure?: boolean
-  onAction?: (action: DayReviewAction) => void
+  onAction?: (action: DayReviewAction) => void | Promise<void>
   onStartClosure?: () => void
 }) {
   const blockers = items.filter((item) => item.level === 'blocker')
   const reviews = items.filter((item) => item.level === 'review')
   const readyItems = items.filter((item) => item.level === 'ok')
+  const bulkAcceptReviewActions = getBulkAcceptableReviewActions(items) as DayReviewAction[]
   const summarizedReadyItems = shouldSummarizeReadyReviewItems({
     blockerCount: blockers.length,
     reviewCount: reviews.length,
@@ -1461,6 +1463,11 @@ function DayReviewPanel({
     reviews: reviews.length,
     closureElapsedSeconds,
   })
+  const acceptAllReviews = async () => {
+    for (const action of bulkAcceptReviewActions) {
+      await onAction?.(action)
+    }
+  }
 
   return (
     <div className={`grid gap-2 rounded-md border px-3 py-2 text-xs ${statusClass}`}>
@@ -1472,6 +1479,18 @@ function DayReviewPanel({
             <span className="rounded border border-gray-800 px-1.5 py-0.5 text-[11px] text-gray-400">
               закрытие {formatDuration(closureElapsedSeconds)}
             </span>
+          )}
+          {bulkAcceptReviewActions.length > 0 && onAction && (
+            <button
+              type="button"
+              onClick={() => {
+                void acceptAllReviews()
+              }}
+              className="rounded border border-amber-800 px-1.5 py-0.5 text-[11px] font-medium text-amber-100 hover:border-amber-500"
+              title="Принять все оставшиеся жёлтые проверки, если они уже осознанно проверены"
+            >
+              Принять всё
+            </button>
           )}
           {onStartClosure && (
             <button
@@ -1547,7 +1566,7 @@ function DayReviewGroup({
 }: {
   title: string
   items: DayReviewItem[]
-  onAction?: (action: DayReviewAction) => void
+  onAction?: (action: DayReviewAction) => void | Promise<void>
 }) {
   return (
     <div className="grid gap-1">
@@ -1565,7 +1584,9 @@ function DayReviewGroup({
             {item.action && (
               <button
                 type="button"
-                onClick={() => onAction?.(item.action!)}
+                onClick={() => {
+                  void onAction?.(item.action!)
+                }}
                 className="rounded border border-amber-800 px-1.5 py-0.5 text-[11px] font-medium text-amber-100 hover:border-amber-500"
               >
                 {formatReviewActionLabel(item.action)}

@@ -81,6 +81,10 @@ pub enum AppEventKind {
     CaptureConvertFailed,
     CaptureFollowupReviewed,
     WorkItemTimeBadgesReviewed,
+    ActivityZoneReviewed,
+    CaptureUsageReviewed,
+    EntryPathsReviewed,
+    WindowEntrypointsReviewed,
     ApiError,
 }
 
@@ -131,6 +135,10 @@ impl AppEventKind {
             "capture_convert_failed" => Some(Self::CaptureConvertFailed),
             "capture_followup_reviewed" => Some(Self::CaptureFollowupReviewed),
             "work_item_time_badges_reviewed" => Some(Self::WorkItemTimeBadgesReviewed),
+            "activity_zone_reviewed" => Some(Self::ActivityZoneReviewed),
+            "capture_usage_reviewed" => Some(Self::CaptureUsageReviewed),
+            "entry_paths_reviewed" => Some(Self::EntryPathsReviewed),
+            "window_entrypoints_reviewed" => Some(Self::WindowEntrypointsReviewed),
             "api_error" => Some(Self::ApiError),
             _ => None,
         }
@@ -182,6 +190,10 @@ impl AppEventKind {
             Self::CaptureConvertFailed => "capture_convert_failed",
             Self::CaptureFollowupReviewed => "capture_followup_reviewed",
             Self::WorkItemTimeBadgesReviewed => "work_item_time_badges_reviewed",
+            Self::ActivityZoneReviewed => "activity_zone_reviewed",
+            Self::CaptureUsageReviewed => "capture_usage_reviewed",
+            Self::EntryPathsReviewed => "entry_paths_reviewed",
+            Self::WindowEntrypointsReviewed => "window_entrypoints_reviewed",
             Self::ApiError => "api_error",
         }
     }

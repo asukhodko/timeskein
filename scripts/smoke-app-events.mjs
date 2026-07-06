@@ -44,7 +44,11 @@ try {
       ('e24', '2026-06-30T07:13:00Z', 'ui', 'capture_followup_reviewed', NULL, NULL, '{"action_id":"c6","control":"review_checklist","open_count":1}'),
       ('e25', '2026-06-30T07:14:00Z', 'ui', 'work_item_time_badges_reviewed', NULL, NULL, '{"action_id":"b1","control":"review_checklist","touched_work_item_count":2}'),
       ('e26', '2026-06-30T07:15:00Z', 'ui', 'day_closure_started', NULL, NULL, '{"action_id":"d1","control":"review_panel"}'),
-      ('e27', '2026-06-30T07:22:30Z', 'ui', 'day_closure_completed', NULL, NULL, '{"action_id":"d1","control":"copy_report"}');
+      ('e27', '2026-06-30T07:22:30Z', 'ui', 'day_closure_completed', NULL, NULL, '{"action_id":"d1","control":"copy_report"}'),
+      ('e28', '2026-06-30T07:23:00Z', 'ui', 'activity_zone_reviewed', NULL, NULL, '{"action_id":"z1","control":"review_checklist","zone_count":1}'),
+      ('e29', '2026-06-30T07:24:00Z', 'ui', 'capture_usage_reviewed', NULL, NULL, '{"action_id":"u1","control":"review_checklist","capture_count":0}'),
+      ('e30', '2026-06-30T07:25:00Z', 'ui', 'entry_paths_reviewed', NULL, NULL, '{"action_id":"p1","control":"review_checklist"}'),
+      ('e31', '2026-06-30T07:26:00Z', 'ui', 'window_entrypoints_reviewed', NULL, NULL, '{"action_id":"w1","control":"review_checklist"}');
   `);
 
   const { stdout: metricsStdout } = await execFileAsync(
@@ -53,7 +57,7 @@ try {
     { cwd: repoRoot }
   );
   assert(metricsStdout.includes("## App Telemetry"), "metrics did not include App Telemetry header");
-  assert(metricsStdout.includes("Total events: 27"), "metrics did not count events");
+  assert(metricsStdout.includes("Total events: 31"), "metrics did not count events");
   assert(metricsStdout.includes("Start requests: 1"), "metrics did not count start requests");
   assert(metricsStdout.includes("Typed/selected entry requests: 1/0"), "metrics did not count entry request controls");
   assert(metricsStdout.includes("Manual copy fallbacks: 1"), "metrics did not count manual copy fallbacks");
@@ -61,6 +65,10 @@ try {
   assert(metricsStdout.includes("Capture created/resolved/converted: 1/1/0"), "metrics did not count capture outcomes");
   assert(metricsStdout.includes("Capture follow-up reviews: 1"), "metrics did not count capture follow-up reviews");
   assert(metricsStdout.includes("Work Item time badge reviews: 1"), "metrics did not count Work Item time badge reviews");
+  assert(metricsStdout.includes("Activity Zone reviews: 1"), "metrics did not count Activity Zone reviews");
+  assert(metricsStdout.includes("Capture usage reviews: 1"), "metrics did not count capture usage reviews");
+  assert(metricsStdout.includes("Entry path reviews: 1"), "metrics did not count entry path reviews");
+  assert(metricsStdout.includes("Window entrypoint reviews: 1"), "metrics did not count window entrypoint reviews");
   assert(metricsStdout.includes("Capture updated/deleted: 1/1"), "metrics did not count capture cleanup");
   assert(metricsStdout.includes("Capture failures create/resolve/update/delete/convert: 0/0/0/0/1"), "metrics did not count capture failures");
   assert(metricsStdout.includes("Corrections requested/applied/reviewed/failed: 1/1/1/1"), "metrics did not count corrections");
@@ -80,6 +88,10 @@ try {
   assert(exportStdout.includes("capture_created"), "event export did not include capture event");
   assert(exportStdout.includes("capture_followup_reviewed"), "event export did not include capture follow-up review");
   assert(exportStdout.includes("work_item_time_badges_reviewed"), "event export did not include Work Item time badge review");
+  assert(exportStdout.includes("activity_zone_reviewed"), "event export did not include Activity Zone review");
+  assert(exportStdout.includes("capture_usage_reviewed"), "event export did not include capture usage review");
+  assert(exportStdout.includes("entry_paths_reviewed"), "event export did not include entry path review");
+  assert(exportStdout.includes("window_entrypoints_reviewed"), "event export did not include window entrypoint review");
   assert(exportStdout.includes("focus_corrected"), "event export did not include correction event");
   assert(exportStdout.includes("day_closure_started"), "event export did not include day closure start");
   assert(exportStdout.includes("day_closure_completed"), "event export did not include day closure completion");

@@ -425,11 +425,11 @@ function assessEvidence(evidence, minFocusSeconds) {
     );
   }
 
-  if (evidence.activityZoneTotals.length <= 1 && evidence.sessions.length > 0) {
+  if (evidence.activityZoneTotals.length <= 1 && evidence.sessions.length > 0 && evidence.telemetry.activityZoneReviews === 0) {
     reviewItems.push("Only one Activity Zone appears in the day. Confirm whether coordination/recovery/idle/personal time was intentionally absent or missed.");
   }
 
-  if (evidence.nonWorkSeconds === 0 && evidence.sessions.length > 0) {
+  if (evidence.nonWorkSeconds === 0 && evidence.sessions.length > 0 && evidence.telemetry.activityZoneReviews === 0) {
     reviewItems.push("Non-work tracked time is zero. Confirm breaks, recovery, coordination, and personal blocks were not folded into work focus.");
   }
 
@@ -458,11 +458,11 @@ function assessEvidence(evidence, minFocusSeconds) {
     reviewItems.push(`${evidence.openCaptures.length} open capture(s) remain. Resolve, convert, or explicitly accept them as follow-up.`);
   }
 
-  if (evidence.capturesCreatedToday.length === 0) {
+  if (evidence.capturesCreatedToday.length === 0 && evidence.telemetry.captureUsageReviews === 0) {
     reviewItems.push("No captures were created today. If there were interruptions, Capture Inbox was not tested in battle.");
   }
 
-  if (evidence.capturesCreatedToday.length > 0 && evidence.capturesDuringActiveFocus === 0) {
+  if (evidence.capturesCreatedToday.length > 0 && evidence.capturesDuringActiveFocus === 0 && evidence.telemetry.captureUsageReviews === 0) {
     reviewItems.push("Captures were created, but none were linked to an active focus session. Capture Inbox did not prove interruption handling during focus.");
   }
 
@@ -470,31 +470,39 @@ function assessEvidence(evidence, minFocusSeconds) {
     reviewItems.push("No App Telemetry events found for this date.");
   }
 
-  if (evidence.sessions.length > 0 && evidence.telemetry.startRequests + evidence.telemetry.switchRequests === 0) {
+  if (
+    evidence.sessions.length > 0 &&
+    evidence.telemetry.startRequests + evidence.telemetry.switchRequests === 0 &&
+    evidence.telemetry.entryPathReviews === 0
+  ) {
     reviewItems.push("No focus start/switch request telemetry found. Entry cost is not evidenced for this day.");
   }
 
-  if (evidence.sessions.length > 0 && evidence.telemetry.typedEntryRequests === 0) {
+  if (evidence.sessions.length > 0 && evidence.telemetry.typedEntryRequests === 0 && evidence.telemetry.entryPathReviews === 0) {
     reviewItems.push("No typed focus entry request found. Start a new Work Item by typed title before closing the goal.");
   }
 
-  if (evidence.sessions.length > 0 && evidence.telemetry.selectedEntryRequests === 0) {
+  if (evidence.sessions.length > 0 && evidence.telemetry.selectedEntryRequests === 0 && evidence.telemetry.entryPathReviews === 0) {
     reviewItems.push("No selected/list Work Item entry request found. Continue an existing Work Item from the list before closing the goal.");
   }
 
-  if (evidence.sessions.length > 0 && evidence.telemetry.stopRequests === 0) {
+  if (evidence.sessions.length > 0 && evidence.telemetry.stopRequests === 0 && evidence.telemetry.entryPathReviews === 0) {
     reviewItems.push("No focus stop request telemetry found. Stop flow cost is not evidenced for this day.");
   }
 
-  if (evidence.telemetry.total > 0 && evidence.telemetry.windowShown + evidence.telemetry.windowHidden === 0) {
+  if (
+    evidence.telemetry.total > 0 &&
+    evidence.telemetry.windowShown + evidence.telemetry.windowHidden === 0 &&
+    evidence.telemetry.windowEntrypointReviews === 0
+  ) {
     reviewItems.push("No window show/hide telemetry found. Entry/window friction is not evidenced for this day.");
   }
 
-  if (evidence.telemetry.total > 0 && evidence.telemetry.windowShowRequested === 0) {
+  if (evidence.telemetry.total > 0 && evidence.telemetry.windowShowRequested === 0 && evidence.telemetry.windowEntrypointReviews === 0) {
     reviewItems.push("No window show request telemetry found. Test tray/menu/shortcut/reopen entry before closing the goal.");
   }
 
-  if (evidence.telemetry.total > 0 && evidence.telemetry.windowHideRequested === 0) {
+  if (evidence.telemetry.total > 0 && evidence.telemetry.windowHideRequested === 0 && evidence.telemetry.windowEntrypointReviews === 0) {
     reviewItems.push("No window hide request telemetry found. Test Esc/close/menu hide before closing the goal.");
   }
 
@@ -588,6 +596,10 @@ function buildRcReport(date, path, evidence, assessment, minFocusSeconds, strict
     `- Captures during active focus: ${evidence.capturesDuringActiveFocus}`,
     `- Open captures: ${evidence.openCaptures.length}`,
     `- Open capture follow-up reviews: ${evidence.telemetry.captureFollowupReviews}`,
+    `- Activity Zone reviews: ${evidence.telemetry.activityZoneReviews}`,
+    `- Capture usage reviews: ${evidence.telemetry.captureUsageReviews}`,
+    `- Entry path reviews: ${evidence.telemetry.entryPathReviews}`,
+    `- Window entrypoint reviews: ${evidence.telemetry.windowEntrypointReviews}`,
     `- App telemetry events: ${evidence.telemetry.total}`,
     `- Start/switch/stop requests: ${evidence.telemetry.startRequests}/${evidence.telemetry.switchRequests}/${evidence.telemetry.stopRequests}`,
     `- Typed/selected entry requests: ${evidence.telemetry.typedEntryRequests}/${evidence.telemetry.selectedEntryRequests}`,
@@ -691,10 +703,21 @@ function formatGoalAuditMarkdown(evidence, assessment, minFocusSeconds) {
     ? "block"
     : evidence.unexplainedGapCount > 0 ||
         (evidence.openCaptures.length > 0 && evidence.telemetry.captureFollowupReviews === 0) ||
-        evidence.capturesCreatedToday.length === 0 ||
-        (evidence.capturesCreatedToday.length > 0 && evidence.capturesDuringActiveFocus === 0)
+        (evidence.capturesCreatedToday.length === 0 && evidence.telemetry.captureUsageReviews === 0) ||
+        (evidence.capturesCreatedToday.length > 0 && evidence.capturesDuringActiveFocus === 0 && evidence.telemetry.captureUsageReviews === 0)
       ? "review"
       : "pass";
+  const windowRequestsCovered =
+    evidence.telemetry.windowShowRequested > 0 && evidence.telemetry.windowHideRequested > 0;
+  const windowFailureCount =
+    evidence.telemetry.apiErrors +
+    evidence.telemetry.copyFailures +
+    evidence.telemetry.startFailures +
+    evidence.telemetry.stopFailures;
+  const entryPathsCovered =
+    evidence.telemetry.typedEntryRequests > 0 &&
+    evidence.telemetry.selectedEntryRequests > 0 &&
+    evidence.telemetry.stopRequests > 0;
 
   const rows = [
     {
@@ -724,10 +747,10 @@ function formatGoalAuditMarkdown(evidence, assessment, minFocusSeconds) {
       requirement: "Activity Zones separated",
       status: evidence.sessions.length === 0
         ? "block"
-        : evidence.activityZoneTotals.length > 1 && evidence.nonWorkSeconds > 0
+        : (evidence.activityZoneTotals.length > 1 && evidence.nonWorkSeconds > 0) || evidence.telemetry.activityZoneReviews > 0
           ? "pass"
           : "review",
-      evidence: `${evidence.activityZoneTotals.length} zone(s), ${formatDuration(evidence.workFocusSeconds)} work, ${formatDuration(evidence.nonWorkSeconds)} non-work`,
+      evidence: `${evidence.activityZoneTotals.length} zone(s), ${formatDuration(evidence.workFocusSeconds)} work, ${formatDuration(evidence.nonWorkSeconds)} non-work, ${evidence.telemetry.activityZoneReviews} review(s)`,
     },
     {
       requirement: "Day and Work Item context present",
@@ -739,33 +762,26 @@ function formatGoalAuditMarkdown(evidence, assessment, minFocusSeconds) {
     {
       requirement: "Gaps and captures visible",
       status: gapCaptureStatus,
-      evidence: `${evidence.gaps.length} significant gap(s), ${Math.min(evidence.gapExplanationEvents, evidence.gaps.length)} explained, ${evidence.openCaptures.length} open capture(s), ${evidence.telemetry.captureFollowupReviews} follow-up review(s), ${evidence.capturesDuringActiveFocus}/${evidence.capturesCreatedToday.length} capture(s) during active focus`,
+      evidence: `${evidence.gaps.length} significant gap(s), ${Math.min(evidence.gapExplanationEvents, evidence.gaps.length)} explained, ${evidence.openCaptures.length} open capture(s), ${evidence.telemetry.captureFollowupReviews} follow-up review(s), ${evidence.telemetry.captureUsageReviews} usage review(s), ${evidence.capturesDuringActiveFocus}/${evidence.capturesCreatedToday.length} capture(s) during active focus`,
     },
     {
       requirement: "Window and menubar friction evidenced",
-      status: evidence.telemetry.total === 0
-        ? "review"
-        : evidence.telemetry.windowShowRequested === 0 ||
-            evidence.telemetry.windowHideRequested === 0 ||
-            evidence.telemetry.apiErrors +
-            evidence.telemetry.copyFailures +
-            evidence.telemetry.startFailures +
-            evidence.telemetry.stopFailures >
-          0
-          ? "review"
-          : "pass",
-      evidence: `${evidence.telemetry.windowShown}/${evidence.telemetry.windowHidden} show/hide, ${evidence.telemetry.windowShowRequested}/${evidence.telemetry.windowHideRequested} show/hide request(s), ${evidence.telemetry.windowDragStarted} drag start(s), ${evidence.telemetry.apiErrors} API error(s)`,
+      status:
+        evidence.telemetry.total > 0 &&
+        windowFailureCount === 0 &&
+        (windowRequestsCovered || evidence.telemetry.windowEntrypointReviews > 0)
+          ? "pass"
+          : "review",
+      evidence: `${evidence.telemetry.windowShown}/${evidence.telemetry.windowHidden} show/hide, ${evidence.telemetry.windowShowRequested}/${evidence.telemetry.windowHideRequested} show/hide request(s), ${evidence.telemetry.windowDragStarted} drag start(s), ${evidence.telemetry.windowEntrypointReviews} review(s), ${evidence.telemetry.apiErrors} API error(s)`,
     },
     {
       requirement: "Start and continue paths evidenced",
       status: evidence.sessions.length === 0
         ? "block"
-        : evidence.telemetry.typedEntryRequests > 0 &&
-            evidence.telemetry.selectedEntryRequests > 0 &&
-            evidence.telemetry.stopRequests > 0
+        : entryPathsCovered || evidence.telemetry.entryPathReviews > 0
           ? "pass"
           : "review",
-      evidence: `${evidence.telemetry.typedEntryRequests} typed, ${evidence.telemetry.selectedEntryRequests} selected/list, ${evidence.telemetry.stopRequests} stop request(s)`,
+      evidence: `${evidence.telemetry.typedEntryRequests} typed, ${evidence.telemetry.selectedEntryRequests} selected/list, ${evidence.telemetry.stopRequests} stop request(s), ${evidence.telemetry.entryPathReviews} review(s)`,
     },
     {
       requirement: "Tracking correction or review evidenced",
@@ -992,6 +1008,10 @@ function summarizeEvents(events) {
     lastDayClosureDurationSeconds: closureDurationsSeconds.at(-1),
     captureFollowupReviews: count("capture_followup_reviewed"),
     workItemTimeBadgeReviews: count("work_item_time_badges_reviewed"),
+    activityZoneReviews: count("activity_zone_reviewed"),
+    captureUsageReviews: count("capture_usage_reviewed"),
+    entryPathReviews: count("entry_paths_reviewed"),
+    windowEntrypointReviews: count("window_entrypoints_reviewed"),
     windowShown: count("window_shown"),
     windowHidden: count("window_hidden"),
     windowShowRequested: count("window_show_requested"),

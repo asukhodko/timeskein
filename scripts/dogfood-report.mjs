@@ -433,7 +433,8 @@ function buildReviewChecklistItems({
     });
   }
 
-  if (focusMarkdown.includes("| Time | Duration | Zone | Work Item | Note |") && countActivityZoneRows(focusMarkdown) <= 1) {
+  const activityZoneReviews = parseLeadingNumber(extractLineValue(telemetryMarkdown, "Activity Zone reviews"));
+  if (focusMarkdown.includes("| Time | Duration | Zone | Work Item | Note |") && countActivityZoneRows(focusMarkdown) <= 1 && activityZoneReviews === 0) {
     items.push({
       level: "review",
       title: "Review Activity Zone coverage",
@@ -441,7 +442,7 @@ function buildReviewChecklistItems({
     });
   }
 
-  if (focusMarkdown.includes("Non-work tracked: 0:00")) {
+  if (focusMarkdown.includes("Non-work tracked: 0:00") && activityZoneReviews === 0) {
     items.push({
       level: "review",
       title: "Confirm non-work tracked time",
@@ -458,7 +459,8 @@ function buildReviewChecklistItems({
     });
   }
 
-  if (focusMarkdown.includes("| Time | Duration | Zone | Work Item | Note |") && captureActivity.length === 0) {
+  const captureUsageReviews = parseLeadingNumber(extractLineValue(telemetryMarkdown, "Capture usage reviews"));
+  if (focusMarkdown.includes("| Time | Duration | Zone | Work Item | Note |") && captureActivity.length === 0 && captureUsageReviews === 0) {
     items.push({
       level: "review",
       title: "Capture Inbox untested today",
@@ -466,7 +468,7 @@ function buildReviewChecklistItems({
     });
   }
 
-  if (captureActivity.length > 0 && captureActivity.every((capture) => !capture.focus_session_id)) {
+  if (captureActivity.length > 0 && captureActivity.every((capture) => !capture.focus_session_id) && captureUsageReviews === 0) {
     items.push({
       level: "review",
       title: "Captures were not linked to active focus",
@@ -506,7 +508,8 @@ function buildReviewChecklistItems({
 
   const entryTelemetry = parseEntryTelemetry(telemetryMarkdown);
   if (focusMarkdown.includes("| Time | Duration | Zone | Work Item | Note |") && entryTelemetry) {
-    if (entryTelemetry.typedEntryRequests === 0 || entryTelemetry.selectedEntryRequests === 0 || entryTelemetry.stopRequests === 0) {
+    const entryPathReviews = parseLeadingNumber(extractLineValue(telemetryMarkdown, "Entry path reviews"));
+    if ((entryTelemetry.typedEntryRequests === 0 || entryTelemetry.selectedEntryRequests === 0 || entryTelemetry.stopRequests === 0) && entryPathReviews === 0) {
       items.push({
         level: "review",
         title: "Exercise start and continue paths",
@@ -517,7 +520,8 @@ function buildReviewChecklistItems({
 
   const windowTelemetry = parseWindowTelemetry(telemetryMarkdown);
   if (focusMarkdown.includes("| Time | Duration | Zone | Work Item | Note |") && windowTelemetry) {
-    if (windowTelemetry.showRequests === 0 || windowTelemetry.hideRequests === 0) {
+    const windowEntrypointReviews = parseLeadingNumber(extractLineValue(telemetryMarkdown, "Window entrypoint reviews"));
+    if ((windowTelemetry.showRequests === 0 || windowTelemetry.hideRequests === 0) && windowEntrypointReviews === 0) {
       items.push({
         level: "review",
         title: "Test window entrypoints",
@@ -573,9 +577,18 @@ function formatDailyControlGoalAuditMarkdown({
     extractLineValue(telemetryMarkdown, "Corrections requested/applied/reviewed/failed") ?? "n/a";
   const captureFollowupReviews = parseLeadingNumber(extractLineValue(telemetryMarkdown, "Capture follow-up reviews"));
   const workItemTimeBadgeReviews = parseLeadingNumber(extractLineValue(telemetryMarkdown, "Work Item time badge reviews"));
+  const activityZoneReviews = parseLeadingNumber(extractLineValue(telemetryMarkdown, "Activity Zone reviews"));
+  const captureUsageReviews = parseLeadingNumber(extractLineValue(telemetryMarkdown, "Capture usage reviews"));
+  const entryPathReviews = parseLeadingNumber(extractLineValue(telemetryMarkdown, "Entry path reviews"));
+  const windowEntrypointReviews = parseLeadingNumber(extractLineValue(telemetryMarkdown, "Window entrypoint reviews"));
   const closureCounts = parseCountPair(extractLineValue(telemetryMarkdown, "Day closure started/completed"));
   const lastClosureDuration = parseDurationSeconds(extractLineValue(telemetryMarkdown, "Last day closure duration"));
   const telemetryAvailable = telemetryMarkdown.includes("Total events:");
+  const entryPathsCovered =
+    entryTelemetry &&
+    entryTelemetry.typedEntryRequests > 0 &&
+    entryTelemetry.selectedEntryRequests > 0 &&
+    entryTelemetry.stopRequests > 0;
 
   const rows = [
     {
@@ -598,10 +611,10 @@ function formatDailyControlGoalAuditMarkdown({
     {
       requirement: "Activity Zones separated",
       status:
-        hasFocusBlocks && !hasReview("Review Activity Zone coverage") && !hasReview("Confirm non-work tracked time")
+        hasFocusBlocks && ((!hasReview("Review Activity Zone coverage") && !hasReview("Confirm non-work tracked time")) || activityZoneReviews > 0)
           ? "pass"
           : "review",
-      evidence: `${workFocus} work, ${nonWorkTracked} non-work`,
+      evidence: `${workFocus} work, ${nonWorkTracked} non-work, ${activityZoneReviews} review(s)`,
     },
     {
       requirement: "Day and Work Item context present",
@@ -616,12 +629,12 @@ function formatDailyControlGoalAuditMarkdown({
       requirement: "Gaps and captures visible",
       status:
         hasReview("Classify significant gaps") ||
-        hasReview("Capture Inbox untested today") ||
-        hasReview("Captures were not linked to active focus") ||
+        (hasReview("Capture Inbox untested today") && captureUsageReviews === 0) ||
+        (hasReview("Captures were not linked to active focus") && captureUsageReviews === 0) ||
         hasReview("Resolve, convert, or accept open captures")
           ? "review"
           : "pass",
-      evidence: `${focusMarkdown.includes("## Gaps >=") ? "gaps section present" : "no significant gaps section"}, ${openCaptures.length} open capture(s), ${captureFollowupReviews} follow-up review(s), ${captureActivity.length} capture(s) today`,
+      evidence: `${focusMarkdown.includes("## Gaps >=") ? "gaps section present" : "no significant gaps section"}, ${openCaptures.length} open capture(s), ${captureFollowupReviews} follow-up review(s), ${captureUsageReviews} usage review(s), ${captureActivity.length} capture(s) today`,
     },
     {
       requirement: "Window and menubar friction evidenced",
@@ -630,23 +643,20 @@ function formatDailyControlGoalAuditMarkdown({
         apiErrors > 0 ||
         copyFailures > 0 ||
         startStopFailures !== "0/0" ||
-        hasReview("Test window entrypoints")
+        (hasReview("Test window entrypoints") && windowEntrypointReviews === 0)
           ? "review"
           : "pass",
-      evidence: `window shown/hidden ${windowEvidence}, requests ${windowRequestEvidence}, API errors ${apiErrors}, start/stop failures ${startStopFailures}`,
+      evidence: `window shown/hidden ${windowEvidence}, requests ${windowRequestEvidence}, ${windowEntrypointReviews} review(s), API errors ${apiErrors}, start/stop failures ${startStopFailures}`,
     },
     {
       requirement: "Start and continue paths evidenced",
       status:
         !telemetryAvailable ||
         !entryTelemetry ||
-        entryTelemetry.typedEntryRequests === 0 ||
-        entryTelemetry.selectedEntryRequests === 0 ||
-        entryTelemetry.stopRequests === 0 ||
-        hasReview("Exercise start and continue paths")
+        (!entryPathsCovered && entryPathReviews === 0)
           ? "review"
           : "pass",
-      evidence: `${entryPathEvidence} typed/selected, ${entryTelemetry?.stopRequests ?? "n/a"} stop request(s)`,
+      evidence: `${entryPathEvidence} typed/selected, ${entryTelemetry?.stopRequests ?? "n/a"} stop request(s), ${entryPathReviews} review(s)`,
     },
     {
       requirement: "Tracking correction or review evidenced",

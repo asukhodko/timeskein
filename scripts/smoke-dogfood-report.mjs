@@ -205,6 +205,52 @@ try {
 
   await runSql(`
     INSERT INTO app_events (id, ts, source, kind, payload)
+    VALUES
+      ('ae_accept_zone', '2026-06-30T07:52:00Z', 'ui', 'activity_zone_reviewed', '{"action_id":"z1","control":"review_checklist","zone_count":1}'),
+      ('ae_accept_entry', '2026-06-30T07:53:00Z', 'ui', 'entry_paths_reviewed', '{"action_id":"p1","control":"review_checklist"}'),
+      ('ae_accept_window', '2026-06-30T07:54:00Z', 'ui', 'window_entrypoints_reviewed', '{"action_id":"w1","control":"review_checklist"}');
+  `);
+
+  const { stdout: acceptedOptionalStdout } = await execFileAsync(
+    "node",
+    [join(repoRoot, "scripts/dogfood-report.mjs"), "--db", dbPath, "--date", "2026-06-30"],
+    { cwd: repoRoot }
+  );
+
+  assert(
+    acceptedOptionalStdout.includes("Проверить зоны активности") === false,
+    "report review checklist should not flag Activity Zone coverage after explicit review"
+  );
+  assert(
+    acceptedOptionalStdout.includes("Проверить нерабочее время") === false,
+    "report review checklist should not flag non-work time after explicit Activity Zone review"
+  );
+  assert(
+    acceptedOptionalStdout.includes("Проверить старт и продолжение") === false,
+    "report review checklist should not flag entry paths after explicit review"
+  );
+  assert(
+    acceptedOptionalStdout.includes("Проверить входы в окно") === false,
+    "report review checklist should not flag window entrypoints after explicit review"
+  );
+  assert(
+    acceptedOptionalStdout.includes("| Зоны активности разделены | ок |"),
+    "report daily-control audit should pass Activity Zones after explicit review"
+  );
+  assert(
+    acceptedOptionalStdout.includes("| Окно и menu bar проверены | ок |"),
+    "report daily-control audit should pass window entrypoints after explicit review"
+  );
+  assert(
+    acceptedOptionalStdout.includes("| Старт и продолжение проверены | ок |"),
+    "report daily-control audit should pass entry paths after explicit review"
+  );
+  assert(acceptedOptionalStdout.includes("Activity Zone reviews: 1"), "report telemetry should include Activity Zone review");
+  assert(acceptedOptionalStdout.includes("Entry path reviews: 1"), "report telemetry should include entry path review");
+  assert(acceptedOptionalStdout.includes("Window entrypoint reviews: 1"), "report telemetry should include window entrypoint review");
+
+  await runSql(`
+    INSERT INTO app_events (id, ts, source, kind, payload)
     VALUES ('ae3', '2026-06-30T07:55:00Z', 'ui', 'focus_correction_reviewed', '{"action_id":"k2","control":"review_checklist"}');
   `);
 
@@ -237,6 +283,27 @@ try {
   assert(
     reviewedCaptureStdout.includes("Capture follow-up reviews: 1"),
     "report telemetry should include capture follow-up review"
+  );
+
+  await runSql(`
+    DELETE FROM captures;
+    INSERT INTO app_events (id, ts, source, kind, payload)
+    VALUES ('ae_accept_capture_usage', '2026-06-30T07:57:00Z', 'ui', 'capture_usage_reviewed', '{"action_id":"u1","control":"review_checklist","capture_count":0}');
+  `);
+
+  const { stdout: acceptedCaptureUsageStdout } = await execFileAsync(
+    "node",
+    [join(repoRoot, "scripts/dogfood-report.mjs"), "--db", dbPath, "--date", "2026-06-30"],
+    { cwd: repoRoot }
+  );
+
+  assert(
+    acceptedCaptureUsageStdout.includes("Инбокс отвлечений сегодня не проверен") === false,
+    "report review checklist should not flag missing captures after explicit usage review"
+  );
+  assert(
+    acceptedCaptureUsageStdout.includes("Capture usage reviews: 1"),
+    "report telemetry should include capture usage review"
   );
 
   await runSql(`

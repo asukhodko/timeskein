@@ -232,7 +232,7 @@ Third real dogfood day and release baseline:
 - Day views include focus blocks that overlap the selected local day; duration totals are clipped to the selected day window
 - Today and Markdown export show an `Open Gap` when no focus block is running and the interval after the last stopped block is at least 20 minutes
 - Markdown reports use the corrected focus-session rows, so post-factum edits are reflected in copied day data
-- Today shows a Russian `Проверка перед отчётом` checklist for active-state blockers, open captures, significant gaps, open gaps, Activity Zone coverage, non-work tracking, Work Item today/total badge visibility, capture coverage, Work Item context coverage, and focus-correction evidence. If the Work Item cards show today's and total tracked time for touched items, the user can explicitly accept that from the checklist, which writes `work_item_time_badges_reviewed` telemetry. If no correction is needed, the user can explicitly accept tracking accuracy from the checklist, which writes `focus_correction_reviewed` telemetry. If open captures are intentionally left as follow-up, the user can explicitly accept them from the checklist, which writes `capture_followup_reviewed` telemetry. Copied UI dogfood reports include the same Russian daily-closure audit as the CLI report.
+- Today shows a Russian `Проверка перед отчётом` checklist for active-state blockers, open captures, significant gaps, open gaps, Activity Zone coverage, non-work tracking, Work Item today/total badge visibility, capture coverage, Work Item context coverage, entry paths, window entrypoints, and focus-correction evidence. Gap items can stage a Day Event through a `Записать` action. Optional checks can be explicitly accepted from the checklist: Work Item today/total badges, tracking accuracy, open-capture follow-up, Activity Zone coverage, Capture usage, entry paths, and window entrypoints each write their own review telemetry. Copied UI dogfood reports include the same Russian daily-closure audit as the CLI report.
 - Today's focus picture can be copied as Markdown from the focus panel, including per-Work-Item totals, Activity Zone totals, and significant gaps
 - Today's focus picture can also be exported from SQLite with `pnpm export:focus-day`
 - Evening dogfood report can be copied from the focus panel, shown as selected Markdown if clipboard access fails, or generated with `pnpm dogfood:report`; UI and CLI reports include the same Russian review checklist and daily-closure audit
@@ -275,7 +275,7 @@ Third real dogfood day and release baseline:
 - Destructive confirmation dialogs focus `Cancel` by default and do not confirm on `Enter`
 - Focus input is refocused when the window becomes visible and no block is active
 - SQLite storage through the embedded Rust agent
-- Local app-event telemetry for dogfood analysis: app start, agent start/reuse/recovery, window show/hide/drag, window show/hide requests, focus start/switch/stop, Capture Inbox create/update/delete/resolve/convert, report copy, manual copy fallback, and API errors
+- Local app-event telemetry for dogfood analysis: app start, agent start/reuse/recovery, window show/hide/drag, window show/hide requests, focus start/switch/stop, Capture Inbox create/update/delete/resolve/convert, accepted review decisions, report copy, manual copy fallback, and API errors
 - Mock server for browser development
 
 ## Focus Session Data
@@ -374,6 +374,7 @@ Tracked event groups:
 - Capture Inbox create, update, delete, resolve, convert requests and outcomes;
 - report copy attempts, clipboard failures, and manual copy fallback;
 - day-closure start/completion and the measured duration from review start to final report copy;
+- accepted review decisions for Activity Zones, Capture usage, entry paths, window entrypoints, Work Item time badges, capture follow-up, and focus-correction review;
 - Local API errors.
 
 Telemetry payloads are sanitized before storage. They can contain safe technical metadata such as control name, action id, duration, counters, and boolean flags. They must not contain raw Work Item titles, notes, URLs, search text, or other free-form user text. Analysis links events through `work_item_id` and `focus_session_id`, using the existing tables when names are needed.
@@ -388,7 +389,7 @@ pnpm dogfood:finish:save
 pnpm dogfood:goal-check
 ```
 
-The report telemetry section includes action counts, typed entry and selected/list continuation evidence, start/switch/stop failures, Capture Inbox action counts and failures, day-closure start/completion counts, last measured day-closure duration, API errors, window show/hide counts, both show and hide request counts, copy fallback counts, average start latency, likely show-to-start friction gaps, attempts to start the already active Work Item, and stale runtime recovery events.
+The report telemetry section includes action counts, typed entry and selected/list continuation evidence, start/switch/stop failures, Capture Inbox action counts and failures, accepted review decisions, day-closure start/completion counts, last measured day-closure duration, API errors, window show/hide counts, both show and hide request counts, copy fallback counts, average start latency, likely show-to-start friction gaps, attempts to start the already active Work Item, and stale runtime recovery events.
 
 ## Global Shortcut and Tray
 

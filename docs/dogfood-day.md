@@ -33,7 +33,8 @@ End of day:
 
 - start the evening closure from `Review before report` by clicking `Начать закрытие дня`;
 - clear hard blockers first: stop active focus, clear stuck active Work Items, and resolve required review actions;
-- consciously accept optional review items that are intentionally left as-is;
+- use `Записать` on gap review items when the right action is to add a Day Event explanation;
+- consciously accept optional review items that are intentionally left as-is: Activity Zones, Capture usage, entry paths, window entrypoints, Work Item today/total badges, tracking accuracy, or open-capture follow-up;
 - click `Copy Report` in Today and paste the dogfood report into the day note;
 - if the button says `Copy Draft`, stop the active focus block or clear the active Work Item before treating the report as final;
 - use `Copy MD` when only the raw day picture is needed;

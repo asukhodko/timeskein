@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import type { ActivityZone, AppEventSummary, CaptureView, DayEventView, FocusSessionView, WorkItemEventView, WorkItemView } from '@timeskein/contracts'
+import type { ActivityZone, AppEventKind, AppEventSummary, CaptureView, DayEventView, FocusSessionView, WorkItemEventView, WorkItemView } from '@timeskein/contracts'
 import {
   useCurrentFocusSession,
   useStartFocusSession,
@@ -555,12 +555,23 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
   }
 
   const handleReviewAction = async (action: DayReviewAction) => {
+    if (action === 'stage_significant_gap') {
+      const gap = gapsBetweenSessions(sessions).find((item) => item.seconds >= SIGNIFICANT_GAP_SECONDS)
+      if (gap) {
+        stageGapDayEvent(gap)
+      }
+      return
+    }
+
+    if (action === 'stage_open_gap') {
+      if (openGap) {
+        stageGapDayEvent(openGap, 'Открытый разрыв')
+      }
+      return
+    }
+
     const actionId = createTelemetryActionId()
-    const kind = action === 'accept_open_captures'
-      ? 'capture_followup_reviewed'
-      : action === 'accept_work_item_time_badges'
-        ? 'work_item_time_badges_reviewed'
-        : 'focus_correction_reviewed'
+    const kind = reviewActionEventKind(action)
     const touchedWorkItemCount = new Set(sessions.map((session) => session.work_item_id).filter(Boolean)).size
 
     await logAppEvent({
@@ -571,6 +582,8 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
         control: 'review_checklist',
         ...(action === 'accept_open_captures' ? { open_count: openCaptures.length } : {}),
         ...(action === 'accept_work_item_time_badges' ? { touched_work_item_count: touchedWorkItemCount } : {}),
+        ...(action === 'accept_activity_zones' ? { zone_count: activityZoneTotals.length } : {}),
+        ...(action === 'accept_capture_usage' ? { capture_count: captureActivity.length } : {}),
       },
     })
 
@@ -796,6 +809,28 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
       )}
     </section>
   )
+}
+
+function reviewActionEventKind(action: DayReviewAction): AppEventKind {
+  switch (action) {
+    case 'accept_open_captures':
+      return 'capture_followup_reviewed'
+    case 'accept_work_item_time_badges':
+      return 'work_item_time_badges_reviewed'
+    case 'accept_tracking_accuracy':
+      return 'focus_correction_reviewed'
+    case 'accept_activity_zones':
+      return 'activity_zone_reviewed'
+    case 'accept_capture_usage':
+      return 'capture_usage_reviewed'
+    case 'accept_entry_paths':
+      return 'entry_paths_reviewed'
+    case 'accept_window_entrypoints':
+      return 'window_entrypoints_reviewed'
+    case 'stage_significant_gap':
+    case 'stage_open_gap':
+      throw new Error(`Review action does not map to telemetry: ${action}`)
+  }
 }
 
 async function copyText(text: string) {
@@ -1072,7 +1107,16 @@ type DayReviewItem = {
   action?: DayReviewAction
 }
 
-type DayReviewAction = 'accept_tracking_accuracy' | 'accept_open_captures' | 'accept_work_item_time_badges'
+type DayReviewAction =
+  | 'accept_tracking_accuracy'
+  | 'accept_open_captures'
+  | 'accept_work_item_time_badges'
+  | 'accept_activity_zones'
+  | 'accept_capture_usage'
+  | 'accept_entry_paths'
+  | 'accept_window_entrypoints'
+  | 'stage_significant_gap'
+  | 'stage_open_gap'
 
 function buildDayReviewItems({
   sessions,
@@ -1106,6 +1150,10 @@ function buildDayReviewItems({
   const touchedWorkItemNoteCount = workItems.filter((item) => touchedWorkItemIds.has(item.id) && item.note?.trim()).length
   const gapExplanationCount = dayEvents.filter((event) => isGapExplanationText(event.text)).length
   const unexplainedGapCount = Math.max(gaps.length - gapExplanationCount, 0)
+  const activityZoneReviewed = (appTelemetry?.by_kind.activity_zone_reviewed ?? 0) > 0
+  const captureUsageReviewed = (appTelemetry?.by_kind.capture_usage_reviewed ?? 0) > 0
+  const entryPathsReviewed = (appTelemetry?.by_kind.entry_paths_reviewed ?? 0) > 0
+  const windowEntrypointsReviewed = (appTelemetry?.by_kind.window_entrypoints_reviewed ?? 0) > 0
 
   if (activeFocus) {
     items.push({
@@ -1137,6 +1185,7 @@ function buildDayReviewItems({
       level: 'review',
       title: 'Classify significant gaps',
       detail: `${unexplainedGapCount}/${gaps.length} больших разрывов без Day Event`,
+      action: 'stage_significant_gap',
     })
   }
 
@@ -1145,22 +1194,25 @@ function buildDayReviewItems({
       level: 'review',
       title: 'Explain current open gap',
       detail: `${formatDuration(openGap.seconds)} после последнего остановленного блока`,
+      action: 'stage_open_gap',
     })
   }
 
-  if (sessions.length > 0 && zoneTotals.length <= 1) {
+  if (sessions.length > 0 && zoneTotals.length <= 1 && !activityZoneReviewed) {
     items.push({
       level: 'review',
       title: 'Review Activity Zone coverage',
       detail: 'В отчёте видна только одна зона',
+      action: 'accept_activity_zones',
     })
   }
 
-  if (sessions.length > 0 && nonWorkSeconds === 0) {
+  if (sessions.length > 0 && nonWorkSeconds === 0 && !activityZoneReviewed) {
     items.push({
       level: 'review',
       title: 'Confirm non-work tracked time',
       detail: 'Перерывы, recovery, coordination или personal могли потеряться',
+      action: 'accept_activity_zones',
     })
   }
 
@@ -1173,19 +1225,21 @@ function buildDayReviewItems({
     })
   }
 
-  if (sessions.length > 0 && captureActivity.length === 0) {
+  if (sessions.length > 0 && captureActivity.length === 0 && !captureUsageReviewed) {
     items.push({
       level: 'review',
       title: 'Capture Inbox untested today',
       detail: 'За день не было ни одного capture',
+      action: 'accept_capture_usage',
     })
   }
 
-  if (captureActivity.length > 0 && captureActivity.every((capture) => !capture.focus_session_id)) {
+  if (captureActivity.length > 0 && captureActivity.every((capture) => !capture.focus_session_id) && !captureUsageReviewed) {
     items.push({
       level: 'review',
       title: 'Captures were not linked to active focus',
       detail: 'Обработка отвлечений в фокусе сегодня не проверена',
+      action: 'accept_capture_usage',
     })
   }
 
@@ -1203,19 +1257,25 @@ function buildDayReviewItems({
       appTelemetry.selected_entry_requests === 0 ||
       appTelemetry.stop_requests === 0
     ) {
-      items.push({
-        level: 'review',
-        title: 'Exercise start and continue paths',
-        detail: `${appTelemetry.typed_entry_requests} вводом, ${appTelemetry.selected_entry_requests} из списка, ${appTelemetry.stop_requests} stop`,
-      })
+      if (!entryPathsReviewed) {
+        items.push({
+          level: 'review',
+          title: 'Exercise start and continue paths',
+          detail: `${appTelemetry.typed_entry_requests} вводом, ${appTelemetry.selected_entry_requests} из списка, ${appTelemetry.stop_requests} stop`,
+          action: 'accept_entry_paths',
+        })
+      }
     }
 
     if (appTelemetry.window_show_requested === 0 || appTelemetry.window_hide_requested === 0) {
-      items.push({
-        level: 'review',
-        title: 'Test window entrypoints',
-        detail: `${appTelemetry.window_show_requested} show, ${appTelemetry.window_hide_requested} hide`,
-      })
+      if (!windowEntrypointsReviewed) {
+        items.push({
+          level: 'review',
+          title: 'Test window entrypoints',
+          detail: `${appTelemetry.window_show_requested} show, ${appTelemetry.window_hide_requested} hide`,
+          action: 'accept_window_entrypoints',
+        })
+      }
     }
 
     if (appTelemetry.correction_failures > 0) {
@@ -1339,7 +1399,7 @@ function DayReviewGroup({
                 onClick={() => onAction?.(item.action!)}
                 className="rounded border border-amber-800 px-1.5 py-0.5 text-[11px] font-medium text-amber-100 hover:border-amber-500"
               >
-                Принять
+                {formatReviewActionLabel(item.action)}
               </button>
             )}
           </div>
@@ -1347,6 +1407,14 @@ function DayReviewGroup({
       })}
     </div>
   )
+}
+
+function formatReviewActionLabel(action: DayReviewAction) {
+  if (action === 'stage_significant_gap' || action === 'stage_open_gap') {
+    return 'Записать'
+  }
+
+  return 'Принять'
 }
 
 function reviewItemDotClass(level: DayReviewItem['level']) {
@@ -1462,9 +1530,18 @@ function formatDailyControlGoalAuditMarkdown({
     extractLineValue(appTelemetryMarkdown, 'Corrections requested/applied/reviewed/failed') ?? 'n/a'
   const captureFollowupReviews = parseLeadingNumber(extractLineValue(appTelemetryMarkdown, 'Capture follow-up reviews'))
   const workItemTimeBadgeReviews = parseLeadingNumber(extractLineValue(appTelemetryMarkdown, 'Work Item time badge reviews'))
+  const activityZoneReviews = parseLeadingNumber(extractLineValue(appTelemetryMarkdown, 'Activity Zone reviews'))
+  const captureUsageReviews = parseLeadingNumber(extractLineValue(appTelemetryMarkdown, 'Capture usage reviews'))
+  const entryPathReviews = parseLeadingNumber(extractLineValue(appTelemetryMarkdown, 'Entry path reviews'))
+  const windowEntrypointReviews = parseLeadingNumber(extractLineValue(appTelemetryMarkdown, 'Window entrypoint reviews'))
   const closureCounts = parseCountPair(extractLineValue(appTelemetryMarkdown, 'Day closure started/completed'))
   const lastClosureDuration = parseDurationSeconds(extractLineValue(appTelemetryMarkdown, 'Last day closure duration'))
   const telemetryAvailable = appTelemetryMarkdown.includes('Total events:')
+  const entryPathsCovered =
+    entryTelemetry &&
+    entryTelemetry.typedEntryRequests > 0 &&
+    entryTelemetry.selectedEntryRequests > 0 &&
+    entryTelemetry.stopRequests > 0
   const rows = [
     {
       requirement: 'Final state clean',
@@ -1485,10 +1562,13 @@ function formatDailyControlGoalAuditMarkdown({
     },
     {
       requirement: 'Activity Zones separated',
-      status: hasFocusBlocks && !hasReview('Review Activity Zone coverage') && !hasReview('Confirm non-work tracked time')
-        ? 'pass'
-        : 'review',
-      evidence: `${workFocus} work, ${nonWorkTracked} non-work`,
+      status:
+        hasFocusBlocks &&
+        ((!hasReview('Review Activity Zone coverage') && !hasReview('Confirm non-work tracked time')) ||
+          activityZoneReviews > 0)
+          ? 'pass'
+          : 'review',
+      evidence: `${workFocus} work, ${nonWorkTracked} non-work, ${activityZoneReviews} review(s)`,
     },
     {
       requirement: 'Day and Work Item context present',
@@ -1503,12 +1583,12 @@ function formatDailyControlGoalAuditMarkdown({
       requirement: 'Gaps and captures visible',
       status:
         hasReview('Classify significant gaps') ||
-        hasReview('Capture Inbox untested today') ||
-        hasReview('Captures were not linked to active focus') ||
+        (hasReview('Capture Inbox untested today') && captureUsageReviews === 0) ||
+        (hasReview('Captures were not linked to active focus') && captureUsageReviews === 0) ||
         hasReview('Resolve, convert, or accept open captures')
           ? 'review'
           : 'pass',
-      evidence: `${todayMarkdown.includes('## Gaps >=') ? 'gaps section present' : 'no significant gaps section'}, ${openCaptures.length} open capture(s), ${captureFollowupReviews} follow-up review(s), ${captureActivity.length} capture(s) today`,
+      evidence: `${todayMarkdown.includes('## Gaps >=') ? 'gaps section present' : 'no significant gaps section'}, ${openCaptures.length} open capture(s), ${captureFollowupReviews} follow-up review(s), ${captureUsageReviews} usage review(s), ${captureActivity.length} capture(s) today`,
     },
     {
       requirement: 'Window and menubar friction evidenced',
@@ -1517,24 +1597,21 @@ function formatDailyControlGoalAuditMarkdown({
         apiErrors > 0 ||
         copyFailures > 0 ||
         startStopFailures !== '0/0' ||
-        hasReview('Test window entrypoints')
+        (hasReview('Test window entrypoints') && windowEntrypointReviews === 0)
           ? 'review'
           : 'pass',
-      evidence: `window shown/hidden ${windowEvidence}, requests ${windowRequestEvidence}, API errors ${apiErrors}, start/stop failures ${startStopFailures}`,
+      evidence: `window shown/hidden ${windowEvidence}, requests ${windowRequestEvidence}, ${windowEntrypointReviews} review(s), API errors ${apiErrors}, start/stop failures ${startStopFailures}`,
     },
     {
       requirement: 'Start and continue paths evidenced',
       status:
         !telemetryAvailable ||
         !entryTelemetry ||
-        entryTelemetry.typedEntryRequests === 0 ||
-        entryTelemetry.selectedEntryRequests === 0 ||
-        entryTelemetry.stopRequests === 0 ||
-        hasReview('Exercise start and continue paths') ||
+        (!entryPathsCovered && entryPathReviews === 0) ||
         entryPathEvidence === 'n/a'
           ? 'review'
           : 'pass',
-      evidence: `${entryPathEvidence} typed/selected, ${entryTelemetry?.stopRequests ?? 'n/a'} stop request(s)`,
+      evidence: `${entryPathEvidence} typed/selected, ${entryTelemetry?.stopRequests ?? 'n/a'} stop request(s), ${entryPathReviews} review(s)`,
     },
     {
       requirement: 'Tracking correction or review evidenced',
@@ -2118,6 +2195,10 @@ function formatAppTelemetryMarkdown(summary: AppEventSummary) {
     `Capture created/resolved/converted: ${summary.capture_created}/${summary.capture_resolved}/${summary.capture_converted}`,
     `Capture follow-up reviews: ${summary.capture_followup_reviews}`,
     `Work Item time badge reviews: ${summary.work_item_time_badge_reviews}`,
+    `Activity Zone reviews: ${summary.activity_zone_reviews}`,
+    `Capture usage reviews: ${summary.capture_usage_reviews}`,
+    `Entry path reviews: ${summary.entry_path_reviews}`,
+    `Window entrypoint reviews: ${summary.window_entrypoint_reviews}`,
     `Capture updated/deleted: ${summary.capture_updated}/${summary.capture_deleted}`,
     `Capture failures create/resolve/update/delete/convert: ${summary.capture_create_failures}/${summary.capture_resolve_failures}/${summary.capture_update_failures}/${summary.capture_delete_failures}/${summary.capture_convert_failures}`,
     `Corrections requested/applied/reviewed/failed: ${summary.correction_requests}/${summary.corrections}/${summary.correction_reviews}/${summary.correction_failures}`,

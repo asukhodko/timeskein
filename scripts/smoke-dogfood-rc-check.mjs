@@ -103,6 +103,36 @@ try {
   assert(goodStrict.code === 0, "good day should pass strict RC check");
   assert(goodStrict.stdout.includes("Strict mode: yes"), "strict RC check marker is missing");
 
+  const singleZoneDb = join(tempDir, "single-zone.db");
+  await copyDb(goodDb, singleZoneDb);
+  await runSql(singleZoneDb, `
+    UPDATE work_items SET activity_zone = 'work';
+    UPDATE focus_sessions SET activity_zone = 'work';
+  `);
+  const singleZoneStrict = await runRcCheck(singleZoneDb, ["--strict"]);
+  assert(singleZoneStrict.code !== 0, "strict RC check should fail when Activity Zone coverage is unreviewed");
+  assert(
+    singleZoneStrict.stdout.includes("Only one Activity Zone appears in the day"),
+    "strict RC check should explain single-zone evidence"
+  );
+
+  const acceptedSingleZoneDb = join(tempDir, "accepted-single-zone.db");
+  await copyDb(singleZoneDb, acceptedSingleZoneDb);
+  await runSql(acceptedSingleZoneDb, `
+    INSERT INTO app_events (id, ts, source, kind, payload)
+    VALUES ('e23', '2026-06-30T10:20:00Z', 'ui', 'activity_zone_reviewed', '{"action_id":"z1","control":"review_checklist","zone_count":1}');
+  `);
+  const acceptedSingleZoneStrict = await runRcCheck(acceptedSingleZoneDb, ["--strict"]);
+  assert(acceptedSingleZoneStrict.code === 0, "accepted Activity Zone review should pass strict RC check");
+  assert(
+    acceptedSingleZoneStrict.stdout.includes("Activity Zone reviews: 1"),
+    "accepted Activity Zone review evidence is missing"
+  );
+  assert(
+    acceptedSingleZoneStrict.stdout.includes("| Activity Zones separated | pass |"),
+    "accepted Activity Zone review should pass Activity Zone audit row"
+  );
+
   const unexplainedGapDb = join(tempDir, "unexplained-gap.db");
   await copyDb(goodDb, unexplainedGapDb);
   await runSql(unexplainedGapDb, "UPDATE day_events SET text = 'Meeting buffer was costly' WHERE id = 'de1';");
@@ -126,6 +156,22 @@ try {
     noSelectedEntryStrict.stdout.includes("No selected/list Work Item entry request found"),
     "strict RC check should explain missing selected/list entry evidence"
   );
+  const acceptedNoSelectedEntryDb = join(tempDir, "accepted-no-selected-entry.db");
+  await copyDb(noSelectedEntryDb, acceptedNoSelectedEntryDb);
+  await runSql(acceptedNoSelectedEntryDb, `
+    INSERT INTO app_events (id, ts, source, kind, payload)
+    VALUES ('e23', '2026-06-30T10:20:00Z', 'ui', 'entry_paths_reviewed', '{"action_id":"p1","control":"review_checklist"}');
+  `);
+  const acceptedNoSelectedEntryStrict = await runRcCheck(acceptedNoSelectedEntryDb, ["--strict"]);
+  assert(acceptedNoSelectedEntryStrict.code === 0, "accepted entry path review should pass strict RC check");
+  assert(
+    acceptedNoSelectedEntryStrict.stdout.includes("Entry path reviews: 1"),
+    "accepted entry path review evidence is missing"
+  );
+  assert(
+    acceptedNoSelectedEntryStrict.stdout.includes("| Start and continue paths evidenced | pass |"),
+    "accepted entry path review should pass entry audit row"
+  );
 
   const noWindowRequestDb = join(tempDir, "no-window-request.db");
   await copyDb(goodDb, noWindowRequestDb);
@@ -139,6 +185,22 @@ try {
   assert(
     noWindowRequestStrict.stdout.includes("No window hide request telemetry found"),
     "strict RC check should explain missing window hide request evidence"
+  );
+  const acceptedNoWindowRequestDb = join(tempDir, "accepted-no-window-request.db");
+  await copyDb(noWindowRequestDb, acceptedNoWindowRequestDb);
+  await runSql(acceptedNoWindowRequestDb, `
+    INSERT INTO app_events (id, ts, source, kind, payload)
+    VALUES ('e23', '2026-06-30T10:20:00Z', 'ui', 'window_entrypoints_reviewed', '{"action_id":"w1","control":"review_checklist"}');
+  `);
+  const acceptedNoWindowRequestStrict = await runRcCheck(acceptedNoWindowRequestDb, ["--strict"]);
+  assert(acceptedNoWindowRequestStrict.code === 0, "accepted window entrypoint review should pass strict RC check");
+  assert(
+    acceptedNoWindowRequestStrict.stdout.includes("Window entrypoint reviews: 1"),
+    "accepted window entrypoint review evidence is missing"
+  );
+  assert(
+    acceptedNoWindowRequestStrict.stdout.includes("| Window and menubar friction evidenced | pass |"),
+    "accepted window entrypoint review should pass window audit row"
   );
 
   const showOnlyWindowRequestDb = join(tempDir, "show-only-window-request.db");
@@ -312,6 +374,22 @@ try {
   );
   const noActiveFocusCaptureStrict = await runRcCheck(noActiveFocusCaptureDb, ["--strict"]);
   assert(noActiveFocusCaptureStrict.code !== 0, "strict RC check should fail without active-focus capture evidence");
+  const acceptedNoActiveFocusCaptureDb = join(tempDir, "accepted-no-active-focus-capture.db");
+  await copyDb(noActiveFocusCaptureDb, acceptedNoActiveFocusCaptureDb);
+  await runSql(acceptedNoActiveFocusCaptureDb, `
+    INSERT INTO app_events (id, ts, source, kind, payload)
+    VALUES ('e23', '2026-06-30T10:20:00Z', 'ui', 'capture_usage_reviewed', '{"action_id":"u1","control":"review_checklist","capture_count":1}');
+  `);
+  const acceptedNoActiveFocusCaptureStrict = await runRcCheck(acceptedNoActiveFocusCaptureDb, ["--strict"]);
+  assert(acceptedNoActiveFocusCaptureStrict.code === 0, "accepted capture usage review should pass strict RC check");
+  assert(
+    acceptedNoActiveFocusCaptureStrict.stdout.includes("Capture usage reviews: 1"),
+    "accepted capture usage review evidence is missing"
+  );
+  assert(
+    acceptedNoActiveFocusCaptureStrict.stdout.includes("| Gaps and captures visible | pass |"),
+    "accepted capture usage review should pass gap/capture audit row"
+  );
 
   const noCaptureDb = join(tempDir, "no-capture.db");
   await copyDb(goodDb, noCaptureDb);
@@ -326,6 +404,18 @@ try {
   assert(
     noCapture.stdout.includes("Capture Inbox was not tested in battle"),
     "missing captures review item is missing"
+  );
+  const acceptedNoCaptureDb = join(tempDir, "accepted-no-capture.db");
+  await copyDb(noCaptureDb, acceptedNoCaptureDb);
+  await runSql(acceptedNoCaptureDb, `
+    INSERT INTO app_events (id, ts, source, kind, payload)
+    VALUES ('e23', '2026-06-30T10:20:00Z', 'ui', 'capture_usage_reviewed', '{"action_id":"u2","control":"review_checklist","capture_count":0}');
+  `);
+  const acceptedNoCaptureStrict = await runRcCheck(acceptedNoCaptureDb, ["--strict"]);
+  assert(acceptedNoCaptureStrict.code === 0, "accepted no-capture usage review should pass strict RC check");
+  assert(
+    acceptedNoCaptureStrict.stdout.includes("Capture Inbox was not tested in battle") === false,
+    "accepted no-capture usage review should clear missing-capture review item"
   );
 
   const captureFailureDb = join(tempDir, "capture-failure.db");

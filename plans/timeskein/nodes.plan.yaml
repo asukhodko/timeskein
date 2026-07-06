@@ -353,7 +353,7 @@ nodes:
       - id: ts.day_review.export
       - id: ts.day_review.work_item_events
       - id: ts.day_review.day_events
-    notes: Today and dogfood reports show a Review Checklist for active-state blockers, open captures, significant gaps, open gaps, Activity Zone coverage, non-work tracking, capture coverage, Day Events, Work Item context coverage, and focus-correction evidence. If no correction is needed, the checklist can record an accepted tracking-accuracy review. The checklist is meant to make evening cleanup explicit before copying the final report.
+    notes: Today and dogfood reports show a Review Checklist for active-state blockers, open captures, significant gaps, open gaps, Activity Zone coverage, non-work tracking, capture coverage, Day Events, Work Item context coverage, entry paths, window entrypoints, and focus-correction evidence. Gap items can stage a Day Event through a Write action. Optional Activity Zone, Capture usage, entry path, window-entrypoint, Work Item badge, tracking-accuracy, and open-capture follow-up checks can be explicitly accepted as review telemetry. The checklist is meant to make evening cleanup explicit before copying the final report.
     x:
       ops:
         attention_class: current
@@ -366,7 +366,7 @@ nodes:
     deps:
       - id: ts.day_review.app_telemetry
       - id: ts.day_review.review_checklist
-    notes: The UI/CLI dogfood report and RC evidence check summarize focus totals, Activity Zones, Day Events, Work Item notes/events, Capture Inbox coverage, window telemetry including show/hide request counts, and product-friction counters. They include a Daily Control Goal Audit table. dogfood:goal-check requires saved evidence for the real local database, then runs pnpm test, dogfood:preflight, and strict RC evidence on the same code, so the next dogfood day can be judged requirement by requirement against report usefulness rather than memory reconstruction.
+    notes: The UI/CLI dogfood report and RC evidence check summarize focus totals, Activity Zones, Day Events, Work Item notes/events, Capture Inbox coverage, accepted review decisions, window telemetry including show/hide request counts, and product-friction counters. They include a Daily Control Goal Audit table. dogfood:goal-check requires saved evidence for the real local database, then runs pnpm test, dogfood:preflight, and strict RC evidence on the same code, so the next dogfood day can be judged requirement by requirement against report usefulness rather than memory reconstruction.
     x:
       ops:
         attention_class: current

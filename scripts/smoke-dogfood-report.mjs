@@ -108,10 +108,12 @@ try {
     stdout.includes("1/1 начато/завершено, последняя длительность: 7:00"),
     "report daily-control audit evidence did not localize closure duration"
   );
-  assert(stdout.includes("| Локальные проверки | вручную |"), "report daily-control audit did not include local gates");
+  assert(
+    !stdout.includes("| Локальные проверки |") && !stdout.includes("Перед закрытием цели"),
+    "report daily-control audit should leave local gates to the goal-check layer"
+  );
   assert(stdout.includes("Закрытий дня начато/завершено: 1/1"), "report telemetry did not include day closure counts");
   assert(stdout.includes("Последняя длительность закрытия дня: 7:00"), "report telemetry did not include day closure duration");
-  assert(stdout.includes("pnpm dogfood:goal-check"), "report daily-control audit did not mention goal-check");
   assert(
     !stdout.includes("active focus block(s)") &&
       !stdout.includes("entrance(s)") &&

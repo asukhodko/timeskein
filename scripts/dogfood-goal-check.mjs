@@ -157,7 +157,6 @@ async function checkSavedEvidence(date) {
     ["Коррекция трекинга проверена", "Tracking correction or review evidenced"],
     ["Длительность закрытия измерена", "Day closure duration measured"],
     ["Жёстких блокеров нет", "Hard blockers absent"],
-    ["Локальные проверки", "Local gates"],
   ];
   const rcDailyControlRows = [
     ["Final state clean"],
@@ -171,8 +170,8 @@ async function checkSavedEvidence(date) {
     ["Tracking correction or review evidenced"],
     ["Day closure duration measured"],
     ["Hard blockers absent"],
-    ["Local gates"],
   ];
+  const rcOnlyDailyControlRows = [["Local gates"]];
 
   for (const aliases of reportRequirements) {
     if (!includesAny(report, aliases)) {
@@ -192,6 +191,14 @@ async function checkSavedEvidence(date) {
   for (const aliases of rcDailyControlRows) {
     if (!includesAny(rcCheck, aliases)) {
       weak.push(`${rcPath} Daily Control Goal Audit does not include ${aliases[0]}`);
+    }
+  }
+  for (const aliases of rcOnlyDailyControlRows) {
+    if (!includesAny(rcCheck, aliases)) {
+      weak.push(`${rcPath} Daily Control Goal Audit does not include ${aliases[0]}`);
+    }
+    if (includesAny(report, aliases)) {
+      weak.push(`${reportPath} Daily Control Goal Audit should leave ${aliases[0]} to the RC/goal-check layer`);
     }
   }
 

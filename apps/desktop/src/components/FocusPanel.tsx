@@ -1634,7 +1634,6 @@ const DAILY_CONTROL_REQUIREMENT_LABELS: Record<string, string> = {
   'Tracking correction or review evidenced': 'Коррекция трекинга проверена',
   'Day closure duration measured': 'Длительность закрытия измерена',
   'Hard blockers absent': 'Жёстких блокеров нет',
-  'Local gates': 'Локальные проверки',
 }
 const DAILY_CONTROL_STATUS_LABELS: Record<string, string> = {
   block: 'блокер',
@@ -1799,11 +1798,6 @@ function formatDailyControlGoalAuditMarkdown({
       requirement: 'Hard blockers absent',
       status: activeFocus || activeWorkItems.length > 0 ? 'block' : 'pass',
       evidence: `${reviewItems.filter((item) => item.level === 'blocker').length} блокеров`,
-    },
-    {
-      requirement: 'Local gates',
-      status: 'manual',
-      evidence: 'Перед закрытием цели прогнать pnpm test и pnpm dogfood:preflight на этом же коде',
     },
   ]
 

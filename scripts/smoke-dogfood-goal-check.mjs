@@ -85,7 +85,7 @@ try {
     "weak saved evidence error did not mention missing audit rows"
   );
 
-  const auditRows = [
+  const reportAuditRows = [
     "| Final state clean | pass | 0 active focus block(s), 0 active Work Item(s) |",
     "| Focus blocks visible | pass | 3 entrance(s), 2:00 tracked |",
     "| Work Item totals available | pass | By Work Item section present, 1 UI badge review(s) |",
@@ -97,14 +97,25 @@ try {
     "| Tracking correction or review evidenced | pass | 0/0/1/0 requested/applied/reviewed/failed |",
     "| Day closure duration measured | pass | 1/1 started/completed, last duration 7:00 |",
     "| Hard blockers absent | pass | 0 blocker(s) |",
+  ];
+  const rcAuditRows = [
+    ...reportAuditRows,
     "| Local gates | manual | Run pnpm dogfood:goal-check on the same code before closing the goal |",
   ];
-  const auditMarkdown = [
+  const reportAuditMarkdown = [
     "## Daily Control Goal Audit",
     "",
     "| Requirement | Status | Evidence |",
     "| --- | --- | --- |",
-    ...auditRows,
+    ...reportAuditRows,
+    "",
+  ].join("\n");
+  const rcAuditMarkdown = [
+    "## Daily Control Goal Audit",
+    "",
+    "| Requirement | Status | Evidence |",
+    "| --- | --- | --- |",
+    ...rcAuditRows,
     "",
   ].join("\n");
 
@@ -113,7 +124,7 @@ try {
     [
       "# Timeskein dogfood report - 2026-06-30",
       "## Focus Data",
-      auditMarkdown,
+      reportAuditMarkdown,
       "## App Telemetry",
       "",
     ].join("\n")
@@ -123,7 +134,7 @@ try {
     [
       "# Timeskein dogfood RC check - 2026-06-30",
       "## Evidence Summary",
-      auditMarkdown,
+      rcAuditMarkdown,
       "",
     ].join("\n")
   );

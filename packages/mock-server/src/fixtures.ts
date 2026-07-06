@@ -374,7 +374,9 @@ export class MockDataStore {
     const byKind: Record<string, number> = {};
     const bySource: Record<string, number> = {};
     const pendingStarts = new Map<string, number>();
+    const pendingClosures = new Map<string, number>();
     const startLatencies: number[] = [];
+    const closureDurationsSeconds: number[] = [];
     const alreadyActiveActionIds = new Set<string>();
     let alreadyActiveWithoutAction = 0;
     let windowShownAt: number | undefined;
@@ -400,6 +402,19 @@ export class MockDataStore {
           slowWindowToFocusCount += 1;
         }
         windowShownAt = undefined;
+      }
+
+      if (event.kind === "day_closure_started") {
+        const actionId = typeof event.payload?.action_id === "string" ? event.payload.action_id : undefined;
+        if (actionId) pendingClosures.set(actionId, new Date(event.ts).getTime());
+      }
+
+      if (event.kind === "day_closure_completed") {
+        const actionId = typeof event.payload?.action_id === "string" ? event.payload.action_id : undefined;
+        if (actionId && pendingClosures.has(actionId)) {
+          closureDurationsSeconds.push(Math.floor(Math.max(new Date(event.ts).getTime() - pendingClosures.get(actionId)!, 0) / 1000));
+          pendingClosures.delete(actionId);
+        }
       }
 
       if (event.kind === "window_shown") {
@@ -438,6 +453,9 @@ export class MockDataStore {
       corrections: count("focus_corrected"),
       correction_reviews: count("focus_correction_reviewed"),
       correction_failures: count("focus_correction_failed"),
+      day_closure_starts: count("day_closure_started"),
+      day_closure_completions: count("day_closure_completed"),
+      last_day_closure_duration_seconds: closureDurationsSeconds.at(-1),
       api_errors: count("api_error"),
       copy_failures: count("report_copy_failed"),
       manual_copy_fallbacks: count("manual_copy_fallback_shown"),

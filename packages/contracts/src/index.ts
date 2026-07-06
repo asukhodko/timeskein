@@ -167,6 +167,8 @@ export type AppEventKind =
   | "focus_corrected"
   | "focus_correction_reviewed"
   | "focus_correction_failed"
+  | "day_closure_started"
+  | "day_closure_completed"
   | "report_copy_requested"
   | "report_copied"
   | "report_copy_failed"
@@ -215,6 +217,9 @@ export interface AppEventSummary {
   corrections: number;
   correction_reviews: number;
   correction_failures: number;
+  day_closure_starts: number;
+  day_closure_completions: number;
+  last_day_closure_duration_seconds?: number;
   api_errors: number;
   copy_failures: number;
   manual_copy_fallbacks: number;

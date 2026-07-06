@@ -35,9 +35,12 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
   const [dayEventText, setDayEventText] = useState('')
   const [dayEventZone, setDayEventZone] = useState<ActivityZone | ''>('')
   const [appEventSummary, setAppEventSummary] = useState<AppEventSummary | null>(null)
+  const [dayClosureStartedAt, setDayClosureStartedAt] = useState<Date | null>(null)
   const titleInputRef = useRef<HTMLInputElement>(null)
   const dayEventInputRef = useRef<HTMLInputElement>(null)
   const manualCopyRef = useRef<HTMLTextAreaElement>(null)
+  const dayClosureActionIdRef = useRef<string | null>(null)
+  const dayClosureCompletedRef = useRef(false)
   const localDayKey = formatLocalDate(now)
   const dayWindow = useMemo(() => {
     const dayStart = startOfLocalDay(now)
@@ -405,6 +408,8 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
   const copyDogfoodReport = async () => {
     if (sessions.length === 0) return
 
+    const closureActionId = await ensureDayClosureStarted('copy_report')
+
     void logAppEvent({
       source: 'ui',
       kind: 'report_copy_requested',
@@ -412,6 +417,7 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
         report_kind: 'dogfood',
       },
     })
+    await ensureDayClosureCompleted(closureActionId, 'copy_report')
 
     const freshAppEventSummary = await loadAppEventSummary(now)
     const reportReviewItems = buildDayReviewItems({
@@ -469,6 +475,47 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
     }
 
     window.setTimeout(() => setCopyReportState('idle'), 1600)
+  }
+
+  const ensureDayClosureStarted = async (control: string) => {
+    if (dayClosureActionIdRef.current) {
+      return dayClosureActionIdRef.current
+    }
+
+    const actionId = createTelemetryActionId()
+    dayClosureActionIdRef.current = actionId
+    const startedAt = new Date()
+    setDayClosureStartedAt(startedAt)
+
+    await logAppEvent({
+      source: 'ui',
+      kind: 'day_closure_started',
+      payload: {
+        action_id: actionId,
+        control,
+        local_day: localDayKey,
+      },
+    })
+
+    const summary = await loadAppEventSummary(now)
+    setAppEventSummary(summary)
+
+    return actionId
+  }
+
+  const ensureDayClosureCompleted = async (actionId: string, control: string) => {
+    if (dayClosureCompletedRef.current) return
+
+    dayClosureCompletedRef.current = true
+    await logAppEvent({
+      source: 'ui',
+      kind: 'day_closure_completed',
+      payload: {
+        action_id: actionId,
+        control,
+        local_day: localDayKey,
+      },
+    })
   }
 
   const addDayEvent = () => {
@@ -626,7 +673,15 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
           </button>
         </div>
 
-        <DayReviewPanel items={reviewItems} onAction={handleReviewAction} />
+        <DayReviewPanel
+          items={reviewItems}
+          closureStartedAt={dayClosureStartedAt}
+          canStartClosure={sessions.length > 0}
+          onAction={handleReviewAction}
+          onStartClosure={() => {
+            void ensureDayClosureStarted('review_panel')
+          }}
+        />
 
         {dayEvents.length > 0 && (
           <DayEventsPanel events={dayEvents} sessions={sessions} />
@@ -1200,10 +1255,16 @@ function buildDayReviewItems({
 
 function DayReviewPanel({
   items,
+  closureStartedAt,
+  canStartClosure,
   onAction,
+  onStartClosure,
 }: {
   items: DayReviewItem[]
+  closureStartedAt?: Date | null
+  canStartClosure?: boolean
   onAction?: (action: DayReviewAction) => void
+  onStartClosure?: () => void
 }) {
   const blockers = items.filter((item) => item.level === 'blocker')
   const reviews = items.filter((item) => item.level === 'review')
@@ -1223,7 +1284,19 @@ function DayReviewPanel({
     <div className={`grid gap-2 rounded-md border px-3 py-2 text-xs ${statusClass}`}>
       <div className="flex items-center justify-between gap-2">
         <span className="font-medium text-gray-200">Проверка перед отчётом</span>
-        <span className="text-gray-500">{statusText}</span>
+        <span className="flex items-center gap-2">
+          <span className="text-gray-500">{statusText}</span>
+          {onStartClosure && (
+            <button
+              type="button"
+              onClick={onStartClosure}
+              disabled={!canStartClosure || Boolean(closureStartedAt)}
+              className="rounded border border-emerald-800 px-1.5 py-0.5 text-[11px] font-medium text-emerald-100 hover:border-emerald-500 disabled:cursor-not-allowed disabled:border-gray-800 disabled:text-gray-500"
+            >
+              {closureStartedAt ? `Закрытие начато ${formatClockTime(closureStartedAt.toISOString())}` : 'Начать закрытие дня'}
+            </button>
+          )}
+        </span>
       </div>
       {blockers.length > 0 && (
         <DayReviewGroup title="Сначала закрыть" items={blockers} onAction={onAction} />
@@ -1369,6 +1442,8 @@ function formatDailyControlGoalAuditMarkdown({
     extractLineValue(appTelemetryMarkdown, 'Corrections requested/applied/reviewed/failed') ?? 'n/a'
   const captureFollowupReviews = parseLeadingNumber(extractLineValue(appTelemetryMarkdown, 'Capture follow-up reviews'))
   const workItemTimeBadgeReviews = parseLeadingNumber(extractLineValue(appTelemetryMarkdown, 'Work Item time badge reviews'))
+  const closureCounts = parseCountPair(extractLineValue(appTelemetryMarkdown, 'Day closure started/completed'))
+  const lastClosureDuration = parseDurationSeconds(extractLineValue(appTelemetryMarkdown, 'Last day closure duration'))
   const telemetryAvailable = appTelemetryMarkdown.includes('Total events:')
   const rows = [
     {
@@ -1447,6 +1522,14 @@ function formatDailyControlGoalAuditMarkdown({
       evidence: correctionEvidence,
     },
     {
+      requirement: 'Day closure duration measured',
+      status:
+        closureCounts?.right && lastClosureDuration != null && lastClosureDuration <= 10 * 60
+          ? 'pass'
+          : 'review',
+      evidence: `${closureCounts ? `${closureCounts.left}/${closureCounts.right}` : 'n/a'} started/completed, last duration ${lastClosureDuration == null ? 'n/a' : formatDuration(lastClosureDuration)}`,
+    },
+    {
       requirement: 'Hard blockers absent',
       status: activeFocus || activeWorkItems.length > 0 ? 'block' : 'pass',
       evidence: `${reviewItems.filter((item) => item.level === 'blocker').length} blocker(s)`,
@@ -1492,6 +1575,31 @@ function parseEntryTelemetryMarkdown(markdown: string) {
     selectedEntryRequests: Number(entryMatch[2]),
     stopRequests: Number(stopMatch[1]),
   }
+}
+
+function parseCountPair(value?: string) {
+  const match = value?.match(/^(\d+)\/(\d+)/)
+  if (!match) return undefined
+
+  return {
+    left: Number(match[1]),
+    right: Number(match[2]),
+  }
+}
+
+function parseDurationSeconds(value?: string) {
+  if (!value || value === 'n/a') return undefined
+  const parts = value.split(':').map(Number)
+  if (parts.some((part) => !Number.isFinite(part))) return undefined
+
+  if (parts.length === 3) {
+    return parts[0] * 3600 + parts[1] * 60 + parts[2]
+  }
+  if (parts.length === 2) {
+    return parts[0] * 60 + parts[1]
+  }
+
+  return undefined
 }
 
 function capturesForLocalDay(captures: CaptureView[], now: Date) {
@@ -1976,6 +2084,8 @@ function formatAppTelemetryMarkdown(summary: AppEventSummary) {
     `Capture updated/deleted: ${summary.capture_updated}/${summary.capture_deleted}`,
     `Capture failures create/resolve/update/delete/convert: ${summary.capture_create_failures}/${summary.capture_resolve_failures}/${summary.capture_update_failures}/${summary.capture_delete_failures}/${summary.capture_convert_failures}`,
     `Corrections requested/applied/reviewed/failed: ${summary.correction_requests}/${summary.corrections}/${summary.correction_reviews}/${summary.correction_failures}`,
+    `Day closure started/completed: ${summary.day_closure_starts}/${summary.day_closure_completions}`,
+    `Last day closure duration: ${summary.last_day_closure_duration_seconds == null ? 'n/a' : formatDuration(summary.last_day_closure_duration_seconds)}`,
     `API errors: ${summary.api_errors}`,
     `Already-active start attempts: ${summary.already_active_start_attempts}`,
     `Stale runtime recoveries: ${summary.stale_runtime_recoveries}`,

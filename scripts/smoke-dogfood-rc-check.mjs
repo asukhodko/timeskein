@@ -53,7 +53,9 @@ try {
       ('e13', '2026-06-30T08:30:00Z', 'ui', 'focus_start_requested', '{"action_id":"a2","control":"selected_item"}'),
       ('e14', '2026-06-30T08:30:01Z', 'ui', 'focus_started', '{"action_id":"a2","control":"selected_item"}'),
       ('e15', '2026-06-30T10:00:00Z', 'ui', 'focus_stop_requested', '{"action_id":"a3","control":"stop_button_or_enter"}'),
-      ('e20', '2026-06-30T10:06:00Z', 'ui', 'work_item_time_badges_reviewed', '{"action_id":"b1","control":"review_checklist","touched_work_item_count":2}');
+      ('e20', '2026-06-30T10:06:00Z', 'ui', 'work_item_time_badges_reviewed', '{"action_id":"b1","control":"review_checklist","touched_work_item_count":2}'),
+      ('e21', '2026-06-30T10:07:00Z', 'ui', 'day_closure_started', '{"action_id":"d1","control":"review_panel"}'),
+      ('e22', '2026-06-30T10:14:00Z', 'ui', 'day_closure_completed', '{"action_id":"d1","control":"copy_report"}');
   `);
 
   const good = await runRcCheck(goodDb);
@@ -74,6 +76,8 @@ try {
   assert(good.stdout.includes("Start/switch/stop requests: 2/0/1"), "good day entry request count is missing");
   assert(good.stdout.includes("Typed/selected entry requests: 1/1"), "good day entry control count is missing");
   assert(good.stdout.includes("Corrections requested/applied/reviewed/failed: 1/1/0/0"), "good day correction telemetry is missing");
+  assert(good.stdout.includes("Day closure started/completed: 1/1"), "good day closure telemetry is missing");
+  assert(good.stdout.includes("Last day closure duration: 7:00"), "good day closure duration is missing");
   assert(good.stdout.includes("Window shown/hidden: 1/1"), "good day window telemetry is missing");
   assert(good.stdout.includes("Window show/hide requests: 1/1"), "good day window request telemetry is missing");
   assert(good.stdout.includes("## Daily Control Goal Audit"), "good day goal audit section is missing");
@@ -83,6 +87,7 @@ try {
   assert(good.stdout.includes("| Gaps and captures visible | pass |"), "good day gap/capture audit row is missing");
   assert(good.stdout.includes("| Start and continue paths evidenced | pass |"), "good day entry-path audit row is missing");
   assert(good.stdout.includes("| Tracking correction or review evidenced | pass |"), "good day correction audit row is missing");
+  assert(good.stdout.includes("| Day closure duration measured | pass |"), "good day closure-duration audit row is missing");
   assert(good.stdout.includes("| Local gates | manual |"), "good day local-gates audit row is missing");
   assert(good.stdout.includes("pnpm dogfood:goal-check"), "good day local-gates audit did not mention goal-check");
   assert(good.stdout.includes("## By Activity Zone"), "good day zone section is missing");
@@ -176,6 +181,20 @@ try {
   assert(
     noBadgeReviewStrict.stdout.includes("| Work Item totals available | review |"),
     "missing Work Item badge review should mark Work Item totals audit for review"
+  );
+
+  const noClosureDb = join(tempDir, "no-closure.db");
+  await copyDb(goodDb, noClosureDb);
+  await runSql(noClosureDb, "DELETE FROM app_events WHERE kind IN ('day_closure_started', 'day_closure_completed');");
+  const noClosureStrict = await runRcCheck(noClosureDb, ["--strict"]);
+  assert(noClosureStrict.code !== 0, "strict RC check should fail without closure-duration evidence");
+  assert(
+    noClosureStrict.stdout.includes("No measured day-closure duration found"),
+    "strict RC check should explain missing closure-duration evidence"
+  );
+  assert(
+    noClosureStrict.stdout.includes("| Day closure duration measured | review |"),
+    "missing closure duration should mark closure audit for review"
   );
 
   const savedPath = join(tempDir, "rc-check.md");

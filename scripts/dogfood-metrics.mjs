@@ -124,6 +124,8 @@ function buildTelemetryMarkdown(events) {
     `Capture updated/deleted: ${summary.captureUpdated}/${summary.captureDeleted}`,
     `Capture failures create/resolve/update/delete/convert: ${summary.captureCreateFailures}/${summary.captureResolveFailures}/${summary.captureUpdateFailures}/${summary.captureDeleteFailures}/${summary.captureConvertFailures}`,
     `Corrections requested/applied/reviewed/failed: ${summary.correctionRequests}/${summary.corrections}/${summary.correctionReviews}/${summary.correctionFailures}`,
+    `Day closure started/completed: ${summary.dayClosureStarts}/${summary.dayClosureCompletions}`,
+    `Last day closure duration: ${summary.lastDayClosureDurationSeconds == null ? "n/a" : formatDuration(summary.lastDayClosureDurationSeconds)}`,
     `API errors: ${summary.apiErrors}`,
     `Already-active start attempts: ${summary.alreadyActiveStartAttempts}`,
     `Stale runtime recoveries: ${summary.staleRuntimeRecoveries}`,
@@ -144,7 +146,9 @@ function buildTelemetryMarkdown(events) {
 function summarizeEvents(events) {
   const byKind = {};
   const pendingStarts = new Map();
+  const pendingClosures = new Map();
   const startLatencies = [];
+  const closureDurationsSeconds = [];
   const alreadyActiveActionIds = new Set();
   let alreadyActiveWithoutAction = 0;
   let windowShownAt;
@@ -169,6 +173,19 @@ function summarizeEvents(events) {
         slowWindowToFocusCount += 1;
       }
       windowShownAt = undefined;
+    }
+
+    if (event.kind === "day_closure_started") {
+      const actionId = typeof event.payload?.action_id === "string" ? event.payload.action_id : undefined;
+      if (actionId) pendingClosures.set(actionId, new Date(event.ts).getTime());
+    }
+
+    if (event.kind === "day_closure_completed") {
+      const actionId = typeof event.payload?.action_id === "string" ? event.payload.action_id : undefined;
+      if (actionId && pendingClosures.has(actionId)) {
+        closureDurationsSeconds.push(Math.floor(Math.max(new Date(event.ts).getTime() - pendingClosures.get(actionId), 0) / 1000));
+        pendingClosures.delete(actionId);
+      }
     }
 
     if (event.kind === "window_shown") {
@@ -230,12 +247,28 @@ function summarizeEvents(events) {
     corrections: count("focus_corrected"),
     correctionReviews: count("focus_correction_reviewed"),
     correctionFailures: count("focus_correction_failed"),
+    dayClosureStarts: count("day_closure_started"),
+    dayClosureCompletions: count("day_closure_completed"),
+    lastDayClosureDurationSeconds: closureDurationsSeconds.at(-1),
     apiErrors: count("api_error"),
     alreadyActiveStartAttempts: alreadyActiveActionIds.size + alreadyActiveWithoutAction,
     staleRuntimeRecoveries: count("agent_stale_runtime_recovered"),
     averageStartLatencyMs,
     slowWindowToFocusCount,
   };
+}
+
+function formatDuration(totalSeconds) {
+  const seconds = Math.max(Math.floor(totalSeconds), 0);
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const rest = seconds % 60;
+
+  if (hours > 0) {
+    return `${hours}:${String(minutes).padStart(2, "0")}:${String(rest).padStart(2, "0")}`;
+  }
+
+  return `${minutes}:${String(rest).padStart(2, "0")}`;
 }
 
 function countEntryRequestsByControls(events, controls) {

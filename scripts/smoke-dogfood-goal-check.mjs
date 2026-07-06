@@ -95,6 +95,7 @@ try {
     "| Window and menubar friction evidenced | pass | window shown/hidden 2/2 |",
     "| Start and continue paths evidenced | pass | 1/1 typed/selected, 2 stop request(s) |",
     "| Tracking correction or review evidenced | pass | 0/0/1/0 requested/applied/reviewed/failed |",
+    "| Day closure duration measured | pass | 1/1 started/completed, last duration 7:00 |",
     "| Hard blockers absent | pass | 0 blocker(s) |",
     "| Local gates | manual | Run pnpm dogfood:goal-check on the same code before closing the goal |",
   ];

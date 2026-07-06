@@ -117,7 +117,9 @@ fn build_summary(events: Vec<AppEvent>) -> serde_json::Value {
     let mut by_kind = BTreeMap::<String, usize>::new();
     let mut by_source = BTreeMap::<String, usize>::new();
     let mut pending_focus_starts = BTreeMap::<String, DateTime<Utc>>::new();
+    let mut pending_day_closures = BTreeMap::<String, DateTime<Utc>>::new();
     let mut start_latency_ms = Vec::<i64>::new();
+    let mut day_closure_durations_seconds = Vec::<i64>::new();
     let mut already_active_action_ids = BTreeSet::<String>::new();
     let mut already_active_without_action = 0usize;
     let mut window_shown_at: Option<DateTime<Utc>> = None;
@@ -151,6 +153,21 @@ fn build_summary(events: Vec<AppEvent>) -> serde_json::Value {
             }
         }
 
+        if event.kind == AppEventKind::DayClosureStarted {
+            if let Some(action_id) = event_action_id(event) {
+                pending_day_closures.insert(action_id, event.ts);
+            }
+        }
+
+        if event.kind == AppEventKind::DayClosureCompleted {
+            if let Some(action_id) = event_action_id(event) {
+                if let Some(started_at) = pending_day_closures.remove(&action_id) {
+                    day_closure_durations_seconds
+                        .push((event.ts - started_at).num_seconds().max(0));
+                }
+            }
+        }
+
         if event.kind == AppEventKind::WindowShown {
             window_shown_at = Some(event.ts);
         } else if event.kind == AppEventKind::WindowHidden {
@@ -173,6 +190,7 @@ fn build_summary(events: Vec<AppEvent>) -> serde_json::Value {
     } else {
         Some(start_latency_ms.iter().sum::<i64>() / start_latency_ms.len() as i64)
     };
+    let last_day_closure_duration_seconds = day_closure_durations_seconds.last().copied();
 
     serde_json::json!({
         "total": events.len(),
@@ -189,6 +207,9 @@ fn build_summary(events: Vec<AppEvent>) -> serde_json::Value {
         "corrections": count(&by_kind, "focus_corrected"),
         "correction_reviews": count(&by_kind, "focus_correction_reviewed"),
         "correction_failures": count(&by_kind, "focus_correction_failed"),
+        "day_closure_starts": count(&by_kind, "day_closure_started"),
+        "day_closure_completions": count(&by_kind, "day_closure_completed"),
+        "last_day_closure_duration_seconds": last_day_closure_duration_seconds,
         "api_errors": count(&by_kind, "api_error"),
         "copy_failures": count(&by_kind, "report_copy_failed"),
         "manual_copy_fallbacks": count(&by_kind, "manual_copy_fallback_shown"),

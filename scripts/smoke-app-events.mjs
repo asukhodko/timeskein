@@ -42,7 +42,9 @@ try {
       ('e22', '2026-06-30T07:11:00Z', 'ui', 'focus_correction_failed', 'w1', 's1', '{"action_id":"k2","control":"split_block","error_code":"validation_error"}'),
       ('e23', '2026-06-30T07:12:00Z', 'ui', 'focus_correction_reviewed', NULL, NULL, '{"action_id":"k3","control":"review_checklist"}'),
       ('e24', '2026-06-30T07:13:00Z', 'ui', 'capture_followup_reviewed', NULL, NULL, '{"action_id":"c6","control":"review_checklist","open_count":1}'),
-      ('e25', '2026-06-30T07:14:00Z', 'ui', 'work_item_time_badges_reviewed', NULL, NULL, '{"action_id":"b1","control":"review_checklist","touched_work_item_count":2}');
+      ('e25', '2026-06-30T07:14:00Z', 'ui', 'work_item_time_badges_reviewed', NULL, NULL, '{"action_id":"b1","control":"review_checklist","touched_work_item_count":2}'),
+      ('e26', '2026-06-30T07:15:00Z', 'ui', 'day_closure_started', NULL, NULL, '{"action_id":"d1","control":"review_panel"}'),
+      ('e27', '2026-06-30T07:22:30Z', 'ui', 'day_closure_completed', NULL, NULL, '{"action_id":"d1","control":"copy_report"}');
   `);
 
   const { stdout: metricsStdout } = await execFileAsync(
@@ -51,7 +53,7 @@ try {
     { cwd: repoRoot }
   );
   assert(metricsStdout.includes("## App Telemetry"), "metrics did not include App Telemetry header");
-  assert(metricsStdout.includes("Total events: 25"), "metrics did not count events");
+  assert(metricsStdout.includes("Total events: 27"), "metrics did not count events");
   assert(metricsStdout.includes("Start requests: 1"), "metrics did not count start requests");
   assert(metricsStdout.includes("Typed/selected entry requests: 1/0"), "metrics did not count entry request controls");
   assert(metricsStdout.includes("Manual copy fallbacks: 1"), "metrics did not count manual copy fallbacks");
@@ -62,6 +64,8 @@ try {
   assert(metricsStdout.includes("Capture updated/deleted: 1/1"), "metrics did not count capture cleanup");
   assert(metricsStdout.includes("Capture failures create/resolve/update/delete/convert: 0/0/0/0/1"), "metrics did not count capture failures");
   assert(metricsStdout.includes("Corrections requested/applied/reviewed/failed: 1/1/1/1"), "metrics did not count corrections");
+  assert(metricsStdout.includes("Day closure started/completed: 1/1"), "metrics did not count day closure events");
+  assert(metricsStdout.includes("Last day closure duration: 7:30"), "metrics did not calculate day closure duration");
   assert(metricsStdout.includes("Stale runtime recoveries: 1"), "metrics did not count stale recoveries");
   assert(metricsStdout.includes("Average start latency: 1000ms"), "metrics did not calculate start latency");
 
@@ -77,6 +81,8 @@ try {
   assert(exportStdout.includes("capture_followup_reviewed"), "event export did not include capture follow-up review");
   assert(exportStdout.includes("work_item_time_badges_reviewed"), "event export did not include Work Item time badge review");
   assert(exportStdout.includes("focus_corrected"), "event export did not include correction event");
+  assert(exportStdout.includes("day_closure_started"), "event export did not include day closure start");
+  assert(exportStdout.includes("day_closure_completed"), "event export did not include day closure completion");
   assert(exportStdout.includes("manual_copy_fallback_shown"), "event export did not include copy fallback");
 
   console.log(JSON.stringify({ ok: true, db_path: dbPath }, null, 2));

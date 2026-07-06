@@ -522,6 +522,12 @@ function assessEvidence(evidence, minFocusSeconds) {
     reviewItems.push("No focus correction or correction-review telemetry found. If no correction was needed, explicitly accept that; otherwise test add/edit/split correction before closing the goal.");
   }
 
+  if (evidence.telemetry.dayClosureCompletions === 0 || evidence.telemetry.lastDayClosureDurationSeconds == null) {
+    reviewItems.push("No measured day-closure duration found. Start the closure ritual and copy the final report before closing the goal.");
+  } else if (evidence.telemetry.lastDayClosureDurationSeconds > 10 * 60) {
+    reviewItems.push(`Last measured day closure took ${formatDuration(evidence.telemetry.lastDayClosureDurationSeconds)}, above the 10:00 goal.`);
+  }
+
   if (evidence.unexplainedGapCount > 0) {
     reviewItems.push(
       `${evidence.unexplainedGapCount} of ${evidence.gaps.length} significant gap(s) lack a Day Event explanation. Use Explain or add a Day Event before closing the goal.`
@@ -590,6 +596,8 @@ function buildRcReport(date, path, evidence, assessment, minFocusSeconds, strict
     `- Start/stop failures: ${evidence.telemetry.startFailures}/${evidence.telemetry.stopFailures}`,
     `- Capture failures: ${evidence.telemetry.captureFailures}`,
     `- Corrections requested/applied/reviewed/failed: ${evidence.telemetry.correctionRequests}/${evidence.telemetry.corrections}/${evidence.telemetry.correctionReviews}/${evidence.telemetry.correctionFailures}`,
+    `- Day closure started/completed: ${evidence.telemetry.dayClosureStarts}/${evidence.telemetry.dayClosureCompletions}`,
+    `- Last day closure duration: ${evidence.telemetry.lastDayClosureDurationSeconds == null ? "n/a" : formatDuration(evidence.telemetry.lastDayClosureDurationSeconds)}`,
     `- Window shown/hidden: ${evidence.telemetry.windowShown}/${evidence.telemetry.windowHidden}`,
     `- Window show/hide requests: ${evidence.telemetry.windowShowRequested}/${evidence.telemetry.windowHideRequested}`,
     `- Window drag starts: ${evidence.telemetry.windowDragStarted}`,
@@ -769,6 +777,16 @@ function formatGoalAuditMarkdown(evidence, assessment, minFocusSeconds) {
       evidence: `${evidence.telemetry.correctionRequests}/${evidence.telemetry.corrections}/${evidence.telemetry.correctionReviews}/${evidence.telemetry.correctionFailures} requested/applied/reviewed/failed`,
     },
     {
+      requirement: "Day closure duration measured",
+      status:
+        evidence.telemetry.dayClosureCompletions > 0 &&
+        evidence.telemetry.lastDayClosureDurationSeconds != null &&
+        evidence.telemetry.lastDayClosureDurationSeconds <= 10 * 60
+          ? "pass"
+          : "review",
+      evidence: `${evidence.telemetry.dayClosureStarts}/${evidence.telemetry.dayClosureCompletions} started/completed, last duration ${evidence.telemetry.lastDayClosureDurationSeconds == null ? "n/a" : formatDuration(evidence.telemetry.lastDayClosureDurationSeconds)}`,
+    },
+    {
       requirement: "Hard blockers absent",
       status: assessment.hardBlockers.length === 0 ? "pass" : "block",
       evidence: `${assessment.hardBlockers.length} hard blocker(s)`,
@@ -930,9 +948,24 @@ function formatActivityZoneLabel(zone) {
 
 function summarizeEvents(events) {
   const byKind = {};
+  const pendingClosures = new Map();
+  const closureDurationsSeconds = [];
 
   for (const event of events) {
     byKind[event.kind] = (byKind[event.kind] ?? 0) + 1;
+
+    if (event.kind === "day_closure_started") {
+      const actionId = typeof event.payload?.action_id === "string" ? event.payload.action_id : undefined;
+      if (actionId) pendingClosures.set(actionId, new Date(event.ts).getTime());
+    }
+
+    if (event.kind === "day_closure_completed") {
+      const actionId = typeof event.payload?.action_id === "string" ? event.payload.action_id : undefined;
+      if (actionId && pendingClosures.has(actionId)) {
+        closureDurationsSeconds.push(Math.floor(Math.max(new Date(event.ts).getTime() - pendingClosures.get(actionId), 0) / 1000));
+        pendingClosures.delete(actionId);
+      }
+    }
   }
 
   const count = (kind) => byKind[kind] ?? 0;
@@ -954,6 +987,9 @@ function summarizeEvents(events) {
     corrections: count("focus_corrected"),
     correctionReviews: count("focus_correction_reviewed"),
     correctionFailures: count("focus_correction_failed"),
+    dayClosureStarts: count("day_closure_started"),
+    dayClosureCompletions: count("day_closure_completed"),
+    lastDayClosureDurationSeconds: closureDurationsSeconds.at(-1),
     captureFollowupReviews: count("capture_followup_reviewed"),
     workItemTimeBadgeReviews: count("work_item_time_badges_reviewed"),
     windowShown: count("window_shown"),

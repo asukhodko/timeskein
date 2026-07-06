@@ -108,7 +108,8 @@ assert(split.right.note === "right block note", "focus.split did not set right b
 assert(split.left.active_seconds >= 29, "focus.split left block duration is too small");
 assert(split.right.active_seconds >= 29, "focus.split right block duration is too small");
 
-const missedStart = new Date(end.getTime() + 5 * 60_000);
+const currentDay = todayWindow();
+const missedStart = new Date(new Date(currentDay.from).getTime() + 12 * 60 * 60_000);
 const missedStop = new Date(missedStart.getTime() + 20 * 60_000);
 const missedTitle = `${title} missed`;
 const missed = await rpc("focus.create_stopped", {

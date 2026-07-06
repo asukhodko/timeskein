@@ -155,6 +155,7 @@ async function checkSavedEvidence(date) {
     "Window and menubar friction evidenced",
     "Start and continue paths evidenced",
     "Tracking correction or review evidenced",
+    "Day closure duration measured",
     "Hard blockers absent",
     "Local gates",
   ];

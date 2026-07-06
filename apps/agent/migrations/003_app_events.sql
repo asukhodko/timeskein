@@ -28,6 +28,8 @@ CREATE TABLE IF NOT EXISTS app_events (
         'focus_corrected',
         'focus_correction_reviewed',
         'focus_correction_failed',
+        'day_closure_started',
+        'day_closure_completed',
         'report_copy_requested',
         'report_copied',
         'report_copy_failed',

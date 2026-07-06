@@ -578,7 +578,8 @@ async function runCorrectionSmoke(port) {
   assert(split.right.work_item_title === rightTitle, "focus.split did not assign right title");
   assert(split.right.activity_zone === "work", "focus.split did not snapshot packaged right zone");
 
-  const missedStart = new Date(end.getTime() + 5 * 60_000);
+  const currentDay = todayWindow();
+  const missedStart = new Date(new Date(currentDay.from).getTime() + 12 * 60 * 60_000);
   const missedStop = new Date(missedStart.getTime() + 20 * 60_000);
   const missedTitle = `${title} missed`;
   const missed = await rpc(port, "focus.create_stopped", {

@@ -53,7 +53,9 @@ try {
       ('ae2', '2026-06-30T07:50:01Z', 'ui', 'focus_corrected', 's1', '{"action_id":"k1","control":"edit_block"}'),
       ('ae3', '2026-06-30T07:51:00Z', 'ui', 'window_show_requested', NULL, '{"control":"tray_click"}'),
       ('ae4', '2026-06-30T07:52:00Z', 'ui', 'window_hide_requested', NULL, '{"control":"global_shortcut"}'),
-      ('ae5', '2026-06-30T07:53:00Z', 'ui', 'work_item_time_badges_reviewed', NULL, '{"action_id":"b1","control":"review_checklist","touched_work_item_count":2}');
+      ('ae5', '2026-06-30T07:53:00Z', 'ui', 'work_item_time_badges_reviewed', NULL, '{"action_id":"b1","control":"review_checklist","touched_work_item_count":2}'),
+      ('ae6', '2026-06-30T07:54:00Z', 'ui', 'day_closure_started', NULL, '{"action_id":"d1","control":"review_panel"}'),
+      ('ae7', '2026-06-30T08:01:00Z', 'ui', 'day_closure_completed', NULL, '{"action_id":"d1","control":"copy_report"}');
 
     UPDATE work_items SET activity_zone = 'coordination' WHERE id = 'w2';
     UPDATE focus_sessions SET activity_zone = 'coordination' WHERE work_item_id = 'w2';
@@ -80,7 +82,10 @@ try {
   assert(stdout.includes("| Window and menubar friction evidenced | pass |"), "report daily-control audit did not pass window evidence");
   assert(stdout.includes("| Start and continue paths evidenced | pass |"), "report daily-control audit did not pass entry-path evidence");
   assert(stdout.includes("| Tracking correction or review evidenced | pass |"), "report daily-control audit did not pass correction evidence");
+  assert(stdout.includes("| Day closure duration measured | pass |"), "report daily-control audit did not pass closure duration");
   assert(stdout.includes("| Local gates | manual |"), "report daily-control audit did not include local gates");
+  assert(stdout.includes("Day closure started/completed: 1/1"), "report telemetry did not include day closure counts");
+  assert(stdout.includes("Last day closure duration: 7:00"), "report telemetry did not include day closure duration");
   assert(stdout.includes("pnpm dogfood:goal-check"), "report daily-control audit did not mention goal-check");
   assert(
     stdout.includes("Разобрать открытые captures"),
@@ -192,6 +197,10 @@ try {
   assert(
     thinEvidenceStdout.includes("0 show, 0 hide"),
     "report review checklist did not show missing window request counts"
+  );
+  assert(
+    thinEvidenceStdout.includes("| Day closure duration measured | review |"),
+    "report daily-control audit should review missing day closure duration"
   );
 
   await runSql(`

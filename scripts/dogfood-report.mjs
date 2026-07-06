@@ -546,6 +546,8 @@ function formatDailyControlGoalAuditMarkdown({
     extractLineValue(telemetryMarkdown, "Corrections requested/applied/reviewed/failed") ?? "n/a";
   const captureFollowupReviews = parseLeadingNumber(extractLineValue(telemetryMarkdown, "Capture follow-up reviews"));
   const workItemTimeBadgeReviews = parseLeadingNumber(extractLineValue(telemetryMarkdown, "Work Item time badge reviews"));
+  const closureCounts = parseCountPair(extractLineValue(telemetryMarkdown, "Day closure started/completed"));
+  const lastClosureDuration = parseDurationSeconds(extractLineValue(telemetryMarkdown, "Last day closure duration"));
   const telemetryAvailable = telemetryMarkdown.includes("Total events:");
 
   const rows = [
@@ -625,6 +627,14 @@ function formatDailyControlGoalAuditMarkdown({
       evidence: correctionEvidence,
     },
     {
+      requirement: "Day closure duration measured",
+      status:
+        closureCounts?.right && lastClosureDuration != null && lastClosureDuration <= 10 * 60
+          ? "pass"
+          : "review",
+      evidence: `${closureCounts ? `${closureCounts.left}/${closureCounts.right}` : "n/a"} started/completed, last duration ${lastClosureDuration == null ? "n/a" : formatDuration(lastClosureDuration)}`,
+    },
+    {
       requirement: "Hard blockers absent",
       status: activeFocus || activeWorkItems.length > 0 ? "block" : "pass",
       evidence: reviewItems.filter((item) => item.level === "blocker").length + " blocker(s)",
@@ -682,6 +692,25 @@ function parseEntryTelemetry(markdown) {
     selectedEntryRequests: Number(entryMatch[2]),
     stopRequests: Number(stopMatch[1]),
   };
+}
+
+function parseCountPair(value) {
+  if (!value) return undefined;
+  const match = value.match(/^(\d+)\/(\d+)/);
+  if (!match) return undefined;
+  return {
+    left: Number(match[1]),
+    right: Number(match[2]),
+  };
+}
+
+function parseDurationSeconds(value) {
+  if (!value || value === "n/a") return undefined;
+  const parts = value.split(":").map(Number);
+  if (parts.some((part) => !Number.isFinite(part))) return undefined;
+  if (parts.length === 2) return parts[0] * 60 + parts[1];
+  if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+  return undefined;
 }
 
 function countActivityZoneRows(markdown) {

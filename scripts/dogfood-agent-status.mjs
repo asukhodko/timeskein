@@ -16,20 +16,20 @@ const result = await waitForAgent(portFile, timeoutMs);
 if (!result.ok) {
   process.stdout.write(
     [
-      "# Timeskein agent status",
+      "# Статус локального агента Timeskein",
       "",
-      `Status: NOT READY`,
-      `Support dir: ${supportDir}`,
+      `Состояние: не готов`,
+      `Каталог данных: ${supportDir}`,
       "",
-      "## Blockers",
+      "## Что мешает",
       "",
       `- ${result.error}`,
       "",
-      "## Next",
+      "## Что сделать",
       "",
-      "- If Timeskein is not running, start the Timeskein day with `pnpm dogfood:start`.",
-      "- If the Timeskein day was already started and Timeskein was quit, reopen it with `pnpm dogfood:continue`.",
-      "- If a stale port file remains after a crash, launching the app again should rewrite it.",
+      "- Если Timeskein не запущен, начни день командой `pnpm dogfood:start`.",
+      "- Если день уже начат, но приложение было закрыто, вернись к нему командой `pnpm dogfood:continue`.",
+      "- Если после падения остался устаревший файл порта, повторный запуск приложения должен перезаписать его.",
       "",
     ].join("\n")
   );
@@ -39,15 +39,15 @@ if (!result.ok) {
 const status = result.status;
 process.stdout.write(
   [
-    "# Timeskein agent status",
+    "# Статус локального агента Timeskein",
     "",
-    "Status: READY",
+    "Состояние: готов",
     `API: ${result.apiUrl}`,
-    `Support dir: ${supportDir}`,
-    `Storage path: ${status.storage_path}`,
-    `DB OK: ${status.db_ok}`,
-    `Work Items: ${status.work_items_count}`,
-    `Agent uptime: ${status.uptime_seconds}s`,
+    `Каталог данных: ${supportDir}`,
+    `Файл данных: ${status.storage_path}`,
+    `База в порядке: ${status.db_ok}`,
+    `Дел в базе: ${status.work_items_count}`,
+    `Агент работает: ${status.uptime_seconds} с`,
     "",
   ].join("\n")
 );
@@ -67,28 +67,28 @@ function parseArgs(args) {
       printHelp();
       process.exit(0);
     } else {
-      throw new Error(`Unknown argument: ${arg}`);
+      throw new Error(`Неизвестный аргумент: ${arg}`);
     }
   }
 
   if (result.timeoutMs !== undefined && (!Number.isFinite(result.timeoutMs) || result.timeoutMs <= 0)) {
-    throw new Error(`Invalid --timeout-ms value: ${result.timeoutMs}`);
+    throw new Error(`Некорректное значение --timeout-ms: ${result.timeoutMs}`);
   }
 
   return result;
 }
 
 function printHelp() {
-  console.log(`Usage: pnpm dogfood:status [--support-dir path] [--timeout-ms 20000]
+  console.log(`Использование: pnpm dogfood:status [--support-dir path] [--timeout-ms 20000]
 
-Waits for the local Timeskein embedded agent port file and verifies agent.status.
-Exits with code 1 when the agent does not become responsive or reports db_ok=false.
-Use dogfood:start for a clean day start and dogfood:continue to reopen an already started day.`);
+Ждёт файл порта встроенного локального агента Timeskein и проверяет agent.status.
+Выходит с кодом 1, если агент не отвечает или сообщает db_ok=false.
+Для чистого начала дня используй dogfood:start, для возврата к уже начатому дню — dogfood:continue.`);
 }
 
 async function waitForAgent(path, timeout) {
   const deadline = Date.now() + timeout;
-  let lastError = `Port file not found: ${path}`;
+  let lastError = `файл порта не найден: ${path}`;
 
   while (Date.now() < deadline) {
     if (!existsSync(path)) {
@@ -98,7 +98,7 @@ async function waitForAgent(path, timeout) {
 
     const port = readFileSync(path, "utf8").trim();
     if (!/^\d+$/.test(port)) {
-      lastError = `Invalid port file content: ${path}`;
+      lastError = `в файле порта некорректное содержимое: ${path}`;
       await delay(150);
       continue;
     }
@@ -109,7 +109,7 @@ async function waitForAgent(path, timeout) {
       if (status.db_ok !== true) {
         return {
           ok: false,
-          error: `Agent responded but database is not healthy: ${apiUrl}`,
+          error: `Агент ответил, но база не в порядке: ${apiUrl}`,
         };
       }
 
@@ -122,7 +122,7 @@ async function waitForAgent(path, timeout) {
 
   return {
     ok: false,
-    error: `Agent did not become responsive within ${timeout}ms. Last error: ${lastError}`,
+    error: `Агент не ответил за ${timeout} мс. Последняя ошибка: ${lastError}`,
   };
 }
 

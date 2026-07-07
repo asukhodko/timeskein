@@ -17,8 +17,9 @@ try {
     await writeFile(join(tempDir, "agent.port"), String(healthyServer.port));
     const healthy = await runStatus();
     assert(healthy.code === 0, "healthy agent should pass status");
-    assert(healthy.stdout.includes("Status: READY"), "healthy status did not report READY");
-    assert(healthy.stdout.includes("DB OK: true"), "healthy status did not report DB OK");
+    assert(healthy.stdout.includes("Состояние: готов"), "healthy status did not report localized ready state");
+    assert(healthy.stdout.includes("База в порядке: true"), "healthy status did not report localized DB OK");
+    assert(!healthy.stdout.includes("Status: READY"), "healthy status leaked old English READY");
   } finally {
     await healthyServer.close();
   }
@@ -28,10 +29,12 @@ try {
     await writeFile(join(tempDir, "agent.port"), String(unhealthyServer.port));
     const unhealthy = await runStatus();
     assert(unhealthy.code !== 0, "unhealthy agent should fail status");
-    assert(unhealthy.stdout.includes("Status: NOT READY"), "unhealthy status did not report NOT READY");
-    assert(unhealthy.stdout.includes("database is not healthy"), "unhealthy status did not explain db health");
+    assert(unhealthy.stdout.includes("Состояние: не готов"), "unhealthy status did not report localized not-ready state");
+    assert(unhealthy.stdout.includes("база не в порядке"), "unhealthy status did not explain db health");
     assert(unhealthy.stdout.includes("pnpm dogfood:start"), "unhealthy status did not mention guarded start");
     assert(unhealthy.stdout.includes("pnpm dogfood:continue"), "unhealthy status did not mention guarded continue");
+    assert(!unhealthy.stdout.includes("Status: NOT READY"), "unhealthy status leaked old English NOT READY");
+    assert(!unhealthy.stdout.includes("## Blockers"), "unhealthy status leaked old English blockers heading");
     assert(!unhealthy.stdout.includes("pnpm dogfood:macos"), "unhealthy status still suggests bypassing the start gate");
   } finally {
     await unhealthyServer.close();

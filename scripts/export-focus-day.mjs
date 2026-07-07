@@ -28,8 +28,9 @@ const sessions = await loadSessions(dbPath, from, to, now);
 const activeSecondsTotal = sessions.reduce((sum, session) => sum + session.active_seconds, 0);
 const workItemEvents = await loadWorkItemEvents(dbPath, from, to);
 const dayEvents = await loadDayEvents(dbPath, from, to);
+const markdown = buildDayMarkdown(sessions, activeSecondsTotal, from, now, workItemEvents, dayEvents);
 
-process.stdout.write(buildDayMarkdown(sessions, activeSecondsTotal, from, now, workItemEvents, dayEvents));
+process.stdout.write(options.internal ? markdown : localizeDayMarkdown(markdown));
 
 function parseArgs(args) {
   const result = {};
@@ -44,6 +45,8 @@ function parseArgs(args) {
       result.date = args[++index];
     } else if (arg === "--now") {
       result.now = args[++index];
+    } else if (arg === "--internal") {
+      result.internal = true;
     } else if (arg === "--help" || arg === "-h") {
       printHelp();
       process.exit(0);
@@ -56,10 +59,12 @@ function parseArgs(args) {
 }
 
 function printHelp() {
-  console.log(`Usage: pnpm export:focus-day [--date YYYY-MM-DD] [--db path/to/timeskein.db] [--now ISO_DATE]
+  console.log(`Использование: pnpm export:focus-day [--date YYYY-MM-DD] [--db path/to/timeskein.db] [--now ISO_DATE] [--internal]
 
-Prints a Markdown focus-day report from the local Timeskein SQLite database.
-Default DB: ~/Library/Application Support/Timeskein/timeskein.db`);
+Печатает Markdown-отчёт дня из локальной SQLite-базы Timeskein.
+По умолчанию выводит пользовательский русский отчёт.
+Флаг --internal оставляет сырой формат для внутренних скриптов.
+База по умолчанию: ~/Library/Application Support/Timeskein/timeskein.db`);
 }
 
 function parseLocalDate(value) {
@@ -507,6 +512,33 @@ function formatEventDuring(event, sessionsById) {
 
   const session = sessionsById.get(event.focus_session_id);
   return session?.work_item_title ?? session?.title ?? "linked focus block";
+}
+
+function localizeDayMarkdown(markdown) {
+  return markdown
+    .replace(/^# Timeskein focus day - /m, "# Дневной отчёт Timeskein — ")
+    .replace(/^Total tracked:/gm, "Всего учтено:")
+    .replace(/^Work focus:/gm, "Рабочий фокус:")
+    .replace(/^Non-work tracked:/gm, "Вне работы учтено:")
+    .replace(/^Entrances:/gm, "Входов:")
+    .replace(/^\| Time \| Duration \| Zone \| Work Item \| Note \|$/gm, "| Время | Длительность | Зона | Дело | Заметка |")
+    .replace(/^## Day-Boundary Blocks$/gm, "## Блоки на границе дня")
+    .replace(/: counted as ([^\n]+) inside this day$/gm, ": учтено $1 внутри этого дня")
+    .replace(/^## By Work Item$/gm, "## По делам")
+    .replace(/^\| Duration \| Entrances \| Work Item \|$/gm, "| Длительность | Входов | Дело |")
+    .replace(/^## By Activity Zone$/gm, "## По зонам активности")
+    .replace(/^\| Duration \| Entrances \| Zone \|$/gm, "| Длительность | Входов | Зона |")
+    .replace(/^## Work Item Notes$/gm, "## Заметки дел")
+    .replace(/^## Day Events$/gm, "## События дня")
+    .replace(/^\| Time \| Zone \| During \| Event \|$/gm, "| Время | Зона | Во время | Событие |")
+    .replace(/^## Work Item Events$/gm, "## События дел")
+    .replace(/^\| Time \| Work Item \| During \| Event \|$/gm, "| Время | Дело | Во время | Событие |")
+    .replace(/^## Gaps >= /gm, "## Разрывы >= ")
+    .replace(/^## Open Gap$/gm, "## Текущий открытый разрыв")
+    .replace(/ since last stopped block$/gm, " после последнего остановленного блока")
+    .replace(/\| day \|/g, "| день |")
+    .replace(/\| linked focus block \|/g, "| связанный фокус-блок |")
+    .replace(/\| unknown Work Item \|/g, "| неизвестное дело |");
 }
 
 function gapsBetweenSessions(sessionsOldestFirst) {

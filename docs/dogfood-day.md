@@ -39,11 +39,11 @@ pnpm dogfood:start:clean
 - используй `Всё проверено` только когда все оставшиеся жёлтые пункты действительно можно принять как есть; Timeskein показывает этот shortcut только для безопасных optional-проверок;
 - нажми `Копировать отчёт` в Today и вставь dogfood-отчёт в дневную заметку;
 - если кнопка говорит `Копировать черновик`, сначала останови активный фокус-блок, сними активный статус с дела или обработай/прими оставшиеся review-пункты; черновик может начать замер закрытия, но завершает его только финальный отчёт;
-- используй `Копировать день`, когда нужна только сырая картина дня;
+- используй `Копировать день`, когда нужна отдельная дневная картина без полного вечернего отчёта;
 - если clipboard недоступен, скопируй выделенный Markdown из резервного поля;
 - если нужен сохранённый Markdown-след, выполни `pnpm dogfood:finish:save`; команда сохранит дневной отчёт и RC-check;
 - если UI copy не сработал, выполни `pnpm dogfood:finish > timeskein-dogfood-report.md`;
-- если нужна только сырая картина дня, выполни `pnpm export:focus-day > timeskein-day.md`;
+- если нужна только дневная картина из SQLite, выполни `pnpm export:focus-day > timeskein-day.md`;
 - если Timeskein сам создавал трение, выполни `pnpm dogfood:metrics` и `pnpm export:app-events`, чтобы посмотреть локальную техническую телеметрию.
 
 Текущая daily-control цель требует, чтобы измеренное вечернее закрытие заняло
@@ -226,7 +226,7 @@ Current status: the macOS dogfood release baseline was accepted on 2026-07-03. T
 | Post-factum correction | `cargo test -p timeskein-agent`, `pnpm smoke:corrections-api`, and `pnpm smoke:macos-app` verify missed-block creation, update, split, reassignment, Work Item edit, and corrected day-list data | Wrong or missing Work Item intervals can be fixed before copying the final report |
 | Significant gaps | UI and Markdown show gap ranges of 20+ minutes | Long breaks and lost intervals are visible enough |
 | Capture Inbox | `pnpm smoke:capture-api`, `pnpm smoke:mock-api`, and `pnpm smoke:macos-app` verify capture create/list/update/delete/resolve/convert/append-event without interrupting focus | Incoming events can be remembered and cleaned up without switching away from the current block |
-| Markdown export | `Копировать отчёт` exports timeline, `По делам`, zone totals, `События дня`, `События дел`, gaps, interruption history, open captures, review checklist, app telemetry, short closure prompts with the measured 10-minute verdict, and deeper review prompts; `Копировать день` exports the raw day picture; failed clipboard writes show selected Markdown; `pnpm smoke:export-focus-day` and `pnpm smoke:dogfood-report` verify SQLite fallbacks | Copied note is enough for evening analysis |
+| Markdown export | `Копировать отчёт` exports timeline, `По делам`, zone totals, `События дня`, `События дел`, gaps, interruption history, open captures, review checklist, app telemetry, short closure prompts with the measured 10-minute verdict, and deeper review prompts; `Копировать день` exports the standalone day picture; failed clipboard writes show selected Markdown; `pnpm smoke:export-focus-day` and `pnpm smoke:dogfood-report` verify SQLite fallbacks | Copied note is enough for evening analysis |
 | App friction telemetry | `app_events` stores local technical events, `pnpm smoke:app-events` verifies metrics/export, and `pnpm dogfood:report` includes `Телеметрия приложения` with both window show and hide request counts | Start/switch/stop/copy/API/window friction is visible without relying only on memory |
 | Evening closure duration | `day_closure_started` and `day_closure_completed` telemetry is included in UI/CLI reports, RC check, and final goal check | Closing the day takes at most 10 minutes and does not require Codex to interpret the review panel |
 | macOS app with embedded agent and SQLite | `pnpm smoke:macos-app` verifies app launch, SQLite health, focus flow, stale lock/port recovery, and active focus restore after app restart | The real app survives normal workday use |
@@ -368,7 +368,7 @@ Use `Ближайшее действие` as the current step. It appears in the
 Если фокус-блок ещё идёт, у дела всё ещё стоит `active`, или review-проверки не закрыты, UI покажет `Копировать черновик`, а Markdown-статус будет `черновик`. Останови активный блок, сними активный статус с дела или обработай/прими оставшиеся проверки перед тем, как считать отчёт финальным артефактом дня.
 If clipboard access is denied, Timeskein shows a selected text box with the Markdown. Copy it manually from there.
 
-If the UI copy path is unavailable, export the same raw day picture from SQLite:
+If the UI copy path is unavailable, export the same standalone day picture from SQLite. The fallback export is user-facing Russian Markdown; the raw internal labels are reserved for scripts through `--internal`:
 
 ```bash
 pnpm export:focus-day > timeskein-day.md

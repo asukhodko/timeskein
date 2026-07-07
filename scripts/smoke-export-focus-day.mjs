@@ -60,51 +60,70 @@ try {
     { cwd: repoRoot }
   );
 
-  assert(stdout.includes("Total tracked: 1:15:00"), "export did not include expected tracked total");
-  assert(stdout.includes("# Timeskein focus day - 30.06.2026"), "export did not use localized day title");
+  const { stdout: internalStdout } = await execFileAsync(
+    "node",
+    [
+      join(repoRoot, "scripts/export-focus-day.mjs"),
+      "--db",
+      dbPath,
+      "--date",
+      "2026-06-30",
+      "--now",
+      "2026-06-30T08:15:00Z",
+      "--internal",
+    ],
+    { cwd: repoRoot }
+  );
+
+  assert(stdout.includes("Всего учтено: 1:15:00"), "export did not include expected localized tracked total");
+  assert(stdout.includes("# Дневной отчёт Timeskein — 30.06.2026"), "export did not use localized day title");
   assert(!stdout.includes(" AM"), "export should not use 12-hour AM time");
   assert(!stdout.includes(" PM"), "export should not use 12-hour PM time");
-  assert(stdout.includes("Work focus: 45:00"), "export did not include expected work focus total");
-  assert(stdout.includes("Non-work tracked: 30:00"), "export did not include expected non-work total");
-  assert(stdout.includes("Entrances: 4"), "export did not include expected entrance count");
+  assert(!stdout.includes("Total tracked:"), "export leaked raw tracked total label");
+  assert(!stdout.includes("## By Work Item"), "export leaked raw Work Item section title");
+  assert(stdout.includes("Рабочий фокус: 45:00"), "export did not include expected work focus total");
+  assert(stdout.includes("Вне работы учтено: 30:00"), "export did not include expected non-work total");
+  assert(stdout.includes("Входов: 4"), "export did not include expected entrance count");
   assert(stdout.includes("started before day"), "export did not include overlapping session");
-  assert(stdout.includes("## Day-Boundary Blocks"), "export did not flag day-boundary blocks");
+  assert(stdout.includes("## Блоки на границе дня"), "export did not flag day-boundary blocks");
   assert(
-    stdout.includes("counted as 10:00 inside this day"),
+    stdout.includes("учтено 10:00 внутри этого дня"),
     "export did not explain clipped day-boundary duration"
   );
-  assert(stdout.includes("## By Work Item"), "export did not include By Work Item section");
-  assert(stdout.includes("## By Activity Zone"), "export did not include By Activity Zone section");
+  assert(stdout.includes("## По делам"), "export did not include localized By Work Item section");
+  assert(stdout.includes("## По зонам активности"), "export did not include localized By Activity Zone section");
   assert(stdout.includes("| 45:00 | 3 | Работа |"), "export did not aggregate localized Work zone");
   assert(stdout.includes("| 30:00 | 1 | Координация |"), "export did not aggregate localized Coordination zone");
   assert(stdout.includes("| 45:00 | 3 | Deep Work |"), "export did not aggregate Deep Work");
   assert(stdout.includes("| 30:00 | 1 | Meetings |"), "export did not aggregate Meetings");
-  assert(stdout.includes("## Work Item Notes"), "export did not include Work Item Notes section");
+  assert(stdout.includes("## Заметки дел"), "export did not include Work Item Notes section");
   assert(
     stdout.includes("- Deep Work: Keep the implementation context here."),
     "export did not include Work Item note"
   );
-  assert(stdout.includes("## Work Item Events"), "export did not include Work Item Events section");
+  assert(stdout.includes("## События дел"), "export did not include Work Item Events section");
   assert(
     stdout.includes("| Deep Work | Deep Work | implementation checkpoint |"),
     "export did not include timestamped Work Item event"
   );
-  assert(stdout.includes("## Day Events"), "export did not include Day Events section");
+  assert(stdout.includes("## События дня"), "export did not include Day Events section");
   assert(
     stdout.includes("| Работа | Deep Work | buffer before meeting felt expensive |"),
     "export did not include focus-linked day event"
   );
   assert(
-    stdout.includes("| Восстановление | day | recovery was not enough |"),
+    stdout.includes("| Восстановление | день | recovery was not enough |"),
     "export did not include day-level recovery event"
   );
-  assert(stdout.includes("## Gaps >= 20:00"), "export did not include significant gaps section");
+  assert(stdout.includes("## Разрывы >= 20:00"), "export did not include significant gaps section");
   assert(stdout.includes(": 35:00"), "export did not include expected significant gap duration");
-  assert(stdout.includes("## Open Gap"), "export did not include open gap section");
+  assert(stdout.includes("## Текущий открытый разрыв"), "export did not include open gap section");
   assert(
-    stdout.includes(": 30:00 since last stopped block"),
+    stdout.includes(": 30:00 после последнего остановленного блока"),
     "export did not include expected open gap duration"
   );
+  assert(internalStdout.includes("Total tracked: 1:15:00"), "internal export did not keep raw tracked total");
+  assert(internalStdout.includes("## By Work Item"), "internal export did not keep raw Work Item section");
 
   await runSql(`
     INSERT INTO work_items (id, title, type, state, pinned, created_at, updated_at, last_seen_at)
@@ -128,16 +147,16 @@ try {
     { cwd: repoRoot }
   );
 
-  assert(activeStdout.includes("Total tracked: 1:30:00"), "active export did not include running total");
-  assert(activeStdout.includes("Work focus: 1:00:00"), "active export did not include running work focus total");
-  assert(activeStdout.includes("Non-work tracked: 30:00"), "active export did not include running non-work total");
-  assert(activeStdout.includes("Entrances: 5"), "active export did not include running entrance count");
+  assert(activeStdout.includes("Всего учтено: 1:30:00"), "active export did not include running total");
+  assert(activeStdout.includes("Рабочий фокус: 1:00:00"), "active export did not include running work focus total");
+  assert(activeStdout.includes("Вне работы учтено: 30:00"), "active export did not include running non-work total");
+  assert(activeStdout.includes("Входов: 5"), "active export did not include running entrance count");
   assert(activeStdout.includes("Active Draft Work"), "active export did not include active work item");
   assert(
     activeStdout.includes("-сейчас | 15:00 | Работа | Active Draft Work"),
     "active export did not show active block ending at current moment"
   );
-  assert(!activeStdout.includes("## Open Gap"), "active export showed open gap while latest block is active");
+  assert(!activeStdout.includes("## Текущий открытый разрыв"), "active export showed open gap while latest block is active");
 
   const legacyDbPath = join(tempDir, "legacy.db");
   await runSqlFileAt(legacyDbPath, join(repoRoot, "apps/agent/migrations/001_initial.sql"));
@@ -175,8 +194,8 @@ try {
     ],
     { cwd: repoRoot }
   );
-  assert(legacyStdout.includes("Total tracked: 30:00"), "legacy export did not include expected total");
-  assert(legacyStdout.includes("Work focus: 30:00"), "legacy export did not fall back to Work focus");
+  assert(legacyStdout.includes("Всего учтено: 30:00"), "legacy export did not include expected total");
+  assert(legacyStdout.includes("Рабочий фокус: 30:00"), "legacy export did not fall back to Work focus");
   assert(legacyStdout.includes("| 30:00 | 1 | Работа |"), "legacy export did not include fallback Work zone total");
 
   console.log(

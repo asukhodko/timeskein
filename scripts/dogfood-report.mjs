@@ -16,7 +16,7 @@ const to = nextLocalDay(from);
 const dbPath = options.db
   ? resolve(options.db)
   : join(homedir(), "Library/Application Support/Timeskein/timeskein.db");
-const exportArgs = [resolve(repoRoot, "scripts/export-focus-day.mjs"), "--db", dbPath];
+const exportArgs = [resolve(repoRoot, "scripts/export-focus-day.mjs"), "--db", dbPath, "--internal"];
 const metricsArgs = [resolve(repoRoot, "scripts/dogfood-metrics.mjs"), "--db", dbPath, "--raw"];
 const REVIEW_TITLE_LABELS = {
   "Stop the active focus block": "Остановить активный фокус-блок",

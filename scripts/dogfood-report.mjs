@@ -713,7 +713,11 @@ function formatDailyControlGoalAuditMarkdown({
     },
     {
       requirement: "Tracking correction or review evidenced",
-      status: hasReview("Confirm tracking accuracy or test correction") ? "review" : "pass",
+      status:
+        hasReview("Confirm tracking accuracy or test correction") ||
+        hasReview("Review failed focus corrections")
+          ? "review"
+          : "pass",
       evidence: correctionEvidence,
     },
     {

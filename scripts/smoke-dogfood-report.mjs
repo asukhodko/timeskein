@@ -303,6 +303,26 @@ try {
 
   await runSql(`
     INSERT INTO app_events (id, ts, source, kind, payload)
+    VALUES ('ae_failed_correction', '2026-06-30T07:55:30Z', 'ui', 'focus_correction_failed', '{"action_id":"k3","control":"edit_block","error_code":"validation_error"}');
+  `);
+
+  const { stdout: failedCorrectionStdout } = await execFileAsync(
+    "node",
+    [join(repoRoot, "scripts/dogfood-report.mjs"), "--db", dbPath, "--date", "2026-06-30"],
+    { cwd: repoRoot }
+  );
+
+  assert(
+    failedCorrectionStdout.includes("Проверить ошибки коррекции фокуса"),
+    "report review checklist should flag failed focus corrections"
+  );
+  assert(
+    failedCorrectionStdout.includes("| Коррекция трекинга проверена | проверить |"),
+    "report daily-control audit should not pass when a focus correction failed"
+  );
+
+  await runSql(`
+    INSERT INTO app_events (id, ts, source, kind, payload)
     VALUES ('ae4', '2026-06-30T07:56:00Z', 'ui', 'capture_followup_reviewed', '{"action_id":"c1","control":"review_checklist","open_count":1}');
   `);
 

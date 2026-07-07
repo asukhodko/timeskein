@@ -49,7 +49,8 @@ try {
   const cleanReportPath = join(tempDir, "clean-report.md");
   const cleanSaved = await runFinish(cleanDb, ["--out", cleanReportPath]);
   assert(cleanSaved.code === 0, "stopped day should save a report");
-  assert(cleanSaved.stdout.includes(`Saved Timeskein dogfood report: ${cleanReportPath}`), "finish did not report saved file path");
+  assert(cleanSaved.stdout.includes(`Сохранён dogfood-отчёт Timeskein: ${cleanReportPath}`), "finish did not report saved file path");
+  assert(!cleanSaved.stdout.includes("Saved Timeskein dogfood report:"), "finish leaked old English saved-report message");
   const cleanSavedMarkdown = await readFile(cleanReportPath, "utf8");
   assert(
     cleanSavedMarkdown.includes("# Timeskein dogfood report - 2026-06-30"),
@@ -62,14 +63,18 @@ try {
   const defaultReportPath = join(tempDir, "timeskein-dogfood-report-2026-06-30.md");
   const defaultRcPath = join(tempDir, "timeskein-dogfood-rc-check-2026-06-30.md");
   assert(
-    cleanSavedDefault.stdout.includes("Saved Timeskein dogfood report:") &&
+    cleanSavedDefault.stdout.includes("Сохранён dogfood-отчёт Timeskein:") &&
       cleanSavedDefault.stdout.includes("timeskein-dogfood-report-2026-06-30.md"),
     "finish --save did not report saved dogfood report"
   );
   assert(
-    cleanSavedDefault.stdout.includes("Saved Timeskein dogfood RC check:") &&
+    cleanSavedDefault.stdout.includes("Сохранён RC-аудит dogfood-дня Timeskein:") &&
       cleanSavedDefault.stdout.includes("timeskein-dogfood-rc-check-2026-06-30.md"),
     "finish --save did not report saved RC check"
+  );
+  assert(
+    !cleanSavedDefault.stdout.includes("Saved Timeskein dogfood"),
+    "finish --save leaked old English saved evidence messages"
   );
   assert(
     cleanSavedDefault.stdout.includes("## Внимание") &&

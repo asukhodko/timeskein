@@ -266,7 +266,8 @@ try {
   const savedPath = join(tempDir, "rc-check.md");
   const saved = await runRcCheck(goodDb, ["--out", savedPath]);
   assert(saved.code === 0, "good day should save RC check");
-  assert(saved.stdout.includes(`Saved Timeskein dogfood RC check: ${savedPath}`), "save output path is missing");
+  assert(saved.stdout.includes(`Сохранён RC-аудит dogfood-дня Timeskein: ${savedPath}`), "save output path is missing");
+  assert(!saved.stdout.includes("Saved Timeskein dogfood RC check:"), "save output leaked old English RC check message");
   const savedMarkdown = await readFile(savedPath, "utf8");
   assert(savedMarkdown.includes("# Timeskein dogfood RC check - 2026-06-30"), "saved RC check title is missing");
   assert(savedMarkdown.includes("Manual RC Verdict"), "saved RC check manual verdict is missing");

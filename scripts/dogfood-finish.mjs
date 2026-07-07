@@ -55,7 +55,7 @@ const { stdout } = await execFileAsync(process.execPath, reportArgs, {
 const outputPath = outputReportPath(options, dateArg);
 if (outputPath) {
   await writeFile(outputPath, stdout);
-  process.stdout.write(`Saved Timeskein dogfood report: ${outputPath}\n`);
+  process.stdout.write(`Сохранён dogfood-отчёт Timeskein: ${outputPath}\n`);
   if (options.save) {
     await saveRcCheck(dateArg, dbPath);
   }

@@ -37,7 +37,7 @@ const shouldFail =
 
 if (outputPath) {
   await writeFile(outputPath, output);
-  process.stdout.write(`Saved Timeskein dogfood RC check: ${outputPath}\n`);
+  process.stdout.write(`Сохранён RC-аудит dogfood-дня Timeskein: ${outputPath}\n`);
 } else {
   process.stdout.write(output);
 }

@@ -45,7 +45,10 @@ try {
     "ready output did not include item time-total UI reminder"
   );
   assert(
-    ready.stdout.includes("Начать закрытие дня") && ready.stdout.includes("10 минут или меньше"),
+    ready.stdout.includes("Начать закрытие дня") &&
+      ready.stdout.includes("дальше иди по строке `Ближайшее действие`") &&
+      ready.stdout.includes("Копировать отчёт") &&
+      ready.stdout.includes("10 минут или меньше"),
     "ready output did not include measured day-closure reminder"
   );
   assert(

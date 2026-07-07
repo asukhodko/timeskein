@@ -95,7 +95,7 @@ pnpm dogfood:status
 ```
 
 If readiness reports active focus, active Work Items, duplicate titles, or existing blocks for today, fix that before treating Timeskein as the source of truth for the day. The readiness report includes exact next commands and shows whether the embedded agent or app process is already alive.
-When readiness is clean, the same report prints the next start command and the `Памятка закрытия дня` checklist for the next dogfood day. Use it as the morning reminder for the paths that must be intentionally exercised before the evening `finish:save` step tells you whether to return to review or run the final `goal-check`. If `goal-check` is launched too early, it repeats the saved report next action instead of leaving you to reopen the Markdown.
+When readiness is clean, the same report prints the next start command and the `Памятка закрытия дня` checklist for the next dogfood day. Use it as the morning reminder for the paths that must be intentionally exercised and for the evening rule: follow the UI `Ближайшее действие` until final `Копировать отчёт`, then let `finish:save` tell you whether to return to review or run the final `goal-check`. If `goal-check` is launched too early, it repeats the saved report next action instead of leaving you to reopen the Markdown.
 
 The default readiness mode is a clean start gate. After the day already has real focus blocks, use continue mode for a health check:
 

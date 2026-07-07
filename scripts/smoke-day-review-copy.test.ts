@@ -382,14 +382,32 @@ test('copied report keeps key focus and telemetry sections localized', () => {
     '',
     'Total events: 3',
     'Start requests: 1',
+    'Switch requests: 2',
     'Stop requests: 1',
-    'Capture follow-up reviews: 1',
-    'Capture usage reviews: 1',
-    'Capture failures create/resolve/update/delete/convert: 0/0/0/0/0',
+    'Typed/selected entry requests: 3/4',
+    'Start/stop failures: 0/1',
+    'Window shown/hidden: 5/6',
+    'Window show/hide requests: 7/8',
+    'Window drag starts: 9',
+    'Copy failures: 0',
     'Manual copy fallbacks: 0',
+    'Capture created/resolved/converted: 1/2/3',
+    'Capture follow-up reviews: 1',
+    'Work Item time badge reviews: 1',
+    'Activity Zone reviews: 1',
+    'Capture usage reviews: 1',
+    'Entry path reviews: 1',
+    'Window entrypoint reviews: 1',
+    'Capture updated/deleted: 2/1',
+    'Capture failures create/resolve/update/delete/convert: 0/0/0/0/0',
+    'Corrections requested/applied/reviewed/failed: 1/1/1/0',
     'Day closure started/completed: 1/1',
     'Last day closure duration: 0:07',
+    'API errors: 0',
+    'Already-active start attempts: 0',
+    'Stale runtime recoveries: 0',
     'Average start latency: n/a',
+    'Slow window-to-focus gaps: 0',
     '',
     '### Events By Kind',
     '',
@@ -416,18 +434,38 @@ test('copied report keeps key focus and telemetry sections localized', () => {
   const localizedTelemetry = formatTelemetryForReport(telemetryMarkdown)
   assert(localizedTelemetry.includes('## Телеметрия приложения'))
   assert(localizedTelemetry.includes('Всего событий: 3'))
+  assert(localizedTelemetry.includes('Запросов переключения: 2'))
+  assert(localizedTelemetry.includes('Входов вводом/из списка: 3/4'))
+  assert(localizedTelemetry.includes('Ошибок старта/остановки: 0/1'))
+  assert(localizedTelemetry.includes('Окно показано/скрыто: 5/6'))
+  assert(localizedTelemetry.includes('Запросы показать/скрыть окно: 7/8'))
+  assert(localizedTelemetry.includes('Начатых перетаскиваний окна: 9'))
   assert(localizedTelemetry.includes('Закрытий дня начато/завершено: 1/1'))
   assert(localizedTelemetry.includes('Последняя длительность закрытия дня: 0:07'))
   assert(localizedTelemetry.includes('Средняя задержка старта: нет данных'))
+  assert(localizedTelemetry.includes('Ошибок API: 0'))
+  assert(localizedTelemetry.includes('Восстановлений устаревшего состояния агента: 0'))
+  assert(localizedTelemetry.includes('Медленных переходов окно-фокус: 0'))
+  assert(localizedTelemetry.includes('Отвлечений создано/закрыто/превращено: 1/2/3'))
+  assert(localizedTelemetry.includes('Отвлечений изменено/удалено: 2/1'))
   assert(localizedTelemetry.includes('Ручных копирований вместо буфера: 0'))
   assert(localizedTelemetry.includes('Проверок открытых отвлечений: 1'))
   assert(localizedTelemetry.includes('Проверок использования инбокса: 1'))
+  assert(localizedTelemetry.includes('Проверок времени по делам: 1'))
+  assert(localizedTelemetry.includes('Проверок зон активности: 1'))
+  assert(localizedTelemetry.includes('Проверок путей входа: 1'))
+  assert(localizedTelemetry.includes('Проверок входа в окно: 1'))
   assert(!localizedTelemetry.includes('Проверок бейджей времени Work Item:'), 'model-side Work Item telemetry label should not leak into copied report')
   assert(localizedTelemetry.includes('Ошибок отвлечений: создание/закрытие/изменение/удаление/превращение: 0/0/0/0/0'))
+  assert(localizedTelemetry.includes('Коррекций запрошено/применено/проверено/ошибок: 1/1/1/0'))
   assert(localizedTelemetry.includes('### События по типам'))
   assert(localizedTelemetry.includes('| 1 | закрытие дня завершено |'))
   assert(!localizedTelemetry.includes('## App Telemetry'), 'raw English telemetry heading should not leak into copied report')
   assert(!localizedTelemetry.includes('Total events:'), 'raw English telemetry counter should not leak into copied report')
+  assert(!localizedTelemetry.includes('Window shown'), 'raw English window telemetry should not leak into copied report')
+  assert(!localizedTelemetry.includes('Capture created'), 'raw English capture telemetry should not leak into copied report')
+  assert(!localizedTelemetry.includes('Corrections requested'), 'raw English correction telemetry should not leak into copied report')
+  assert(!localizedTelemetry.includes('API errors:'), 'raw English API telemetry should not leak into copied report')
   assert(!localizedTelemetry.includes('day_closure_completed'), 'raw event kind should not leak into copied report')
   assert(!localizedTelemetry.includes('typed/selected'), 'raw mixed-language entry label should not leak into copied report')
   assert(!localizedTelemetry.includes('n/a'), 'raw unavailable value should not leak into copied report')

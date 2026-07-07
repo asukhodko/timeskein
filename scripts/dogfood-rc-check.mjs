@@ -923,7 +923,7 @@ function formatCaptureOutcome(capture) {
 }
 
 function isGapExplanationText(text) {
-  return /\bopen\s+gap\b|\bgap\b|разрыв|перерыв|буфер|recovery/i.test(text ?? "");
+  return /\bopen\s+gap\b|\bgap\b|разрыв|перерыв|буфер|recovery|восстановлен/i.test(text ?? "");
 }
 
 function clippedActiveSeconds(startedAtValue, stoppedAtValue, from, to, now) {

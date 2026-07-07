@@ -3,12 +3,16 @@ import test from 'node:test'
 
 import {
   formatDayReviewItem,
+  formatGapDayEventDraft,
   formatFocusMarkdownForReport,
   formatReviewChecklistMarkdown,
   formatReviewActionLabel,
   formatTelemetryForReport,
+  isOpenGapExplanationText,
+  pickNextGapForReview,
   type DayReviewAction,
   type DayReviewItem,
+  type Gap,
 } from '../apps/desktop/src/components/FocusPanel'
 import { CAPTURE_INBOX_LABELS } from '../apps/desktop/src/components/CaptureInbox'
 
@@ -73,6 +77,23 @@ test('day review action buttons explain what will happen', () => {
     assert.equal(formatReviewActionLabel(action), label)
     assert.notEqual(label, 'Принять')
   }
+})
+
+test('gap review helpers keep repeated Explain actions on the next unresolved gap', () => {
+  const gaps: Gap[] = [
+    { from: '2026-07-07T09:00:00Z', to: '2026-07-07T09:30:00Z', seconds: 30 * 60 },
+    { from: '2026-07-07T11:00:00Z', to: '2026-07-07T11:40:00Z', seconds: 40 * 60 },
+  ]
+
+  assert.equal(pickNextGapForReview(gaps, []), gaps[0])
+  assert.equal(
+    pickNextGapForReview(gaps, [{ text: formatGapDayEventDraft(gaps[0]) + 'обед и восстановление' }]),
+    gaps[1]
+  )
+  assert.equal(pickNextGapForReview(gaps, [{ text: 'Открытый разрыв 12:00-12:30: перерыв' }]), gaps[1])
+  assert.equal(pickNextGapForReview(gaps, [{ text: 'обычная заметка о ходе дня' }]), gaps[0])
+  assert.equal(isOpenGapExplanationText('Открытый разрыв 12:00-12:30: ужин'), true)
+  assert.equal(isOpenGapExplanationText('open gap 12:00-12:30: dinner'), true)
 })
 
 test('copied report keeps key focus and telemetry sections localized', () => {

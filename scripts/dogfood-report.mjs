@@ -877,11 +877,11 @@ function countActivityZoneRows(markdown) {
 }
 
 function hasGapExplanationEvent(markdown) {
-  return /\bopen\s+gap\b|\bgap\b|разрыв|перерыв|буфер|recovery/i.test(extractMarkdownSection(markdown, "## Day Events"));
+  return /\bopen\s+gap\b|\bgap\b|разрыв|перерыв|буфер|recovery|восстановлен/i.test(extractMarkdownSection(markdown, "## Day Events"));
 }
 
 function hasOpenGapExplanationEvent(markdown) {
-  return /\bopen\s+gap\b/i.test(extractMarkdownSection(markdown, "## Day Events"));
+  return /\bopen\s+gap\b|открыт[а-яё]*\s+разрыв/i.test(extractMarkdownSection(markdown, "## Day Events"));
 }
 
 function extractMarkdownSection(markdown, title) {

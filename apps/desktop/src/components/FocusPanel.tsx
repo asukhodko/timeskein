@@ -584,15 +584,15 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
   }
 
   const stageGapDayEvent = (gap: Gap, label = 'Разрыв') => {
-    stageDayEvent(
-      `${label} ${formatClockTime(gap.from)}-${formatClockTime(gap.to)} (${formatDuration(gap.seconds)}): `,
-      'recovery'
-    )
+    stageDayEvent(formatGapDayEventDraft(gap, label), 'recovery')
   }
 
   const handleReviewAction = async (action: DayReviewAction) => {
     if (action === 'stage_significant_gap') {
-      const gap = gapsBetweenSessions(sessions).find((item) => item.seconds >= SIGNIFICANT_GAP_SECONDS)
+      const gap = pickNextGapForReview(
+        gapsBetweenSessions(sessions).filter((item) => item.seconds >= SIGNIFICANT_GAP_SECONDS),
+        dayEvents
+      )
       if (gap) {
         stageGapDayEvent(gap)
       }
@@ -1250,7 +1250,7 @@ export function formatTelemetryForReport(markdown: string) {
     .replace(/^\| Count \| Kind \|$/gm, '| Кол-во | Тип |')
 }
 
-type Gap = {
+export type Gap = {
   from: string
   to: string
   seconds: number
@@ -1309,7 +1309,7 @@ function buildDayReviewItems({
   const nonWorkSeconds = Math.max(activeSecondsTotal - getZoneActiveSeconds(zoneTotals, 'work'), 0)
   const touchedWorkItemIds = new Set(sessions.map((session) => session.work_item_id).filter(Boolean))
   const touchedWorkItemNoteCount = workItems.filter((item) => touchedWorkItemIds.has(item.id) && item.note?.trim()).length
-  const gapExplanationCount = dayEvents.filter((event) => isGapExplanationText(event.text)).length
+  const gapExplanationCount = countGapExplanationTexts(dayEvents)
   const unexplainedGapCount = Math.max(gaps.length - gapExplanationCount, 0)
   const activityZoneReviewed = (appTelemetry?.by_kind.activity_zone_reviewed ?? 0) > 0
   const captureUsageReviewed = (appTelemetry?.by_kind.capture_usage_reviewed ?? 0) > 0
@@ -2564,12 +2564,25 @@ function getZoneActiveSeconds(
   return zoneTotals.find((item) => item.zone === zone)?.activeSeconds ?? 0
 }
 
-function isGapExplanationText(text: string | undefined) {
-  return /\bopen\s+gap\b|\bgap\b|разрыв|перерыв|буфер|recovery/i.test(text ?? '')
+export function formatGapDayEventDraft(gap: Gap, label = 'Разрыв') {
+  return `${label} ${formatClockTime(gap.from)}-${formatClockTime(gap.to)} (${formatDuration(gap.seconds)}): `
 }
 
-function isOpenGapExplanationText(text: string | undefined) {
-  return /\bopen\s+gap\b/i.test(text ?? '')
+export function countGapExplanationTexts(dayEvents: Array<{ text?: string }>) {
+  return dayEvents.filter((event) => isGapExplanationText(event.text)).length
+}
+
+export function pickNextGapForReview(gaps: Gap[], dayEvents: Array<{ text?: string }>) {
+  const explainedCount = Math.min(countGapExplanationTexts(dayEvents), gaps.length)
+  return gaps[explainedCount]
+}
+
+function isGapExplanationText(text: string | undefined) {
+  return /\bopen\s+gap\b|\bgap\b|разрыв|перерыв|буфер|recovery|восстановлен/i.test(text ?? '')
+}
+
+export function isOpenGapExplanationText(text: string | undefined) {
+  return /\bopen\s+gap\b|открыт[а-яё]*\s+разрыв/i.test(text ?? '')
 }
 
 function appendWorkItemNotes(

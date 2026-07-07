@@ -404,6 +404,10 @@ try {
     stuckItemDraftStdout.includes("Снять активный статус с дела"),
     "stuck active item review checklist did not include active item cleanup"
   );
+  assert(
+    stuckItemDraftStdout.includes("Ближайшее действие: закрыть блокер: Снять активный статус с дела. Выбери активное дело и смени состояние с «Активно»."),
+    "stuck active item next action did not explain how to clear the blocker"
+  );
 
   await runSql(`
     UPDATE work_items SET state = 'unknown' WHERE id = 'w3';
@@ -427,6 +431,10 @@ try {
   assert(
     draftStdout.includes("Остановить активный фокус-блок"),
     "active focus review checklist did not include stop action"
+  );
+  assert(
+    draftStdout.includes("Ближайшее действие: закрыть блокер: Остановить активный фокус-блок. Нажми «Стоп» у активного фокуса."),
+    "active focus next action did not point to the Stop button"
   );
 
   console.log(

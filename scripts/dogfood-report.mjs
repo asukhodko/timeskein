@@ -956,20 +956,33 @@ function formatDayReviewNextStep(items) {
 
 function formatNextStep(prefix, items) {
   const title = REVIEW_TITLE_LABELS[items[0].title] ?? items[0].title;
-  const actionHint = items.length === 1 ? formatNextStepActionHint(items[0]) : "";
+  const actionHint = formatNextStepHint(items[0], items.length);
   const rest = items.length > 1 ? ` Ещё ${items.length - 1}.` : "";
   return `${prefix}: ${title}.${actionHint}${rest}`;
 }
 
-function formatNextStepActionHint(item) {
+function formatNextStepHint(item, itemCount) {
   const actionLabel = REVIEW_ACTION_LABELS_BY_TITLE[item.title];
-  if (!actionLabel) return "";
+  if (!actionLabel) return formatNextStepBlockerHint(item);
+  if (itemCount > 1) return "";
 
   if (isAcceptAsIsReviewItem(item)) {
     return ` Нажми «${actionLabel}», если данные уже честные.`;
   }
 
   return ` Нажми «${actionLabel}».`;
+}
+
+function formatNextStepBlockerHint(item) {
+  if (item.title === "Stop the active focus block") {
+    return " Нажми «Стоп» у активного фокуса.";
+  }
+
+  if (item.title === "Clear active Work Item state") {
+    return " Выбери активное дело и смени состояние с «Активно».";
+  }
+
+  return "";
 }
 
 function formatDayReviewDetail(detail) {

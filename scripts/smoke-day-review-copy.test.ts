@@ -104,7 +104,14 @@ test('day review next step points to one calm action', () => {
       { level: 'blocker', title: 'Stop the active focus block', detail: 'Вход в день' },
       { level: 'review', title: 'Classify significant gaps', action: 'stage_significant_gap' },
     ]),
-    'закрыть блокер: Остановить активный фокус-блок.'
+    'закрыть блокер: Остановить активный фокус-блок. Нажми «Стоп» у активного фокуса.'
+  )
+
+  assert.equal(
+    formatDayReviewNextStep([
+      { level: 'blocker', title: 'Clear active Work Item state', detail: '1 дело с активным статусом' },
+    ]),
+    'закрыть блокер: Снять активный статус с дела. Выбери активное дело и смени состояние с «Активно».'
   )
 
   assert.equal(

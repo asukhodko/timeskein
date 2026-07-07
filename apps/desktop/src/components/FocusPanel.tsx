@@ -1911,13 +1911,14 @@ export function formatDayReviewNextStep(items: DayReviewItem[]) {
 
 function formatNextStep(prefix: string, items: DayReviewItem[]) {
   const label = formatDayReviewItem(items[0])
-  const actionHint = items.length === 1 ? formatNextStepActionHint(items[0]) : ''
+  const actionHint = formatNextStepHint(items[0], items.length)
   const rest = items.length > 1 ? ` Ещё ${items.length - 1}.` : ''
   return `${prefix}: ${label.title}.${actionHint}${rest}`
 }
 
-function formatNextStepActionHint(item: DayReviewItem) {
-  if (!item.action) return ''
+function formatNextStepHint(item: DayReviewItem, itemCount: number) {
+  if (!item.action) return formatNextStepBlockerHint(item)
+  if (itemCount > 1) return ''
 
   const actionLabel = formatReviewActionLabel(item.action)
   if (isBulkAcceptableReviewAction(item.action)) {
@@ -1925,6 +1926,18 @@ function formatNextStepActionHint(item: DayReviewItem) {
   }
 
   return ` Нажми «${actionLabel}».`
+}
+
+function formatNextStepBlockerHint(item: DayReviewItem) {
+  if (item.title === 'Stop the active focus block') {
+    return ' Нажми «Стоп» у активного фокуса.'
+  }
+
+  if (item.title === 'Clear active Work Item state') {
+    return ' Выбери активное дело и смени состояние с «Активно».'
+  }
+
+  return ''
 }
 
 function appendReviewChecklistGroup(lines: string[], title: string, items: DayReviewItem[]) {

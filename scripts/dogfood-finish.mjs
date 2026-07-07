@@ -261,7 +261,7 @@ function formatBlockedNextAction(items) {
     return "проверь путь к базе или запусти Timeskein, чтобы он создал локальную базу.";
   }
 
-  return "исправь первый блокер из списка выше и повтори команду.";
+  return "исправь первый красный пункт из списка выше и повтори команду.";
 }
 
 function buildMeasuredClosureWarning(date, reportState, reviewNextAction) {

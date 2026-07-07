@@ -1058,7 +1058,7 @@ async function buildDogfoodReportMarkdown(
 
   if (activeFocus) {
     lines.push(
-      '## Блокер финального отчёта',
+      '## Что мешает финальному отчёту',
       '',
       `- Активное дело: ${activeFocus.work_item_title ?? activeFocus.title}`,
       `- Старт: ${formatClockTime(activeFocus.started_at)}`,
@@ -1070,7 +1070,7 @@ async function buildDogfoodReportMarkdown(
 
   if (!activeFocus && hasActiveWorkItems) {
     lines.push(
-      '## Блокер финального отчёта',
+      '## Что мешает финальному отчёту',
       '',
       ...activeWorkItems.map((item) => `- Дело с активным статусом: ${item.title}`),
       '- Сними активный статус с дела перед финальным отчётом.',
@@ -1612,7 +1612,7 @@ function DayReviewPanel({
     : closureStage === 'not_started'
       ? 'не начато'
       : blockers.length > 0
-        ? `${blockers.length} ${pluralRu(blockers.length, 'блокер', 'блокера', 'блокеров')}`
+        ? `${blockers.length} ${pluralRu(blockers.length, 'красный пункт', 'красных пункта', 'красных пунктов')}`
         : reviews.length > 0
           ? `${reviews.length} ${pluralRu(reviews.length, 'проверка', 'проверки', 'проверок')}`
           : 'готово'
@@ -1756,7 +1756,7 @@ export function formatDayClosurePrompt(
   }
 
   if (stage === 'blocked') {
-    return `Сначала закрой красные пункты: ${blockers} ${pluralRu(blockers, 'блокер', 'блокера', 'блокеров')} мешает финальному отчёту.`
+    return `Сначала закрой красные пункты: осталось ${blockers} ${pluralRu(blockers, 'пункт', 'пункта', 'пунктов')} перед финальным отчётом.`
   }
 
   if (stage === 'review') {
@@ -2015,7 +2015,7 @@ export function formatReviewChecklistMarkdown(items: DayReviewItem[]) {
 export function formatDayReviewNextStep(items: DayReviewItem[]) {
   const blockers = items.filter((item) => item.level === 'blocker')
   if (blockers.length > 0) {
-    return formatNextStep('закрыть блокер', blockers)
+    return formatNextStep('закрыть красный пункт', blockers)
   }
 
   const reviews = items.filter((item) => item.level === 'review')

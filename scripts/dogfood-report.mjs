@@ -364,7 +364,7 @@ function buildDogfoodReport(
 
   if (activeFocus) {
     lines.push(
-      "## Блокер финального отчёта",
+      "## Что мешает финальному отчёту",
       "",
       `- Активное дело: ${activeFocus.title}`,
       `- Старт: ${formatClockTime(activeFocus.started_at)}`,
@@ -376,7 +376,7 @@ function buildDogfoodReport(
 
   if (!activeFocus && hasActiveWorkItems) {
     lines.push(
-      "## Блокер финального отчёта",
+      "## Что мешает финальному отчёту",
       "",
       ...activeWorkItems.map((item) => `- Дело с активным статусом: ${item.title}`),
       "- Сними активный статус с дела перед финальным отчётом.",
@@ -1113,7 +1113,7 @@ function formatReviewChecklistMarkdown(items) {
 function formatDayReviewNextStep(items) {
   const blockers = items.filter((item) => item.level === "blocker");
   if (blockers.length > 0) {
-    return formatNextStep("закрыть блокер", blockers);
+    return formatNextStep("закрыть красный пункт", blockers);
   }
 
   const reviews = items.filter((item) => item.level === "review");

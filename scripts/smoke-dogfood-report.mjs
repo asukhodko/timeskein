@@ -409,7 +409,7 @@ try {
     "stuck active item report state is missing"
   );
   assert(
-    stuckItemDraftStdout.includes("## Блокер финального отчёта"),
+    stuckItemDraftStdout.includes("## Что мешает финальному отчёту"),
     "stuck active item report did not include active item warning"
   );
   assert(
@@ -421,7 +421,7 @@ try {
     "stuck active item review checklist did not include active item cleanup"
   );
   assert(
-    stuckItemDraftStdout.includes("Ближайшее действие: закрыть блокер: Снять активный статус с дела. Выбери активное дело и смени состояние с «Активно»."),
+    stuckItemDraftStdout.includes("Ближайшее действие: закрыть красный пункт: Снять активный статус с дела. Выбери активное дело и смени состояние с «Активно»."),
     "stuck active item next action did not explain how to clear the blocker"
   );
 
@@ -442,14 +442,14 @@ try {
   );
 
   assert(draftStdout.includes("Статус отчёта: черновик — фокус-блок ещё активен"), "draft report state is missing");
-  assert(draftStdout.includes("## Блокер финального отчёта"), "draft report did not include active block warning");
+  assert(draftStdout.includes("## Что мешает финальному отчёту"), "draft report did not include active block warning");
   assert(draftStdout.includes("Активное дело: Still Running"), "draft report did not name active item");
   assert(
     draftStdout.includes("Остановить активный фокус-блок"),
     "active focus review checklist did not include stop action"
   );
   assert(
-    draftStdout.includes("Ближайшее действие: закрыть блокер: Остановить активный фокус-блок. Нажми «Стоп» у активного фокуса."),
+    draftStdout.includes("Ближайшее действие: закрыть красный пункт: Остановить активный фокус-блок. Нажми «Стоп» у активного фокуса."),
     "active focus next action did not point to the Stop button"
   );
 

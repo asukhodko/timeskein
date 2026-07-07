@@ -50,6 +50,7 @@ try {
   );
   assert(
     ready.stdout.includes("если аудит ещё не чистый") &&
+      ready.stdout.includes("Ближайшее действие") &&
       ready.stdout.includes("Проверка перед отчётом"),
     "ready output did not explain pending audit finish flow"
   );
@@ -57,6 +58,11 @@ try {
     ready.stdout.includes("pnpm dogfood:goal-check -- --date YYYY-MM-DD") &&
       ready.stdout.includes("напечатанному следующему шагу"),
     "ready output did not explain the printed goal-check next step"
+  );
+  assert(
+    ready.stdout.includes("Если запустишь `pnpm dogfood:goal-check` слишком рано") &&
+      ready.stdout.includes("Ближайшее действие` из сохранённого отчёта"),
+    "ready output did not explain early goal-check next-action guidance"
   );
   assert(!ready.stdout.includes("pnpm dogfood:macos"), "ready output still suggests bypassing dogfood gates");
 

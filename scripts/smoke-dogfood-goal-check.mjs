@@ -63,8 +63,16 @@ try {
   const missingEvidence = await runGoalCheck(["--check-saved-evidence-only", "--date", "2026-06-30"], tempDir);
   assert(missingEvidence.code !== 0, "missing saved evidence should fail");
   assert(
-    `${missingEvidence.stdout}${missingEvidence.stderr}`.includes("Не найдены сохранённые материалы dogfood-дня за 2026-06-30"),
+    `${missingEvidence.stdout}${missingEvidence.stderr}`.includes("# Финальная проверка пока не готова") &&
+      `${missingEvidence.stdout}${missingEvidence.stderr}`.includes("## Что ещё осталось") &&
+      `${missingEvidence.stdout}${missingEvidence.stderr}`.includes("Сохранённые материалы dogfood-дня ещё не найдены") &&
+      `${missingEvidence.stdout}${missingEvidence.stderr}`.includes("pnpm dogfood:finish:save -- --date 2026-06-30"),
     "missing saved evidence error is missing"
+  );
+  assert(
+    !`${missingEvidence.stdout}${missingEvidence.stderr}`.includes("Error:") &&
+      !`${missingEvidence.stdout}${missingEvidence.stderr}`.includes("at checkSavedEvidence"),
+    "missing saved evidence should not print a JavaScript stack trace"
   );
   assert(
     !`${missingEvidence.stdout}${missingEvidence.stderr}`.includes("Saved dogfood evidence is missing"),
@@ -197,6 +205,11 @@ try {
   const reviewEvidence = await runGoalCheck(["--check-saved-evidence-only", "--date", "2026-06-30"], tempDir);
   assert(reviewEvidence.code !== 0, "saved evidence with review audit rows should fail before expensive gates");
   assert(
+    `${reviewEvidence.stdout}${reviewEvidence.stderr}`.includes("# Финальная проверка пока не готова") &&
+      `${reviewEvidence.stdout}${reviewEvidence.stderr}`.includes("## Что ещё осталось"),
+    "review saved evidence error did not use the calm not-ready wrapper"
+  );
+  assert(
     `${reviewEvidence.stdout}${reviewEvidence.stderr}`.includes("строка аудита «Длительность закрытия измерена» ещё не в статусе ok/pass"),
     "review saved evidence error did not mention the non-passing closure-duration row"
   );
@@ -260,7 +273,8 @@ try {
   const draftReportEvidence = await runGoalCheck(["--check-saved-evidence-only", "--date", "2026-06-30"], tempDir);
   assert(draftReportEvidence.code !== 0, "saved evidence with a draft report state should fail");
   assert(
-    `${draftReportEvidence.stdout}${draftReportEvidence.stderr}`.includes("статус отчёта ещё не финальный"),
+    `${draftReportEvidence.stdout}${draftReportEvidence.stderr}`.includes("# Финальная проверка пока не готова") &&
+      `${draftReportEvidence.stdout}${draftReportEvidence.stderr}`.includes("статус отчёта ещё не финальный"),
     "draft saved report evidence error did not mention non-final report state"
   );
 

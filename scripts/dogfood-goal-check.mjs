@@ -36,9 +36,14 @@ const steps = [
 ];
 
 if (options.checkSavedEvidenceOnly) {
-  await checkSavedEvidence(date);
-  console.log(`Сохранённые материалы dogfood-дня за ${date} найдены.`);
-  process.exit(0);
+  try {
+    await checkSavedEvidence(date);
+    console.log(`Сохранённые материалы dogfood-дня за ${date} найдены.`);
+    process.exit(0);
+  } catch (error) {
+    process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`);
+    process.exit(1);
+  }
 }
 
 if (options.dryRun) {
@@ -125,14 +130,7 @@ async function checkSavedEvidence(date) {
   const rcCheck = await readEvidenceFile(rcPath, missing);
 
   if (missing.length > 0) {
-    throw new Error(
-      [
-        `Не найдены сохранённые материалы dogfood-дня за ${date}:`,
-        ...missing.map((item) => `- ${item}`),
-        "",
-        `Сохрани вечерний отчёт и RC-аудит: pnpm dogfood:finish:save -- --date ${date}`,
-      ].join("\n")
-    );
+    throw new Error(buildMissingEvidenceMessage(date, missing));
   }
 
   const weak = [];
@@ -222,22 +220,44 @@ async function checkSavedEvidence(date) {
   }
 
   if (weak.length > 0 || notPassing.length > 0) {
-    throw new Error(
-      [
-        `Сохранённые материалы dogfood-дня за ${date} неполные:`,
-        ...weak.map((item) => `- ${item}`),
-        ...notPassing.map((item) => `- ${item}`),
-        "",
-        ...(weak.length > 0 ? [`Пересобери устаревшие или неполные файлы: pnpm dogfood:finish:save -- --date ${date}`] : []),
-        ...(notPassing.length > 0
-          ? [
-              "Закрой перечисленные строки аудита перед повторным финальным gate.",
-              `Для измерения закрытия дня: нажми \`Начать закрытие дня\`, скопируй финальный отчёт за 10 минут или меньше, затем сохрани evidence через \`pnpm dogfood:finish:save -- --date ${date}\`.`,
-            ]
-          : []),
-      ].join("\n")
-    );
+    throw new Error(buildIncompleteEvidenceMessage(date, weak, notPassing));
   }
+}
+
+function buildMissingEvidenceMessage(date, missing) {
+  return [
+    "# Финальная проверка пока не готова",
+    "",
+    "## Что ещё осталось",
+    "",
+    "- Сохранённые материалы dogfood-дня ещё не найдены.",
+    `- Сохрани вечерний отчёт и RC-аудит: \`pnpm dogfood:finish:save -- --date ${date}\`.`,
+    "",
+    "## Детали",
+    "",
+    ...missing.map((item) => `- ${item}`),
+  ].join("\n");
+}
+
+function buildIncompleteEvidenceMessage(date, weak, notPassing) {
+  return [
+    "# Финальная проверка пока не готова",
+    "",
+    "## Что ещё осталось",
+    "",
+    ...(weak.length > 0 ? [`- Пересобери устаревшие или неполные файлы: \`pnpm dogfood:finish:save -- --date ${date}\`.`] : []),
+    ...(notPassing.length > 0
+      ? [
+          "- Вернись к `Проверка перед отчётом`, закрой оставшиеся строки аудита и снова сохрани отчёт.",
+          `- Для измерения закрытия дня нажми \`Начать закрытие дня\`, скопируй финальный отчёт за 10 минут или меньше, затем повтори \`pnpm dogfood:finish:save -- --date ${date}\`.`,
+        ]
+      : []),
+    "",
+    "## Детали",
+    "",
+    ...weak.map((item) => `- ${item}`),
+    ...notPassing.map((item) => `- ${item}`),
+  ].join("\n");
 }
 
 function includesAny(text, aliases) {

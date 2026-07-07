@@ -60,7 +60,7 @@ try {
   assert(metricsStdout.includes("Всего событий: 31"), "metrics did not count events");
   assert(metricsStdout.includes("Запросов старта: 1"), "metrics did not count start requests");
   assert(metricsStdout.includes("Входов вводом/из списка: 1/0"), "metrics did not count entry request controls");
-  assert(metricsStdout.includes("Ручных fallback-копирований: 1"), "metrics did not count manual copy fallbacks");
+  assert(metricsStdout.includes("Ручных копирований вместо буфера: 1"), "metrics did not count manual copy fallbacks");
   assert(metricsStdout.includes("Запросов показать/скрыть окно: 1/1"), "metrics did not count window requests");
   assert(metricsStdout.includes("Отвлечений создано/закрыто/превращено: 1/1/0"), "metrics did not count capture outcomes");
   assert(metricsStdout.includes("Проверок открытых отвлечений: 1"), "metrics did not count capture follow-up reviews");
@@ -74,9 +74,11 @@ try {
   assert(metricsStdout.includes("Коррекций запрошено/применено/проверено/ошибок: 1/1/1/1"), "metrics did not count corrections");
   assert(metricsStdout.includes("Закрытие дня начато/завершено: 1/1"), "metrics did not count day closure events");
   assert(metricsStdout.includes("Последняя длительность закрытия дня: 7:30"), "metrics did not calculate day closure duration");
-  assert(metricsStdout.includes("Восстановлений stale runtime: 1"), "metrics did not count stale recoveries");
-  assert(metricsStdout.includes("Средняя задержка старта: 1000ms"), "metrics did not calculate start latency");
+  assert(metricsStdout.includes("Восстановлений устаревшего состояния агента: 1"), "metrics did not count stale recoveries");
+  assert(metricsStdout.includes("Средняя задержка старта: 1000 мс"), "metrics did not calculate start latency");
+  assert(metricsStdout.includes("| 1 | фокус начат |"), "metrics did not localize event kinds");
   assert(!metricsStdout.includes("## App Telemetry"), "metrics leaked raw English telemetry header");
+  assert(!metricsStdout.includes("stale runtime"), "metrics leaked raw stale runtime wording");
 
   const { stdout: rawMetricsStdout } = await execFileAsync(
     "node",

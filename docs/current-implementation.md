@@ -392,7 +392,7 @@ pnpm dogfood:finish:save
 pnpm dogfood:goal-check -- --no-codex-guidance
 ```
 
-The report telemetry section includes action counts, typed entry and selected/list continuation evidence, start/switch/stop failures, Capture Inbox action counts and failures, accepted review decisions, day-closure start/completion counts, last measured day-closure duration, API errors, window show/hide counts, both show and hide request counts, copy fallback counts, average start latency, likely show-to-start friction gaps, attempts to start the already active Work Item, and stale runtime recovery events.
+The report telemetry section includes action counts, typed entry and selected/list continuation evidence, start/switch/stop failures, Capture Inbox action counts and failures, accepted review decisions, day-closure start/completion counts, last measured day-closure duration, API errors, window show/hide counts, both show and hide request counts, copy fallback counts, average start latency, likely show-to-start friction gaps, attempts to start the already active Work Item, and stale runtime recovery events. The user-facing Markdown localizes unavailable values and event kind rows as `нет данных`, `фокус начат`, `окно показано`, and `запрошен старт фокуса`; raw English labels remain available only through `pnpm dogfood:metrics -- --raw` for scripts.
 
 ## Global Shortcut and Tray
 

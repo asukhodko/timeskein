@@ -1226,6 +1226,62 @@ function localizeActivityZoneCells(markdown: string) {
     .join('\n')
 }
 
+const APP_EVENT_KIND_LABELS: Record<string, string> = {
+  app_started: 'приложение запущено',
+  agent_started: 'агент запущен',
+  agent_reused: 'агент переиспользован',
+  agent_stale_runtime_recovered: 'устаревшее состояние агента восстановлено',
+  api_error: 'ошибка API',
+  window_shown: 'окно показано',
+  window_hidden: 'окно скрыто',
+  window_drag_started: 'перетаскивание окна начато',
+  window_show_requested: 'запрошен показ окна',
+  window_hide_requested: 'запрошено скрытие окна',
+  window_entrypoints_reviewed: 'входы в окно проверены',
+  focus_start_requested: 'запрошен старт фокуса',
+  focus_started: 'фокус начат',
+  focus_switch_requested: 'запрошено переключение фокуса',
+  focus_switched: 'фокус переключён',
+  focus_stop_requested: 'запрошена остановка фокуса',
+  focus_stopped: 'фокус остановлен',
+  focus_start_failed: 'старт фокуса не удался',
+  focus_stop_failed: 'остановка фокуса не удалась',
+  focus_correction_requested: 'запрошена коррекция фокуса',
+  focus_corrected: 'фокус скорректирован',
+  focus_correction_reviewed: 'коррекция фокуса проверена',
+  focus_correction_failed: 'коррекция фокуса не удалась',
+  capture_create_requested: 'запрошено создание отвлечения',
+  capture_created: 'отвлечение создано',
+  capture_resolve_requested: 'запрошено закрытие отвлечения',
+  capture_resolved: 'отвлечение закрыто',
+  capture_update_requested: 'запрошено исправление отвлечения',
+  capture_updated: 'отвлечение исправлено',
+  capture_delete_requested: 'запрошено удаление отвлечения',
+  capture_deleted: 'отвлечение удалено',
+  capture_convert_requested: 'запрошено превращение отвлечения в дело',
+  capture_converted: 'отвлечение превращено в дело',
+  capture_create_failed: 'создание отвлечения не удалось',
+  capture_resolve_failed: 'закрытие отвлечения не удалось',
+  capture_update_failed: 'исправление отвлечения не удалось',
+  capture_delete_failed: 'удаление отвлечения не удалось',
+  capture_convert_failed: 'превращение отвлечения не удалось',
+  capture_followup_reviewed: 'открытые отвлечения проверены',
+  capture_usage_reviewed: 'инбокс отвлечений проверен',
+  work_item_time_badges_reviewed: 'время по делам проверено',
+  activity_zone_reviewed: 'зоны активности проверены',
+  entry_paths_reviewed: 'пути входа проверены',
+  day_closure_started: 'закрытие дня начато',
+  day_closure_completed: 'закрытие дня завершено',
+  report_copy_requested: 'запрошено копирование отчёта',
+  report_copied: 'отчёт скопирован',
+  report_copy_failed: 'копирование отчёта не удалось',
+  manual_copy_fallback_shown: 'показано ручное копирование',
+}
+
+function formatAppEventKind(kind: string) {
+  return APP_EVENT_KIND_LABELS[kind] ?? kind
+}
+
 export function formatTelemetryForReport(markdown: string) {
   return markdown
     .replace(/^## App Telemetry$/m, '## Телеметрия приложения')
@@ -1233,13 +1289,13 @@ export function formatTelemetryForReport(markdown: string) {
     .replace(/^Start requests:/gm, 'Запросов старта:')
     .replace(/^Switch requests:/gm, 'Запросов переключения:')
     .replace(/^Stop requests:/gm, 'Запросов остановки:')
-    .replace(/^Typed\/selected entry requests:/gm, 'Входы typed/selected:')
-    .replace(/^Start\/stop failures:/gm, 'Ошибки старта/остановки:')
+    .replace(/^Typed\/selected entry requests:/gm, 'Входов вводом/из списка:')
+    .replace(/^Start\/stop failures:/gm, 'Ошибок старта/остановки:')
     .replace(/^Window shown\/hidden:/gm, 'Окно показано/скрыто:')
     .replace(/^Window show\/hide requests:/gm, 'Запросы показать/скрыть окно:')
-    .replace(/^Window drag starts:/gm, 'Стартов перетаскивания окна:')
+    .replace(/^Window drag starts:/gm, 'Начатых перетаскиваний окна:')
     .replace(/^Copy failures:/gm, 'Ошибок копирования:')
-    .replace(/^Manual copy fallbacks:/gm, 'Ручных fallback-копирований:')
+    .replace(/^Manual copy fallbacks:/gm, 'Ручных копирований вместо буфера:')
     .replace(/^Capture created\/resolved\/converted:/gm, 'Отвлечений создано/закрыто/превращено:')
     .replace(/^Capture follow-up reviews:/gm, 'Проверок открытых отвлечений:')
     .replace(/^Work Item time badge reviews:/gm, 'Проверок времени по делам:')
@@ -1254,11 +1310,14 @@ export function formatTelemetryForReport(markdown: string) {
     .replace(/^Last day closure duration:/gm, 'Последняя длительность закрытия дня:')
     .replace(/^API errors:/gm, 'Ошибок API:')
     .replace(/^Already-active start attempts:/gm, 'Попыток старта уже активного дела:')
-    .replace(/^Stale runtime recoveries:/gm, 'Восстановлений устаревшего runtime:')
+    .replace(/^Stale runtime recoveries:/gm, 'Восстановлений устаревшего состояния агента:')
     .replace(/^Average start latency:/gm, 'Средняя задержка старта:')
-    .replace(/^Slow window-to-focus gaps:/gm, 'Медленных разрывов окно->фокус:')
+    .replace(/^Slow window-to-focus gaps:/gm, 'Медленных переходов окно-фокус:')
     .replace(/^### Events By Kind$/m, '### События по типам')
     .replace(/^\| Count \| Kind \|$/gm, '| Кол-во | Тип |')
+    .replace(/: n\/a$/gm, ': нет данных')
+    .replace(/(\d+)ms\b/g, '$1 мс')
+    .replace(/^\| (\d+) \| ([a-z_]+) \|$/gm, (_line, count, kind) => `| ${count} | ${formatAppEventKind(kind)} |`)
 }
 
 export function formatShortClosureMarkdown(appTelemetryMarkdown: string) {

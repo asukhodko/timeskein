@@ -337,8 +337,10 @@ test('copied report keeps key focus and telemetry sections localized', () => {
     'Capture follow-up reviews: 1',
     'Capture usage reviews: 1',
     'Capture failures create/resolve/update/delete/convert: 0/0/0/0/0',
+    'Manual copy fallbacks: 0',
     'Day closure started/completed: 1/1',
     'Last day closure duration: 0:07',
+    'Average start latency: n/a',
     '',
     '### Events By Kind',
     '',
@@ -367,13 +369,19 @@ test('copied report keeps key focus and telemetry sections localized', () => {
   assert(localizedTelemetry.includes('Всего событий: 3'))
   assert(localizedTelemetry.includes('Закрытий дня начато/завершено: 1/1'))
   assert(localizedTelemetry.includes('Последняя длительность закрытия дня: 0:07'))
+  assert(localizedTelemetry.includes('Средняя задержка старта: нет данных'))
+  assert(localizedTelemetry.includes('Ручных копирований вместо буфера: 0'))
   assert(localizedTelemetry.includes('Проверок открытых отвлечений: 1'))
   assert(localizedTelemetry.includes('Проверок использования инбокса: 1'))
   assert(!localizedTelemetry.includes('Проверок бейджей времени Work Item:'), 'model-side Work Item telemetry label should not leak into copied report')
   assert(localizedTelemetry.includes('Ошибок отвлечений: создание/закрытие/изменение/удаление/превращение: 0/0/0/0/0'))
   assert(localizedTelemetry.includes('### События по типам'))
+  assert(localizedTelemetry.includes('| 1 | закрытие дня завершено |'))
   assert(!localizedTelemetry.includes('## App Telemetry'), 'raw English telemetry heading should not leak into copied report')
   assert(!localizedTelemetry.includes('Total events:'), 'raw English telemetry counter should not leak into copied report')
+  assert(!localizedTelemetry.includes('day_closure_completed'), 'raw event kind should not leak into copied report')
+  assert(!localizedTelemetry.includes('typed/selected'), 'raw mixed-language entry label should not leak into copied report')
+  assert(!localizedTelemetry.includes('n/a'), 'raw unavailable value should not leak into copied report')
   assert(!localizedTelemetry.includes('Проверок follow-up по отвлечениям:'), 'old mixed-language follow-up label should not leak into copied report')
   assert(!localizedTelemetry.includes('Проверок использования Inbox:'), 'old mixed-language Inbox label should not leak into copied report')
 

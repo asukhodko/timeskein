@@ -17,6 +17,58 @@ if (!existsSync(dbPath)) {
   throw new Error(`Timeskein database not found: ${dbPath}`);
 }
 
+const APP_EVENT_KIND_LABELS = {
+  app_started: "приложение запущено",
+  agent_started: "агент запущен",
+  agent_reused: "агент переиспользован",
+  agent_stale_runtime_recovered: "устаревшее состояние агента восстановлено",
+  api_error: "ошибка API",
+  window_shown: "окно показано",
+  window_hidden: "окно скрыто",
+  window_drag_started: "перетаскивание окна начато",
+  window_show_requested: "запрошен показ окна",
+  window_hide_requested: "запрошено скрытие окна",
+  window_entrypoints_reviewed: "входы в окно проверены",
+  focus_start_requested: "запрошен старт фокуса",
+  focus_started: "фокус начат",
+  focus_switch_requested: "запрошено переключение фокуса",
+  focus_switched: "фокус переключён",
+  focus_stop_requested: "запрошена остановка фокуса",
+  focus_stopped: "фокус остановлен",
+  focus_start_failed: "старт фокуса не удался",
+  focus_stop_failed: "остановка фокуса не удалась",
+  focus_correction_requested: "запрошена коррекция фокуса",
+  focus_corrected: "фокус скорректирован",
+  focus_correction_reviewed: "коррекция фокуса проверена",
+  focus_correction_failed: "коррекция фокуса не удалась",
+  capture_create_requested: "запрошено создание отвлечения",
+  capture_created: "отвлечение создано",
+  capture_resolve_requested: "запрошено закрытие отвлечения",
+  capture_resolved: "отвлечение закрыто",
+  capture_update_requested: "запрошено исправление отвлечения",
+  capture_updated: "отвлечение исправлено",
+  capture_delete_requested: "запрошено удаление отвлечения",
+  capture_deleted: "отвлечение удалено",
+  capture_convert_requested: "запрошено превращение отвлечения в дело",
+  capture_converted: "отвлечение превращено в дело",
+  capture_create_failed: "создание отвлечения не удалось",
+  capture_resolve_failed: "закрытие отвлечения не удалось",
+  capture_update_failed: "исправление отвлечения не удалось",
+  capture_delete_failed: "удаление отвлечения не удалось",
+  capture_convert_failed: "превращение отвлечения не удалось",
+  capture_followup_reviewed: "открытые отвлечения проверены",
+  capture_usage_reviewed: "инбокс отвлечений проверен",
+  work_item_time_badges_reviewed: "время по делам проверено",
+  activity_zone_reviewed: "зоны активности проверены",
+  entry_paths_reviewed: "пути входа проверены",
+  day_closure_started: "закрытие дня начато",
+  day_closure_completed: "закрытие дня завершено",
+  report_copy_requested: "запрошено копирование отчёта",
+  report_copied: "отчёт скопирован",
+  report_copy_failed: "копирование отчёта не удалось",
+  manual_copy_fallback_shown: "показано ручное копирование",
+};
+
 const from = startOfLocalDay(date);
 const to = nextLocalDay(from);
 const events = await loadEvents(dbPath, from, to);
@@ -153,7 +205,7 @@ function buildTelemetryMarkdown(events, { raw = false } = {}) {
         `Запросов показать/скрыть окно: ${summary.windowShowRequested}/${summary.windowHideRequested}`,
         `Начатых перетаскиваний окна: ${summary.windowDragStarted}`,
         `Ошибок копирования: ${summary.copyFailures}`,
-        `Ручных fallback-копирований: ${summary.manualCopyFallbacks}`,
+        `Ручных копирований вместо буфера: ${summary.manualCopyFallbacks}`,
         `Отвлечений создано/закрыто/превращено: ${summary.captureCreated}/${summary.captureResolved}/${summary.captureConverted}`,
         `Проверок открытых отвлечений: ${summary.captureFollowupReviews}`,
         `Проверок времени по делам: ${summary.workItemTimeBadgeReviews}`,
@@ -168,9 +220,9 @@ function buildTelemetryMarkdown(events, { raw = false } = {}) {
         `Последняя длительность закрытия дня: ${summary.lastDayClosureDurationSeconds == null ? "нет данных" : formatDuration(summary.lastDayClosureDurationSeconds)}`,
         `Ошибок API: ${summary.apiErrors}`,
         `Попыток старта уже активного дела: ${summary.alreadyActiveStartAttempts}`,
-        `Восстановлений stale runtime: ${summary.staleRuntimeRecoveries}`,
-        `Средняя задержка старта: ${summary.averageStartLatencyMs == null ? "нет данных" : `${summary.averageStartLatencyMs}ms`}`,
-        `Медленных разрывов окно-фокус: ${summary.slowWindowToFocusCount}`,
+        `Восстановлений устаревшего состояния агента: ${summary.staleRuntimeRecoveries}`,
+        `Средняя задержка старта: ${summary.averageStartLatencyMs == null ? "нет данных" : `${summary.averageStartLatencyMs} мс`}`,
+        `Медленных переходов окно-фокус: ${summary.slowWindowToFocusCount}`,
       ];
 
   if (Object.keys(summary.byKind).length > 0) {
@@ -182,11 +234,15 @@ function buildTelemetryMarkdown(events, { raw = false } = {}) {
       "| ---: | --- |"
     );
     for (const [kind, count] of Object.entries(summary.byKind).sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0]))) {
-      lines.push(`| ${count} | ${escapeMarkdownTable(kind)} |`);
+      lines.push(`| ${count} | ${escapeMarkdownTable(raw ? kind : formatAppEventKind(kind))} |`);
     }
   }
 
   return `${lines.join("\n")}\n`;
+}
+
+function formatAppEventKind(kind) {
+  return APP_EVENT_KIND_LABELS[kind] ?? kind;
 }
 
 function summarizeEvents(events) {

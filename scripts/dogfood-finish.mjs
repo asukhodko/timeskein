@@ -62,6 +62,8 @@ if (outputPath) {
   const closureStatus = findAuditRowStatus(stdout, ["Длительность закрытия измерена", "Day closure duration measured"]);
   if (closureStatus && !isPassingAuditStatus(closureStatus)) {
     process.stdout.write(buildMeasuredClosureWarning(dateArg));
+  } else if (options.save && process.exitCode == null) {
+    process.stdout.write(buildGoalCheckNextStep(dateArg));
   }
 } else {
   process.stdout.write(stdout);
@@ -239,6 +241,17 @@ function buildMeasuredClosureWarning(date) {
     "- Отчёт сохранён, но он ещё не закрывает daily-control goal: длительность закрытия дня не измерена или не прошла.",
     "- Начни закрытие в Timeskein кнопкой `Начать закрытие дня`, дойди до финального `Копировать отчёт` за 10 минут или меньше.",
     `- Затем повтори: \`pnpm dogfood:finish:save -- --date ${date}\`.`,
+    "",
+  ].join("\n");
+}
+
+function buildGoalCheckNextStep(date) {
+  return [
+    "",
+    "## Следующий шаг",
+    "",
+    "- Сохранённый отчёт содержит измеренное закрытие дня.",
+    `- Запусти финальный gate цели: \`pnpm dogfood:goal-check -- --date ${date}\`.`,
     "",
   ].join("\n");
 }

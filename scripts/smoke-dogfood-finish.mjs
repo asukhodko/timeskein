@@ -93,6 +93,24 @@ try {
     "saved RC check did not include daily control audit"
   );
 
+  await runSql(cleanDb, `
+    INSERT INTO app_events (id, ts, source, kind, payload)
+    VALUES
+      ('ae_closure_start', '2026-06-30T08:00:00Z', 'ui', 'day_closure_started', '{"action_id":"closure-1","control":"review_panel"}'),
+      ('ae_closure_done', '2026-06-30T08:07:00Z', 'ui', 'day_closure_completed', '{"action_id":"closure-1","control":"copy_report"}');
+  `);
+  const measuredSavedDefault = await runFinish(cleanDb, ["--save"], tempDir);
+  assert(measuredSavedDefault.code === 0, "measured day should save default report and RC check");
+  assert(
+    measuredSavedDefault.stdout.includes("## Следующий шаг") &&
+      measuredSavedDefault.stdout.includes("pnpm dogfood:goal-check -- --date 2026-06-30"),
+    "finish --save did not print the final goal-check next step after measured closure"
+  );
+  assert(
+    !measuredSavedDefault.stdout.includes("длительность закрытия дня не измерена"),
+    "finish --save should not warn about missing measured closure after closure telemetry exists"
+  );
+
   const activeDb = join(tempDir, "active.db");
   await migrate(activeDb);
   await runSql(activeDb, `
@@ -148,6 +166,7 @@ try {
 async function migrate(path) {
   await runSqlFile(path, join(repoRoot, "apps/agent/migrations/001_initial.sql"));
   await runSqlFile(path, join(repoRoot, "apps/agent/migrations/002_focus_sessions.sql"));
+  await runSqlFile(path, join(repoRoot, "apps/agent/migrations/003_app_events.sql"));
   await runSqlFile(path, join(repoRoot, "apps/agent/migrations/005_activity_zones.sql"));
 }
 

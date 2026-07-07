@@ -189,6 +189,8 @@ Before marking the daily-control goal complete, run the final gate after `pnpm d
 pnpm dogfood:goal-check
 ```
 
+When measured closure evidence is present, `pnpm dogfood:finish:save` prints the exact dated `dogfood:goal-check` command to run next.
+
 If you close yesterday's dogfood day after midnight, pass the date explicitly:
 
 ```bash

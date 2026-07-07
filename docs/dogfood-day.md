@@ -421,6 +421,7 @@ pnpm dogfood:goal-check
 ```
 
 The final goal gate also checks that the saved report contains the grouped `Проверка перед отчётом` section. If the saved file still has an old flat checklist, regenerate the evidence with `pnpm dogfood:finish:save -- --date YYYY-MM-DD`.
+When measured closure evidence is present, `pnpm dogfood:finish:save` prints the exact dated `pnpm dogfood:goal-check -- --date YYYY-MM-DD` command for the final gate.
 
 The RC-check scripts read old SQLite databases defensively. If a previous dogfood day was captured before Activity Zone columns existed, reports fall back to `Work` rather than crashing. A fresh dogfood day should still be started through the app so real migrations run before new data is captured.
 

@@ -3,6 +3,7 @@ import test from 'node:test'
 
 import {
   formatDayReviewItem,
+  formatDayReviewNextStep,
   formatDogfoodReportState,
   formatGapDayEventDraft,
   formatFocusMarkdownForReport,
@@ -48,6 +49,10 @@ test('day review checklist keeps the evening ritual in Russian', () => {
 
   const markdown = formatReviewChecklistMarkdown(items)
   assert(markdown.includes('## Проверка перед отчётом'), 'review checklist heading should be localized')
+  assert(
+    markdown.includes('Ближайшее действие: закрыть блокер: Остановить активный фокус-блок.'),
+    'review checklist should name the next concrete action'
+  )
   assert(markdown.includes('### Сначала закрыть'), 'blocker group should be explicit')
   assert(markdown.includes('### Дописать или исправить'), 'fix-up group should be explicit')
   assert(markdown.includes('### Осознанно проверить'), 'accept-as-is group should be explicit')
@@ -58,6 +63,37 @@ test('day review checklist keeps the evening ritual in Russian', () => {
   assert(markdown.includes('Можно копировать финальный отчёт'), 'ready label should be localized')
   assert(!markdown.includes('Review before report'), 'old English heading should not leak into the report')
   assert(!markdown.includes('Stop the active focus block'), 'old English blocker should not leak into the report')
+})
+
+test('day review next step points to one calm action', () => {
+  assert.equal(
+    formatDayReviewNextStep([
+      { level: 'blocker', title: 'Stop the active focus block', detail: 'Вход в день' },
+      { level: 'review', title: 'Classify significant gaps', action: 'stage_significant_gap' },
+    ]),
+    'закрыть блокер: Остановить активный фокус-блок.'
+  )
+
+  assert.equal(
+    formatDayReviewNextStep([
+      { level: 'review', title: 'Classify significant gaps', action: 'stage_significant_gap' },
+      { level: 'review', title: 'No day or Work Item notes/events', action: 'stage_day_context' },
+    ]),
+    'дописать или исправить: Объяснить большие разрывы. Ещё 1.'
+  )
+
+  assert.equal(
+    formatDayReviewNextStep([
+      { level: 'review', title: 'Review Activity Zone coverage', action: 'accept_activity_zones' },
+      { level: 'review', title: 'Test window entrypoints', action: 'accept_window_entrypoints' },
+    ]),
+    'осознанно проверить 2 пункта или нажать «Всё проверено», если данные уже честные.'
+  )
+
+  assert.equal(
+    formatDayReviewNextStep([{ level: 'ok', title: 'Ready to copy final report' }]),
+    'скопировать финальный отчёт.'
+  )
 })
 
 test('day review action buttons explain what will happen', () => {

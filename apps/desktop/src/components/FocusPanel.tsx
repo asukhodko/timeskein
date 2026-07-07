@@ -1514,6 +1514,7 @@ function DayReviewPanel({
     : reviews.length > 0
       ? `${reviews.length} ${pluralRu(reviews.length, 'проверка', 'проверки', 'проверок')}`
       : 'готово'
+  const nextStep = formatDayReviewNextStep(items)
   const prompt = formatDayClosurePrompt(closureStage, {
     blockers: blockers.length,
     reviews: reviews.length,
@@ -1565,6 +1566,9 @@ function DayReviewPanel({
           {prompt}
         </div>
       )}
+      <div className="rounded border border-gray-800/80 bg-gray-950/20 px-2 py-1 text-[11px] text-gray-300">
+        <span className="font-medium text-gray-200">Ближайшее действие:</span> {nextStep}
+      </div>
       {blockers.length > 0 && (
         <DayReviewGroup title="Сначала закрыть" items={blockers} onAction={onAction} />
       )}
@@ -1766,7 +1770,7 @@ export function formatDogfoodReportState({
 }
 
 export function formatReviewChecklistMarkdown(items: DayReviewItem[]) {
-  const lines = ['## Проверка перед отчётом', '']
+  const lines = ['## Проверка перед отчётом', '', `Ближайшее действие: ${formatDayReviewNextStep(items)}`, '']
   const blockers = items.filter((item) => item.level === 'blocker')
   const reviews = items.filter((item) => item.level === 'review')
   const fixups = reviews.filter((item) => !isBulkAcceptableReviewAction(item.action))
@@ -1779,6 +1783,40 @@ export function formatReviewChecklistMarkdown(items: DayReviewItem[]) {
   appendReviewChecklistGroup(lines, 'Готово', ready)
 
   return `${lines.join('\n')}\n`
+}
+
+export function formatDayReviewNextStep(items: DayReviewItem[]) {
+  const blockers = items.filter((item) => item.level === 'blocker')
+  if (blockers.length > 0) {
+    return formatNextStep('закрыть блокер', blockers)
+  }
+
+  const reviews = items.filter((item) => item.level === 'review')
+  const fixups = reviews.filter((item) => !isBulkAcceptableReviewAction(item.action))
+  if (fixups.length > 0) {
+    return formatNextStep('дописать или исправить', fixups)
+  }
+
+  const accepts = reviews.filter((item) => isBulkAcceptableReviewAction(item.action))
+  if (accepts.length > 1) {
+    return `осознанно проверить ${accepts.length} ${pluralRu(accepts.length, 'пункт', 'пункта', 'пунктов')} или нажать «Всё проверено», если данные уже честные.`
+  }
+
+  if (accepts.length === 1) {
+    return formatNextStep('осознанно проверить', accepts)
+  }
+
+  if (items.some((item) => item.level === 'ok')) {
+    return 'скопировать финальный отчёт.'
+  }
+
+  return 'дождаться первых фокус-блоков за день.'
+}
+
+function formatNextStep(prefix: string, items: DayReviewItem[]) {
+  const label = formatDayReviewItem(items[0])
+  const rest = items.length > 1 ? ` Ещё ${items.length - 1}.` : ''
+  return `${prefix}: ${label.title}.${rest}`
 }
 
 function appendReviewChecklistGroup(lines: string[], title: string, items: DayReviewItem[]) {

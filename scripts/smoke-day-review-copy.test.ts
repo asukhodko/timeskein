@@ -146,7 +146,7 @@ test('day review next step points to one calm action', () => {
 
   assert.equal(
     formatDayReviewNextStep([{ level: 'ok', title: 'Ready to copy final report' }]),
-    'скопировать финальный отчёт.'
+    'нажать «Копировать отчёт».'
   )
 })
 

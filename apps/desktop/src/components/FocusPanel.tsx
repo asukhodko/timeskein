@@ -1902,7 +1902,7 @@ export function formatDayReviewNextStep(items: DayReviewItem[]) {
   }
 
   if (items.some((item) => item.level === 'ok')) {
-    return 'скопировать финальный отчёт.'
+    return 'нажать «Копировать отчёт».'
   }
 
   return 'дождаться первых фокус-блоков за день.'

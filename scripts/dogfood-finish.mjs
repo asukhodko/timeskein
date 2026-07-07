@@ -99,7 +99,7 @@ function parseArgs(args) {
 }
 
 function printHelp() {
-  console.log(`Usage: pnpm dogfood:finish [--date YYYY-MM-DD] [--db path/to/timeskein.db] [--save | --out path.md]
+  console.log(`Использование: pnpm dogfood:finish [--date YYYY-MM-DD] [--db path/to/timeskein.db] [--save | --out path.md]
 
 Закрывает dogfood-день: проверяет, что нет активного фокус-блока, нет Work Item с активным статусом, и за день есть хотя бы один фокус-блок.
 При успехе печатает Markdown-отчёт или сохраняет его в файл, если передан --save или --out.
@@ -213,7 +213,7 @@ function buildNotReadyReport(date, path, items) {
   const lines = [
     `# Закрытие dogfood-дня заблокировано - ${date}`,
     "",
-    `DB: ${path}`,
+    `База: ${path}`,
     "",
     "## Что мешает",
     "",
@@ -241,7 +241,7 @@ function buildMeasuredClosureWarning(date) {
     "",
     "## Внимание",
     "",
-    "- Отчёт сохранён, но он ещё не закрывает daily-control goal: длительность закрытия дня не измерена или не прошла.",
+    "- Отчёт сохранён, но цель закрытия дня ещё не доказана: длительность закрытия не измерена или больше 10 минут.",
     "- Начни закрытие в Timeskein кнопкой `Начать закрытие дня`, дойди до финального `Копировать отчёт` за 10 минут или меньше.",
     `- Затем повтори: \`pnpm dogfood:finish:save -- --date ${date}\`.`,
     "",
@@ -271,8 +271,8 @@ function buildGoalCheckNextStep(date) {
     "",
     "## Следующий шаг",
     "",
-    "- Сохранённый отчёт содержит измеренное закрытие дня.",
-    `- Запусти финальный gate цели: \`pnpm dogfood:goal-check -- --date ${date}\`.`,
+    "- Сохранённый отчёт содержит измеренное закрытие дня, а аудит закрытия уже чистый.",
+    `- Запусти финальную проверку цели: \`pnpm dogfood:goal-check -- --date ${date}\`.`,
     "",
   ].join("\n");
 }

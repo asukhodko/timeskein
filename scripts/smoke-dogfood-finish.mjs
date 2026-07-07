@@ -20,10 +20,22 @@ try {
   const empty = await runFinish(emptyDb);
   assert(empty.code !== 0, "empty day should not finish");
   assert(empty.stdout.includes("# Закрытие dogfood-дня заблокировано - 2026-06-30"), "empty day did not show localized blocked title");
+  assert(empty.stdout.includes("База:"), "empty day did not show localized DB label");
   assert(empty.stdout.includes("## Что мешает"), "empty day did not show localized blocker section");
   assert(empty.stdout.includes("За 2026-06-30 нет фокус-блоков"), "empty day did not explain missing blocks");
   assert(empty.stdout.includes("## Что сделать дальше"), "empty day did not show localized next steps");
-  assert(!empty.stdout.includes("## Blockers") && !empty.stdout.includes("## Next"), "empty day leaked old English diagnostic headings");
+  assert(
+    !empty.stdout.includes("DB:") && !empty.stdout.includes("## Blockers") && !empty.stdout.includes("## Next"),
+    "empty day leaked old English diagnostic text"
+  );
+
+  const help = await runFinish(emptyDb, ["--help"]);
+  assert(help.code === 0, "help should exit successfully");
+  assert(
+    help.stdout.includes("Использование: pnpm dogfood:finish"),
+    "finish help did not show localized usage"
+  );
+  assert(!help.stdout.includes("Usage:"), "finish help leaked old English usage heading");
 
   const cleanDb = join(tempDir, "clean.db");
   await migrate(cleanDb);
@@ -78,7 +90,8 @@ try {
   );
   assert(
     cleanSavedDefault.stdout.includes("## Внимание") &&
-      cleanSavedDefault.stdout.includes("длительность закрытия дня не измерена") &&
+      cleanSavedDefault.stdout.includes("цель закрытия дня ещё не доказана") &&
+      cleanSavedDefault.stdout.includes("длительность закрытия не измерена или больше 10 минут") &&
       cleanSavedDefault.stdout.includes("pnpm dogfood:finish:save -- --date 2026-06-30"),
     "finish --save did not warn about missing measured closure"
   );
@@ -143,11 +156,13 @@ try {
   assert(measuredSavedDefault.code === 0, "measured day should save default report and RC check");
   assert(
     measuredSavedDefault.stdout.includes("## Следующий шаг") &&
+      measuredSavedDefault.stdout.includes("финальную проверку цели") &&
       measuredSavedDefault.stdout.includes("pnpm dogfood:goal-check -- --date 2026-06-30"),
     "finish --save did not print the final goal-check next step after measured closure"
   );
+  assert(!measuredSavedDefault.stdout.includes("gate цели"), "finish --save leaked old gate wording");
   assert(
-    !measuredSavedDefault.stdout.includes("длительность закрытия дня не измерена"),
+    !measuredSavedDefault.stdout.includes("цель закрытия дня ещё не доказана"),
     "finish --save should not warn about missing measured closure after closure telemetry exists"
   );
 

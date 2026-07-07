@@ -869,7 +869,7 @@ function formatGoalAuditRequirement(requirement) {
     ["Activity Zones separated", "Зоны активности разделены"],
     ["Day and Work Item context present", "Контекст дня и Work Item сохранён"],
     ["Gaps and captures visible", "Разрывы и отвлечения видны"],
-    ["Window and menubar friction evidenced", "Окно и menu bar проверены"],
+    ["Window and menubar friction evidenced", "Окно и строка меню проверены"],
     ["Start and continue paths evidenced", "Старт и продолжение проверены"],
     ["Tracking correction or review evidenced", "Коррекция трекинга проверена"],
     ["Day closure duration measured", "Длительность закрытия измерена"],

@@ -1043,7 +1043,7 @@ async function buildDogfoodReportMarkdown(
       : 'финальный — нет активных фокус-блоков и активных Work Item'
 
   const lines = [
-    `# Timeskein dogfood report - ${formatLocalDate(now)}`,
+    `# Dogfood-отчёт Timeskein - ${formatLocalDate(now)}`,
     '',
     `Статус отчёта: ${reportState}`,
     '',
@@ -1134,7 +1134,7 @@ async function buildDogfoodReportMarkdown(
     '### Трения Timeskein',
     '',
     '- Старт/переключение/остановка:',
-    '- Окно/menu bar:',
+    '- Окно и строка меню:',
     '- Доверие к данным:',
     '',
     '## Вердикт',
@@ -1724,7 +1724,7 @@ const DAILY_CONTROL_REQUIREMENT_LABELS: Record<string, string> = {
   'Activity Zones separated': 'Зоны активности разделены',
   'Day and Work Item context present': 'Контекст дня и Work Item сохранён',
   'Gaps and captures visible': 'Разрывы и отвлечения видны',
-  'Window and menubar friction evidenced': 'Окно и menu bar проверены',
+  'Window and menubar friction evidenced': 'Окно и строка меню проверены',
   'Start and continue paths evidenced': 'Старт и продолжение проверены',
   'Tracking correction or review evidenced': 'Коррекция трекинга проверена',
   'Day closure duration measured': 'Длительность закрытия измерена',

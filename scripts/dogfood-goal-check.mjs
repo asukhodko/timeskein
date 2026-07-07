@@ -138,7 +138,7 @@ async function checkSavedEvidence(date) {
   const weak = [];
   const notPassing = [];
   const reportRequirements = [
-    ["# Timeskein dogfood report"],
+    ["# Dogfood-отчёт Timeskein", "# Timeskein dogfood report"],
     ["## Данные фокуса", "## Focus Data"],
     ["## Проверка перед отчётом", "## Review before report"],
     ["## Аудит закрытия дня", "## Daily Control Goal Audit"],
@@ -156,7 +156,7 @@ async function checkSavedEvidence(date) {
     ["Зоны активности разделены", "Activity Zones separated"],
     ["Контекст дня и Work Item сохранён", "Day and Work Item context present"],
     ["Разрывы и отвлечения видны", "Gaps and captures visible"],
-    ["Окно и menu bar проверены", "Window and menubar friction evidenced"],
+    ["Окно и строка меню проверены", "Окно и menu bar проверены", "Window and menubar friction evidenced"],
     ["Старт и продолжение проверены", "Start and continue paths evidenced"],
     ["Коррекция трекинга проверена", "Tracking correction or review evidenced"],
     ["Длительность закрытия измерена", "Day closure duration measured"],
@@ -169,7 +169,7 @@ async function checkSavedEvidence(date) {
     ["Зоны активности разделены", "Activity Zones separated"],
     ["Контекст дня и Work Item сохранён", "Day and Work Item context present"],
     ["Разрывы и отвлечения видны", "Gaps and captures visible"],
-    ["Окно и menu bar проверены", "Window and menubar friction evidenced"],
+    ["Окно и строка меню проверены", "Окно и menu bar проверены", "Window and menubar friction evidenced"],
     ["Старт и продолжение проверены", "Start and continue paths evidenced"],
     ["Коррекция трекинга проверена", "Tracking correction or review evidenced"],
     ["Длительность закрытия измерена", "Day closure duration measured"],

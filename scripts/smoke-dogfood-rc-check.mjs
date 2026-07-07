@@ -206,7 +206,7 @@ try {
     "accepted window entrypoint review evidence is missing"
   );
   assert(
-    acceptedNoWindowRequestStrict.stdout.includes("| Окно и menu bar проверены | ок |"),
+    acceptedNoWindowRequestStrict.stdout.includes("| Окно и строка меню проверены | ок |"),
     "accepted window entrypoint review should pass window audit row"
   );
 
@@ -220,7 +220,7 @@ try {
     "strict RC check should explain missing window hide request evidence when show exists"
   );
   assert(
-    showOnlyWindowRequestStrict.stdout.includes("| Окно и menu bar проверены | проверить |"),
+    showOnlyWindowRequestStrict.stdout.includes("| Окно и строка меню проверены | проверить |"),
     "missing hide request should mark window audit for review"
   );
 
@@ -234,7 +234,7 @@ try {
     "strict RC check should explain missing window show request evidence when hide exists"
   );
   assert(
-    hideOnlyWindowRequestStrict.stdout.includes("| Окно и menu bar проверены | проверить |"),
+    hideOnlyWindowRequestStrict.stdout.includes("| Окно и строка меню проверены | проверить |"),
     "missing show request should mark window audit for review"
   );
 

@@ -67,7 +67,7 @@ try {
     { cwd: repoRoot }
   );
 
-  assert(stdout.includes("# Timeskein dogfood report - 2026-06-30"), "report title is missing");
+  assert(stdout.includes("# Dogfood-отчёт Timeskein - 2026-06-30"), "report title is missing");
   assert(
     stdout.includes("Статус отчёта: финальный — нет активных фокус-блоков и активных Work Item"),
     "final report state is missing"
@@ -95,7 +95,7 @@ try {
     stdout.includes("35:00 рабочий фокус, 30:00 вне работы, проверок зон: 0"),
     "report daily-control audit evidence did not localize zone totals"
   );
-  assert(stdout.includes("| Окно и menu bar проверены | ок |"), "report daily-control audit did not pass window evidence");
+  assert(stdout.includes("| Окно и строка меню проверены | ок |"), "report daily-control audit did not pass window evidence");
   assert(
     stdout.includes("окно показано/скрыто"),
     "report daily-control audit evidence did not localize window evidence"
@@ -280,7 +280,7 @@ try {
     "report daily-control audit should pass Activity Zones after explicit review"
   );
   assert(
-    acceptedOptionalStdout.includes("| Окно и menu bar проверены | ок |"),
+    acceptedOptionalStdout.includes("| Окно и строка меню проверены | ок |"),
     "report daily-control audit should pass window entrypoints after explicit review"
   );
   assert(

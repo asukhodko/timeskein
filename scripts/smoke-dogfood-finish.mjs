@@ -52,7 +52,7 @@ try {
   `);
   const clean = await runFinish(cleanDb);
   assert(clean.code === 0, "stopped day should finish");
-  assert(clean.stdout.includes("# Timeskein dogfood report - 2026-06-30"), "finish did not output dogfood report");
+  assert(clean.stdout.includes("# Dogfood-отчёт Timeskein - 2026-06-30"), "finish did not output dogfood report");
   assert(clean.stdout.includes("started before day"), "finish did not include overlapping focus session");
   assert(clean.stdout.includes("## Блоки на границе дня"), "finish did not flag day-boundary blocks");
   assert(clean.stdout.includes("finished block"), "finish did not include focus session note");
@@ -65,7 +65,7 @@ try {
   assert(!cleanSaved.stdout.includes("Saved Timeskein dogfood report:"), "finish leaked old English saved-report message");
   const cleanSavedMarkdown = await readFile(cleanReportPath, "utf8");
   assert(
-    cleanSavedMarkdown.includes("# Timeskein dogfood report - 2026-06-30"),
+    cleanSavedMarkdown.includes("# Dogfood-отчёт Timeskein - 2026-06-30"),
     "saved report did not include dogfood report title"
   );
   assert(cleanSavedMarkdown.includes("### Цена входа"), "saved report did not include review prompts");

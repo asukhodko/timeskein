@@ -74,7 +74,7 @@ try {
   await writeFile(
     join(tempDir, "timeskein-dogfood-report-2026-06-30.md"),
     [
-      "# Timeskein dogfood report - 2026-06-30",
+      "# Dogfood-отчёт Timeskein - 2026-06-30",
       "## Focus Data",
       "## Daily Control Goal Audit",
       "## App Telemetry",
@@ -118,7 +118,7 @@ try {
     "| Зоны активности разделены | ок | 2 зон, 1:30 работа, 0:30 вне работы |",
     "| Контекст дня и Work Item сохранён | ок | 1 Day Event, 1 Work Item Event, 1 заметок Work Item |",
     "| Разрывы и отвлечения видны | ок | 1 больших разрывов, 1 объяснено, 0 открытых отвлечений |",
-    "| Окно и menu bar проверены | ок | 2/2 показов/скрытий |",
+    "| Окно и строка меню проверены | ок | 2/2 показов/скрытий |",
     "| Старт и продолжение проверены | ок | 1 typed, 1 selected/list, 2 stop-запросов |",
     "| Коррекция трекинга проверена | ок | 0/0/1/0 запрошено/применено/проверено/ошибок |",
     "| Длительность закрытия измерена | ок | 1/1 начато/завершено, последняя длительность 7:00 |",
@@ -165,7 +165,7 @@ try {
   await writeFile(
     join(tempDir, "timeskein-dogfood-report-2026-06-30.md"),
     [
-      "# Timeskein dogfood report - 2026-06-30",
+      "# Dogfood-отчёт Timeskein - 2026-06-30",
       "## Focus Data",
       groupedReviewMarkdown,
       "## Daily Control Goal Audit",
@@ -207,7 +207,7 @@ try {
   await writeFile(
     join(tempDir, "timeskein-dogfood-report-2026-06-30.md"),
     [
-      "# Timeskein dogfood report - 2026-06-30",
+      "# Dogfood-отчёт Timeskein - 2026-06-30",
       "## Focus Data",
       flatReviewMarkdown,
       reportAuditMarkdown,
@@ -235,7 +235,7 @@ try {
   await writeFile(
     join(tempDir, "timeskein-dogfood-report-2026-06-30.md"),
     [
-      "# Timeskein dogfood report - 2026-06-30",
+      "# Dogfood-отчёт Timeskein - 2026-06-30",
       "## Focus Data",
       groupedReviewMarkdown,
       reportAuditMarkdown,

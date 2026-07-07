@@ -123,6 +123,14 @@ assert(appended.capture.work_item_id === focus.work_item_id, "capture event did 
 assert(appended.event.kind === "note_added", "capture event did not create a note_added Work Item event");
 assert(appended.event.text === eventCandidate.text, "capture event did not preserve capture text");
 assert(appended.event.focus_session_id === focus.id, "capture event did not preserve focus-session link");
+assert(
+  appended.event.payload?.source_capture_id === eventCandidate.id,
+  "capture event did not keep source capture id"
+);
+assert(
+  appended.event.payload?.origin === "capture_append_to_work_item_event",
+  "capture event did not mark append origin"
+);
 
 const events = await rpc("work_item.events", {
   id: focus.work_item_id,

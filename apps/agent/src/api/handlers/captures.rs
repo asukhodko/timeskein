@@ -273,6 +273,7 @@ pub async fn handle_capture_append_to_work_item_event(
     let mut payload = serde_json::json!({
         "text": capture.text.clone(),
         "source_capture_id": capture.id.to_string(),
+        "origin": "capture_append_to_work_item_event",
     });
     if let Some(focus_session_id) = capture.focus_session_id {
         payload["focus_session_id"] = serde_json::Value::String(focus_session_id.to_string());

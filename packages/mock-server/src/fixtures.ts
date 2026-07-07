@@ -309,6 +309,7 @@ export class MockDataStore {
       text: capture.text,
       focus_session_id: capture.focus_session_id,
       source_capture_id: capture.id,
+      origin: "capture_append_to_work_item_event",
     });
     if (!event) return { capture };
 

@@ -65,6 +65,7 @@ test("capture inbox does not interrupt active focus", async () => {
   assert.equal(appended.event?.text, eventCapture.text);
   assert.equal(appended.event?.focus_session_id, focus.id);
   assert.equal(appended.event?.payload?.source_capture_id, eventCapture.id);
+  assert.equal(appended.event?.payload?.origin, "capture_append_to_work_item_event");
   assert.equal(store.getActiveFocusSession()?.id, focus.id);
 
   const deleteCapture = store.createCapture({

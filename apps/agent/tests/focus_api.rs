@@ -245,6 +245,14 @@ async fn capture_can_be_appended_to_linked_work_item_event_without_interrupting_
         appended["event"]["focus_session_id"].as_str(),
         Some(session_id.as_str())
     );
+    assert_eq!(
+        appended["event"]["payload"]["source_capture_id"].as_str(),
+        Some(capture_id.as_str())
+    );
+    assert_eq!(
+        appended["event"]["payload"]["origin"].as_str(),
+        Some("capture_append_to_work_item_event")
+    );
 
     let listed_events = handle_work_item_events(
         &state,

@@ -61,6 +61,7 @@ if (outputPath) {
   }
   const reportState = findReportState(stdout);
   const reviewNextAction = findReviewNextAction(stdout);
+  const shortClosureVerdict = findShortClosureVerdict(stdout);
   const closureStatus = findAuditRowStatus(stdout, ["Длительность закрытия измерена", "Day closure duration measured"]);
   const pendingAuditRows = findPendingAuditRows(stdout);
   if (closureStatus && !isPassingAuditStatus(closureStatus)) {
@@ -68,7 +69,7 @@ if (outputPath) {
   } else if (pendingAuditRows.length > 0 || (reportState && !isFinalReportState(reportState))) {
     process.stdout.write(buildPendingReviewWarning(dateArg, pendingAuditRows, reportState, reviewNextAction));
   } else if (options.save && process.exitCode == null) {
-    process.stdout.write(buildGoalCheckNextStep(dateArg));
+    process.stdout.write(buildGoalCheckNextStep(dateArg, shortClosureVerdict));
   }
 } else {
   process.stdout.write(stdout);
@@ -290,12 +291,13 @@ function formatReviewNextActionWarning(reviewNextAction) {
   return [`- Ближайшее действие из отчёта: ${reviewNextAction}`];
 }
 
-function buildGoalCheckNextStep(date) {
+function buildGoalCheckNextStep(date, shortClosureVerdict) {
   return [
     "",
     "## Следующий шаг",
     "",
     "- Отчёт финальный, закрытие измерено, аудит чистый.",
+    ...(shortClosureVerdict ? [`- Короткое закрытие: ${shortClosureVerdict}.`] : []),
     `- Запусти финальную проверку цели: \`pnpm dogfood:goal-check -- --date ${date}\`.`,
     "",
   ].join("\n");
@@ -372,6 +374,20 @@ function findReviewNextAction(text) {
   for (const line of section.split("\n")) {
     const match = line.match(/^Ближайшее действие:\s*(.+)$/);
     if (match) return match[1].trim();
+  }
+
+  return undefined;
+}
+
+function findShortClosureVerdict(text) {
+  const section = extractSection(text, ["## Короткое закрытие"]);
+  if (!section) {
+    return undefined;
+  }
+
+  for (const line of section.split("\n")) {
+    const match = line.match(/^-\s*(Закрытие уложилось в 10 минут:\s*.+)$/);
+    if (match) return match[1].trim().replace(/\.$/, "");
   }
 
   return undefined;

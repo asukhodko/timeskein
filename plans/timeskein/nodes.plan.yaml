@@ -528,7 +528,7 @@ nodes:
     milestone: true
     deps:
       - id: ts.daily_control.real_day
-    notes: "`pnpm dogfood:finish:save -- --date 2026-07-06` saved the report and RC evidence. Current `pnpm dogfood:goal-check -- --date 2026-07-06` fails correctly because the day has no measured closure duration: 0/0 day_closure_started/day_closure_completed. The next real dogfood closure must start from `Начать закрытие дня` and finish with final `Копировать отчёт` in 10 minutes or less."
+    notes: "`pnpm dogfood:finish:save -- --date 2026-07-06` saved the report and RC evidence. Current `pnpm dogfood:goal-check -- --date 2026-07-06` fails correctly because the day has no measured closure duration: 0/0 day_closure_started/day_closure_completed. The next real dogfood closure must start from `Начать закрытие дня`, finish with final `Копировать отчёт` in 10 minutes or less, and not need Codex to explain the next closure step."
     x:
       ops:
         attention_class: current

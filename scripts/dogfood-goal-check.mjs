@@ -62,6 +62,7 @@ for (const [command, args] of steps) {
 }
 
 console.log("\nФинальная проверка цели Timeskein прошла.");
+console.log("Если во время вечернего закрытия пришлось спрашивать Codex, что делать дальше, не закрывай цель по этому дню: повтори dogfood-день.");
 
 function parseArgs(args) {
   const result = {};

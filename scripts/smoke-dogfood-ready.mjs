@@ -57,6 +57,11 @@ try {
     "ready output did not keep short closure lightweight"
   );
   assert(
+    ready.stdout.includes("не спрашивай Codex") &&
+      ready.stdout.includes("не закрывает текущую цель"),
+    "ready output did not make the no-Codex closure proof rule explicit"
+  );
+  assert(
     ready.stdout.includes("если аудит ещё не чистый") &&
       ready.stdout.includes("Ближайшее действие") &&
       ready.stdout.includes("Проверка перед отчётом"),

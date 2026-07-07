@@ -101,7 +101,7 @@ pnpm dogfood:start
 
 The start gate first checks the real local SQLite database for active sessions, active Work Items, duplicate titles, and existing blocks for today. If the real day is clean, it checks that no old `timeskein-desktop` process is running, runs the dogfood preflight, opens `Timeskein.app`, and waits for the embedded agent to respond.
 It refuses to open the app if `timeskein-desktop` is already running, so the dogfood day does not accidentally reuse an older process after a rebuild.
-When readiness is clean, `dogfood:ready` also prints the next start command and the daily-control checklist for the next dogfood day: window entrypoints, new and existing Work Item starts, Work Item day/total time visibility with explicit review acceptance, Activity Zones, Day Events, Work Item Events, Capture Inbox, tracking correction/review, measured evening closure, filling only the short closure notes, following the UI `Ближайшее действие` until final `Копировать отчёт`, and treating the terminal `Короткое закрытие ... да (...)` plus the exact next action from `dogfood:finish:save`/`dogfood:goal-check` as the proof path.
+When readiness is clean, `dogfood:ready` also prints the next start command and the daily-control checklist for the next dogfood day: window entrypoints, new and existing Work Item starts, Work Item day/total time visibility with explicit review acceptance, Activity Zones, Day Events, Work Item Events, Capture Inbox, tracking correction/review, measured evening closure, filling only the short closure notes, following the UI `Ближайшее действие` until final `Копировать отчёт`, avoiding Codex as closure navigation, and treating the terminal `Короткое закрытие ... да (...)` plus the exact next action from `dogfood:finish:save`/`dogfood:goal-check` as the proof path.
 
 If Timeskein was quit during an already started dogfood day, reopen it through the continue gate:
 
@@ -192,7 +192,7 @@ Before marking the daily-control goal complete, run the final gate after `pnpm d
 pnpm dogfood:goal-check
 ```
 
-When measured closure evidence is present and every `Аудит закрытия дня` row is already `ок`, `pnpm dogfood:finish:save` prints the short closure verdict and the exact dated `dogfood:goal-check` command to run next. If the saved report is still a draft, the command prints its saved status explicitly, repeats `Ближайшее действие` from the report under `Что ещё осталось`, and keeps the next step visible without reopening the Markdown. If measured closure exists but audit rows are still pending, it prints those pending rows and tells you to return to `Проверка перед отчётом` first.
+When measured closure evidence is present and every `Аудит закрытия дня` row is already `ок`, `pnpm dogfood:finish:save` prints the short closure verdict, reminds that a day with Codex guidance is not proof for the active goal, and prints the exact dated `dogfood:goal-check` command to run next. If the saved report is still a draft, the command prints its saved status explicitly, repeats `Ближайшее действие` from the report under `Что ещё осталось`, and keeps the next step visible without reopening the Markdown. If measured closure exists but audit rows are still pending, it prints those pending rows and tells you to return to `Проверка перед отчётом` first.
 
 If you close yesterday's dogfood day after midnight, pass the date explicitly:
 

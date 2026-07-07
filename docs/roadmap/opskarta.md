@@ -10,7 +10,8 @@ strong real workday trace with focus blocks, Activity Zones, Day Events, Work
 Item Events, Capture Inbox evidence, and Work Item day/total time evidence. The
 remaining daily-control proof is narrower: one evening closure must be measured
 from `Начать закрытие дня` to final `Копировать отчёт`, take at most 10 minutes,
-and then pass strict `pnpm dogfood:goal-check`.
+not require Codex to explain the next closure step, and then pass strict
+`pnpm dogfood:goal-check`.
 
 The completed `Аудит закрытия дня` in the UI/CLI dogfood report and in
 `pnpm dogfood:rc-check` checked whether a real day had enough evidence for focus

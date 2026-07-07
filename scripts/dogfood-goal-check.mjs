@@ -194,6 +194,7 @@ async function checkSavedEvidence(date) {
   if (!hasReviewNextAction(report)) {
     weak.push(`В ${reportPath} раздел «Проверка перед отчётом» должен содержать строку «Ближайшее действие»`);
   }
+  const reviewNextAction = findReviewNextAction(report);
   for (const aliases of rcRequirements) {
     if (!includesAny(rcCheck, aliases)) {
       weak.push(`В ${rcPath} нет раздела «${aliases[0]}»`);
@@ -223,7 +224,7 @@ async function checkSavedEvidence(date) {
   }
 
   if (weak.length > 0 || notPassing.length > 0) {
-    throw new Error(buildIncompleteEvidenceMessage(date, weak, notPassing));
+    throw new Error(buildIncompleteEvidenceMessage(date, weak, notPassing, reviewNextAction));
   }
 }
 
@@ -242,13 +243,14 @@ function buildMissingEvidenceMessage(date, missing) {
   ].join("\n");
 }
 
-function buildIncompleteEvidenceMessage(date, weak, notPassing) {
+function buildIncompleteEvidenceMessage(date, weak, notPassing, reviewNextAction) {
   return [
     "# Финальная проверка пока не готова",
     "",
     "## Что ещё осталось",
     "",
     ...(weak.length > 0 ? [`- Пересобери устаревшие или неполные файлы: \`pnpm dogfood:finish:save -- --date ${date}\`.`] : []),
+    ...formatReviewNextActionHint(reviewNextAction),
     ...(notPassing.length > 0
       ? [
           "- Вернись к `Проверка перед отчётом`, закрой оставшиеся строки аудита и снова сохрани отчёт.",
@@ -261,6 +263,14 @@ function buildIncompleteEvidenceMessage(date, weak, notPassing) {
     ...weak.map((item) => `- ${item}`),
     ...notPassing.map((item) => `- ${item}`),
   ].join("\n");
+}
+
+function formatReviewNextActionHint(reviewNextAction) {
+  if (!reviewNextAction) {
+    return [];
+  }
+
+  return [`- Ближайшее действие из сохранённого отчёта: ${reviewNextAction}`];
 }
 
 function includesAny(text, aliases) {
@@ -315,6 +325,20 @@ function hasGroupedReviewChecklist(text) {
 function hasReviewNextAction(text) {
   const section = extractMarkdownSection(text, ["## Проверка перед отчётом", "## Review before report"]);
   return Boolean(section && /^Ближайшее действие:\s*\S/m.test(section));
+}
+
+function findReviewNextAction(text) {
+  const section = extractMarkdownSection(text, ["## Проверка перед отчётом", "## Review before report"]);
+  if (!section) {
+    return undefined;
+  }
+
+  for (const line of section.split("\n")) {
+    const match = line.match(/^Ближайшее действие:\s*(.+)$/);
+    if (match) return match[1].trim();
+  }
+
+  return undefined;
 }
 
 function extractMarkdownSection(text, headings) {

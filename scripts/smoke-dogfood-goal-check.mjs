@@ -226,6 +226,10 @@ try {
     "review saved evidence error did not mention the non-passing closure-duration row"
   );
   assert(
+    `${reviewEvidence.stdout}${reviewEvidence.stderr}`.includes("Ближайшее действие из сохранённого отчёта:"),
+    "review saved evidence error did not repeat the saved report next action"
+  );
+  assert(
     `${reviewEvidence.stdout}${reviewEvidence.stderr}`.includes("нажми `Начать закрытие дня`") &&
       `${reviewEvidence.stdout}${reviewEvidence.stderr}`.includes("скопируй финальный отчёт за 10 минут или меньше"),
     "review saved evidence error did not explain how to create measured closure evidence"
@@ -311,7 +315,8 @@ try {
   assert(draftReportEvidence.code !== 0, "saved evidence with a draft report state should fail");
   assert(
     `${draftReportEvidence.stdout}${draftReportEvidence.stderr}`.includes("# Финальная проверка пока не готова") &&
-      `${draftReportEvidence.stdout}${draftReportEvidence.stderr}`.includes("статус отчёта ещё не финальный"),
+      `${draftReportEvidence.stdout}${draftReportEvidence.stderr}`.includes("статус отчёта ещё не финальный") &&
+      `${draftReportEvidence.stdout}${draftReportEvidence.stderr}`.includes("Ближайшее действие из сохранённого отчёта:"),
     "draft saved report evidence error did not mention non-final report state"
   );
 

@@ -253,7 +253,7 @@ try {
     "report review checklist did not flag missing window request evidence"
   );
   assert(
-    thinEvidenceStdout.includes("0 запросов показа, 0 запросов скрытия"),
+    thinEvidenceStdout.includes("0 запросов на показ, 0 запросов на скрытие"),
     "report review checklist did not show missing window request counts"
   );
   assert(

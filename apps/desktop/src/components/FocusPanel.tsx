@@ -1790,19 +1790,65 @@ export function formatDayReviewItem(item: DayReviewItem) {
 function formatDayReviewDetail(detail?: string) {
   if (!detail) return detail
 
+  const openCapturesMatch = detail.match(/^(\d+) открыто$/)
+  if (openCapturesMatch) {
+    const count = Number(openCapturesMatch[1])
+    return formatCount(count, 'открытое отвлечение', 'открытых отвлечения', 'открытых отвлечений')
+  }
+
+  const unexplainedGapsMatch = detail.match(/^(\d+)\/(\d+) больших разрывов без события дня$/)
+  if (unexplainedGapsMatch) {
+    const missing = Number(unexplainedGapsMatch[1])
+    const total = Number(unexplainedGapsMatch[2])
+    const gapLabel = formatCount(missing, 'большой разрыв', 'больших разрыва', 'больших разрывов')
+    return missing === total ? `${gapLabel} без события дня` : `${missing} из ${total} больших разрывов без события дня`
+  }
+
   const activeWorkItemMatch = detail.match(/^(\d+) Work Item с активным статусом$/)
   if (activeWorkItemMatch) {
     const count = Number(activeWorkItemMatch[1])
-    return `${count} ${pluralRu(count, 'дело', 'дела', 'дел')} с активным статусом`
+    return `${formatCount(count, 'дело', 'дела', 'дел')} с активным статусом`
   }
 
   const touchedWorkItemMatch = detail.match(/^(\d+) Work Item были в работе сегодня$/)
   if (touchedWorkItemMatch) {
     const count = Number(touchedWorkItemMatch[1])
-    return `${count} ${pluralRu(count, 'дело было', 'дела были', 'дел было')} в работе сегодня`
+    return `${formatCount(count, 'дело было', 'дела были', 'дел было')} в работе сегодня`
+  }
+
+  const entryPathMatch = detail.match(/^(\d+) вводом, (\d+) из списка, (\d+) остановок$/)
+  if (entryPathMatch) {
+    const typed = Number(entryPathMatch[1])
+    const selected = Number(entryPathMatch[2])
+    const stops = Number(entryPathMatch[3])
+    return [
+      formatCount(typed, 'старт вводом', 'старта вводом', 'стартов вводом'),
+      formatCount(selected, 'старт из списка', 'старта из списка', 'стартов из списка'),
+      formatCount(stops, 'остановка', 'остановки', 'остановок'),
+    ].join(', ')
+  }
+
+  const windowRequestMatch = detail.match(/^(\d+) запросов показа, (\d+) запросов скрытия$/)
+  if (windowRequestMatch) {
+    const show = Number(windowRequestMatch[1])
+    const hide = Number(windowRequestMatch[2])
+    return [
+      formatCount(show, 'запрос на показ', 'запроса на показ', 'запросов на показ'),
+      formatCount(hide, 'запрос на скрытие', 'запроса на скрытие', 'запросов на скрытие'),
+    ].join(', ')
+  }
+
+  const correctionFailuresMatch = detail.match(/^(\d+) ошибок коррекции$/)
+  if (correctionFailuresMatch) {
+    const count = Number(correctionFailuresMatch[1])
+    return formatCount(count, 'ошибка коррекции', 'ошибки коррекции', 'ошибок коррекции')
   }
 
   return detail
+}
+
+function formatCount(value: number, one: string, few: string, many: string) {
+  return `${value} ${pluralRu(value, one, few, many)}`
 }
 
 const REVIEW_TITLE_LABELS: Record<string, string> = {

@@ -85,12 +85,16 @@ test('day review checklist keeps the evening ritual in Russian', () => {
     { level: 'blocker', title: 'Stop the active focus block', detail: 'Вход в день' },
     { level: 'blocker', title: 'Clear active Work Item state', detail: '1 Work Item с активным статусом' },
     { level: 'review', title: 'Classify significant gaps', detail: '1/2 больших разрывов без события дня' },
+    { level: 'review', title: 'Resolve, convert, or accept open captures', detail: '1 открыто' },
     {
       level: 'review',
       title: 'Confirm Work Item today/total badges',
       detail: '2 Work Item были в работе сегодня',
       action: 'accept_work_item_time_badges',
     },
+    { level: 'review', title: 'Exercise start and continue paths', detail: '1 вводом, 0 из списка, 1 остановок' },
+    { level: 'review', title: 'Test window entrypoints', detail: '1 запросов показа, 0 запросов скрытия' },
+    { level: 'review', title: 'Review failed focus corrections', detail: '1 ошибок коррекции' },
     {
       level: 'review',
       title: 'Review Activity Zone coverage',
@@ -104,10 +108,16 @@ test('day review checklist keeps the evening ritual in Russian', () => {
   assert.equal(formatDayReviewItem(items[1]).title, 'Снять активный статус с дела')
   assert.equal(formatDayReviewItem(items[1]).detail, '1 дело с активным статусом')
   assert.equal(formatDayReviewItem(items[2]).title, 'Объяснить большие разрывы')
-  assert.equal(formatDayReviewItem(items[3]).title, 'Проверить время по делам')
-  assert.equal(formatDayReviewItem(items[3]).detail, '2 дела были в работе сегодня')
-  assert.equal(formatDayReviewItem(items[4]).title, 'Проверить зоны активности')
-  assert.equal(formatDayReviewItem(items[5]).title, 'Можно копировать финальный отчёт')
+  assert.equal(formatDayReviewItem(items[2]).detail, '1 из 2 больших разрывов без события дня')
+  assert.equal(formatDayReviewItem(items[3]).title, 'Разобрать открытые отвлечения')
+  assert.equal(formatDayReviewItem(items[3]).detail, '1 открытое отвлечение')
+  assert.equal(formatDayReviewItem(items[4]).title, 'Проверить время по делам')
+  assert.equal(formatDayReviewItem(items[4]).detail, '2 дела были в работе сегодня')
+  assert.equal(formatDayReviewItem(items[5]).detail, '1 старт вводом, 0 стартов из списка, 1 остановка')
+  assert.equal(formatDayReviewItem(items[6]).detail, '1 запрос на показ, 0 запросов на скрытие')
+  assert.equal(formatDayReviewItem(items[7]).detail, '1 ошибка коррекции')
+  assert.equal(formatDayReviewItem(items[8]).title, 'Проверить зоны активности')
+  assert.equal(formatDayReviewItem(items[9]).title, 'Можно копировать финальный отчёт')
 
   const markdown = formatReviewChecklistMarkdown(items)
   assert(markdown.includes('## Проверка перед отчётом'), 'review checklist heading should be localized')

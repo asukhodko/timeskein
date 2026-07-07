@@ -268,7 +268,7 @@ All shortcuts work regardless of keyboard layout (Russian, etc.):
 
 The macOS app also tries to register one global show/hide shortcut, in this
 order: `Ctrl+Shift+Space`, then `Ctrl+Option+Space`, then `Cmd+Option+Space`.
-If macOS rejects all three, use the menu bar item or normal app switching.
+If macOS rejects all three, use the macOS menu bar item or normal app switching.
 
 | Key | Action |
 |-----|--------|
@@ -285,19 +285,19 @@ If macOS rejects all three, use the menu bar item or normal app switching.
 | `C` or `Alt+N` | Create new item |
 | `Esc` | Close dialogs; hide the macOS window when no dialog is open |
 
-Focus Session controls:
+Управление фокус-блоками:
 
-| Control | Action |
+| Что нажать | Что произойдёт |
 |---------|--------|
-| Focus input + `Start` | Find or create a Work Item by title, then start focus on it |
-| Focus input + `Switch` | Stop the current block and start a new block by title |
-| Capture input + `Capture` | Save an incoming event without stopping or switching focus |
-| Empty focus input + `Space` | Start or switch focus to the selected Work Item |
-| `Start Item` / `Switch Item` | Start or continue focus on the selected Work Item |
-| Double-click Work Item | Start or switch focus to that Work Item |
-| Stop note + `Enter` or `Stop` | Stop the active focus session and optionally save a note |
-| Today `Add Block` | Add a missed stopped focus block before copying the final report |
-| Today row `Edit` | Correct a stopped focus block or split it into two blocks |
+| Поле «На чём сейчас фокус?» + `Старт` | Найти или создать Work Item по названию и начать фокус |
+| Поле «Переключиться на...» + `Переключить` | Остановить текущий блок и начать следующий по названию |
+| Поле «Зафиксировать отвлечение...» + `Записать` | Сохранить входящее событие, не останавливая и не переключая фокус |
+| Пустое поле фокуса + `Space` | Начать или переключить фокус на выбранный Work Item |
+| `Начать` / `Переключиться` на выбранном Work Item | Продолжить фокус на выбранном Work Item |
+| Двойной клик по Work Item | Начать или переключить фокус на этот Work Item |
+| «Заметка при остановке» + `Enter` или `Стоп` | Остановить активный фокус-блок и при необходимости сохранить заметку |
+| `Добавить пропущенный блок` в «Сегодня» | Добавить пропущенный остановленный блок перед финальным отчётом |
+| `Править` в строке «Сегодня» | Исправить остановленный фокус-блок или разделить его на два |
 
 **State shortcuts (in State menu):**
 1. Active, 2. Blocked, 3. Waiting, 4. Someday, 5. Unknown, 6. Done

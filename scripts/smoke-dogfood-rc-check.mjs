@@ -251,8 +251,12 @@ try {
   const noClosureStrict = await runRcCheck(noClosureDb, ["--strict"]);
   assert(noClosureStrict.code !== 0, "strict RC check should fail without closure-duration evidence");
   assert(
-    noClosureStrict.stdout.includes("No measured day-closure duration found"),
+    noClosureStrict.stdout.includes("Длительность закрытия дня не измерена"),
     "strict RC check should explain missing closure-duration evidence"
+  );
+  assert(
+    !noClosureStrict.stdout.includes("No measured day-closure duration found"),
+    "strict RC check should not show the old English closure-duration warning"
   );
   assert(
     noClosureStrict.stdout.includes("| Day closure duration measured | review |"),

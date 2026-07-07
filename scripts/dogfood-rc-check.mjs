@@ -531,9 +531,13 @@ function assessEvidence(evidence, minFocusSeconds) {
   }
 
   if (evidence.telemetry.dayClosureCompletions === 0 || evidence.telemetry.lastDayClosureDurationSeconds == null) {
-    reviewItems.push("No measured day-closure duration found. Start the closure ritual and copy the final report before closing the goal.");
+    reviewItems.push(
+      "Длительность закрытия дня не измерена. Начни закрытие кнопкой «Начать закрытие дня», дойди до финального «Копировать отчёт» за 10 минут или меньше, затем пересохрани evidence."
+    );
   } else if (evidence.telemetry.lastDayClosureDurationSeconds > 10 * 60) {
-    reviewItems.push(`Last measured day closure took ${formatDuration(evidence.telemetry.lastDayClosureDurationSeconds)}, above the 10:00 goal.`);
+    reviewItems.push(
+      `Последнее закрытие дня заняло ${formatDuration(evidence.telemetry.lastDayClosureDurationSeconds)}, это больше цели 10:00. Повтори вечернее закрытие спокойным коротким проходом.`
+    );
   }
 
   if (evidence.unexplainedGapCount > 0) {

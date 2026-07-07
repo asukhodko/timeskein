@@ -117,6 +117,20 @@ test('day review next step points to one calm action', () => {
 
   assert.equal(
     formatDayReviewNextStep([
+      { level: 'review', title: 'Classify significant gaps', action: 'stage_significant_gap' },
+    ]),
+    'дописать или исправить: Объяснить большие разрывы. Нажми «Объяснить».'
+  )
+
+  assert.equal(
+    formatDayReviewNextStep([
+      { level: 'review', title: 'Confirm Work Item today/total badges', action: 'accept_work_item_time_badges' },
+    ]),
+    'осознанно проверить: Проверить время по делам. Нажми «Время верно», если данные уже честные.'
+  )
+
+  assert.equal(
+    formatDayReviewNextStep([
       { level: 'review', title: 'Review Activity Zone coverage', action: 'accept_activity_zones' },
       { level: 'review', title: 'Test window entrypoints', action: 'accept_window_entrypoints' },
     ]),

@@ -1911,8 +1911,20 @@ export function formatDayReviewNextStep(items: DayReviewItem[]) {
 
 function formatNextStep(prefix: string, items: DayReviewItem[]) {
   const label = formatDayReviewItem(items[0])
+  const actionHint = items.length === 1 ? formatNextStepActionHint(items[0]) : ''
   const rest = items.length > 1 ? ` Ещё ${items.length - 1}.` : ''
-  return `${prefix}: ${label.title}.${rest}`
+  return `${prefix}: ${label.title}.${actionHint}${rest}`
+}
+
+function formatNextStepActionHint(item: DayReviewItem) {
+  if (!item.action) return ''
+
+  const actionLabel = formatReviewActionLabel(item.action)
+  if (isBulkAcceptableReviewAction(item.action)) {
+    return ` Нажми «${actionLabel}», если данные уже честные.`
+  }
+
+  return ` Нажми «${actionLabel}».`
 }
 
 function appendReviewChecklistGroup(lines: string[], title: string, items: DayReviewItem[]) {

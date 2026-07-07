@@ -66,6 +66,21 @@ const ACCEPT_AS_IS_REVIEW_TITLES = new Set([
   "Test window entrypoints",
   "Confirm tracking accuracy or test correction",
 ]);
+const REVIEW_ACTION_LABELS_BY_TITLE = {
+  "Resolve, convert, or accept open captures": "Оставить открытыми",
+  "Classify significant gaps": "Объяснить",
+  "Explain current open gap": "Объяснить",
+  "Review Activity Zone coverage": "Зоны верны",
+  "Confirm non-work tracked time": "Зоны верны",
+  "Confirm Work Item today/total badges": "Время верно",
+  "Capture Inbox untested today": "Инбокс проверен",
+  "Captures were not linked to active focus": "Инбокс проверен",
+  "No day or Work Item notes/events": "Добавить контекст",
+  "Exercise start and continue paths": "Пути проверены",
+  "Test window entrypoints": "Окно проверено",
+  "Review failed focus corrections": "Трекинг верен",
+  "Confirm tracking accuracy or test correction": "Трекинг верен",
+};
 
 if (options.date) {
   exportArgs.push("--date", options.date);
@@ -941,8 +956,20 @@ function formatDayReviewNextStep(items) {
 
 function formatNextStep(prefix, items) {
   const title = REVIEW_TITLE_LABELS[items[0].title] ?? items[0].title;
+  const actionHint = items.length === 1 ? formatNextStepActionHint(items[0]) : "";
   const rest = items.length > 1 ? ` Ещё ${items.length - 1}.` : "";
-  return `${prefix}: ${title}.${rest}`;
+  return `${prefix}: ${title}.${actionHint}${rest}`;
+}
+
+function formatNextStepActionHint(item) {
+  const actionLabel = REVIEW_ACTION_LABELS_BY_TITLE[item.title];
+  if (!actionLabel) return "";
+
+  if (isAcceptAsIsReviewItem(item)) {
+    return ` Нажми «${actionLabel}», если данные уже честные.`;
+  }
+
+  return ` Нажми «${actionLabel}».`;
 }
 
 function formatDayReviewDetail(detail) {

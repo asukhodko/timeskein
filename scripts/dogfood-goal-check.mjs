@@ -155,15 +155,15 @@ function parseArgs(args) {
 function printHelp() {
   console.log(`Использование: pnpm dogfood:goal-check [--date YYYY-MM-DD] [--no-codex-guidance] [--db path/to/timeskein.db] [--min-focus-minutes N] [--save | --out path.md] [--skip-saved-evidence-check] [--status] [--dry-run]
 
-Запускает финальный локальный gate для цели про дешёвое вечернее закрытие дня:
+Запускает финальную локальную проверку цели про дешёвое вечернее закрытие дня:
 
-1. сохранённый dogfood-отчёт и RC-аудит есть за выбранную дату
+1. сохранённый отчёт закрытия дня и RC-аудит есть за выбранную дату
 2. есть явное подтверждение \`--no-codex-guidance\`, что закрытие прошло без подсказок Codex
 3. pnpm test
 4. pnpm dogfood:preflight
-5. dogfood:rc-check --strict для выбранного dogfood-дня
+5. dogfood:rc-check --strict для выбранного дня Timeskein
 
-Используй это после реального dogfood-дня, перед закрытием цели.
+Используй это после реального дня Timeskein, перед закрытием цели.
 
 Для спокойного просмотра состояния без дорогих проверок и без падения на ожидаемой неготовности:
 
@@ -190,7 +190,7 @@ function buildStatusNotReadyMessage(date, message) {
     "## Мягкая проверка",
     "",
     "- Эта команда только показывает состояние.",
-    "- Она не закрывает цель и не запускает локальные gate.",
+    "- Она не закрывает цель и не запускает локальные проверки.",
     `- Когда материалы будут готовы, строгая проверка останется такой: \`pnpm dogfood:goal-check -- --date ${date} --no-codex-guidance\`.`,
   ].join("\n");
 }
@@ -219,7 +219,7 @@ async function checkSavedEvidence(date) {
     ["## Телеметрия приложения", "## App Telemetry"],
   ];
   const rcRequirements = [
-    ["# RC-аудит dogfood-дня Timeskein", "# Timeskein dogfood RC check"],
+    ["# RC-аудит закрытия дня Timeskein", "# RC-аудит dogfood-дня Timeskein", "# Timeskein dogfood RC check"],
     ["## Сводка доказательств", "## Evidence Summary"],
     ["## Аудит закрытия дня", "## Daily Control Goal Audit"],
   ];
@@ -333,7 +333,7 @@ function buildMissingNoCodexGuidanceMessage(date) {
     "",
     "- Нужна явная отметка, что вечернее закрытие прошло без подсказок Codex.",
     `- Если ты шёл по \`Ближайшее действие\` и не спрашивал Codex, запусти: \`pnpm dogfood:goal-check -- --date ${date} --no-codex-guidance\`.`,
-    "- Если Codex всё же понадобился как навигатор закрытия, этот день не закрывает цель: проведи ещё один dogfood-день.",
+    "- Если Codex всё же понадобился как навигатор закрытия, этот день не закрывает цель: проведи ещё один день Timeskein.",
   ].join("\n");
 }
 

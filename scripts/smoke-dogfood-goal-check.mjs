@@ -51,7 +51,7 @@ try {
     cwd: repoRoot,
   });
   assert(helpStdout.includes("Использование: pnpm dogfood:goal-check"), "goal-check help title is not localized");
-  assert(helpStdout.includes("финальный локальный gate"), "goal-check help body is not localized");
+  assert(helpStdout.includes("финальную локальную проверку"), "goal-check help body is not localized");
   assert(helpStdout.includes("--no-codex-guidance"), "goal-check help did not mention the no-Codex attestation flag");
   assert(helpStdout.includes("dogfood:goal-check:status"), "goal-check help did not mention the status command");
   assert(!helpStdout.includes("Usage:"), "goal-check help leaked old English usage");
@@ -156,7 +156,7 @@ try {
   await writeFile(
     join(tempDir, "timeskein-dogfood-rc-check-2026-06-30.md"),
     [
-      "# RC-аудит dogfood-дня Timeskein - 2026-06-30",
+      "# RC-аудит закрытия дня Timeskein - 2026-06-30",
       "## Сводка доказательств",
       "## Аудит закрытия дня",
       "",
@@ -285,7 +285,7 @@ try {
   await writeFile(
     join(tempDir, "timeskein-dogfood-rc-check-2026-06-30.md"),
     [
-      "# RC-аудит dogfood-дня Timeskein - 2026-06-30",
+      "# RC-аудит закрытия дня Timeskein - 2026-06-30",
       "## Сводка доказательств",
       "## Аудит закрытия дня",
       "",
@@ -333,7 +333,7 @@ try {
   await writeFile(
     join(tempDir, "timeskein-dogfood-rc-check-2026-06-30.md"),
     [
-      "# RC-аудит dogfood-дня Timeskein - 2026-06-30",
+      "# RC-аудит закрытия дня Timeskein - 2026-06-30",
       "## Сводка доказательств",
       rcAuditMarkdown,
       "",
@@ -389,7 +389,7 @@ try {
   await writeFile(
     join(tempDir, "timeskein-dogfood-rc-check-2026-06-30.md"),
     [
-      "# RC-аудит dogfood-дня Timeskein - 2026-06-30",
+      "# RC-аудит закрытия дня Timeskein - 2026-06-30",
       "## Сводка доказательств",
       rcAuditMarkdown,
       "",
@@ -462,7 +462,7 @@ try {
   await writeFile(
     join(tempDir, "timeskein-dogfood-rc-check-2026-06-30.md"),
     [
-      "# RC-аудит dogfood-дня Timeskein - 2026-06-30",
+      "# RC-аудит закрытия дня Timeskein - 2026-06-30",
       "## Сводка доказательств",
       rcAuditMarkdown,
       "",

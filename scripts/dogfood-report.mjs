@@ -193,7 +193,7 @@ function parseArgs(args) {
 function printHelp() {
   console.log(`Usage: pnpm dogfood:report [--date YYYY-MM-DD] [--db path/to/timeskein.db]
 
-Prints a Markdown dogfood report from the local Timeskein SQLite database.
+Prints a Markdown day-closure report from the local Timeskein SQLite database.
 The report includes the focus-day export plus review prompts for evening analysis.
 If a focus block or Work Item is still active, the report is marked as a draft.`);
 }

@@ -92,7 +92,7 @@ function parseArgs(args) {
 function printHelp() {
   console.log(`Usage: pnpm dogfood:reset-db [--apply] [--force] [--db path/to/timeskein.db]
 
-Moves the current local Timeskein SQLite database aside before a clean dogfood day.
+Moves the current local Timeskein SQLite database aside before a clean Timeskein day.
 Default mode is a dry run. Use --apply to move the database and its -wal/-shm files.
 If a Timeskein agent or app process appears to be running, --apply refuses unless --force is passed.`);
 }

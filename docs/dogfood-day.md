@@ -37,11 +37,11 @@ pnpm dogfood:start:clean
 - используй `Объяснить` на пунктах про разрывы, если нужно добавить объясняющее событие дня;
 - осознанно принимай optional-проверки, которые намеренно остаются как есть: `Зоны верны`, `Инбокс проверен`, `Пути проверены`, `Окно проверено`, `Время верно`, `Трекинг верен` или `Оставить открытыми`;
 - используй `Всё проверено` только когда все оставшиеся жёлтые пункты действительно можно принять как есть; Timeskein показывает этот shortcut только для безопасных optional-проверок;
-- нажми `Копировать отчёт` в Today и вставь dogfood-отчёт в дневную заметку;
+- нажми `Копировать отчёт` в Today и вставь отчёт закрытия дня в дневную заметку;
 - если кнопка говорит `Копировать черновик`, сначала останови активный фокус-блок, сними активный статус с дела или обработай/прими оставшиеся review-пункты; черновик может начать замер закрытия, но завершает его только финальный отчёт;
 - используй `Копировать день`, когда нужна отдельная дневная картина без полного вечернего отчёта;
 - если clipboard недоступен, скопируй выделенный Markdown из резервного поля;
-- если нужен сохранённый Markdown-след, выполни `pnpm dogfood:finish:save`; команда сохранит дневной отчёт и RC-check;
+- если нужен сохранённый Markdown-след, выполни `pnpm dogfood:finish:save`; команда сохранит дневной отчёт и RC-аудит;
 - если UI copy не сработал, выполни `pnpm dogfood:finish > timeskein-dogfood-report.md`;
 - если нужна только дневная картина из SQLite, выполни `pnpm export:focus-day > timeskein-day.md`;
 - если Timeskein сам создавал трение, выполни `pnpm dogfood:metrics` и `pnpm export:app-events`, чтобы посмотреть локальную техническую телеметрию.
@@ -353,7 +353,7 @@ At the end of the day:
 3. Click `Начать закрытие дня` in `Проверка перед отчётом`, or use the Today report button while it says `Начать закрытие`.
 4. Clear or consciously accept every `Проверка перед отчётом` item.
 5. Click `Копировать отчёт`.
-6. Paste the Markdown dogfood report into the day note or analysis thread.
+6. Paste the Markdown day-closure report into the day note or analysis thread.
 
 Use `Копировать день` only when the raw day picture is enough.
 If Today or the report shows `Открытый разрыв`, there was a significant interval after the last stopped block with no active focus block. Treat it as either a real break or a lost-tracking interval during review.
@@ -422,21 +422,21 @@ For a Dogfood Release Candidate day, rerun the RC evidence check when you want t
 pnpm dogfood:rc-check:save
 ```
 
-The command prints hard blockers and review items for the Session replacement gate. Its Russian `Сводка доказательств` includes total tracked time, work focus, non-work tracked time, Activity Zone coverage, Work Item notes/events, Work Item time review acceptance, Capture Inbox coverage, typed entry and selected/list continuation evidence, correction telemetry, window telemetry with both show and hide request counts, and product-friction counters. The same `Аудит закрытия дня` framing maps the day to the active daily-control goal: focus blocks, Work Item totals plus UI time review, Activity Zones, notes/events, gaps/captures, entry-path evidence, window friction evidence, tracking correction evidence, and hard blockers. The readable daily report keeps this audit focused on evening closure; manual local gates are checked by RC/goal-check scripts instead. The Work Item totals audit row moves to `проверить` when touched Work Item time was not explicitly accepted from the review checklist. The gaps/captures audit row moves to `проверить` when significant gaps are unexplained, captures remain open without explicit acceptance, no captures were created, or captures were not linked to active focus.
-Before marking the daily-control goal complete, run the final gate after `pnpm dogfood:finish:save`. For the real local database it first checks that both saved evidence files exist, that the saved report status is final, that the saved report contains `Короткое закрытие` with a positive generated `Закрытие уложилось в 10 минут: да` verdict, that it carries the current review checklist format, and that the final command includes the explicit `--no-codex-guidance` confirmation; then it runs `pnpm test`, `pnpm dogfood:preflight`, and the strict RC check on the same code. If the saved evidence is missing, stale, or still draft, the command stops early with `Финальная проверка пока не готова`, repeats the saved report next action when available, and prints a short `Что ещё осталось` list:
+The command prints hard blockers and review items for the Session replacement evidence check. Its Russian `Сводка доказательств` includes total tracked time, work focus, non-work tracked time, Activity Zone coverage, Work Item notes/events, Work Item time review acceptance, Capture Inbox coverage, typed entry and selected/list continuation evidence, correction telemetry, window telemetry with both show and hide request counts, and product-friction counters. The same `Аудит закрытия дня` framing maps the day to the active daily-control goal: focus blocks, Work Item totals plus UI time review, Activity Zones, notes/events, gaps/captures, entry-path evidence, window friction evidence, tracking correction evidence, and hard blockers. The readable daily report keeps this audit focused on evening closure; manual local checks are handled by RC/goal-check scripts instead. The Work Item totals audit row moves to `проверить` when touched Work Item time was not explicitly accepted from the review checklist. The gaps/captures audit row moves to `проверить` when significant gaps are unexplained, captures remain open without explicit acceptance, no captures were created, or captures were not linked to active focus.
+Before marking the daily-control goal complete, run the final check after `pnpm dogfood:finish:save`. For the real local database it first checks that both saved evidence files exist, that the saved report status is final, that the saved report contains `Короткое закрытие` with a positive generated `Закрытие уложилось в 10 минут: да` verdict, that it carries the current review checklist format, and that the final command includes the explicit `--no-codex-guidance` confirmation; then it runs `pnpm test`, `pnpm dogfood:preflight`, and the strict RC check on the same code. If the saved evidence is missing, stale, or still draft, the command stops early with `Финальная проверка пока не готова`, repeats the saved report next action when available, and prints a short `Что ещё осталось` list:
 
 ```bash
 pnpm dogfood:goal-check -- --no-codex-guidance
 ```
 
-For a calm read-only check during or after closure, use the status command. It does not close the goal and does not run expensive gates; it only says whether the saved evidence is ready and what strict command remains:
+For a calm read-only check during or after closure, use the status command. It does not close the goal and does not run expensive checks; it only says whether the saved evidence is ready and what strict command remains:
 
 ```bash
 pnpm dogfood:goal-check:status -- --date YYYY-MM-DD
 ```
 
-The final goal gate also checks that the saved report contains `Короткое закрытие`, the generated `Закрытие уложилось в 10 минут` line with a `да` verdict, the grouped `Проверка перед отчётом` section, and the `Ближайшее действие` line. If the saved file still has an old flat checklist, lacks the short closure section, lacks a passing measured-closure line, or lacks the next-action line, regenerate the evidence with `pnpm dogfood:finish:save -- --date YYYY-MM-DD`.
-When measured closure evidence is present and every `Аудит закрытия дня` row is already `ок`, `pnpm dogfood:finish:save` prints the short closure verdict, warns that Codex-guided closure is not proof for the active goal, and prints the exact dated `pnpm dogfood:goal-check -- --date YYYY-MM-DD --no-codex-guidance` command for the final gate. If the saved report is still a draft, the command prints its saved status explicitly and repeats `Ближайшее действие` from the report under `Что ещё осталось`, so the next action stays visible even from the terminal. If measured closure exists but audit rows are still pending, it prints those pending rows and points back to `Проверка перед отчётом`.
+The final goal check also verifies that the saved report contains `Короткое закрытие`, the generated `Закрытие уложилось в 10 минут` line with a `да` verdict, the grouped `Проверка перед отчётом` section, and the `Ближайшее действие` line. If the saved file still has an old flat checklist, lacks the short closure section, lacks a passing measured-closure line, or lacks the next-action line, regenerate the evidence with `pnpm dogfood:finish:save -- --date YYYY-MM-DD`.
+When measured closure evidence is present and every `Аудит закрытия дня` row is already `ок`, `pnpm dogfood:finish:save` prints the short closure verdict, warns that Codex-guided closure is not proof for the active goal, and prints the exact dated `pnpm dogfood:goal-check -- --date YYYY-MM-DD --no-codex-guidance` command for the final check. If the saved report is still a draft, the command prints its saved status explicitly and repeats `Ближайшее действие` from the report under `Что ещё осталось`, so the next action stays visible even from the terminal. If measured closure exists but audit rows are still pending, it prints those pending rows and points back to `Проверка перед отчётом`.
 
 The RC-check scripts read old SQLite databases defensively. If a previous dogfood day was captured before Activity Zone columns existed, reports fall back to `Work` rather than crashing. A fresh dogfood day should still be started through the app so real migrations run before new data is captured.
 

@@ -87,7 +87,7 @@ try {
     "finish --save did not report saved dogfood report"
   );
   assert(
-    cleanSavedDefault.stdout.includes("Сохранён RC-аудит dogfood-дня Timeskein:") &&
+    cleanSavedDefault.stdout.includes("Сохранён RC-аудит закрытия дня Timeskein:") &&
       cleanSavedDefault.stdout.includes("timeskein-dogfood-rc-check-2026-06-30.md"),
     "finish --save did not report saved RC check"
   );

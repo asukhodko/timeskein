@@ -48,15 +48,15 @@ try {
   }
 
   if (options.dryRun) {
-    console.log("\nTimeskein dogfood start gate passed. Dry run: app was not opened.");
+    console.log("\nTimeskein day start check passed. Dry run: app was not opened.");
   } else {
     await run(process.execPath, openMacosAppArgs());
     await run(process.execPath, [resolve(repoRoot, "scripts/dogfood-agent-status.mjs")]);
-    console.log("\nTimeskein dogfood start gate passed. App opened and embedded agent is responsive.");
+    console.log("\nTimeskein day start check passed. App opened and embedded agent is responsive.");
   }
 } catch (error) {
   const message = error instanceof Error ? error.message : String(error);
-  console.error(`\nTimeskein dogfood start gate failed: ${message}`);
+  console.error(`\nTimeskein day start check failed: ${message}`);
   process.exitCode = 1;
 }
 
@@ -105,16 +105,16 @@ function parseArgs(args) {
 function printHelp() {
   console.log(`Usage: pnpm dogfood:start [--mode start|continue] [--skip-preflight] [--dry-run] [--reset-db] [--allow-running] [--date YYYY-MM-DD] [--db path/to/timeskein.db]
 
-Runs the dogfood start gate:
+Runs the Timeskein day start check:
 1. optional database backup reset when --reset-db is passed;
-2. real local database readiness check, in start mode by default or continue mode for an existing dogfood day;
+2. real local database readiness check, in start mode by default or continue mode for an existing Timeskein day;
 3. running-process check;
 4. dogfood preflight, unless --skip-preflight is passed;
 5. opens the macOS app, unless --dry-run is passed;
 6. waits for the embedded agent to become responsive.
 
-With --reset-db --dry-run, only prints the reset plan and checks the running-process/preflight gates. It does not move database files.
-By default, the start gate refuses when Timeskein is already running. Use --allow-running only when intentionally reusing or activating the current app process.`);
+With --reset-db --dry-run, only prints the reset plan and checks the running-process/preflight guards. It does not move database files.
+By default, the start check refuses when Timeskein is already running. Use --allow-running only when intentionally reusing or activating the current app process.`);
 }
 
 function openMacosAppArgs(...extraArgs) {

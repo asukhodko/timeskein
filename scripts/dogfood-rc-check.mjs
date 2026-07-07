@@ -37,7 +37,7 @@ const shouldFail =
 
 if (outputPath) {
   await writeFile(outputPath, output);
-  process.stdout.write(`Сохранён RC-аудит dogfood-дня Timeskein: ${outputPath}\n`);
+  process.stdout.write(`Сохранён RC-аудит закрытия дня Timeskein: ${outputPath}\n`);
 } else {
   process.stdout.write(output);
 }
@@ -81,9 +81,9 @@ function parseArgs(args) {
 function printHelp() {
   console.log(`Использование: pnpm dogfood:rc-check [--date YYYY-MM-DD] [--db path/to/timeskein.db] [--min-focus-minutes N] [--strict] [--save | --out path.md]
 
-Проверяет, достаточно ли данных Timeskein для dogfood RC-вердикта.
+Проверяет, достаточно ли данных Timeskein для строгого аудита закрытия дня.
 Команда завершается с кодом 1 при жёстких блокерах: активное состояние, дубли названий дел или пустой день.
-Пункты проверки печатаются, но без --strict оставляют код 0, потому что финальный RC-вердикт всё ещё требует человеческого решения.
+Пункты проверки печатаются, но без --strict оставляют код 0, потому что финальное решение всё ещё требует человеческого взгляда.
 С --strict пункты проверки тоже дают код 1. Используй это перед закрытием цели про дешёвое вечернее закрытие дня.`);
 }
 
@@ -554,7 +554,7 @@ function assessEvidence(evidence, minFocusSeconds) {
 
 function buildMissingDbReport(date, path) {
   return [
-    `# RC-аудит dogfood-дня Timeskein - ${date}`,
+    `# RC-аудит закрытия дня Timeskein - ${date}`,
     "",
     "Вердикт: заблокировано",
     "",
@@ -567,7 +567,7 @@ function buildRcReport(date, path, evidence, assessment, minFocusSeconds, strict
   const verdict = formatRcVerdict(assessment, strict);
 
   const lines = [
-    `# RC-аудит dogfood-дня Timeskein - ${date}`,
+    `# RC-аудит закрытия дня Timeskein - ${date}`,
     "",
     `Вердикт: ${verdict}`,
     `База: ${path}`,
@@ -687,7 +687,7 @@ function buildRcReport(date, path, evidence, assessment, minFocusSeconds, strict
     "",
     "## Что дальше",
     "",
-    "- Если есть блокеры, исправь только перечисленные блокеры и проведи ещё один dogfood-день.",
+    "- Если есть блокеры, исправь только перечисленные блокеры и проведи ещё один день Timeskein.",
     "- Если остались пункты проверки, заполни ручной вердикт перед закрытием milestone.",
     "- Если вердикт pass, обнови docs/opskarta и закоммить dogfood release baseline.",
     ""

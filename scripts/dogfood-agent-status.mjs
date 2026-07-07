@@ -27,8 +27,8 @@ if (!result.ok) {
       "",
       "## Next",
       "",
-      "- If Timeskein is not running, start the dogfood day with `pnpm dogfood:start`.",
-      "- If the dogfood day was already started and Timeskein was quit, reopen it with `pnpm dogfood:continue`.",
+      "- If Timeskein is not running, start the Timeskein day with `pnpm dogfood:start`.",
+      "- If the Timeskein day was already started and Timeskein was quit, reopen it with `pnpm dogfood:continue`.",
       "- If a stale port file remains after a crash, launching the app again should rewrite it.",
       "",
     ].join("\n")

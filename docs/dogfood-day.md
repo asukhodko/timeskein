@@ -46,11 +46,12 @@ pnpm dogfood:start:clean
 - если нужна только сырая картина дня, выполни `pnpm export:focus-day > timeskein-day.md`;
 - если Timeskein сам создавал трение, выполни `pnpm dogfood:metrics` и `pnpm export:app-events`, чтобы посмотреть локальную техническую телеметрию.
 
-The active daily-control goal requires the measured closure duration to be at most
-10 minutes. `Копировать отчёт`, `pnpm dogfood:finish:save`, `pnpm dogfood:rc-check`,
-and `pnpm dogfood:goal-check` include a `Day closure duration measured` row.
+Текущая daily-control цель требует, чтобы измеренное вечернее закрытие заняло
+не больше 10 минут. `Копировать отчёт`, `pnpm dogfood:finish:save`,
+`pnpm dogfood:rc-check` и `pnpm dogfood:goal-check` включают строку
+`Длительность закрытия измерена`.
 
-Saved dogfood reports and RC checks can contain personal or internal work context. They are local evidence files and are ignored by git.
+Сохранённые отчёты закрытия дня и RC-аудиты могут содержать личный или внутренний рабочий контекст. Это локальные evidence-файлы, они игнорируются git.
 
 ## Goal
 
@@ -94,7 +95,7 @@ pnpm dogfood:status
 ```
 
 If readiness reports active focus, active Work Items, duplicate titles, or existing blocks for today, fix that before treating Timeskein as the source of truth for the day. The readiness report includes exact next commands and shows whether the embedded agent or app process is already alive.
-When readiness is clean, the same report prints the next start command and the `Памятка закрытия дня` checklist for the next dogfood day. Use it as the morning reminder for the paths that must be intentionally exercised and for the evening rule: follow the UI `Ближайшее действие` until final `Копировать отчёт`, do not ask Codex to interpret the closure panel, fill only the short closure notes, then let `finish:save` tell you whether to return to review or run the final `goal-check`. The dogfood day is strong evidence only when `finish:save` prints the short closure verdict with `да (...)` and the exact dated `goal-check` command with `--no-codex-guidance`. If `goal-check` is launched too early, it repeats the saved report next action instead of leaving you to reopen the Markdown.
+When readiness is clean, the same report prints the next start command and the `Памятка закрытия дня` checklist for the next Timeskein day. Use it as the morning reminder for the paths that must be intentionally exercised and for the evening rule: follow the UI `Ближайшее действие` until final `Копировать отчёт`, do not ask Codex to interpret the closure panel, fill only the short closure notes, then let `finish:save` tell you whether to return to review or run the final `goal-check`. The day is strong evidence only when `finish:save` prints the short closure verdict with `да (...)` and the exact dated `goal-check` command with `--no-codex-guidance`. If `goal-check` is launched too early, it repeats the saved report next action instead of leaving you to reopen the Markdown, and it exits without a JavaScript stack trace.
 
 The default readiness mode is a clean start gate. After the day already has real focus blocks, use continue mode for a health check:
 
@@ -104,7 +105,7 @@ pnpm dogfood:ready -- --mode continue
 
 Continue mode allows existing focus blocks and one coherent active focus block linked to exactly one active Work Item. It still rejects duplicate titles and active-state split brain.
 
-If Timeskein was quit during an already started dogfood day, reopen it through the continue gate:
+If Timeskein was quit during an already started day, reopen it through the continue gate:
 
 ```bash
 pnpm dogfood:continue
@@ -266,8 +267,8 @@ The 2026-07-06 post-baseline daily-control day produced strong evidence for the
 daily trace, but it did not pass the current strict goal gate because closure
 duration was not measured. The next dogfood closure must specifically verify the
 evening ritual: start closure from the review panel, handle blockers and accepted
-review items, copy the final report, then pass `pnpm dogfood:goal-check` with
-`Day closure duration measured` at 10:00 or less.
+review items, copy the final report, then pass `pnpm dogfood:goal-check`.
+The saved evidence must show `Длительность закрытия измерена` as 10:00 or less.
 
 For the stricter daily-use gate, use [Dogfood Release Candidate](dogfood-release-candidate.md). The day protocol explains how to run the test; the release-candidate gate decides whether the current baseline is good enough to replace Session.
 

@@ -85,7 +85,7 @@ try {
   assert(
     `${missingEvidence.stdout}${missingEvidence.stderr}`.includes("# Финальная проверка пока не готова") &&
       `${missingEvidence.stdout}${missingEvidence.stderr}`.includes("## Что ещё осталось") &&
-      `${missingEvidence.stdout}${missingEvidence.stderr}`.includes("Сохранённые материалы dogfood-дня ещё не найдены") &&
+      `${missingEvidence.stdout}${missingEvidence.stderr}`.includes("Сохранённые материалы дня Timeskein ещё не найдены") &&
       `${missingEvidence.stdout}${missingEvidence.stderr}`.includes("pnpm dogfood:finish:save -- --date 2026-06-30"),
     "missing saved evidence error is missing"
   );
@@ -97,6 +97,20 @@ try {
   assert(
     !`${missingEvidence.stdout}${missingEvidence.stderr}`.includes("Saved dogfood evidence is missing"),
     "missing saved evidence error should not use the old English wording"
+  );
+
+  const missingEvidenceFromFullCheck = await runGoalCheck(["--date", "2026-06-30", "--no-codex-guidance"], tempDir);
+  assert(missingEvidenceFromFullCheck.code !== 0, "full goal-check should fail calmly when saved evidence is missing");
+  assert(
+    `${missingEvidenceFromFullCheck.stdout}${missingEvidenceFromFullCheck.stderr}`.includes("# Финальная проверка пока не готова") &&
+      `${missingEvidenceFromFullCheck.stdout}${missingEvidenceFromFullCheck.stderr}`.includes("Сохранённые материалы дня Timeskein ещё не найдены"),
+    "full goal-check did not repeat the saved evidence not-ready message"
+  );
+  assert(
+    !`${missingEvidenceFromFullCheck.stdout}${missingEvidenceFromFullCheck.stderr}`.includes("file://") &&
+      !`${missingEvidenceFromFullCheck.stdout}${missingEvidenceFromFullCheck.stderr}`.includes("exited with code") &&
+      !`${missingEvidenceFromFullCheck.stdout}${missingEvidenceFromFullCheck.stderr}`.includes("at run"),
+    "full goal-check should not print a JavaScript stack trace after missing saved evidence"
   );
 
   await writeFile(
@@ -429,7 +443,7 @@ try {
   const savedEvidence = await runGoalCheck(["--check-saved-evidence-only", "--date", "2026-06-30"], tempDir);
   assert(savedEvidence.code === 0, "saved evidence check should pass with both evidence files");
   assert(
-    savedEvidence.stdout.includes("Сохранённые материалы dogfood-дня за 2026-06-30 найдены."),
+    savedEvidence.stdout.includes("Сохранённые материалы дня Timeskein за 2026-06-30 найдены."),
     "saved evidence success message is missing"
   );
 

@@ -19,13 +19,16 @@ try {
   await migrate(emptyDb);
   const empty = await runFinish(emptyDb);
   assert(empty.code !== 0, "empty day should not finish");
-  assert(empty.stdout.includes("# Закрытие dogfood-дня заблокировано - 2026-06-30"), "empty day did not show localized blocked title");
+  assert(empty.stdout.includes("# Закрытие дня Timeskein заблокировано - 2026-06-30"), "empty day did not show localized blocked title");
   assert(empty.stdout.includes("База:"), "empty day did not show localized DB label");
   assert(empty.stdout.includes("## Что мешает"), "empty day did not show localized blocker section");
   assert(empty.stdout.includes("За 2026-06-30 нет фокус-блоков"), "empty day did not explain missing blocks");
   assert(empty.stdout.includes("## Что сделать дальше"), "empty day did not show localized next steps");
   assert(
-    !empty.stdout.includes("DB:") && !empty.stdout.includes("## Blockers") && !empty.stdout.includes("## Next"),
+    !empty.stdout.includes("dogfood-дня") &&
+      !empty.stdout.includes("DB:") &&
+      !empty.stdout.includes("## Blockers") &&
+      !empty.stdout.includes("## Next"),
     "empty day leaked old English diagnostic text"
   );
 

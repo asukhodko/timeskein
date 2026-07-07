@@ -2,10 +2,12 @@
 
 import { spawn } from "node:child_process";
 import { readFile } from "node:fs/promises";
+import { relative, resolve } from "node:path";
 
 const options = parseArgs(process.argv.slice(2));
+const repoRoot = resolve(import.meta.dirname, "..");
 const date = options.date ?? formatLocalDate(new Date());
-const rcArgs = ["scripts/dogfood-rc-check.mjs", "--strict"];
+const rcArgs = [resolve(repoRoot, "scripts/dogfood-rc-check.mjs"), "--strict"];
 const shouldCheckSavedEvidence = !options.db && !options.skipSavedEvidenceCheck;
 const shouldRequireNoCodexGuidance = !options.db && !options.checkSavedEvidenceOnly;
 
@@ -29,7 +31,7 @@ if (options.out) {
 
 const savedEvidenceSteps = [
   ...(shouldCheckSavedEvidence
-    ? [["node", ["scripts/dogfood-goal-check.mjs", "--check-saved-evidence-only", "--date", date]]]
+    ? [[process.execPath, [resolve(repoRoot, "scripts/dogfood-goal-check.mjs"), "--check-saved-evidence-only", "--date", date]]]
     : []),
 ];
 const verificationSteps = [
@@ -46,7 +48,7 @@ const dryRunSteps = [
 if (options.checkSavedEvidenceOnly) {
   try {
     await checkSavedEvidence(date);
-    console.log(`Сохранённые материалы dogfood-дня за ${date} найдены.`);
+    console.log(`Сохранённые материалы дня Timeskein за ${date} найдены.`);
     process.exit(0);
   } catch (error) {
     process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`);
@@ -66,7 +68,7 @@ if (options.dryRun) {
 }
 
 for (const [command, args] of savedEvidenceSteps) {
-  await run(command, args);
+  await runOrExit(command, args);
 }
 
 if (shouldRequireNoCodexGuidance && !options.noCodexGuidance) {
@@ -79,7 +81,7 @@ if (shouldRequireNoCodexGuidance) {
 }
 
 for (const [command, args] of verificationSteps) {
-  await run(command, args);
+  await runOrExit(command, args);
 }
 
 console.log("\nФинальная проверка цели Timeskein прошла.");
@@ -266,7 +268,7 @@ function buildMissingEvidenceMessage(date, missing) {
     "",
     "## Что ещё осталось",
     "",
-    "- Сохранённые материалы dogfood-дня ещё не найдены.",
+    "- Сохранённые материалы дня Timeskein ещё не найдены.",
     `- Сохрани вечерний отчёт и RC-аудит: \`pnpm dogfood:finish:save -- --date ${date}\`.`,
     "",
     "## Детали",
@@ -432,6 +434,17 @@ async function readEvidenceFile(path, missing) {
   }
 }
 
+async function runOrExit(command, args) {
+  try {
+    await run(command, args);
+  } catch (error) {
+    if (!isExpectedStepFailure(error)) {
+      process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`);
+    }
+    process.exit(1);
+  }
+}
+
 function run(command, args) {
   const label = formatCommand(command, args);
   console.log(`\n> ${label}`);
@@ -445,12 +458,16 @@ function run(command, args) {
     child.on("error", reject);
     child.on("exit", (code, signal) => {
       if (signal) {
-        reject(new Error(`${label} terminated by ${signal}`));
+        const error = new Error(`${label} terminated by ${signal}`);
+        error.expectedStepFailure = true;
+        reject(error);
         return;
       }
 
       if (code !== 0) {
-        reject(new Error(`${label} exited with code ${code}`));
+        const error = new Error(`${label} exited with code ${code}`);
+        error.expectedStepFailure = true;
+        reject(error);
         return;
       }
 
@@ -459,13 +476,25 @@ function run(command, args) {
   });
 }
 
+function isExpectedStepFailure(error) {
+  return Boolean(error && typeof error === "object" && error.expectedStepFailure);
+}
+
 function formatCommand(command, args) {
   if (command === "self" && args[0] === "--no-codex-guidance") {
     return "подтверждение: --no-codex-guidance (закрытие прошло без подсказок Codex)";
   }
 
   const displayCommand = command === process.execPath ? "node" : command;
-  return [displayCommand, ...args].map(shellQuote).join(" ");
+  return [displayCommand, ...args.map(formatCommandArg)].map(shellQuote).join(" ");
+}
+
+function formatCommandArg(value) {
+  if (value.startsWith(`${repoRoot}/`)) {
+    return relative(repoRoot, value);
+  }
+
+  return value;
 }
 
 function formatLocalDate(date) {

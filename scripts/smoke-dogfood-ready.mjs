@@ -130,7 +130,7 @@ try {
   );
   assert(
     dirty.stdout.includes("pnpm dogfood:ready -- --mode continue"),
-    "dirty output did not suggest continue mode for an already started real dogfood day"
+    "dirty output did not suggest continue mode for an already started real Timeskein day"
   );
   assert(dirty.stdout.includes("Команда ручного бэкапа"), "dirty output did not include localized manual backup fallback");
 
@@ -141,15 +141,23 @@ try {
   assert(continuing.stdout.includes("Режим: продолжение"), "continue output did not report localized continue mode");
   assert(continuing.stdout.includes("Статус: ГОТОВО"), "continue output did not report localized READY");
   assert(
-    continuing.stdout.includes("Режим продолжения считает это уже начатым dogfood-днём"),
+    continuing.stdout.includes("Режим продолжения считает это уже начатым днём Timeskein"),
     "continue output did not explain existing focus blocks"
   );
   assert(
-    continuing.stdout.includes("Dogfood-день уже идёт: Dogfood Dirty"),
+    continuing.stdout.includes("День Timeskein уже идёт: Dogfood Dirty, с 09:00"),
     "continue output did not identify the active coherent focus"
   );
   assert(
-    continuing.stdout.includes("Продолжай текущий dogfood-день в Timeskein"),
+    !continuing.stdout.includes("Dogfood-день") &&
+      !continuing.stdout.includes("dogfood-день") &&
+      !continuing.stdout.includes("dogfood-днём") &&
+      !continuing.stdout.includes("AM") &&
+      !continuing.stdout.includes("PM"),
+    "continue output leaked old dogfood wording or AM/PM time"
+  );
+  assert(
+    continuing.stdout.includes("Продолжай текущий день в Timeskein"),
     "continue output did not include continue next action"
   );
   assert(

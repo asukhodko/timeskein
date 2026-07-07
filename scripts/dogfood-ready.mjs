@@ -17,7 +17,7 @@ const dbPath = options.db
 const supportDir = dirname(dbPath);
 const appBundlePath = resolve("target/release/bundle/macos/Timeskein.app");
 
-const lines = [`# Готовность Timeskein dogfood - ${formatLocalDate(date)}`, ""];
+const lines = [`# Готовность Timeskein к дню - ${formatLocalDate(date)}`, ""];
 const blockers = [];
 const warnings = [];
 const nextActions = [];
@@ -87,21 +87,21 @@ function appendDailyControlChecklist(lines) {
   lines.push("- Во время активного фокуса зафиксируй хотя бы одно входящее отвлечение через `Зафиксировать отвлечение...`, затем закрой его, преврати `В дело`/`В событие` или явно оставь открытым.");
   lines.push("- Перед финальным отчётом поправь одну безопасную деталь трекинга или нажми `Трекинг верен` у проверки точности трекинга.");
   lines.push("- Вечером нажми `Начать закрытие дня` и дальше иди по строке `Ближайшее действие`: она называет текущий жест или кнопку, пока ты не дойдёшь до финального `Копировать отчёт` за 10 минут или меньше.");
-  lines.push("- Во время закрытия не спрашивай Codex, что делать дальше. Если без Codex не удалось понять следующий шаг, этот dogfood-день не закрывает текущую цель.");
+  lines.push("- Во время закрытия не спрашивай Codex, что делать дальше. Если без Codex не удалось понять следующий шаг, этот день не закрывает текущую цель.");
   lines.push("- В скопированном отчёте заполни только `Короткое закрытие`: доверие к данным, главное наблюдение и следующий шаг; строку про 10 минут Timeskein заполнит сам.");
   lines.push("- Закрой день командой `pnpm dogfood:finish:save`; если аудит ещё не чистый, она покажет `Ближайшее действие` и куда вернуться в `Проверка перед отчётом`.");
   lines.push("- День считается доказательством цели, когда `pnpm dogfood:finish:save` печатает `Короткое закрытие: Закрытие уложилось в 10 минут: да (...)` и точную команду `pnpm dogfood:goal-check -- --date YYYY-MM-DD --no-codex-guidance`.");
   lines.push("- Если запустишь `pnpm dogfood:goal-check` слишком рано, он тоже повторит `Ближайшее действие` из сохранённого отчёта.");
-  lines.push("- Если закрываешь день после полуночи, сначала явно передай дату dogfood-дня: `pnpm dogfood:finish:save -- --date YYYY-MM-DD`, затем следуй напечатанному следующему шагу.");
+  lines.push("- Если закрываешь день после полуночи, сначала явно передай дату дня Timeskein: `pnpm dogfood:finish:save -- --date YYYY-MM-DD`, затем следуй напечатанному следующему шагу.");
 }
 
 function appendReadyNext(lines, mode) {
   lines.push("## Что сделать дальше", "");
   if (mode === "continue") {
-    lines.push("- Продолжай текущий dogfood-день в Timeskein.");
+    lines.push("- Продолжай текущий день в Timeskein.");
     lines.push("- Если приложение не открыто, выполни `pnpm dogfood:continue`: команда проверит состояние дня и откроет собранное приложение.");
   } else {
-    lines.push("- Начни dogfood-день командой `pnpm dogfood:start`.");
+    lines.push("- Начни день в Timeskein командой `pnpm dogfood:start`.");
     lines.push("- Если предупреждения говорят о запущенном приложении или агенте, сначала закрой Timeskein, чтобы использовать свежую сборку.");
     lines.push("- Если нужна чистая тестовая база, сначала посмотри план через `pnpm dogfood:start:clean:preview`, затем выполни `pnpm dogfood:start:clean`.");
   }
@@ -302,7 +302,7 @@ function addStartModeFindings(blockers, warnings, nextActions, summary, todaySec
     blockers.push(
       `Сегодня уже есть фокус-блоки: ${summary.todaySessions.length}, всего ${formatDuration(todaySeconds)}. Это смешает чистый однодневный тест со старыми данными.`
     );
-    nextActions.push("Если это уже начатый реальный dogfood-день, проверь его режимом продолжения: `pnpm dogfood:ready -- --mode continue`.");
+    nextActions.push("Если это уже начатый реальный день в Timeskein, проверь его режимом продолжения: `pnpm dogfood:ready -- --mode continue`.");
     nextActions.push("Для чистого однодневного теста с уже существующими блоками лучше reset, а не stop-active: сначала выполни dry-run `pnpm dogfood:reset-db`.");
     if (responsiveAgent) {
       nextActions.push("Перед применением reset закрой Timeskein: `dogfood:reset-db -- --apply` откажется работать, пока агент отвечает.");
@@ -328,7 +328,7 @@ function addStartModeFindings(blockers, warnings, nextActions, summary, todaySec
 function addContinueModeFindings(blockers, warnings, nextActions, summary, todaySeconds) {
   if (summary.todaySessions.length > 0) {
     warnings.push(
-      `В выбранном дне уже есть фокус-блоки: ${summary.todaySessions.length}, всего ${formatDuration(todaySeconds)}. Режим продолжения считает это уже начатым dogfood-днём.`
+      `В выбранном дне уже есть фокус-блоки: ${summary.todaySessions.length}, всего ${formatDuration(todaySeconds)}. Режим продолжения считает это уже начатым днём Timeskein.`
     );
   }
 
@@ -367,9 +367,7 @@ function addContinueModeFindings(blockers, warnings, nextActions, summary, today
     return;
   }
 
-  warnings.push(
-    `Dogfood-день уже идёт: ${activeWorkItem.title}, с ${formatClockTime(activeSession.started_at)}.`
-  );
+  warnings.push(`День Timeskein уже идёт: ${activeWorkItem.title}, с ${formatClockTime(activeSession.started_at)}.`);
 }
 
 async function detectResponsiveAgent(dir) {
@@ -488,9 +486,10 @@ function formatDuration(totalSeconds) {
 }
 
 function formatClockTime(value) {
-  return new Date(value).toLocaleTimeString([], {
+  return new Date(value).toLocaleTimeString("ru-RU", {
     hour: "2-digit",
     minute: "2-digit",
+    hour12: false,
   });
 }
 

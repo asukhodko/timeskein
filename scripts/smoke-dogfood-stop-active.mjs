@@ -28,9 +28,9 @@ try {
   `);
 
   const dryRun = await runStopActive("--stopped-at", stoppedAt, "--note", stopNote);
-  assert(dryRun.stdout.includes("Mode: dry-run"), "dry run did not report dry-run mode");
-  assert(dryRun.stdout.includes("Active Work since"), "dry run did not list active focus session");
-  assert(dryRun.stdout.includes(`Stop note: ${stopNote}`), "dry run did not report stop note");
+  assert(dryRun.stdout.includes("Режим: сухой прогон"), "dry run did not report dry-run mode");
+  assert(dryRun.stdout.includes("Active Work, с"), "dry run did not list active focus session");
+  assert(dryRun.stdout.includes(`Заметка остановки: ${stopNote}`), "dry run did not report stop note");
 
   let activeState = await loadActiveState();
   assert(activeState.activeSessions === 1, "dry run stopped active session");
@@ -42,7 +42,7 @@ try {
     const blocked = await runStopActiveCaptured("--apply", "--stopped-at", stoppedAt, "--note", stopNote);
     assert(blocked.code !== 0, "apply should refuse while app process is running and agent is not responsive");
     assert(
-      blocked.stderr.includes("direct SQLite update would be unsafe"),
+      blocked.stderr.includes("прямое изменение SQLite небезопасно"),
       "apply did not explain unsafe direct SQLite update"
     );
     activeState = await loadActiveState();
@@ -53,7 +53,7 @@ try {
   }
 
   const applied = await runStopActive("--apply", "--force", "--stopped-at", stoppedAt, "--note", stopNote);
-  assert(applied.stdout.includes("Mode: applied"), "apply did not report applied mode");
+  assert(applied.stdout.includes("Режим: применено"), "apply did not report applied mode");
 
   activeState = await loadActiveState();
   assert(activeState.activeSessions === 0, "apply left active session");
@@ -74,7 +74,7 @@ try {
   try {
     await writeFile(join(tempDir, "agent.port"), String(server.port));
     const apiApplied = await runStopActive("--apply", "--note", "api stop note");
-    assert(apiApplied.stdout.includes("Apply method: agent-api"), "apply did not use agent API");
+    assert(apiApplied.stdout.includes("Способ применения: agent-api"), "apply did not use agent API");
     assert(apiCalls.some((call) => call.method === "focus.stop"), "agent API path did not call focus.stop");
     assert(
       apiCalls.some((call) => call.method === "work_item.set_state"),
@@ -83,6 +83,19 @@ try {
   } finally {
     await server.close();
   }
+
+  const badDate = await runStopActiveCaptured("--stopped-at", "bad-date");
+  assert(badDate.code !== 0, "invalid stopped-at should fail");
+  assert(
+    badDate.stderr.includes("Некорректное значение --stopped-at, ожидается ISO-дата: bad-date"),
+    "invalid stopped-at was not localized"
+  );
+  assert(!badDate.stderr.includes("Invalid --stopped-at value"), "invalid stopped-at leaked English text");
+
+  const badArg = await runStopActiveCaptured("--surprise");
+  assert(badArg.code !== 0, "unknown argument should fail");
+  assert(badArg.stderr.includes("Неизвестный аргумент: --surprise"), "unknown argument was not localized");
+  assert(!badArg.stderr.includes("Unknown argument"), "unknown argument leaked English text");
 
   console.log(
     JSON.stringify(

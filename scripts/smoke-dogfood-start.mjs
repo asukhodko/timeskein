@@ -23,7 +23,7 @@ try {
     hasRunningProcessGuard(clean.stdout),
     "clean start gate did not check for an already running app"
   );
-  assert(clean.stdout.includes("Dry run: app was not opened"), "clean start gate did not stay dry-run");
+  assert(clean.stdout.includes("Сухой прогон: приложение не открывалось"), "clean start gate did not stay dry-run");
 
   await runSql(`
     INSERT INTO work_items (id, title, type, state, pinned, created_at, updated_at, last_seen_at)
@@ -42,7 +42,7 @@ try {
   assert(continuing.code === 0, "coherent active dogfood day should pass the continue gate");
   assert(continuing.stdout.includes("Режим: продолжение"), "continue start gate did not use localized continue readiness");
   assert(continuing.stdout.includes("Статус: ГОТОВО"), "continue start gate did not report localized READY");
-  assert(continuing.stdout.includes("Dry run: app was not opened"), "continue start gate did not stay dry-run");
+  assert(continuing.stdout.includes("Сухой прогон: приложение не открывалось"), "continue start gate did not stay dry-run");
 
   const fakeBin = join(tempDir, "fake-bin");
   await mkdir(fakeBin);
@@ -65,20 +65,33 @@ try {
 
   const cleanStart = await runStart({ resetDb: true });
   assert(cleanStart.code === 0, "clean start dry run should plan reset and pass safe checks");
-  assert(cleanStart.stdout.includes("# Timeskein dogfood DB reset"), "clean start did not run reset-db");
-  assert(cleanStart.stdout.includes("Mode: dry-run"), "clean start dry run applied reset");
+  assert(cleanStart.stdout.includes("# Сброс базы Timeskein для dogfood-дня"), "clean start did not run reset-db");
+  assert(cleanStart.stdout.includes("Режим: сухой прогон"), "clean start dry run applied reset");
   assert(
     hasRunningProcessGuard(cleanStart.stdout),
     "clean start dry run did not check for an already running app"
   );
   assert(
-    cleanStart.stdout.includes("Database was not moved and app was not opened"),
+    cleanStart.stdout.includes("база не перемещалась, приложение не открывалось"),
     "clean start dry run did not explain that it was non-mutating"
   );
   assert(existsSync(dbPath), "clean start dry run moved the dirty database");
 
   const dirtyAfterCleanDryRun = await runStart();
   assert(dirtyAfterCleanDryRun.code !== 0, "clean start dry run should leave dirty database dirty");
+
+  const badMode = await runStart({ mode: "wrong" });
+  assert(badMode.code !== 0, "invalid mode should fail");
+  assert(
+    badMode.stderr.includes("Некорректное значение --mode, ожидается start или continue: wrong"),
+    "invalid mode was not localized"
+  );
+  assert(!badMode.stderr.includes("Invalid --mode value"), "invalid mode leaked English text");
+
+  const badArg = await runStart({ extraArgs: ["--surprise"] });
+  assert(badArg.code !== 0, "unknown argument should fail");
+  assert(badArg.stderr.includes("Неизвестный аргумент: --surprise"), "unknown argument was not localized");
+  assert(!badArg.stderr.includes("Unknown argument"), "unknown argument leaked English text");
 
   console.log(
     JSON.stringify(
@@ -94,7 +107,7 @@ try {
   await rm(tempDir, { recursive: true, force: true });
 }
 
-async function runStart({ resetDb = false, skipPreflight = true, env = process.env, mode, allowRunning = true } = {}) {
+async function runStart({ resetDb = false, skipPreflight = true, env = process.env, mode, allowRunning = true, extraArgs = [] } = {}) {
   const args = [
     join(repoRoot, "scripts/dogfood-start.mjs"),
     "--dry-run",
@@ -102,6 +115,7 @@ async function runStart({ resetDb = false, skipPreflight = true, env = process.e
     dbPath,
     "--date",
     "2026-06-30",
+    ...extraArgs,
   ];
 
   if (skipPreflight) {

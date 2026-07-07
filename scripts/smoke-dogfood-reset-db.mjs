@@ -18,8 +18,8 @@ try {
   await writeFile(`${dbPath}-shm`, "shm");
 
   const dryRun = await runReset();
-  assert(dryRun.stdout.includes("Mode: dry-run"), "dry run did not report dry-run mode");
-  assert(dryRun.stdout.includes("Running app PIDs:"), "dry run did not report running app status");
+  assert(dryRun.stdout.includes("Режим: сухой прогон"), "dry run did not report dry-run mode");
+  assert(dryRun.stdout.includes("PID процессов приложения:"), "dry run did not report running app status");
   assert(existsSync(dbPath), "dry run moved the database");
   assert(existsSync(`${dbPath}-wal`), "dry run moved the wal file");
   assert(existsSync(`${dbPath}-shm`), "dry run moved the shm file");
@@ -30,7 +30,7 @@ try {
     const blocked = await runResetCaptured("--apply");
     assert(blocked.code !== 0, "apply should refuse while timeskein-desktop process is running");
     assert(
-      blocked.stderr.includes("Timeskein app process appears to be running"),
+      blocked.stderr.includes("Процесс Timeskein сейчас запущен"),
       "apply did not explain running process blocker"
     );
     assert(existsSync(dbPath), "blocked apply moved the database");
@@ -39,7 +39,7 @@ try {
   }
 
   const applied = await runReset("--apply", "--force");
-  assert(applied.stdout.includes("Mode: applied"), "apply did not report applied mode");
+  assert(applied.stdout.includes("Режим: применено"), "apply did not report applied mode");
   assert(!existsSync(dbPath), "apply left the database in place");
   assert(!existsSync(`${dbPath}-wal`), "apply left the wal file in place");
   assert(!existsSync(`${dbPath}-shm`), "apply left the shm file in place");
@@ -55,6 +55,11 @@ try {
     { cwd: repoRoot }
   );
   assert(ready.stdout.includes("Статус: ГОТОВО"), "missing database should be ready after reset");
+
+  const badArg = await runResetCaptured("--surprise");
+  assert(badArg.code !== 0, "unknown argument should fail");
+  assert(badArg.stderr.includes("Неизвестный аргумент: --surprise"), "unknown argument was not localized");
+  assert(!badArg.stderr.includes("Unknown argument"), "unknown argument leaked English text");
 
   console.log(
     JSON.stringify(

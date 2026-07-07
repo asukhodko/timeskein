@@ -23,7 +23,7 @@ try {
       if (!options.skipPreflight) {
         await run("pnpm", ["dogfood:preflight"]);
       }
-      console.log("\nTimeskein clean dogfood start dry run passed. Database was not moved and app was not opened.");
+      console.log("\nПроверка чистого старта Timeskein прошла. Сухой прогон: база не перемещалась, приложение не открывалось.");
       process.exit(0);
     }
   }
@@ -48,15 +48,15 @@ try {
   }
 
   if (options.dryRun) {
-    console.log("\nTimeskein day start check passed. Dry run: app was not opened.");
+    console.log("\nПроверка старта дня Timeskein прошла. Сухой прогон: приложение не открывалось.");
   } else {
     await run(process.execPath, openMacosAppArgs());
     await run(process.execPath, [resolve(repoRoot, "scripts/dogfood-agent-status.mjs")]);
-    console.log("\nTimeskein day start check passed. App opened and embedded agent is responsive.");
+    console.log("\nПроверка старта дня Timeskein прошла. Приложение открыто, встроенный агент отвечает.");
   }
 } catch (error) {
   const message = error instanceof Error ? error.message : String(error);
-  console.error(`\nTimeskein day start check failed: ${message}`);
+  console.error(`\nПроверка старта дня Timeskein не прошла: ${message}`);
   process.exitCode = 1;
 }
 
@@ -78,7 +78,7 @@ function parseArgs(args) {
     } else if (arg === "--mode") {
       const mode = args[++index];
       if (mode !== "start" && mode !== "continue") {
-        throw new Error(`Invalid --mode value, expected start or continue: ${mode}`);
+        throw new Error(`Некорректное значение --mode, ожидается start или continue: ${mode}`);
       }
       result.mode = mode;
     } else if (arg === "--continue") {
@@ -95,7 +95,7 @@ function parseArgs(args) {
       printHelp();
       process.exit(0);
     } else {
-      throw new Error(`Unknown argument: ${arg}`);
+      throw new Error(`Неизвестный аргумент: ${arg}`);
     }
   }
 
@@ -103,18 +103,18 @@ function parseArgs(args) {
 }
 
 function printHelp() {
-  console.log(`Usage: pnpm dogfood:start [--mode start|continue] [--skip-preflight] [--dry-run] [--reset-db] [--allow-running] [--date YYYY-MM-DD] [--db path/to/timeskein.db]
+  console.log(`Использование: pnpm dogfood:start [--mode start|continue] [--skip-preflight] [--dry-run] [--reset-db] [--allow-running] [--date YYYY-MM-DD] [--db path/to/timeskein.db]
 
-Runs the Timeskein day start check:
-1. optional database backup reset when --reset-db is passed;
-2. real local database readiness check, in start mode by default or continue mode for an existing Timeskein day;
-3. running-process check;
-4. dogfood preflight, unless --skip-preflight is passed;
-5. opens the macOS app, unless --dry-run is passed;
-6. waits for the embedded agent to become responsive.
+Проверяет старт дня Timeskein:
+1. при --reset-db готовит резервный сброс локальной базы;
+2. проверяет готовность реальной локальной базы в режиме start или continue;
+3. проверяет, не запущено ли приложение;
+4. запускает dogfood preflight, если не передан --skip-preflight;
+5. открывает macOS-приложение, если не передан --dry-run;
+6. ждёт ответа встроенного агента.
 
-With --reset-db --dry-run, only prints the reset plan and checks the running-process/preflight guards. It does not move database files.
-By default, the start check refuses when Timeskein is already running. Use --allow-running only when intentionally reusing or activating the current app process.`);
+С --reset-db --dry-run только печатает план сброса и проверяет защитные условия. Файлы базы не перемещаются.
+По умолчанию команда отказывается работать, если Timeskein уже запущен. Используй --allow-running только когда сознательно переиспользуешь текущий процесс приложения.`);
 }
 
 function openMacosAppArgs(...extraArgs) {
@@ -139,12 +139,12 @@ function run(command, args) {
     child.on("error", reject);
     child.on("exit", (code, signal) => {
       if (signal) {
-        reject(new Error(`${label} terminated by ${signal}`));
+        reject(new Error(`${label} завершился по сигналу ${signal}`));
         return;
       }
 
       if (code !== 0) {
-        reject(new Error(`${label} exited with code ${code}`));
+        reject(new Error(`${label} завершился с кодом ${code}`));
         return;
       }
 

@@ -59,7 +59,7 @@ function parseArgs(args) {
     } else if (arg === "--min-focus-minutes") {
       result.minFocusMinutes = Number(args[++index]);
       if (!Number.isFinite(result.minFocusMinutes) || result.minFocusMinutes < 0) {
-        throw new Error("--min-focus-minutes must be a non-negative number");
+        throw new Error("--min-focus-minutes должен быть неотрицательным числом");
       }
     } else if (arg === "--out") {
       result.out = args[++index];
@@ -71,7 +71,7 @@ function parseArgs(args) {
       printHelp();
       process.exit(0);
     } else {
-      throw new Error(`Unknown argument: ${arg}`);
+      throw new Error(`Неизвестный аргумент: ${arg}`);
     }
   }
 
@@ -1163,7 +1163,7 @@ function parsePayload(value) {
 
 function parseLocalDate(value) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    throw new Error(`Invalid --date value, expected YYYY-MM-DD: ${value}`);
+    throw new Error(`Некорректное значение --date, ожидается YYYY-MM-DD: ${value}`);
   }
 
   const [year, month, day] = value.split("-").map(Number);

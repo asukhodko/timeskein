@@ -196,6 +196,27 @@ try {
     "schema did not report the active Work Item unique constraint"
   );
 
+  const badDate = await runReady(["--date", "bad-date"]);
+  assert(badDate.code !== 0, "invalid date should fail");
+  assert(
+    badDate.stderr.includes("Некорректное значение --date, ожидается YYYY-MM-DD: bad-date"),
+    "invalid date was not localized"
+  );
+  assert(!badDate.stderr.includes("Invalid --date value"), "invalid date leaked English text");
+
+  const badMode = await runReady(["--mode", "wrong"]);
+  assert(badMode.code !== 0, "invalid mode should fail");
+  assert(
+    badMode.stderr.includes("Некорректное значение --mode, ожидается start или continue: wrong"),
+    "invalid mode was not localized"
+  );
+  assert(!badMode.stderr.includes("Invalid --mode value"), "invalid mode leaked English text");
+
+  const badArg = await runReady(["--surprise"]);
+  assert(badArg.code !== 0, "unknown argument should fail");
+  assert(badArg.stderr.includes("Неизвестный аргумент: --surprise"), "unknown argument was not localized");
+  assert(!badArg.stderr.includes("Unknown argument"), "unknown argument leaked English text");
+
   console.log(
     JSON.stringify(
       {

@@ -17,7 +17,7 @@ const stopNote = options.note ?? "closed by dogfood:stop-active";
 const runningPids = await runningTimeskeinPids();
 
 if (!existsSync(dbPath)) {
-  console.log(`# Timeskein dogfood active stop\n\nDB: ${dbPath}\nStatus: nothing to stop`);
+  console.log(`# Остановка активного Timeskein-фокуса\n\nБаза: ${dbPath}\nСтатус: нечего останавливать`);
   process.exit(0);
 }
 
@@ -25,10 +25,10 @@ const responsiveAgent = await detectResponsiveAgent(supportDir);
 if (responsiveAgent && options.apply && options.stoppedAt && !options.force) {
   console.error(
     [
-      "Timeskein agent appears to be running.",
+      "Агент Timeskein сейчас запущен.",
       `Agent URL: ${responsiveAgent}`,
-      "--stopped-at cannot be applied through the running agent API.",
-      "Omit --stopped-at, stop the focus block in the app, or pass --force if direct DB update is acceptable.",
+      "--stopped-at нельзя применить через API запущенного агента.",
+      "Убери --stopped-at, останови фокус-блок в приложении или передай --force, если прямое изменение базы допустимо.",
     ].join("\n")
   );
   process.exit(1);
@@ -37,9 +37,9 @@ if (responsiveAgent && options.apply && options.stoppedAt && !options.force) {
 if (!responsiveAgent && runningPids.length > 0 && options.apply && !options.force) {
   console.error(
     [
-      `Timeskein app process appears to be running: PID ${runningPids.join(", ")}`,
-      "The Local API is not responsive, so direct SQLite update would be unsafe.",
-      "Quit Timeskein first, or pass --force if you know the database is not in use.",
+      `Процесс Timeskein сейчас запущен: PID ${runningPids.join(", ")}`,
+      "Локальный API не отвечает, поэтому прямое изменение SQLite небезопасно.",
+      "Сначала закрой Timeskein или передай --force, если точно знаешь, что база не используется.",
     ].join("\n")
   );
   process.exit(1);
@@ -111,7 +111,7 @@ function parseArgs(args) {
       printHelp();
       process.exit(0);
     } else {
-      throw new Error(`Unknown argument: ${arg}`);
+      throw new Error(`Неизвестный аргумент: ${arg}`);
     }
   }
 
@@ -119,19 +119,19 @@ function parseArgs(args) {
 }
 
 function printHelp() {
-  console.log(`Usage: pnpm dogfood:stop-active [--apply] [--force] [--note text] [--db path/to/timeskein.db]
+  console.log(`Использование: pnpm dogfood:stop-active [--apply] [--force] [--note text] [--db path/to/timeskein.db]
 
-Stops active Timeskein focus sessions and clears active Work Items.
-Default mode is a dry run. Use --apply to update the database.
-If a Timeskein agent appears to be running, --apply stops the block through the Local API.
-If the agent is not responsive and no app process is running, --apply updates SQLite directly.
-Use --force to force the direct SQLite path.`);
+Останавливает активные фокус-сессии Timeskein и снимает активный статус с дел.
+По умолчанию это сухой прогон. Передай --apply, чтобы изменить базу.
+Если агент Timeskein запущен, --apply останавливает блок через локальный API.
+Если агент не отвечает и процесс приложения не запущен, --apply изменяет SQLite напрямую.
+Передай --force, чтобы принудительно использовать прямое изменение SQLite.`);
 }
 
 function parseIsoDate(value) {
   const date = new Date(value);
   if (!value || Number.isNaN(date.getTime())) {
-    throw new Error(`Invalid --stopped-at value, expected ISO date: ${value}`);
+    throw new Error(`Некорректное значение --stopped-at, ожидается ISO-дата: ${value}`);
   }
 
   return date.toISOString();
@@ -296,45 +296,45 @@ async function rpc(apiUrl, method, params = {}) {
 
 function buildReport({ dbPath, responsiveAgent, runningPids, stoppedAt, stopNote, dryRun, activeSessions, activeWorkItems, applied, applyMethod }) {
   const lines = [
-    "# Timeskein dogfood active stop",
+    "# Остановка активного Timeskein-фокуса",
     "",
-    `Mode: ${dryRun ? "dry-run" : "applied"}`,
-    `Apply method: ${applyMethod ?? "none"}`,
-    `DB: ${dbPath}`,
-    `Agent responsive: ${responsiveAgent ?? "no"}`,
-    `Running app PIDs: ${runningPids.length > 0 ? runningPids.join(", ") : "none"}`,
-    `Stopped at: ${stoppedAt}`,
-    `Stop note: ${stopNote}`,
+    `Режим: ${dryRun ? "сухой прогон" : "применено"}`,
+    `Способ применения: ${applyMethod ?? "нет"}`,
+    `База: ${dbPath}`,
+    `Агент отвечает: ${responsiveAgent ?? "нет"}`,
+    `PID процессов приложения: ${runningPids.length > 0 ? runningPids.join(", ") : "нет"}`,
+    `Остановить на момент: ${stoppedAt}`,
+    `Заметка остановки: ${stopNote}`,
     "",
-    "## Active Focus Sessions",
+    "## Активные фокус-сессии",
     "",
   ];
 
   if (activeSessions.length === 0) {
-    lines.push("- none");
+    lines.push("- нет");
   } else {
     for (const session of activeSessions) {
-      lines.push(`- ${session.work_item_title ?? session.title} since ${formatClockTime(session.started_at)}`);
+      lines.push(`- ${session.work_item_title ?? session.title}, с ${formatClockTime(session.started_at)}`);
     }
   }
 
-  lines.push("", "## Active Work Items", "");
+  lines.push("", "## Активные дела", "");
   if (activeWorkItems.length === 0) {
-    lines.push("- none");
+    lines.push("- нет");
   } else {
     for (const item of activeWorkItems) {
       lines.push(`- ${item.title}`);
     }
   }
 
-  lines.push("", "## Next", "");
+  lines.push("", "## Дальше", "");
   if (dryRun && (activeSessions.length > 0 || activeWorkItems.length > 0)) {
-    lines.push("- Run `pnpm dogfood:stop-active -- --apply` to close the active block.");
+    lines.push("- Выполни `pnpm dogfood:stop-active -- --apply`, чтобы закрыть активный блок.");
   }
   if (applied) {
-    lines.push("- Run `pnpm dogfood:ready` again.");
+    lines.push("- Снова выполни `pnpm dogfood:ready`.");
   }
-  lines.push("- For a clean one-day trial with no existing focus blocks, use `pnpm dogfood:reset-db`.");
+  lines.push("- Для чистого однодневного теста без старых фокус-блоков используй `pnpm dogfood:reset-db`.");
 
   return `${lines.join("\n")}\n`;
 }

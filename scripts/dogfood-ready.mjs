@@ -122,7 +122,7 @@ function parseArgs(args) {
     } else if (arg === "--mode") {
       const mode = args[++index];
       if (mode !== "start" && mode !== "continue") {
-        throw new Error(`Invalid --mode value, expected start or continue: ${mode}`);
+        throw new Error(`Некорректное значение --mode, ожидается start или continue: ${mode}`);
       }
       result.mode = mode;
     } else if (arg === "--continue") {
@@ -131,7 +131,7 @@ function parseArgs(args) {
       printHelp();
       process.exit(0);
     } else {
-      throw new Error(`Unknown argument: ${arg}`);
+      throw new Error(`Неизвестный аргумент: ${arg}`);
     }
   }
 
@@ -148,7 +148,7 @@ function printHelp() {
 
 function parseLocalDate(value) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    throw new Error(`Invalid --date value, expected YYYY-MM-DD: ${value}`);
+    throw new Error(`Некорректное значение --date, ожидается YYYY-MM-DD: ${value}`);
   }
 
   const [year, month, day] = value.split("-").map(Number);

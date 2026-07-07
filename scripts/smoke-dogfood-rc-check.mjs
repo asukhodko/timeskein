@@ -18,6 +18,27 @@ try {
   assert(helpStdout.includes("Проверяет, достаточно ли данных Timeskein"), "RC check help body is not localized");
   assert(!helpStdout.includes("Usage:"), "RC check help leaked old English usage");
 
+  const badDate = await runRcCheckArgs(["--date", "bad-date"]);
+  assert(badDate.code !== 0, "invalid date should fail");
+  assert(
+    badDate.stderr.includes("Некорректное значение --date, ожидается YYYY-MM-DD: bad-date"),
+    "invalid date was not localized"
+  );
+  assert(!badDate.stderr.includes("Invalid --date value"), "invalid date leaked English text");
+
+  const badMinFocus = await runRcCheckArgs(["--min-focus-minutes", "-1"]);
+  assert(badMinFocus.code !== 0, "invalid min focus should fail");
+  assert(
+    badMinFocus.stderr.includes("--min-focus-minutes должен быть неотрицательным числом"),
+    "invalid min focus was not localized"
+  );
+  assert(!badMinFocus.stderr.includes("must be a non-negative number"), "invalid min focus leaked English text");
+
+  const badArg = await runRcCheckArgs(["--surprise"]);
+  assert(badArg.code !== 0, "unknown argument should fail");
+  assert(badArg.stderr.includes("Неизвестный аргумент: --surprise"), "unknown argument was not localized");
+  assert(!badArg.stderr.includes("Unknown argument"), "unknown argument leaked English text");
+
   const goodDb = join(tempDir, "good.db");
   await migrate(goodDb);
   await runSql(goodDb, `
@@ -518,6 +539,23 @@ async function runRcCheck(path, extraArgs = []) {
         maxBuffer: 10 * 1024 * 1024,
       }
     );
+
+    return { code: 0, stdout, stderr };
+  } catch (error) {
+    return {
+      code: error.code ?? 1,
+      stdout: error.stdout ?? "",
+      stderr: error.stderr ?? "",
+    };
+  }
+}
+
+async function runRcCheckArgs(args) {
+  try {
+    const { stdout, stderr } = await execFileAsync("node", [join(repoRoot, "scripts/dogfood-rc-check.mjs"), ...args], {
+      cwd: repoRoot,
+      maxBuffer: 10 * 1024 * 1024,
+    });
 
     return { code: 0, stdout, stderr };
   } catch (error) {

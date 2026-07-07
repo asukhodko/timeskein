@@ -19,7 +19,7 @@ const files = existingDatabaseFiles(dbPath);
 const runningPids = await runningTimeskeinPids();
 
 if (files.length === 0) {
-  console.log(`# Timeskein dogfood DB reset\n\nDB: ${dbPath}\nStatus: nothing to reset`);
+  console.log(`# Сброс базы Timeskein для dogfood-дня\n\nБаза: ${dbPath}\nСтатус: нечего сбрасывать`);
   process.exit(0);
 }
 
@@ -27,9 +27,9 @@ const responsiveAgent = await detectResponsiveAgent(supportDir);
 if (responsiveAgent && options.apply && !options.force) {
   console.error(
     [
-      "Timeskein agent appears to be running.",
+      "Агент Timeskein сейчас запущен.",
       `Agent URL: ${responsiveAgent}`,
-      "Quit Timeskein first, or pass --force if you know the database is not in use.",
+      "Сначала закрой Timeskein или передай --force, если точно знаешь, что база не используется.",
     ].join("\n")
   );
   process.exit(1);
@@ -38,8 +38,8 @@ if (responsiveAgent && options.apply && !options.force) {
 if (runningPids.length > 0 && options.apply && !options.force) {
   console.error(
     [
-      `Timeskein app process appears to be running: PID ${runningPids.join(", ")}`,
-      "Quit Timeskein first, or pass --force if you know the database is not in use.",
+      `Процесс Timeskein сейчас запущен: PID ${runningPids.join(", ")}`,
+      "Сначала закрой Timeskein или передай --force, если точно знаешь, что база не используется.",
     ].join("\n")
   );
   process.exit(1);
@@ -82,7 +82,7 @@ function parseArgs(args) {
       printHelp();
       process.exit(0);
     } else {
-      throw new Error(`Unknown argument: ${arg}`);
+      throw new Error(`Неизвестный аргумент: ${arg}`);
     }
   }
 
@@ -90,11 +90,11 @@ function parseArgs(args) {
 }
 
 function printHelp() {
-  console.log(`Usage: pnpm dogfood:reset-db [--apply] [--force] [--db path/to/timeskein.db]
+  console.log(`Использование: pnpm dogfood:reset-db [--apply] [--force] [--db path/to/timeskein.db]
 
-Moves the current local Timeskein SQLite database aside before a clean Timeskein day.
-Default mode is a dry run. Use --apply to move the database and its -wal/-shm files.
-If a Timeskein agent or app process appears to be running, --apply refuses unless --force is passed.`);
+Убирает текущую локальную SQLite-базу Timeskein в резервную копию перед чистым тестовым днём.
+По умолчанию это сухой прогон. Передай --apply, чтобы перенести базу и файлы -wal/-shm.
+Если агент или приложение Timeskein запущены, --apply откажется работать без --force.`);
 }
 
 function existingDatabaseFiles(path) {
@@ -139,14 +139,14 @@ async function detectResponsiveAgent(dir) {
 
 function buildPlan({ dbPath, plannedMoves, responsiveAgent, runningPids, dryRun }) {
   const lines = [
-    "# Timeskein dogfood DB reset",
+    "# Сброс базы Timeskein для dogfood-дня",
     "",
-    `Mode: ${dryRun ? "dry-run" : "applied"}`,
-    `DB: ${dbPath}`,
-    `Agent responsive: ${responsiveAgent ?? "no"}`,
-    `Running app PIDs: ${runningPids.length > 0 ? runningPids.join(", ") : "none"}`,
+    `Режим: ${dryRun ? "сухой прогон" : "применено"}`,
+    `База: ${dbPath}`,
+    `Агент отвечает: ${responsiveAgent ?? "нет"}`,
+    `PID процессов приложения: ${runningPids.length > 0 ? runningPids.join(", ") : "нет"}`,
     "",
-    "## Moves",
+    "## Перемещения",
     "",
   ];
 
@@ -156,11 +156,11 @@ function buildPlan({ dbPath, plannedMoves, responsiveAgent, runningPids, dryRun 
   }
 
   if (dryRun) {
-    lines.push("", "## Next", "", "- Run `pnpm dogfood:reset-db -- --apply` to move these files aside.");
-    lines.push("- Then run `pnpm dogfood:ready` again.");
+    lines.push("", "## Дальше", "", "- Выполни `pnpm dogfood:reset-db -- --apply`, чтобы убрать эти файлы в резервную копию.");
+    lines.push("- Затем снова выполни `pnpm dogfood:ready`.");
   } else {
-    lines.push("", "## Next", "", "- Run `pnpm dogfood:ready` again.");
-    lines.push("- Launch Timeskein; the app will create a fresh SQLite database.");
+    lines.push("", "## Дальше", "", "- Снова выполни `pnpm dogfood:ready`.");
+    lines.push("- Запусти Timeskein: приложение создаст свежую SQLite-базу.");
   }
 
   return `${lines.join("\n")}\n`;

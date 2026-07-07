@@ -61,6 +61,9 @@ try {
   );
 
   assert(stdout.includes("Total tracked: 1:15:00"), "export did not include expected tracked total");
+  assert(stdout.includes("# Timeskein focus day - 30.06.2026"), "export did not use localized day title");
+  assert(!stdout.includes(" AM"), "export should not use 12-hour AM time");
+  assert(!stdout.includes(" PM"), "export should not use 12-hour PM time");
   assert(stdout.includes("Work focus: 45:00"), "export did not include expected work focus total");
   assert(stdout.includes("Non-work tracked: 30:00"), "export did not include expected non-work total");
   assert(stdout.includes("Entrances: 4"), "export did not include expected entrance count");
@@ -130,7 +133,10 @@ try {
   assert(activeStdout.includes("Non-work tracked: 30:00"), "active export did not include running non-work total");
   assert(activeStdout.includes("Entrances: 5"), "active export did not include running entrance count");
   assert(activeStdout.includes("Active Draft Work"), "active export did not include active work item");
-  assert(activeStdout.includes("-now | 15:00 | Работа | Active Draft Work"), "active export did not show active block ending at now");
+  assert(
+    activeStdout.includes("-сейчас | 15:00 | Работа | Active Draft Work"),
+    "active export did not show active block ending at current moment"
+  );
   assert(!activeStdout.includes("## Open Gap"), "active export showed open gap while latest block is active");
 
   const legacyDbPath = join(tempDir, "legacy.db");

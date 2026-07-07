@@ -1120,9 +1120,10 @@ function formatCaptureState(state) {
 }
 
 function formatClockTime(value) {
-  return new Date(value).toLocaleTimeString([], {
+  return new Date(value).toLocaleTimeString("ru-RU", {
     hour: "2-digit",
     minute: "2-digit",
+    hour12: false,
   });
 }
 

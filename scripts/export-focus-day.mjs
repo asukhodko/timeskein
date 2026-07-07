@@ -290,7 +290,7 @@ function buildDayMarkdown(sessionsOldestFirst, activeSecondsTotal, day, now, wor
   const zoneTotals = aggregateActivityZoneTotals(sessionsOldestFirst);
   const workFocusSeconds = getZoneActiveSeconds(zoneTotals, "work");
   const nonWorkSeconds = Math.max(activeSecondsTotal - workFocusSeconds, 0);
-  const dateTitle = day.toLocaleDateString([], {
+  const dateTitle = day.toLocaleDateString("ru-RU", {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
@@ -590,10 +590,11 @@ function formatDuration(totalSeconds) {
 }
 
 function formatClockTime(isoDate) {
-  if (!isoDate) return "now";
+  if (!isoDate) return "сейчас";
 
-  return new Date(isoDate).toLocaleTimeString([], {
+  return new Date(isoDate).toLocaleTimeString("ru-RU", {
     hour: "2-digit",
     minute: "2-digit",
+    hour12: false,
   });
 }

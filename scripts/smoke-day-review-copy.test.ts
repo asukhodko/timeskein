@@ -22,6 +22,7 @@ import { CAPTURE_INBOX_LABELS } from '../apps/desktop/src/components/CaptureInbo
 import { FOCUS_CORRECTION_LABELS } from '../apps/desktop/src/components/FocusCorrectionDialog'
 import { MISSED_FOCUS_BLOCK_LABELS } from '../apps/desktop/src/components/MissedFocusBlockDialog'
 import { APP_UI_LABELS } from '../apps/desktop/src/utils/appUiLabels'
+import { formatClockTime } from '../apps/desktop/src/utils/formatTime'
 import { ITEM_UI_LABELS, formatCreateItemError } from '../apps/desktop/src/utils/itemUiLabels'
 
 test('capture inbox controls keep interruption handling in Russian', () => {
@@ -54,6 +55,13 @@ test('agent unavailable message stays useful during dogfood', () => {
   const labels = Object.values(APP_UI_LABELS).join('\n')
   assert(!labels.includes('mock server'), 'runtime UI should not send dogfood users into dev-server wording')
   assert(!labels.includes('mock'), 'runtime UI should not expose mock-only wording')
+})
+
+test('clock time stays 24-hour and Russian-facing', () => {
+  assert.equal(formatClockTime('2026-07-07T13:14:00'), '13:14')
+  assert.equal(formatClockTime(undefined), 'сейчас')
+  assert(!formatClockTime('2026-07-07T13:14:00').includes('PM'))
+  assert(!formatClockTime('2026-07-07T01:14:00').includes('AM'))
 })
 
 test('focus correction labels keep evening fixes calm', () => {

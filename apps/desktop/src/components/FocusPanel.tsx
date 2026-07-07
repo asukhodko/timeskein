@@ -941,7 +941,7 @@ function buildTodayMarkdown(
       .filter((item) => item.note?.trim())
       .map((item) => [item.id, item.note?.trim() ?? ''])
   )
-  const dateTitle = now.toLocaleDateString([], {
+  const dateTitle = now.toLocaleDateString('ru-RU', {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',

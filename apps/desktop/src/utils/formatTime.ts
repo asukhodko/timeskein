@@ -47,10 +47,11 @@ export function formatDuration(totalSeconds: number): string {
 }
 
 export function formatClockTime(isoDate: string | undefined): string {
-  if (!isoDate) return 'now'
+  if (!isoDate) return 'сейчас'
 
-  return new Date(isoDate).toLocaleTimeString([], {
+  return new Date(isoDate).toLocaleTimeString('ru-RU', {
     hour: '2-digit',
     minute: '2-digit',
+    hour12: false,
   })
 }

@@ -179,28 +179,28 @@ function parseArgs(args) {
       printHelp();
       process.exit(0);
     } else {
-      throw new Error(`Unknown argument: ${arg}`);
+      throw new Error(`Неизвестный аргумент: ${arg}`);
     }
   }
 
   if (result.date && !/^\d{4}-\d{2}-\d{2}$/.test(result.date)) {
-    throw new Error(`Invalid --date value, expected YYYY-MM-DD: ${result.date}`);
+    throw new Error(`Некорректное значение --date, ожидается YYYY-MM-DD: ${result.date}`);
   }
 
   return result;
 }
 
 function printHelp() {
-  console.log(`Usage: pnpm dogfood:report [--date YYYY-MM-DD] [--db path/to/timeskein.db]
+  console.log(`Использование: pnpm dogfood:report [--date YYYY-MM-DD] [--db path/to/timeskein.db]
 
-Prints a Markdown day-closure report from the local Timeskein SQLite database.
-The report includes the focus-day export plus review prompts for evening analysis.
-If a focus block or Work Item is still active, the report is marked as a draft.`);
+Печатает Markdown-отчёт закрытия дня из локальной SQLite-базы Timeskein.
+Отчёт включает дневную картину фокуса, проверку перед отчётом и короткое закрытие.
+Если фокус-блок, дело или проверка ещё требуют внимания, отчёт помечается как черновик.`);
 }
 
 function parseLocalDate(value) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    throw new Error(`Invalid --date value, expected YYYY-MM-DD: ${value}`);
+    throw new Error(`Некорректное значение --date, ожидается YYYY-MM-DD: ${value}`);
   }
 
   const [year, month, day] = value.split("-").map(Number);

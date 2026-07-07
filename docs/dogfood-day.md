@@ -164,7 +164,7 @@ target/release/bundle/macos/Timeskein.app/Contents/MacOS/timeskein-desktop
 
 - Timeskein открывается из значка в строке меню.
 - Значок в строке меню показывает длительность активного фокуса, пока блок идёт.
-- `pnpm dogfood:status` показывает `Status: READY`.
+- `pnpm dogfood:status` показывает `Состояние: готов`.
 - Окно можно двигать за заголовок.
 - Окно можно скрыть через `Esc`, когда не открыт диалог, и затем снова показать.
 - Today виден.

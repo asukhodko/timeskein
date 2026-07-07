@@ -12,6 +12,14 @@ const tempDir = await mkdtemp(join(tmpdir(), "timeskein-dogfood-report-smoke-"))
 const dbPath = join(tempDir, "timeskein.db");
 
 try {
+  const { stdout: helpStdout } = await execFileAsync("node", [join(repoRoot, "scripts/dogfood-report.mjs"), "--help"], {
+    cwd: repoRoot,
+  });
+  assert(helpStdout.includes("Использование: pnpm dogfood:report"), "report help title is not localized");
+  assert(helpStdout.includes("Markdown-отчёт закрытия дня"), "report help body is not localized");
+  assert(!helpStdout.includes("Usage:"), "report help leaked old English usage");
+  assert(!helpStdout.includes("Prints a Markdown"), "report help leaked old English body");
+
   await runSqlFile(join(repoRoot, "apps/agent/migrations/001_initial.sql"));
   await runSqlFile(join(repoRoot, "apps/agent/migrations/002_focus_sessions.sql"));
   await runSqlFile(join(repoRoot, "apps/agent/migrations/003_app_events.sql"));

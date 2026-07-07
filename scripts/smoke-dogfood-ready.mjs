@@ -49,12 +49,14 @@ try {
     "ready output did not include measured day-closure reminder"
   );
   assert(
-    ready.stdout.includes("pnpm dogfood:goal-check"),
-    "ready output did not include final goal-check reminder"
+    ready.stdout.includes("если аудит ещё не чистый") &&
+      ready.stdout.includes("Проверка перед отчётом"),
+    "ready output did not explain pending audit finish flow"
   );
   assert(
-    ready.stdout.includes("pnpm dogfood:goal-check -- --date YYYY-MM-DD"),
-    "ready output did not include after-midnight goal-check date reminder"
+    ready.stdout.includes("pnpm dogfood:goal-check -- --date YYYY-MM-DD") &&
+      ready.stdout.includes("напечатанному следующему шагу"),
+    "ready output did not explain the printed goal-check next step"
   );
   assert(!ready.stdout.includes("pnpm dogfood:macos"), "ready output still suggests bypassing dogfood gates");
 

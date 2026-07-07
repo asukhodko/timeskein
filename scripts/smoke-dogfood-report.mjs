@@ -197,6 +197,8 @@ try {
     "report leaked old English activity zone labels"
   );
   assert(stdout.includes("## Разрывы >= 20:00"), "report did not include significant gaps");
+  assert(stdout.includes("## Короткое закрытие"), "report did not include short closure section");
+  assert(stdout.includes("Данным можно доверять: да/нет"), "report did not include short trust prompt");
   assert(stdout.includes("### Цена входа"), "report did not include entry cost prompts");
   assert(stdout.includes("Данных достаточно для разговора о дне: да/нет"), "report did not include verdict prompts");
 

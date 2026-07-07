@@ -9,28 +9,33 @@ import { promisify } from "node:util";
 const execFileAsync = promisify(execFile);
 const SIGNIFICANT_GAP_SECONDS = 20 * 60;
 
-const options = parseArgs(process.argv.slice(2));
-const date = options.date ? parseLocalDate(options.date) : new Date();
-const now = options.now ? parseIsoDate(options.now) : new Date();
-const dbPath = options.db
-  ? resolve(options.db)
-  : join(homedir(), "Library/Application Support/Timeskein/timeskein.db");
+try {
+  const options = parseArgs(process.argv.slice(2));
+  const date = options.date ? parseLocalDate(options.date) : new Date();
+  const now = options.now ? parseIsoDate(options.now) : new Date();
+  const dbPath = options.db
+    ? resolve(options.db)
+    : join(homedir(), "Library/Application Support/Timeskein/timeskein.db");
 
-if (!existsSync(dbPath)) {
-  throw new Error(`Timeskein database not found: ${dbPath}`);
+  if (!existsSync(dbPath)) {
+    throw new Error(`База Timeskein не найдена: ${dbPath}`);
+  }
+
+  const from = startOfLocalDay(date);
+  const to = new Date(from);
+  to.setDate(to.getDate() + 1);
+
+  const sessions = await loadSessions(dbPath, from, to, now);
+  const activeSecondsTotal = sessions.reduce((sum, session) => sum + session.active_seconds, 0);
+  const workItemEvents = await loadWorkItemEvents(dbPath, from, to);
+  const dayEvents = await loadDayEvents(dbPath, from, to);
+  const markdown = buildDayMarkdown(sessions, activeSecondsTotal, from, now, workItemEvents, dayEvents);
+
+  process.stdout.write(options.internal ? markdown : localizeDayMarkdown(markdown));
+} catch (error) {
+  console.error(error instanceof Error ? error.message : String(error));
+  process.exit(1);
 }
-
-const from = startOfLocalDay(date);
-const to = new Date(from);
-to.setDate(to.getDate() + 1);
-
-const sessions = await loadSessions(dbPath, from, to, now);
-const activeSecondsTotal = sessions.reduce((sum, session) => sum + session.active_seconds, 0);
-const workItemEvents = await loadWorkItemEvents(dbPath, from, to);
-const dayEvents = await loadDayEvents(dbPath, from, to);
-const markdown = buildDayMarkdown(sessions, activeSecondsTotal, from, now, workItemEvents, dayEvents);
-
-process.stdout.write(options.internal ? markdown : localizeDayMarkdown(markdown));
 
 function parseArgs(args) {
   const result = {};
@@ -51,7 +56,7 @@ function parseArgs(args) {
       printHelp();
       process.exit(0);
     } else {
-      throw new Error(`Unknown argument: ${arg}`);
+      throw new Error(`Неизвестный аргумент: ${arg}`);
     }
   }
 
@@ -69,7 +74,7 @@ function printHelp() {
 
 function parseLocalDate(value) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    throw new Error(`Invalid --date value, expected YYYY-MM-DD: ${value}`);
+    throw new Error(`Некорректное значение --date, ожидается YYYY-MM-DD: ${value}`);
   }
 
   const [year, month, day] = value.split("-").map(Number);
@@ -79,7 +84,7 @@ function parseLocalDate(value) {
 function parseIsoDate(value) {
   const date = new Date(value);
   if (!value || Number.isNaN(date.getTime())) {
-    throw new Error(`Invalid --now value, expected ISO date: ${value}`);
+    throw new Error(`Некорректное значение --now, ожидается ISO-дата: ${value}`);
   }
 
   return date;

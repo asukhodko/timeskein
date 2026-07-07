@@ -198,6 +198,27 @@ try {
   assert(legacyStdout.includes("Рабочий фокус: 30:00"), "legacy export did not fall back to Work focus");
   assert(legacyStdout.includes("| 30:00 | 1 | Работа |"), "legacy export did not include fallback Work zone total");
 
+  await expectCommandFailure(
+    ["node", [join(repoRoot, "scripts/export-focus-day.mjs"), "--db", dbPath, "--date", "bad-date"]],
+    "Некорректное значение --date, ожидается YYYY-MM-DD: bad-date",
+    ["Invalid --date value", "Error:"]
+  );
+  await expectCommandFailure(
+    ["node", [join(repoRoot, "scripts/export-focus-day.mjs"), "--db", dbPath, "--date", "2026-06-30", "--now", "bad-now"]],
+    "Некорректное значение --now, ожидается ISO-дата: bad-now",
+    ["Invalid --now value", "Error:"]
+  );
+  await expectCommandFailure(
+    ["node", [join(repoRoot, "scripts/export-focus-day.mjs"), "--db", dbPath, "--surprise"]],
+    "Неизвестный аргумент: --surprise",
+    ["Unknown argument", "Error:"]
+  );
+  await expectCommandFailure(
+    ["node", [join(repoRoot, "scripts/export-focus-day.mjs"), "--db", join(tempDir, "missing.db"), "--date", "2026-06-30"]],
+    "База Timeskein не найдена:",
+    ["Timeskein database not found", "Error:"]
+  );
+
   console.log(
     JSON.stringify(
       {
@@ -234,6 +255,19 @@ async function runSqlAt(path, sql) {
   await execFileAsync("sqlite3", [path, sql], {
     maxBuffer: 10 * 1024 * 1024,
   });
+}
+
+async function expectCommandFailure([command, args], expected, forbidden = []) {
+  try {
+    await execFileAsync(command, args, { cwd: repoRoot });
+    assert(false, `command unexpectedly succeeded: ${command} ${args.join(" ")}`);
+  } catch (error) {
+    const output = `${error.stdout ?? ""}${error.stderr ?? ""}`;
+    assert(output.includes(expected), `command failure did not include ${expected}; output: ${output}`);
+    for (const forbiddenText of forbidden) {
+      assert(!output.includes(forbiddenText), `command failure leaked ${forbiddenText}; output: ${output}`);
+    }
+  }
 }
 
 function assert(condition, message) {

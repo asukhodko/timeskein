@@ -7,21 +7,26 @@ import { join, resolve } from "node:path";
 import { promisify } from "node:util";
 
 const execFileAsync = promisify(execFile);
-const options = parseArgs(process.argv.slice(2));
-const date = options.date ? parseLocalDate(options.date) : new Date();
-const dbPath = options.db
-  ? resolve(options.db)
-  : join(homedir(), "Library/Application Support/Timeskein/timeskein.db");
+try {
+  const options = parseArgs(process.argv.slice(2));
+  const date = options.date ? parseLocalDate(options.date) : new Date();
+  const dbPath = options.db
+    ? resolve(options.db)
+    : join(homedir(), "Library/Application Support/Timeskein/timeskein.db");
 
-if (!existsSync(dbPath)) {
-  throw new Error(`Timeskein database not found: ${dbPath}`);
+  if (!existsSync(dbPath)) {
+    throw new Error(`База Timeskein не найдена: ${dbPath}`);
+  }
+
+  const from = startOfLocalDay(date);
+  const to = nextLocalDay(from);
+  const events = await loadEvents(dbPath, from, to);
+
+  process.stdout.write(buildEventsMarkdown(events, from));
+} catch (error) {
+  console.error(error instanceof Error ? error.message : String(error));
+  process.exit(1);
 }
-
-const from = startOfLocalDay(date);
-const to = nextLocalDay(from);
-const events = await loadEvents(dbPath, from, to);
-
-process.stdout.write(buildEventsMarkdown(events, from));
 
 function parseArgs(args) {
   const result = {};
@@ -38,7 +43,7 @@ function parseArgs(args) {
       printHelp();
       process.exit(0);
     } else {
-      throw new Error(`Unknown argument: ${arg}`);
+      throw new Error(`Неизвестный аргумент: ${arg}`);
     }
   }
 
@@ -53,7 +58,7 @@ function printHelp() {
 
 function parseLocalDate(value) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    throw new Error(`Invalid --date value, expected YYYY-MM-DD: ${value}`);
+    throw new Error(`Некорректное значение --date, ожидается YYYY-MM-DD: ${value}`);
   }
 
   const [year, month, day] = value.split("-").map(Number);

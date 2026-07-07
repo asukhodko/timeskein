@@ -157,7 +157,7 @@ Dogfood launch helper:
 - `pnpm dogfood:rc-check` prints the release-candidate `Сводка доказательств`, `Аудит закрытия дня`, hard blockers, review items, and manual verdict prompts for the saved dogfood day; the summary includes total tracked time, work focus, non-work tracked time, Activity Zone coverage, Work Item notes/events, Work Item today/total badge review acceptance, Capture Inbox coverage, typed entry and selected/list continuation evidence, correction telemetry, window telemetry with both show and hide request counts, and product-friction counters
 - `pnpm dogfood:rc-check:save` saves the same RC evidence again when it needs to be inspected without regenerating the day report
 - `pnpm dogfood:rc-check:strict` uses the same evidence but exits with code 1 when any review item remains, for the final daily-control goal closure check
-- `pnpm dogfood:goal-check` runs the final closure gate for the active daily-control goal: for the real local database it requires saved dogfood report and RC-check files for the selected date, verifies that the saved report contains the grouped `Проверка перед отчётом` checklist, then runs `pnpm test`, `pnpm dogfood:preflight`, and strict RC evidence for the selected dogfood day
+- `pnpm dogfood:goal-check` runs the final closure gate for the active daily-control goal: for the real local database it requires saved dogfood report and RC-check files for the selected date, verifies that the saved report status is final and that the report contains the grouped `Проверка перед отчётом` checklist, then runs `pnpm test`, `pnpm dogfood:preflight`, and strict RC evidence for the selected dogfood day
 - `pnpm dogfood:reset-db` moves the real local SQLite database and sidecar files aside only when `--apply` is passed; it refuses while the agent or app process appears alive unless `--force` is passed
 - `pnpm dogfood:stop-active` stops active focus sessions, writes a stop note, and clears active Work Items only when `--apply` is passed; it uses the running agent API when available and direct SQLite only when neither agent nor app process is alive, unless `--force` is passed
 - `pnpm dogfood:macos` rebuilds and opens the packaged app as a low-level development/manual-debugging helper; normal dogfood days should use `dogfood:start` or `dogfood:continue` because those commands inspect the real day state before opening the app
@@ -165,7 +165,7 @@ Dogfood launch helper:
 - `pnpm export:focus-day` prints a Markdown day report from the local SQLite database as a fallback to UI copy
 - `pnpm dogfood:metrics` prints dogfood telemetry aggregates from the local SQLite app-event journal, including start/stop failure counts and accepted open-capture reviews
 - `pnpm export:app-events` prints a Markdown event table for deeper inspection of show/hide/start/switch/stop/copy/API behavior
-- `pnpm dogfood:report` prints a Markdown dogfood report with Russian focus data, a Russian review checklist, a Russian daily-closure audit, Day Events, interruption history, open captures, human-readable app telemetry, and evening review prompts, marked as a draft if a focus block or Work Item still has an active status
+- `pnpm dogfood:report` prints a Markdown dogfood report with Russian focus data, a Russian review checklist, a Russian daily-closure audit, Day Events, interruption history, open captures, human-readable app telemetry, and evening review prompts, marked as a draft if a focus block, Work Item, or review check still needs attention
 
 Runtime smoke in browser/mock mode:
 
@@ -240,7 +240,7 @@ Third real dogfood day and release baseline:
 - Dogfood reports include a `Заметки Work Item` section for touched Work Items that have non-empty notes
 - Dogfood reports include a `События дня` section for timestamped notes that belong to the day rather than one Work Item
 - Dogfood reports include a `События Work Item` section for timestamped Work Item observations created during the selected day
-- The UI and CLI label the report as a draft while a focus block or Work Item is still active and include an active-state warning in the Markdown
+- The UI and CLI label the report as a draft while a focus block or Work Item is still active, or while review checks remain open. Active-state blockers still add an explicit warning section to the Markdown
 - Capture Inbox for incoming events that should not interrupt the current focus block
 - Captures link to the active focus session when one exists
 - Open captures are visible in the focus panel

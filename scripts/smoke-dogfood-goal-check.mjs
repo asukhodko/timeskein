@@ -75,6 +75,7 @@ try {
     join(tempDir, "timeskein-dogfood-report-2026-06-30.md"),
     [
       "# Dogfood-отчёт Timeskein - 2026-06-30",
+      "Статус отчёта: черновик — осталось 1 проверка перед финальным отчётом",
       "## Focus Data",
       "## Daily Control Goal Audit",
       "## App Telemetry",
@@ -166,6 +167,7 @@ try {
     join(tempDir, "timeskein-dogfood-report-2026-06-30.md"),
     [
       "# Dogfood-отчёт Timeskein - 2026-06-30",
+      "Статус отчёта: финальный — нет активных фокус-блоков, активных Work Item и незакрытых проверок",
       "## Focus Data",
       groupedReviewMarkdown,
       "## Daily Control Goal Audit",
@@ -208,6 +210,7 @@ try {
     join(tempDir, "timeskein-dogfood-report-2026-06-30.md"),
     [
       "# Dogfood-отчёт Timeskein - 2026-06-30",
+      "Статус отчёта: финальный — нет активных фокус-блоков, активных Work Item и незакрытых проверок",
       "## Focus Data",
       flatReviewMarkdown,
       reportAuditMarkdown,
@@ -236,6 +239,36 @@ try {
     join(tempDir, "timeskein-dogfood-report-2026-06-30.md"),
     [
       "# Dogfood-отчёт Timeskein - 2026-06-30",
+      "Статус отчёта: черновик — осталось 1 проверка перед финальным отчётом",
+      "## Focus Data",
+      groupedReviewMarkdown,
+      reportAuditMarkdown,
+      "## App Telemetry",
+      "",
+    ].join("\n")
+  );
+  await writeFile(
+    join(tempDir, "timeskein-dogfood-rc-check-2026-06-30.md"),
+    [
+      "# RC-аудит dogfood-дня Timeskein - 2026-06-30",
+      "## Сводка доказательств",
+      rcAuditMarkdown,
+      "",
+    ].join("\n")
+  );
+
+  const draftReportEvidence = await runGoalCheck(["--check-saved-evidence-only", "--date", "2026-06-30"], tempDir);
+  assert(draftReportEvidence.code !== 0, "saved evidence with a draft report state should fail");
+  assert(
+    `${draftReportEvidence.stdout}${draftReportEvidence.stderr}`.includes("статус отчёта ещё не финальный"),
+    "draft saved report evidence error did not mention non-final report state"
+  );
+
+  await writeFile(
+    join(tempDir, "timeskein-dogfood-report-2026-06-30.md"),
+    [
+      "# Dogfood-отчёт Timeskein - 2026-06-30",
+      "Статус отчёта: финальный — нет активных фокус-блоков, активных Work Item и незакрытых проверок",
       "## Focus Data",
       groupedReviewMarkdown,
       reportAuditMarkdown,

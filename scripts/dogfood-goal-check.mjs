@@ -182,6 +182,12 @@ async function checkSavedEvidence(date) {
       weak.push(`В ${reportPath} нет раздела «${aliases[0]}»`);
     }
   }
+  const reportState = findReportState(report);
+  if (!reportState) {
+    weak.push(`В ${reportPath} нет строки «Статус отчёта»`);
+  } else if (!isFinalReportState(reportState)) {
+    notPassing.push(`В ${reportPath} статус отчёта ещё не финальный: ${reportState}`);
+  }
   if (!hasGroupedReviewChecklist(report)) {
     weak.push(
       `В ${reportPath} раздел «Проверка перед отчётом» должен быть сохранён с группами «Сначала закрыть», «Дописать или исправить», «Осознанно проверить» или «Готово»`
@@ -236,6 +242,19 @@ async function checkSavedEvidence(date) {
 
 function includesAny(text, aliases) {
   return aliases.some((needle) => text.includes(needle));
+}
+
+function findReportState(text) {
+  for (const line of text.split("\n")) {
+    const match = line.match(/^Статус отчёта:\s*(.+)$/);
+    if (match) return match[1].trim();
+  }
+
+  return undefined;
+}
+
+function isFinalReportState(state) {
+  return state.toLowerCase().startsWith("финальный");
 }
 
 function findAuditRowStatus(text, aliases) {

@@ -20,16 +20,16 @@ const exportArgs = [resolve(repoRoot, "scripts/export-focus-day.mjs"), "--db", d
 const metricsArgs = [resolve(repoRoot, "scripts/dogfood-metrics.mjs"), "--db", dbPath];
 const REVIEW_TITLE_LABELS = {
   "Stop the active focus block": "Остановить активный фокус-блок",
-  "Clear active Work Item state": "Снять активный статус с Work Item",
+  "Clear active Work Item state": "Снять активный статус с дела",
   "Resolve, convert, or accept open captures": "Разобрать открытые отвлечения",
   "Classify significant gaps": "Объяснить большие разрывы",
   "Explain current open gap": "Объяснить текущий открытый разрыв",
   "Review Activity Zone coverage": "Проверить зоны активности",
   "Confirm non-work tracked time": "Проверить нерабочее время",
-  "Confirm Work Item today/total badges": "Проверить today/total у Work Item",
+  "Confirm Work Item today/total badges": "Проверить today/total у дел",
   "Capture Inbox untested today": "Инбокс отвлечений сегодня не проверен",
   "Captures were not linked to active focus": "Отвлечения не были связаны с активным фокусом",
-  "No day or Work Item notes/events": "Нет дневных или Work Item событий",
+  "No day or Work Item notes/events": "Нет событий дня или дел",
   "Exercise start and continue paths": "Проверить старт и продолжение",
   "Test window entrypoints": "Проверить входы в окно",
   "Review failed focus corrections": "Проверить ошибки коррекции фокуса",
@@ -39,9 +39,9 @@ const REVIEW_TITLE_LABELS = {
 const DAILY_CONTROL_REQUIREMENT_LABELS = {
   "Final state clean": "Финальное состояние чистое",
   "Focus blocks visible": "Фокус-блоки видны",
-  "Work Item totals available": "Итоги по Work Item есть",
+  "Work Item totals available": "Итоги по делам есть",
   "Activity Zones separated": "Зоны активности разделены",
-  "Day and Work Item context present": "Контекст дня и Work Item сохранён",
+  "Day and Work Item context present": "Контекст дня и дел сохранён",
   "Gaps and captures visible": "Разрывы и отвлечения видны",
   "Window and menubar friction evidenced": "Окно и строка меню проверены",
   "Start and continue paths evidenced": "Старт и продолжение проверены",
@@ -299,7 +299,7 @@ function buildDogfoodReport(
     lines.push(
       "## Блокер финального отчёта",
       "",
-      `- Активный Work Item: ${activeFocus.title}`,
+      `- Активное дело: ${activeFocus.title}`,
       `- Старт: ${formatClockTime(activeFocus.started_at)}`,
       `- Текущая длительность: ${formatDuration(activeFocus.active_seconds)}`,
       "- Останови активный блок перед финальным отчётом.",
@@ -311,8 +311,8 @@ function buildDogfoodReport(
     lines.push(
       "## Блокер финального отчёта",
       "",
-      ...activeWorkItems.map((item) => `- Work Item с активным статусом: ${item.title}`),
-      "- Сними активный статус с Work Item перед финальным отчётом.",
+      ...activeWorkItems.map((item) => `- Дело с активным статусом: ${item.title}`),
+      "- Сними активный статус с дела перед финальным отчётом.",
       ""
     );
   }
@@ -322,7 +322,7 @@ function buildDogfoodReport(
       "## Открытые отвлечения",
       "",
       ...openCaptures.map((capture) => `- ${formatClockTime(capture.created_at)} ${formatMarkdownListText(capture.text)}`),
-      "- Разбери их: закрыть, превратить в Work Item, добавить событием или явно оставить открытыми.",
+      "- Разбери их: закрыть, превратить в дело, добавить событием или явно оставить открытыми.",
       ""
     );
   }
@@ -355,7 +355,7 @@ function buildDogfoodReport(
     "",
     "- Что поправлено вручную:",
     "- Что осталось спорным:",
-    "- Где Work Item слишком широкий или неверный:",
+    "- Где дело слишком широкое или неверное:",
     "",
     "### Разрывы и восстановление",
     "",
@@ -393,18 +393,20 @@ function formatFocusMarkdownForReport(markdown) {
     .replace(/^Work focus:/gm, "Рабочий фокус:")
     .replace(/^Non-work tracked:/gm, "Нерабочее учтено:")
     .replace(/^Entrances:/gm, "Входов:")
-    .replace(/^\| Time \| Duration \| Zone \| Work Item \| Note \|$/gm, "| Время | Длительность | Зона | Work Item | Заметка |")
+    .replace(/^\| Time \| Duration \| Zone \| Work Item \| Note \|$/gm, "| Время | Длительность | Зона | Дело | Заметка |")
     .replace(/^## Day-Boundary Blocks$/gm, "## Блоки на границе дня")
     .replace(/: counted as ([^\n]+) inside this day/g, ": учтено как $1 внутри этого дня")
-    .replace(/^## By Work Item$/gm, "## По Work Item")
-    .replace(/^\| Duration \| Entrances \| Work Item \|$/gm, "| Длительность | Входов | Work Item |")
+    .replace(/^## By Work Item$/gm, "## По делам")
+    .replace(/^\| Duration \| Entrances \| Work Item \|$/gm, "| Длительность | Входов | Дело |")
     .replace(/^## By Activity Zone$/gm, "## По зонам активности")
     .replace(/^\| Duration \| Entrances \| Zone \|$/gm, "| Длительность | Входов | Зона |")
-    .replace(/^## Work Item Notes$/gm, "## Заметки Work Item")
+    .replace(/^## Work Item Notes$/gm, "## Заметки дел")
     .replace(/^## Day Events$/gm, "## События дня")
     .replace(/^\| Time \| Zone \| During \| Event \|$/gm, "| Время | Зона | Во время | Событие |")
-    .replace(/^## Work Item Events$/gm, "## События Work Item")
-    .replace(/^\| Time \| Work Item \| During \| Event \|$/gm, "| Время | Work Item | Во время | Событие |")
+    .replace(/\| day \|/g, "| день |")
+    .replace(/\| linked focus block \|/g, "| связанный фокус-блок |")
+    .replace(/^## Work Item Events$/gm, "## События дел")
+    .replace(/^\| Time \| Work Item \| During \| Event \|$/gm, "| Время | Дело | Во время | Событие |")
     .replace(/^## Gaps >=/gm, "## Разрывы >=")
     .replace(/^## Open Gap$/gm, "## Текущий открытый разрыв")
     .replace(/ since last stopped block$/gm, " после последнего остановленного блока");
@@ -469,7 +471,7 @@ function formatTelemetryForReport(markdown) {
     .replace(/^Manual copy fallbacks:/gm, "Ручных fallback-копирований:")
     .replace(/^Capture created\/resolved\/converted:/gm, "Отвлечений создано/закрыто/превращено:")
     .replace(/^Capture follow-up reviews:/gm, "Проверок открытых отвлечений:")
-    .replace(/^Work Item time badge reviews:/gm, "Проверок бейджей времени Work Item:")
+    .replace(/^Work Item time badge reviews:/gm, "Проверок бейджей времени дел:")
     .replace(/^Activity Zone reviews:/gm, "Проверок зон активности:")
     .replace(/^Capture usage reviews:/gm, "Проверок использования инбокса:")
     .replace(/^Entry path reviews:/gm, "Проверок путей входа:")
@@ -480,7 +482,7 @@ function formatTelemetryForReport(markdown) {
     .replace(/^Day closure started\/completed:/gm, "Закрытий дня начато/завершено:")
     .replace(/^Last day closure duration:/gm, "Последняя длительность закрытия дня:")
     .replace(/^API errors:/gm, "Ошибок API:")
-    .replace(/^Already-active start attempts:/gm, "Попыток старта уже активного Work Item:")
+    .replace(/^Already-active start attempts:/gm, "Попыток старта уже активного дела:")
     .replace(/^Stale runtime recoveries:/gm, "Восстановлений устаревшего runtime:")
     .replace(/^Average start latency:/gm, "Средняя задержка старта:")
     .replace(/^Slow window-to-focus gaps:/gm, "Медленных разрывов окно->фокус:")
@@ -701,7 +703,7 @@ function formatDailyControlGoalAuditMarkdown({
     {
       requirement: "Final state clean",
       status: activeFocus || activeWorkItems.length > 0 ? "block" : "pass",
-      evidence: `${activeFocus ? 1 : 0} активных фокус-блоков, ${activeWorkItems.length} Work Item с активным статусом`,
+      evidence: `${activeFocus ? 1 : 0} активных фокус-блоков, ${activeWorkItems.length} ${pluralRu(activeWorkItems.length, "дело", "дела", "дел")} с активным статусом`,
     },
     {
       requirement: "Focus blocks visible",
@@ -712,8 +714,8 @@ function formatDailyControlGoalAuditMarkdown({
       requirement: "Work Item totals available",
       status: focusMarkdown.includes("## By Work Item") && !hasReview("Confirm Work Item today/total badges") ? "pass" : "review",
       evidence: focusMarkdown.includes("## By Work Item")
-        ? `Раздел «По Work Item» есть, проверок бейджей в UI: ${workItemTimeBadgeReviews}`
-        : "Раздела «По Work Item» нет",
+        ? `Раздел «По делам» есть, проверок бейджей в UI: ${workItemTimeBadgeReviews}`
+        : "Раздела «По делам» нет",
     },
     {
       requirement: "Activity Zones separated",
@@ -728,8 +730,8 @@ function formatDailyControlGoalAuditMarkdown({
       status: hasReview("No day or Work Item notes/events") ? "review" : "pass",
       evidence: [
         focusMarkdown.includes("## Day Events") ? "события дня" : "",
-        focusMarkdown.includes("## Work Item Events") ? "события Work Item" : "",
-        focusMarkdown.includes("## Work Item Notes") ? "заметки Work Item" : "",
+        focusMarkdown.includes("## Work Item Events") ? "события дел" : "",
+        focusMarkdown.includes("## Work Item Notes") ? "заметки дел" : "",
       ].filter(Boolean).join(", ") || "контекстных секций нет",
     },
     {
@@ -943,6 +945,24 @@ function formatNextStep(prefix, items) {
   return `${prefix}: ${title}.${rest}`;
 }
 
+function formatDayReviewDetail(detail) {
+  if (!detail) return detail;
+
+  const activeWorkItemMatch = detail.match(/^(\d+) Work Item с активным статусом$/);
+  if (activeWorkItemMatch) {
+    const count = Number(activeWorkItemMatch[1]);
+    return `${count} ${pluralRu(count, "дело", "дела", "дел")} с активным статусом`;
+  }
+
+  const touchedWorkItemMatch = detail.match(/^(\d+) Work Item были в работе сегодня$/);
+  if (touchedWorkItemMatch) {
+    const count = Number(touchedWorkItemMatch[1]);
+    return `${count} ${pluralRu(count, "дело было", "дела были", "дел было")} в работе сегодня`;
+  }
+
+  return detail;
+}
+
 function appendReviewChecklistGroup(lines, title, items) {
   if (items.length === 0) return;
   if (lines.length > 2 && lines[lines.length - 1] !== "") {
@@ -954,7 +974,8 @@ function appendReviewChecklistGroup(lines, title, items) {
   for (const item of items) {
     const marker = item.level === "ok" ? "[x]" : "[ ]";
     const title = REVIEW_TITLE_LABELS[item.title] ?? item.title;
-    const suffix = item.detail ? ` - ${formatMarkdownListText(item.detail)}` : "";
+    const detail = formatDayReviewDetail(item.detail);
+    const suffix = detail ? ` - ${formatMarkdownListText(detail)}` : "";
     lines.push(`- ${marker} ${formatMarkdownListText(title)}${suffix}`);
   }
 }
@@ -969,11 +990,11 @@ function countPendingReviewItems(items) {
 
 function formatDogfoodReportState({ activeFocus, activeWorkItemCount, pendingReviewItemCount }) {
   if (activeFocus) return "черновик — фокус-блок ещё активен";
-  if (activeWorkItemCount > 0) return "черновик — у Work Item ещё стоит активный статус";
+  if (activeWorkItemCount > 0) return "черновик — у дела ещё стоит активный статус";
   if (pendingReviewItemCount > 0) {
     return `черновик — осталось ${pendingReviewItemCount} ${pluralRu(pendingReviewItemCount, "проверка", "проверки", "проверок")} перед финальным отчётом`;
   }
-  return "финальный — нет активных фокус-блоков, активных Work Item и незакрытых проверок";
+  return "финальный — нет активных фокус-блоков, активных дел и незакрытых проверок";
 }
 
 function pluralRu(value, one, few, many) {

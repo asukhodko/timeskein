@@ -82,14 +82,14 @@ try {
   assert(stdout.includes("## Аудит закрытия дня"), "report did not include daily-control audit section");
   assert(stdout.includes("| Фокус-блоки видны | ок |"), "report daily-control audit did not pass focus blocks");
   assert(
-    stdout.includes("0 активных фокус-блоков, 0 Work Item с активным статусом") &&
+    stdout.includes("0 активных фокус-блоков, 0 дел с активным статусом") &&
       stdout.includes("Статус отчёта: черновик — осталось"),
     "report daily-control audit evidence did not localize final-state blockers"
   );
   assert(stdout.includes("3 входов, 1:05:00 учтено"), "report daily-control audit evidence did not localize focus blocks");
-  assert(stdout.includes("| Итоги по Work Item есть | ок |"), "report daily-control audit did not pass Work Item totals");
+  assert(stdout.includes("| Итоги по делам есть | ок |"), "report daily-control audit did not pass work item totals");
   assert(
-    stdout.includes("Раздел «По Work Item» есть, проверок бейджей в UI: 1"),
+    stdout.includes("Раздел «По делам» есть, проверок бейджей в UI: 1"),
     "report daily-control audit evidence did not localize Work Item totals"
   );
   assert(stdout.includes("| Зоны активности разделены | ок |"), "report daily-control audit did not pass zones");
@@ -148,7 +148,7 @@ try {
     "report review checklist should not flag non-work time when coordination is present"
   );
   assert(
-    stdout.includes("Нет дневных или Work Item событий") === false,
+    stdout.includes("Нет событий дня или дел") === false,
     "report review checklist should not flag missing context when notes/events are present"
   );
   assert(
@@ -156,7 +156,7 @@ try {
     "report review checklist should not flag correction coverage when a correction was applied"
   );
   assert(
-    stdout.includes("Проверить today/total у Work Item") === false,
+    stdout.includes("Проверить today/total у дел") === false,
     "report review checklist should not flag Work Item badge coverage when explicitly reviewed"
   );
   assert(stdout.includes("## Открытые отвлечения"), "report did not include open captures section");
@@ -169,16 +169,16 @@ try {
   assert(stdout.includes("Всего учтено: 1:05:00"), "report did not include exported tracked total");
   assert(stdout.includes("Рабочий фокус: 35:00"), "report did not include exported work focus total");
   assert(stdout.includes("Нерабочее учтено: 30:00"), "report did not include exported non-work total");
-  assert(stdout.includes("## По Work Item"), "report did not include work item totals");
+  assert(stdout.includes("## По делам"), "report did not include work item totals");
   assert(stdout.includes("## По зонам активности"), "report did not include activity zone totals");
   assert(stdout.includes("| 35:00 | 2 | Работа |"), "report did not include localized Work zone total");
   assert(stdout.includes("| 30:00 | 1 | Координация |"), "report did not include localized Coordination zone total");
-  assert(stdout.includes("## Заметки Work Item"), "report did not include Work Item Notes section");
+  assert(stdout.includes("## Заметки дел"), "report did not include Work Item Notes section");
   assert(
     stdout.includes("- Deep Work: Keep the implementation context here."),
     "report did not include Work Item note"
   );
-  assert(stdout.includes("## События Work Item"), "report did not include Work Item Events section");
+  assert(stdout.includes("## События дел"), "report did not include Work Item Events section");
   assert(
     stdout.includes("| Deep Work | Deep Work | implementation checkpoint |"),
     "report did not include timestamped Work Item event"
@@ -219,11 +219,11 @@ try {
     "report review checklist did not flag zero non-work time"
   );
   assert(
-    thinEvidenceStdout.includes("Нет дневных или Work Item событий"),
+    thinEvidenceStdout.includes("Нет событий дня или дел"),
     "report review checklist did not flag missing day/Work Item context"
   );
   assert(
-    thinEvidenceStdout.includes("Проверить today/total у Work Item"),
+    thinEvidenceStdout.includes("Проверить today/total у дел"),
     "report review checklist did not flag missing Work Item badge review"
   );
   assert(
@@ -385,20 +385,20 @@ try {
   );
 
   assert(
-    stuckItemDraftStdout.includes("Статус отчёта: черновик — у Work Item ещё стоит активный статус"),
+    stuckItemDraftStdout.includes("Статус отчёта: черновик — у дела ещё стоит активный статус"),
     "stuck active item report state is missing"
   );
   assert(
     stuckItemDraftStdout.includes("## Блокер финального отчёта"),
-    "stuck active item report did not include active Work Item warning"
+    "stuck active item report did not include active item warning"
   );
   assert(
-    stuckItemDraftStdout.includes("Work Item с активным статусом: Stuck Active Item"),
-    "stuck active item report did not name active Work Item"
+    stuckItemDraftStdout.includes("Дело с активным статусом: Stuck Active Item"),
+    "stuck active item report did not name active item"
   );
   assert(
-    stuckItemDraftStdout.includes("Снять активный статус с Work Item"),
-    "stuck active item review checklist did not include active Work Item cleanup"
+    stuckItemDraftStdout.includes("Снять активный статус с дела"),
+    "stuck active item review checklist did not include active item cleanup"
   );
 
   await runSql(`
@@ -419,7 +419,7 @@ try {
 
   assert(draftStdout.includes("Статус отчёта: черновик — фокус-блок ещё активен"), "draft report state is missing");
   assert(draftStdout.includes("## Блокер финального отчёта"), "draft report did not include active block warning");
-  assert(draftStdout.includes("Активный Work Item: Still Running"), "draft report did not name active work item");
+  assert(draftStdout.includes("Активное дело: Still Running"), "draft report did not name active item");
   assert(
     draftStdout.includes("Остановить активный фокус-блок"),
     "active focus review checklist did not include stop action"

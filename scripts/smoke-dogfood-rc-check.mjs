@@ -72,14 +72,14 @@ try {
   assert(good.stdout.includes("Всего учтено: 3:30:00"), "good day total tracked is missing");
   assert(good.stdout.includes("Рабочий фокус: 2:00:00"), "good day work focus is missing");
   assert(good.stdout.includes("Нерабочее учтено: 1:30:00"), "good day non-work tracked is missing");
-  assert(good.stdout.includes("Проверок бейджей времени Work Item: 1"), "good day Work Item badge review count is missing");
+  assert(good.stdout.includes("Проверок бейджей времени дел: 1"), "good day item badge review count is missing");
   assert(good.stdout.includes("Зон активности в отчёте: 2"), "good day zone count is missing");
   assert(good.stdout.includes("Больших разрывов: 1"), "good day significant gap count is missing");
   assert(good.stdout.includes("Больших разрывов объяснено: 1/1"), "good day explained gap count is missing");
   assert(good.stdout.includes("Событий дня: 1"), "good day Day Events count is missing");
   assert(good.stdout.includes("Событий дня с зоной активности: 1"), "good day zoned Day Events count is missing");
   assert(good.stdout.includes("Событий дня во время активного фокуса: 1"), "good day active-focus Day Events count is missing");
-  assert(good.stdout.includes("Событий Work Item: 1"), "good day Work Item Events count is missing");
+  assert(good.stdout.includes("Событий дел: 1"), "good day item events count is missing");
   assert(good.stdout.includes("Запросов старт/переключение/остановка: 2/0/1"), "good day entry request count is missing");
   assert(good.stdout.includes("Входов typed/selected: 1/1"), "good day entry control count is missing");
   assert(good.stdout.includes("Коррекций запрошено/применено/проверено/ошибок: 1/1/0/0"), "good day correction telemetry is missing");
@@ -89,7 +89,7 @@ try {
   assert(good.stdout.includes("Запросы показать/скрыть окно: 1/1"), "good day window request telemetry is missing");
   assert(good.stdout.includes("## Аудит закрытия дня"), "good day goal audit section is missing");
   assert(good.stdout.includes("| Фокус-блоки видны | ок |"), "good day focus-block audit row is missing");
-  assert(good.stdout.includes("| Итоги по Work Item есть | ок |"), "good day Work Item totals audit row is missing");
+  assert(good.stdout.includes("| Итоги по делам есть | ок |"), "good day item totals audit row is missing");
   assert(good.stdout.includes("| Зоны активности разделены | ок |"), "good day activity-zone audit row is missing");
   assert(good.stdout.includes("| Разрывы и отвлечения видны | ок |"), "good day gap/capture audit row is missing");
   assert(good.stdout.includes("| Старт и продолжение проверены | ок |"), "good day entry-path audit row is missing");
@@ -100,7 +100,7 @@ try {
   assert(good.stdout.includes("## По зонам активности"), "good day zone section is missing");
   assert(good.stdout.includes("## События дня"), "good day Day Events section is missing");
   assert(good.stdout.includes("Gap explained: meeting buffer was costly"), "good day Day Event text is missing");
-  assert(good.stdout.includes("## События Work Item"), "good day Work Item Events section is missing");
+  assert(good.stdout.includes("## События дел"), "good day item events section is missing");
   assert(good.stdout.includes("Отвлечений создано сегодня: 1"), "good day capture count is missing");
   assert(good.stdout.includes("Отвлечений во время активного фокуса: 1"), "good day active-focus capture count is missing");
   assert(good.stdout.includes("## История отвлечений"), "good day capture activity section is missing");
@@ -160,7 +160,7 @@ try {
   const noSelectedEntryStrict = await runRcCheck(noSelectedEntryDb, ["--strict"]);
   assert(noSelectedEntryStrict.code !== 0, "strict RC check should fail without selected/list entry evidence");
   assert(
-    noSelectedEntryStrict.stdout.includes("Нет входа через выбранный Work Item из списка"),
+    noSelectedEntryStrict.stdout.includes("Нет входа через выбранное дело из списка"),
     "strict RC check should explain missing selected/list entry evidence"
   );
   const acceptedNoSelectedEntryDb = join(tempDir, "accepted-no-selected-entry.db");
@@ -242,14 +242,14 @@ try {
   await copyDb(goodDb, noBadgeReviewDb);
   await runSql(noBadgeReviewDb, "DELETE FROM app_events WHERE kind = 'work_item_time_badges_reviewed';");
   const noBadgeReviewStrict = await runRcCheck(noBadgeReviewDb, ["--strict"]);
-  assert(noBadgeReviewStrict.code !== 0, "strict RC check should fail without Work Item badge review evidence");
+  assert(noBadgeReviewStrict.code !== 0, "strict RC check should fail without item badge review evidence");
   assert(
     noBadgeReviewStrict.stdout.includes("Нет подтверждения проверки бейджей today/total"),
-    "strict RC check should explain missing Work Item badge review evidence"
+    "strict RC check should explain missing item badge review evidence"
   );
   assert(
-    noBadgeReviewStrict.stdout.includes("| Итоги по Work Item есть | проверить |"),
-    "missing Work Item badge review should mark Work Item totals audit for review"
+    noBadgeReviewStrict.stdout.includes("| Итоги по делам есть | проверить |"),
+    "missing item badge review should mark item totals audit for review"
   );
 
   const noClosureDb = join(tempDir, "no-closure.db");
@@ -458,7 +458,7 @@ try {
   `);
   const duplicate = await runRcCheck(duplicateDb);
   assert(duplicate.code !== 0, "duplicate title should be blocked");
-  assert(duplicate.stdout.includes("Дублируется название Work Item"), "duplicate title blocker is missing");
+  assert(duplicate.stdout.includes("Дублируется название дела"), "duplicate title blocker is missing");
 
   const activeDb = join(tempDir, "active.db");
   await copyDb(goodDb, activeDb);

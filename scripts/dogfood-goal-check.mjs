@@ -150,9 +150,9 @@ async function checkSavedEvidence(date) {
   const reportDailyControlRows = [
     ["Финальное состояние чистое", "Final state clean"],
     ["Фокус-блоки видны", "Focus blocks visible"],
-    ["Итоги по Work Item есть", "Work Item totals available"],
+    ["Итоги по делам есть", "Итоги по Work Item есть", "Work Item totals available"],
     ["Зоны активности разделены", "Activity Zones separated"],
-    ["Контекст дня и Work Item сохранён", "Day and Work Item context present"],
+    ["Контекст дня и дел сохранён", "Контекст дня и Work Item сохранён", "Day and Work Item context present"],
     ["Разрывы и отвлечения видны", "Gaps and captures visible"],
     ["Окно и строка меню проверены", "Окно и menu bar проверены", "Window and menubar friction evidenced"],
     ["Старт и продолжение проверены", "Start and continue paths evidenced"],
@@ -163,9 +163,9 @@ async function checkSavedEvidence(date) {
   const rcDailyControlRows = [
     ["Финальное состояние чистое", "Final state clean"],
     ["Фокус-блоки видны", "Focus blocks visible"],
-    ["Итоги по Work Item есть", "Work Item totals available"],
+    ["Итоги по делам есть", "Итоги по Work Item есть", "Work Item totals available"],
     ["Зоны активности разделены", "Activity Zones separated"],
-    ["Контекст дня и Work Item сохранён", "Day and Work Item context present"],
+    ["Контекст дня и дел сохранён", "Контекст дня и Work Item сохранён", "Day and Work Item context present"],
     ["Разрывы и отвлечения видны", "Gaps and captures visible"],
     ["Окно и строка меню проверены", "Окно и menu bar проверены", "Window and menubar friction evidenced"],
     ["Старт и продолжение проверены", "Start and continue paths evidenced"],

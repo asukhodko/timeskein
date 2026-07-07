@@ -389,6 +389,7 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
 
   const copyTodayMarkdown = async () => {
     if (sessions.length === 0) return
+    const dayMarkdownForCopy = formatFocusMarkdownForReport(todayMarkdown)
 
     void logAppEvent({
       source: 'ui',
@@ -399,7 +400,7 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
     })
 
     try {
-      await copyText(todayMarkdown)
+      await copyText(dayMarkdownForCopy)
       setCopyDayState('copied')
       setManualCopy(null)
       void logAppEvent({
@@ -411,7 +412,7 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
       })
     } catch {
       setCopyDayState('failed')
-      setManualCopy({ label: 'Дневной Markdown', text: todayMarkdown })
+      setManualCopy({ label: 'Дневной Markdown', text: dayMarkdownForCopy })
       void logAppEvent({
         source: 'ui',
         kind: 'report_copy_failed',
@@ -671,7 +672,7 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
           {selectedItem && selectedItem.id !== current?.work_item_id && (
             <div className="flex items-center justify-between gap-2 rounded-md border border-gray-800 bg-gray-900/60 px-3 py-2">
               <div className="min-w-0">
-                <div className="text-[11px] uppercase tracking-wide text-gray-500">Выбранный Work Item</div>
+                <div className="text-[11px] uppercase tracking-wide text-gray-500">Выбранное дело</div>
                 <div className="truncate text-xs font-medium text-gray-200">
                   {truncate(selectedItem.title, 80)}
                 </div>
@@ -1156,18 +1157,20 @@ export function formatFocusMarkdownForReport(markdown: string) {
     .replace(/^Work focus:/gm, 'Рабочий фокус:')
     .replace(/^Non-work tracked:/gm, 'Нерабочее учтено:')
     .replace(/^Entrances:/gm, 'Входов:')
-    .replace(/^\| Time \| Duration \| Zone \| Work Item \| Note \|$/gm, '| Время | Длительность | Зона | Work Item | Заметка |')
+    .replace(/^\| Time \| Duration \| Zone \| Work Item \| Note \|$/gm, '| Время | Длительность | Зона | Дело | Заметка |')
     .replace(/^## Day-Boundary Blocks$/gm, '## Блоки на границе дня')
     .replace(/: counted as ([^\n]+) inside this day/g, ': учтено как $1 внутри этого дня')
-    .replace(/^## By Work Item$/gm, '## По Work Item')
-    .replace(/^\| Duration \| Entrances \| Work Item \|$/gm, '| Длительность | Входов | Work Item |')
+    .replace(/^## By Work Item$/gm, '## По делам')
+    .replace(/^\| Duration \| Entrances \| Work Item \|$/gm, '| Длительность | Входов | Дело |')
     .replace(/^## By Activity Zone$/gm, '## По зонам активности')
     .replace(/^\| Duration \| Entrances \| Zone \|$/gm, '| Длительность | Входов | Зона |')
-    .replace(/^## Work Item Notes$/gm, '## Заметки Work Item')
+    .replace(/^## Work Item Notes$/gm, '## Заметки дел')
     .replace(/^## Day Events$/gm, '## События дня')
     .replace(/^\| Time \| Zone \| During \| Event \|$/gm, '| Время | Зона | Во время | Событие |')
-    .replace(/^## Work Item Events$/gm, '## События Work Item')
-    .replace(/^\| Time \| Work Item \| During \| Event \|$/gm, '| Время | Work Item | Во время | Событие |')
+    .replace(/\| day \|/g, '| день |')
+    .replace(/\| linked focus block \|/g, '| связанный фокус-блок |')
+    .replace(/^## Work Item Events$/gm, '## События дел')
+    .replace(/^\| Time \| Work Item \| During \| Event \|$/gm, '| Время | Дело | Во время | Событие |')
     .replace(/^## Gaps >=/gm, '## Разрывы >=')
     .replace(/^## Open Gap$/gm, '## Текущий открытый разрыв')
     .replace(/ since last stopped block$/gm, ' после последнего остановленного блока')
@@ -1232,7 +1235,7 @@ export function formatTelemetryForReport(markdown: string) {
     .replace(/^Manual copy fallbacks:/gm, 'Ручных fallback-копирований:')
     .replace(/^Capture created\/resolved\/converted:/gm, 'Отвлечений создано/закрыто/превращено:')
     .replace(/^Capture follow-up reviews:/gm, 'Проверок открытых отвлечений:')
-    .replace(/^Work Item time badge reviews:/gm, 'Проверок бейджей времени Work Item:')
+    .replace(/^Work Item time badge reviews:/gm, 'Проверок бейджей времени дел:')
     .replace(/^Activity Zone reviews:/gm, 'Проверок зон активности:')
     .replace(/^Capture usage reviews:/gm, 'Проверок использования инбокса:')
     .replace(/^Entry path reviews:/gm, 'Проверок путей входа:')
@@ -1243,7 +1246,7 @@ export function formatTelemetryForReport(markdown: string) {
     .replace(/^Day closure started\/completed:/gm, 'Закрытий дня начато/завершено:')
     .replace(/^Last day closure duration:/gm, 'Последняя длительность закрытия дня:')
     .replace(/^API errors:/gm, 'Ошибок API:')
-    .replace(/^Already-active start attempts:/gm, 'Попыток старта уже активного Work Item:')
+    .replace(/^Already-active start attempts:/gm, 'Попыток старта уже активного дела:')
     .replace(/^Stale runtime recoveries:/gm, 'Восстановлений устаревшего runtime:')
     .replace(/^Average start latency:/gm, 'Средняя задержка старта:')
     .replace(/^Slow window-to-focus gaps:/gm, 'Медленных разрывов окно->фокус:')
@@ -1903,7 +1906,7 @@ function formatDailyControlGoalAuditMarkdown({
     {
       requirement: 'Final state clean',
       status: activeFocus || activeWorkItems.length > 0 ? 'block' : 'pass',
-      evidence: `${activeFocus ? 1 : 0} активных фокус-блоков, ${activeWorkItems.length} Work Item с активным статусом`,
+      evidence: `${activeFocus ? 1 : 0} активных фокус-блоков, ${activeWorkItems.length} ${pluralRu(activeWorkItems.length, 'дело', 'дела', 'дел')} с активным статусом`,
     },
     {
       requirement: 'Focus blocks visible',
@@ -1914,8 +1917,8 @@ function formatDailyControlGoalAuditMarkdown({
       requirement: 'Work Item totals available',
       status: todayMarkdown.includes('## By Work Item') && !hasReview('Confirm Work Item today/total badges') ? 'pass' : 'review',
       evidence: todayMarkdown.includes('## By Work Item')
-        ? `Раздел «По Work Item» есть, проверок бейджей в UI: ${workItemTimeBadgeReviews}`
-        : 'Раздела «По Work Item» нет',
+        ? `Раздел «По делам» есть, проверок бейджей в UI: ${workItemTimeBadgeReviews}`
+        : 'Раздела «По делам» нет',
     },
     {
       requirement: 'Activity Zones separated',
@@ -1932,8 +1935,8 @@ function formatDailyControlGoalAuditMarkdown({
       status: hasReview('No day or Work Item notes/events') ? 'review' : 'pass',
       evidence: [
         todayMarkdown.includes('## Day Events') ? 'события дня' : '',
-        todayMarkdown.includes('## Work Item Events') ? 'события Work Item' : '',
-        todayMarkdown.includes('## Work Item Notes') ? 'заметки Work Item' : '',
+        todayMarkdown.includes('## Work Item Events') ? 'события дел' : '',
+        todayMarkdown.includes('## Work Item Notes') ? 'заметки дел' : '',
       ].filter(Boolean).join(', ') || 'контекстных секций нет',
     },
     {
@@ -2333,7 +2336,7 @@ function WorkItemEventsPanel({
   return (
     <div className="grid gap-1 rounded-md border border-gray-800 bg-gray-900/50 px-3 py-2 text-xs">
       <div className="flex items-center justify-between text-gray-400">
-        <span className="font-medium text-gray-300">События Work Item</span>
+        <span className="font-medium text-gray-300">События дел</span>
         <span>{events.length}</span>
       </div>
       <div className="grid max-h-32 gap-1 overflow-auto pr-1">
@@ -2439,7 +2442,7 @@ function WorkItemEventsPanel({
       </div>
       {mutationError && (
         <div className="text-[11px] text-red-300">
-          {mutationError instanceof Error ? mutationError.message : 'Не удалось обновить событие Work Item'}
+          {mutationError instanceof Error ? mutationError.message : 'Не удалось обновить событие дела'}
         </div>
       )}
     </div>
@@ -2716,11 +2719,11 @@ function appendWorkItemEvents(
 
 function formatDayEventDuring(event: DayEventView, sessionsById: Map<string, FocusSessionView>) {
   if (!event.focus_session_id) {
-    return 'day'
+    return 'день'
   }
 
   const session = sessionsById.get(event.focus_session_id)
-  return session?.work_item_title ?? session?.title ?? 'linked focus block'
+  return session?.work_item_title ?? session?.title ?? 'связанный фокус-блок'
 }
 
 function formatEventWorkItemTitle(
@@ -2731,7 +2734,7 @@ function formatEventWorkItemTitle(
   return workItemsById.get(event.work_item_id)?.title
     ?? (event.focus_session_id ? sessionsById.get(event.focus_session_id)?.work_item_title : undefined)
     ?? (event.focus_session_id ? sessionsById.get(event.focus_session_id)?.title : undefined)
-    ?? 'unknown Work Item'
+    ?? 'неизвестное дело'
 }
 
 function formatEventDuring(event: WorkItemEventView, sessionsById: Map<string, FocusSessionView>) {
@@ -2740,7 +2743,7 @@ function formatEventDuring(event: WorkItemEventView, sessionsById: Map<string, F
   }
 
   const session = sessionsById.get(event.focus_session_id)
-  return session?.work_item_title ?? session?.title ?? 'linked focus block'
+  return session?.work_item_title ?? session?.title ?? 'связанный фокус-блок'
 }
 
 function gapsBetweenSessions(sessionsOldestFirst: FocusSessionView[]) {

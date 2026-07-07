@@ -60,7 +60,7 @@ export default function WorkItemEditor({ item, onClose }: WorkItemEditorProps) {
         onClick={(event) => event.stopPropagation()}
         onSubmit={handleSubmit}
       >
-        <div className="mb-4 text-lg font-semibold text-gray-100">Править Work Item</div>
+        <div className="mb-4 text-lg font-semibold text-gray-100">Править дело</div>
 
         <label className="mb-3 grid gap-1 text-sm text-gray-300">
           <span>Название</span>

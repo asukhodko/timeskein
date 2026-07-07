@@ -237,9 +237,9 @@ Third real dogfood day and release baseline:
 - Today's focus picture can also be exported from SQLite with `pnpm export:focus-day`
 - Evening dogfood report can be copied from the focus panel, shown as selected Markdown if clipboard access fails, or generated with `pnpm dogfood:report`; UI and CLI reports include the same Russian review checklist and daily-closure audit
 - Copying a draft report or a report with pending review items does not write `day_closure_completed`; the measured closure completes only when the report is final and review-clean, so an early copy cannot hide the real evening closure duration
-- Dogfood reports include a `Заметки Work Item` section for touched Work Items that have non-empty notes
+- Dogfood reports include a `Заметки дел` section for touched Work Items that have non-empty notes
 - Dogfood reports include a `События дня` section for timestamped notes that belong to the day rather than one Work Item
-- Dogfood reports include a `События Work Item` section for timestamped Work Item observations created during the selected day
+- Dogfood reports include a `События дел` section for timestamped Work Item observations created during the selected day
 - The UI and CLI label the report as a draft while a focus block or Work Item is still active, or while review checks remain open. Active-state blockers still add an explicit warning section to the Markdown
 - Capture Inbox for incoming events that should not interrupt the current focus block
 - Captures link to the active focus session when one exists
@@ -341,7 +341,7 @@ The current API surface is:
 - `work_item.delete_event` to delete user-authored `note_added` events;
 - `work_item.events` to list events by Work Item and/or time window.
 
-The note editor can append a timestamped event without replacing the Work Item description. Its entry rule is intentionally conservative: typed event text is cleared only after a successful append, and it stays in the field after an API failure. Capture Inbox can also append a capture as a Work Item Event, preserving the capture text and focus-session link. The focus panel shows Work Item Events for the day and lets user-authored note events be edited or deleted before the final report. UI/CLI dogfood reports include a `События Work Item` section.
+The note editor can append a timestamped event without replacing the Work Item description. Its entry rule is intentionally conservative: typed event text is cleared only after a successful append, and it stays in the field after an API failure. Capture Inbox can also append a capture as a Work Item Event, preserving the capture text and focus-session link. The focus panel shows item events for the day and lets user-authored note events be edited or deleted before the final report. UI/CLI dogfood reports include a `События дел` section.
 
 ## Day Events
 

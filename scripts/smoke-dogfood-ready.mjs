@@ -42,7 +42,7 @@ try {
   );
   assert(
     ready.stdout.includes("проверь бейджи `today` и `total`"),
-    "ready output did not include Work Item time-total UI reminder"
+    "ready output did not include item time-total UI reminder"
   );
   assert(
     ready.stdout.includes("Начать закрытие дня") && ready.stdout.includes("10 минут или меньше"),
@@ -101,9 +101,9 @@ try {
   assert(dirty.code !== 0, "dirty database should not be ready");
   assert(dirty.stdout.includes("Статус: НЕ ГОТОВО"), "dirty output did not report localized NOT READY");
   assert(dirty.stdout.includes("Активная фокус-сессия"), "dirty output did not mention localized active focus");
-  assert(dirty.stdout.includes("Активный Work Item"), "dirty output did not mention localized active work item");
+  assert(dirty.stdout.includes("Активное дело"), "dirty output did not mention localized active item");
   assert(dirty.stdout.includes("Сегодня уже есть фокус-блоки: 2"), "dirty output did not mention localized today's blocks");
-  assert(dirty.stdout.includes("Дублируется название Work Item"), "dirty output did not mention localized duplicate titles");
+  assert(dirty.stdout.includes("Дублируется название дела"), "dirty output did not mention localized duplicate titles");
   assert(dirty.stdout.includes("pnpm dogfood:stop-active"), "dirty output did not suggest stop-active");
   assert(dirty.stdout.includes("pnpm dogfood:reset-db"), "dirty output did not suggest reset-db");
   assert(
@@ -152,10 +152,10 @@ try {
   `);
 
   const splitBrain = await runReady(["--mode", "continue"]);
-  assert(splitBrain.code !== 0, "continue mode should reject mismatched active Work Item");
+  assert(splitBrain.code !== 0, "continue mode should reject mismatched active item");
   assert(
-    splitBrain.stdout.includes("Активная фокус-сессия связана с Dogfood Dirty, а активный Work Item — Overlapping Dirty"),
-    "continue output did not explain active Work Item mismatch"
+    splitBrain.stdout.includes("Активная фокус-сессия связана с Dogfood Dirty, а активное дело — Overlapping Dirty"),
+    "continue output did not explain active item mismatch"
   );
 
   const duplicateActiveWrite = await runSqlCaptured(`

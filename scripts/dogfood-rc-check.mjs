@@ -82,7 +82,7 @@ function printHelp() {
   console.log(`Использование: pnpm dogfood:rc-check [--date YYYY-MM-DD] [--db path/to/timeskein.db] [--min-focus-minutes N] [--strict] [--save | --out path.md]
 
 Проверяет, достаточно ли данных Timeskein для dogfood RC-вердикта.
-Команда завершается с кодом 1 при жёстких блокерах: активное состояние, дубли названий Work Item или пустой день.
+Команда завершается с кодом 1 при жёстких блокерах: активное состояние, дубли названий дел или пустой день.
 Пункты проверки печатаются, но без --strict оставляют код 0, потому что финальный RC-вердикт всё ещё требует человеческого решения.
 С --strict пункты проверки тоже дают код 1. Используй это перед закрытием цели про дешёвое вечернее закрытие дня.`);
 }
@@ -408,7 +408,7 @@ function assessEvidence(evidence, minFocusSeconds) {
   }
 
   for (const item of evidence.activeWorkItems) {
-    hardBlockers.push(`У Work Item всё ещё активный статус: ${item.title}`);
+    hardBlockers.push(`У дела всё ещё активный статус: ${item.title}`);
   }
 
   if (evidence.sessions.length === 0) {
@@ -416,7 +416,7 @@ function assessEvidence(evidence, minFocusSeconds) {
   }
 
   for (const duplicate of evidence.duplicateTitles) {
-    hardBlockers.push(`Дублируется название Work Item: ${duplicate.titles}`);
+    hardBlockers.push(`Дублируется название дела: ${duplicate.titles}`);
   }
 
   if (evidence.totalFocusSeconds < minFocusSeconds && evidence.sessions.length > 0) {
@@ -439,11 +439,11 @@ function assessEvidence(evidence, minFocusSeconds) {
     evidence.workItemNoteCount === 0 &&
     evidence.sessions.length > 0
   ) {
-    reviewItems.push("Нет событий дня, заметок Work Item или timestamped Work Item Events. Если без памяти день не восстановить, добавь контекст перед финальным отчётом.");
+    reviewItems.push("Нет событий дня, заметок дел или timestamped-событий дел. Если без памяти день не восстановить, добавь контекст перед финальным отчётом.");
   }
 
   if (evidence.sessions.length > 0 && evidence.workItemTotals.length > 0 && evidence.telemetry.workItemTimeBadgeReviews === 0) {
-    reviewItems.push("Нет подтверждения проверки бейджей today/total у Work Item. Посмотри карточки затронутых Work Item и прими эту проверку перед закрытием цели.");
+    reviewItems.push("Нет подтверждения проверки бейджей today/total у дел. Посмотри карточки затронутых дел и прими эту проверку перед закрытием цели.");
   }
 
   if (evidence.dayEvents.length > 0 && evidence.dayEventsWithZone === 0) {
@@ -451,11 +451,11 @@ function assessEvidence(evidence, minFocusSeconds) {
   }
 
   if (evidence.workItemEvents.length === 0 && evidence.sessions.length > 0) {
-    reviewItems.push("Нет timestamped Work Item Events. Если важны детали конкретной задачи, добавь событие или подними отвлечение в событие, не полагаясь на память.");
+    reviewItems.push("Нет timestamped-событий дел. Если важны детали конкретной задачи, добавь событие или подними отвлечение в событие, не полагаясь на память.");
   }
 
   if (evidence.openCaptures.length > 0 && evidence.telemetry.captureFollowupReviews === 0) {
-    reviewItems.push(`${evidence.openCaptures.length} открытых отвлечений осталось. Закрой, преврати в Work Item или явно оставь открытыми.`);
+    reviewItems.push(`${evidence.openCaptures.length} открытых отвлечений осталось. Закрой, преврати в дело или явно оставь открытыми.`);
   }
 
   if (evidence.capturesCreatedToday.length === 0 && evidence.telemetry.captureUsageReviews === 0) {
@@ -479,11 +479,11 @@ function assessEvidence(evidence, minFocusSeconds) {
   }
 
   if (evidence.sessions.length > 0 && evidence.telemetry.typedEntryRequests === 0 && evidence.telemetry.entryPathReviews === 0) {
-    reviewItems.push("Нет входа через ввод названия. Перед закрытием цели стартуй новый Work Item typed-вводом или явно прими эту проверку.");
+    reviewItems.push("Нет входа через ввод названия. Перед закрытием цели стартуй новое дело typed-вводом или явно прими эту проверку.");
   }
 
   if (evidence.sessions.length > 0 && evidence.telemetry.selectedEntryRequests === 0 && evidence.telemetry.entryPathReviews === 0) {
-    reviewItems.push("Нет входа через выбранный Work Item из списка. Перед закрытием цели продолжи существующий Work Item из списка или явно прими эту проверку.");
+    reviewItems.push("Нет входа через выбранное дело из списка. Перед закрытием цели продолжи существующее дело из списка или явно прими эту проверку.");
   }
 
   if (evidence.sessions.length > 0 && evidence.telemetry.stopRequests === 0 && evidence.telemetry.entryPathReviews === 0) {
@@ -579,14 +579,14 @@ function buildRcReport(date, path, evidence, assessment, minFocusSeconds, strict
     `- Рабочий фокус: ${formatDuration(evidence.workFocusSeconds)}`,
     `- Нерабочее учтено: ${formatDuration(evidence.nonWorkSeconds)}`,
     `- Входов: ${evidence.sessions.length}`,
-    `- Work Item в отчёте: ${evidence.workItemTotals.length}`,
-    `- Проверок бейджей времени Work Item: ${evidence.telemetry.workItemTimeBadgeReviews}`,
-    `- Заметок Work Item в отчёте: ${evidence.workItemNoteCount}`,
+    `- Дел в отчёте: ${evidence.workItemTotals.length}`,
+    `- Проверок бейджей времени дел: ${evidence.telemetry.workItemTimeBadgeReviews}`,
+    `- Заметок дел в отчёте: ${evidence.workItemNoteCount}`,
     `- Событий дня: ${evidence.dayEvents.length}`,
     `- Событий дня с зоной активности: ${evidence.dayEventsWithZone}`,
     `- Событий дня во время активного фокуса: ${evidence.dayEventsDuringActiveFocus}`,
-    `- Событий Work Item: ${evidence.workItemEvents.length}`,
-    `- Событий Work Item во время активного фокуса: ${evidence.workItemEventsDuringActiveFocus}`,
+    `- Событий дел: ${evidence.workItemEvents.length}`,
+    `- Событий дел во время активного фокуса: ${evidence.workItemEventsDuringActiveFocus}`,
     `- Зон активности в отчёте: ${evidence.activityZoneTotals.length}`,
     `- Больших разрывов: ${evidence.gaps.length}`,
     `- Больших разрывов объяснено: ${Math.min(evidence.gapExplanationEvents, evidence.gaps.length)}/${evidence.gaps.length}`,
@@ -611,14 +611,14 @@ function buildRcReport(date, path, evidence, assessment, minFocusSeconds, strict
     `- Окно показано/скрыто: ${evidence.telemetry.windowShown}/${evidence.telemetry.windowHidden}`,
     `- Запросы показать/скрыть окно: ${evidence.telemetry.windowShowRequested}/${evidence.telemetry.windowHideRequested}`,
     `- Начатых перетаскиваний окна: ${evidence.telemetry.windowDragStarted}`,
-    `- Групп дублей названий Work Item: ${evidence.duplicateTitles.length}`,
+    `- Групп дублей названий дел: ${evidence.duplicateTitles.length}`,
     "",
   ];
 
   lines.push(...formatGoalAuditMarkdown(evidence, assessment, minFocusSeconds), "");
 
   if (evidence.workItemTotals.length > 0) {
-    lines.push("## По Work Item", "", "| Длительность | Входов | Work Item |", "| ---: | ---: | --- |");
+    lines.push("## По делам", "", "| Длительность | Входов | Дело |", "| ---: | ---: | --- |");
     for (const item of evidence.workItemTotals) {
       lines.push(`| ${formatDuration(item.activeSeconds)} | ${item.entrances} | ${escapeMarkdownTable(item.title)} |`);
     }
@@ -644,10 +644,10 @@ function buildRcReport(date, path, evidence, assessment, minFocusSeconds, strict
   }
 
   if (evidence.workItemEvents.length > 0) {
-    lines.push("## События Work Item", "", "| Время | Work Item | Во время фокуса | Событие |", "| --- | --- | --- | --- |");
+    lines.push("## События дел", "", "| Время | Дело | Во время фокуса | Событие |", "| --- | --- | --- | --- |");
     for (const event of evidence.workItemEvents) {
       lines.push(
-        `| ${escapeMarkdownTable(formatClockTime(event.ts))} | ${escapeMarkdownTable(event.work_item_title ?? "неизвестный Work Item")} | ${escapeMarkdownTable(event.focus_session_id ? "да" : "")} | ${escapeMarkdownTable(event.text)} |`
+        `| ${escapeMarkdownTable(formatClockTime(event.ts))} | ${escapeMarkdownTable(event.work_item_title ?? "неизвестное дело")} | ${escapeMarkdownTable(event.focus_session_id ? "да" : "")} | ${escapeMarkdownTable(event.text)} |`
       );
     }
     lines.push("");
@@ -678,7 +678,7 @@ function buildRcReport(date, path, evidence, assessment, minFocusSeconds, strict
     "",
     "- Timeskein был основным трекером всего дня: да/нет",
     "- Зоны активности достаточно отделили работу от координации, восстановления, простоя и личных дел: да/нет",
-    "- Day Events, Work Item Events или заметки снизили восстановление дня по памяти: да/нет",
+    "- События дня, события дел или заметки снизили восстановление дня по памяти: да/нет",
     "- Ошибки трекинга можно было исправить перед финальным отчётом: да/нет",
     "- Capture Inbox удерживал фокус, а не стал ещё одной кучей: да/нет",
     "- Отчёта достаточно без реконструкции по памяти: да/нет",
@@ -741,7 +741,7 @@ function formatGoalAuditMarkdown(evidence, assessment, minFocusSeconds) {
     {
       requirement: "Final state clean",
       status: evidence.activeSessions.length === 0 && evidence.activeWorkItems.length === 0 ? "pass" : "block",
-      evidence: `${evidence.activeSessions.length} активных фокус-сессий, ${evidence.activeWorkItems.length} Work Item со статусом active`,
+      evidence: `${evidence.activeSessions.length} активных фокус-сессий, ${evidence.activeWorkItems.length} ${pluralRu(evidence.activeWorkItems.length, "дело", "дела", "дел")} со статусом active`,
     },
     {
       requirement: "Focus blocks visible",
@@ -759,7 +759,7 @@ function formatGoalAuditMarkdown(evidence, assessment, minFocusSeconds) {
         : evidence.telemetry.workItemTimeBadgeReviews > 0
           ? "pass"
           : "review",
-      evidence: `${evidence.workItemTotals.length} строк итогов Work Item, ${evidence.telemetry.workItemTimeBadgeReviews} проверок бейджей UI`,
+      evidence: `${evidence.workItemTotals.length} строк итогов дел, ${evidence.telemetry.workItemTimeBadgeReviews} проверок бейджей UI`,
     },
     {
       requirement: "Activity Zones separated",
@@ -775,7 +775,7 @@ function formatGoalAuditMarkdown(evidence, assessment, minFocusSeconds) {
       status: evidence.dayEvents.length + evidence.workItemEvents.length + evidence.workItemNoteCount > 0
         ? "pass"
         : "review",
-      evidence: `${evidence.dayEvents.length} Day Event, ${evidence.workItemEvents.length} Work Item Event, ${evidence.workItemNoteCount} заметок Work Item`,
+      evidence: `${evidence.dayEvents.length} событий дня, ${evidence.workItemEvents.length} событий дел, ${evidence.workItemNoteCount} заметок дел`,
     },
     {
       requirement: "Gaps and captures visible",
@@ -865,9 +865,9 @@ function formatGoalAuditRequirement(requirement) {
   const labels = new Map([
     ["Final state clean", "Финальное состояние чистое"],
     ["Focus blocks visible", "Фокус-блоки видны"],
-    ["Work Item totals available", "Итоги по Work Item есть"],
+    ["Work Item totals available", "Итоги по делам есть"],
     ["Activity Zones separated", "Зоны активности разделены"],
-    ["Day and Work Item context present", "Контекст дня и Work Item сохранён"],
+    ["Day and Work Item context present", "Контекст дня и дел сохранён"],
     ["Gaps and captures visible", "Разрывы и отвлечения видны"],
     ["Window and menubar friction evidenced", "Окно и строка меню проверены"],
     ["Start and continue paths evidenced", "Старт и продолжение проверены"],
@@ -1155,6 +1155,16 @@ function formatDuration(totalSeconds) {
   }
 
   return `${minutes}:${String(rest).padStart(2, "0")}`;
+}
+
+function pluralRu(value, one, few, many) {
+  const abs = Math.abs(value);
+  const mod10 = abs % 10;
+  const mod100 = abs % 100;
+
+  if (mod10 === 1 && mod100 !== 11) return one;
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return few;
+  return many;
 }
 
 function formatClockTime(value) {

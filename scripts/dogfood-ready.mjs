@@ -79,11 +79,11 @@ if (blockers.length > 0) {
 function appendDailyControlChecklist(lines) {
   lines.push("## Памятка закрытия дня", "");
   lines.push("- Проверь входы в окно: menu bar, глобальный хоткей (`Ctrl+Shift+Space`, запасной `Ctrl+Option+Space` или `Cmd+Option+Space`), возврат через macOS, скрытие через Esc или закрытие окна.");
-  lines.push("- Начни один новый Work Item вводом названия и продолжи один существующий Work Item из списка.");
-  lines.push("- Когда у затронутого Work Item появится фокус-время, проверь бейджи `today` и `total` в списке дел, затем нажми `Бейджи верны` в соответствующей проверке.");
+  lines.push("- Начни одно новое дело вводом названия и продолжи одно существующее дело из списка.");
+  lines.push("- Когда у затронутого дела появится фокус-время, проверь бейджи `today` и `total` в списке дел, затем нажми `Бейджи верны` в соответствующей проверке.");
   lines.push("- Используй минимум две зоны активности, включая одну нерабочую: координация, восстановление, простой или личные дела.");
   lines.push("- Добавь одно событие дня через `Добавить событие дня...` для буфера, разрыва, восстановления или коррекции трекинга.");
-  lines.push("- Добавь или продвинь одно событие Work Item с временем, если для задачи важна конкретная подробность.");
+  lines.push("- Добавь или продвинь одно событие дела с временем, если для задачи важна конкретная подробность.");
   lines.push("- Во время активного фокуса зафиксируй хотя бы одно входящее отвлечение через `Зафиксировать отвлечение...`, затем закрой его, преврати `В дело`/`В событие` или явно оставь открытым.");
   lines.push("- Перед финальным отчётом поправь одну безопасную деталь трекинга или нажми `Трекинг верен` у проверки точности трекинга.");
   lines.push("- Вечером нажми `Начать закрытие дня`, убери красные блокеры, осознанно отметь оставшиеся жёлтые проверки и дойди до финального `Копировать отчёт` за 10 минут или меньше.");
@@ -241,10 +241,10 @@ function addSummary(lines, blockers, warnings, nextActions, summary, responsiveA
   const todaySeconds = summary.todaySessions.reduce((sum, session) => sum + session.active_seconds, 0);
 
   lines.push("## Сводка", "");
-  lines.push(`- Work Item: ${summary.counts.work_items}`);
+  lines.push(`- Дел: ${summary.counts.work_items}`);
   lines.push(`- Фокус-сессий: ${summary.counts.focus_sessions}`);
   lines.push(`- Активных фокус-сессий: ${summary.activeSessions.length}`);
-  lines.push(`- Активных Work Item: ${summary.activeWorkItems.length}`);
+  lines.push(`- Активных дел: ${summary.activeWorkItems.length}`);
   lines.push(`- Фокус-блоков сегодня: ${summary.todaySessions.length}`);
   lines.push(`- Фокус сегодня: ${formatDuration(todaySeconds)}`);
   lines.push(`- Групп дублей названий: ${summary.duplicateTitles.length}`);
@@ -266,7 +266,7 @@ function addSummary(lines, blockers, warnings, nextActions, summary, responsiveA
 
   if (summary.duplicateTitles.length > 0) {
     for (const duplicate of summary.duplicateTitles.slice(0, 5)) {
-      blockers.push(`Дублируется название Work Item (${duplicate.count}): ${duplicate.titles}`);
+      blockers.push(`Дублируется название дела (${duplicate.count}): ${duplicate.titles}`);
     }
     if (summary.duplicateTitles.length > 5) {
       blockers.push(`Ещё групп дублей: ${summary.duplicateTitles.length - 5}`);
@@ -275,7 +275,7 @@ function addSummary(lines, blockers, warnings, nextActions, summary, responsiveA
   }
 
   if (summary.counts.work_items === 0) {
-    warnings.push("Work Item пока нет. Для свежего теста это нормально: ввод названия создаст их при старте фокуса.");
+    warnings.push("Дел пока нет. Для свежего теста это нормально: ввод названия создаст их при старте фокуса.");
   }
 }
 
@@ -292,7 +292,7 @@ function addStartModeFindings(blockers, warnings, nextActions, summary, todaySec
 
   if (summary.activeWorkItems.length > 0) {
     for (const item of summary.activeWorkItems) {
-      blockers.push(`Активный Work Item: ${item.title}`);
+      blockers.push(`Активное дело: ${item.title}`);
     }
   }
 
@@ -318,7 +318,7 @@ function addStartModeFindings(blockers, warnings, nextActions, summary, todaySec
   }
 
   if (summary.activeWorkItems.length > 0) {
-    nextActions.push("Сними активный статус с Work Item: останови текущий фокус-блок или выполни `pnpm dogfood:stop-active -- --apply`.");
+    nextActions.push("Сними активный статус с дела: останови текущий фокус-блок или выполни `pnpm dogfood:stop-active -- --apply`.");
   }
 }
 
@@ -338,7 +338,7 @@ function addContinueModeFindings(blockers, warnings, nextActions, summary, today
   if (summary.activeSessions.length === 0) {
     if (summary.activeWorkItems.length > 0) {
       for (const item of summary.activeWorkItems) {
-        blockers.push(`Work Item активен, но активной фокус-сессии нет: ${item.title}`);
+        blockers.push(`Дело активно, но активной фокус-сессии нет: ${item.title}`);
       }
       nextActions.push("Сними активный статус через `pnpm dogfood:stop-active -- --apply` или поменяй состояние в приложении.");
     }
@@ -350,7 +350,7 @@ function addContinueModeFindings(blockers, warnings, nextActions, summary, today
 
   if (summary.activeWorkItems.length !== 1) {
     blockers.push(
-      `Активная фокус-сессия есть, но активных Work Item: ${summary.activeWorkItems.length}; ожидался ровно один.`
+      `Активная фокус-сессия есть, но активных дел: ${summary.activeWorkItems.length}; ожидалось ровно одно.`
     );
     nextActions.push("Сначала выполни dry-run `pnpm dogfood:stop-active`, затем примени план, если он выглядит правильно.");
     return;
@@ -358,7 +358,7 @@ function addContinueModeFindings(blockers, warnings, nextActions, summary, today
 
   if (activeSession.work_item_id !== activeWorkItem.id) {
     blockers.push(
-      `Активная фокус-сессия связана с ${activeSession.work_item_title ?? activeSession.title}, а активный Work Item — ${activeWorkItem.title}.`
+      `Активная фокус-сессия связана с ${activeSession.work_item_title ?? activeSession.title}, а активное дело — ${activeWorkItem.title}.`
     );
     nextActions.push("Переключи фокус в приложении или выполни dry-run `pnpm dogfood:stop-active` и примени план, если он выглядит правильно.");
     return;

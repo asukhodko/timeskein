@@ -350,14 +350,16 @@ At the end of the day:
 
 1. Open Timeskein.
 2. Check Today work focus, total tracked time, zones, and entrance count.
-3. Clear or consciously accept every `Проверка перед отчётом` item.
-4. Click `Копировать отчёт`.
-5. Paste the Markdown dogfood report into the day note or analysis thread.
+3. Click `Начать закрытие дня` in `Проверка перед отчётом`, or use the Today report button while it says `Начать закрытие`.
+4. Clear or consciously accept every `Проверка перед отчётом` item.
+5. Click `Копировать отчёт`.
+6. Paste the Markdown dogfood report into the day note or analysis thread.
 
 Use `Копировать день` only when the raw day picture is enough.
 If Today or the report shows `Открытый разрыв`, there was a significant interval after the last stopped block with no active focus block. Treat it as either a real break or a lost-tracking interval during review.
 If the report shows `Открытые отвлечения`, edit, delete, resolve, convert, or explicitly leave them open before considering the day fully reviewed.
 If Today shows `Проверка перед отчётом` during the day, it stays compact until `Начать закрытие дня`: this is a reminder that the evening ritual exists, not a running list of accusations.
+The Today report button follows the same flow: before closure starts it says `Начать закрытие` and only opens the ritual; after that it offers `Копировать черновик`, `Копировать с проверками`, or `Копировать отчёт` according to the current state.
 If Today or the report shows the full `Проверка перед отчётом`, use it as the minimal evening queue: active-state blockers under `Сначала закрыть` must be cleared, `Дописать или исправить` items should produce a small artifact, and `Осознанно проверить` items can be accepted when the data is already honest enough.
 Use `Ближайшее действие` as the current step. It appears in the panel, copied Markdown, and CLI dogfood report, so a draft report can still guide the next action without reconstructing the whole checklist from memory.
 Проверка также подсвечивает слабые доказательства дня: все блоки попали в одну Activity Zone, нет non-work времени, нет заметок/событий дел для контекста или нет следа проверки коррекций. Если таймлайн уже точный, используй `Трекинг верен`, чтобы в отчёте осталось доказательство осознанной проверки. Если дню не хватает контекста, используй `Добавить контекст`, чтобы подготовить короткое событие дня вместо поздней реконструкции по памяти.

@@ -783,19 +783,22 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
               </button>
               <button
                 type="button"
-                onClick={copyDogfoodReport}
+                onClick={() => {
+                  if (!dayClosureStartedAt) {
+                    void ensureDayClosureStarted('report_button')
+                    return
+                  }
+                  void copyDogfoodReport()
+                }}
                 disabled={sessions.length === 0}
                 className="rounded border border-emerald-800 px-2 py-0.5 text-[11px] font-medium text-emerald-200 transition-colors hover:border-emerald-500 hover:text-emerald-100 disabled:cursor-not-allowed disabled:border-gray-800 disabled:text-gray-600"
               >
-                {copyReportState === 'copied'
-                  ? 'Скопировано'
-                  : copyReportState === 'failed'
-                    ? 'Ошибка'
-                    : reportIsDraft
-                      ? 'Копировать черновик'
-                      : reportHasPendingReview
-                        ? 'Копировать с проверками'
-                        : 'Копировать отчёт'}
+                {formatReportButtonLabel({
+                  copyState: copyReportState,
+                  closureStarted: Boolean(dayClosureStartedAt),
+                  reportIsDraft,
+                  reportHasPendingReview,
+                })}
               </button>
             </div>
           </div>
@@ -1841,6 +1844,25 @@ export function formatDogfoodReportState({
     return `черновик — осталось ${pendingReviewItemCount} ${pluralRu(pendingReviewItemCount, 'проверка', 'проверки', 'проверок')} перед финальным отчётом`
   }
   return 'финальный — нет активных фокус-блоков, активных дел и незакрытых проверок'
+}
+
+export function formatReportButtonLabel({
+  copyState,
+  closureStarted,
+  reportIsDraft,
+  reportHasPendingReview,
+}: {
+  copyState: 'idle' | 'copied' | 'failed'
+  closureStarted: boolean
+  reportIsDraft: boolean
+  reportHasPendingReview: boolean
+}) {
+  if (copyState === 'copied') return 'Скопировано'
+  if (copyState === 'failed') return 'Ошибка'
+  if (!closureStarted) return 'Начать закрытие'
+  if (reportIsDraft) return 'Копировать черновик'
+  if (reportHasPendingReview) return 'Копировать с проверками'
+  return 'Копировать отчёт'
 }
 
 export function formatReviewChecklistMarkdown(items: DayReviewItem[]) {

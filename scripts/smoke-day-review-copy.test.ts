@@ -7,6 +7,7 @@ import {
   formatDogfoodReportState,
   formatGapDayEventDraft,
   formatFocusMarkdownForReport,
+  formatReportButtonLabel,
   formatReviewChecklistMarkdown,
   formatReviewActionLabel,
   formatTelemetryForReport,
@@ -164,6 +165,54 @@ test('dogfood report state stays draft until review items are clear', () => {
   assert.equal(
     formatDogfoodReportState({ activeFocus: false, activeWorkItemCount: 0, pendingReviewItemCount: 0 }),
     'финальный — нет активных фокус-блоков, активных дел и незакрытых проверок'
+  )
+})
+
+test('report button starts the closure ritual before it offers copying', () => {
+  assert.equal(
+    formatReportButtonLabel({
+      copyState: 'idle',
+      closureStarted: false,
+      reportIsDraft: false,
+      reportHasPendingReview: false,
+    }),
+    'Начать закрытие'
+  )
+  assert.equal(
+    formatReportButtonLabel({
+      copyState: 'idle',
+      closureStarted: true,
+      reportIsDraft: true,
+      reportHasPendingReview: false,
+    }),
+    'Копировать черновик'
+  )
+  assert.equal(
+    formatReportButtonLabel({
+      copyState: 'idle',
+      closureStarted: true,
+      reportIsDraft: false,
+      reportHasPendingReview: true,
+    }),
+    'Копировать с проверками'
+  )
+  assert.equal(
+    formatReportButtonLabel({
+      copyState: 'idle',
+      closureStarted: true,
+      reportIsDraft: false,
+      reportHasPendingReview: false,
+    }),
+    'Копировать отчёт'
+  )
+  assert.equal(
+    formatReportButtonLabel({
+      copyState: 'copied',
+      closureStarted: false,
+      reportIsDraft: false,
+      reportHasPendingReview: false,
+    }),
+    'Скопировано'
   )
 })
 

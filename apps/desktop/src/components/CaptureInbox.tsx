@@ -17,6 +17,21 @@ interface CaptureInboxProps {
   targetWorkItemId?: string
 }
 
+export const CAPTURE_INBOX_LABELS = {
+  placeholder: 'Зафиксировать отвлечение...',
+  submit: 'Записать',
+  heading: 'Инбокс',
+  edit: 'Править',
+  delete: 'Удалить',
+  makeItem: 'В дело',
+  appendEvent: 'В событие',
+  done: 'Готово',
+  cancel: 'Отмена',
+  save: 'Сохранить',
+  createError: 'Не удалось записать отвлечение',
+  processError: 'Не удалось обработать отвлечение',
+} as const
+
 export default function CaptureInbox({ focusSessionId, targetWorkItemId }: CaptureInboxProps) {
   const [text, setText] = useState('')
   const capturesQuery = useOpenCaptures()
@@ -89,7 +104,7 @@ export default function CaptureInbox({ focusSessionId, targetWorkItemId }: Captu
               createCapture()
             }
           }}
-          placeholder="Зафиксировать отвлечение..."
+          placeholder={CAPTURE_INBOX_LABELS.placeholder}
           className="min-w-0 flex-1 rounded border border-gray-700 bg-gray-950 px-2 py-1.5 text-xs text-gray-100 placeholder-gray-500 focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
         />
         <button
@@ -98,26 +113,26 @@ export default function CaptureInbox({ focusSessionId, targetWorkItemId }: Captu
           disabled={!trimmed || createMutation.isPending}
           className="rounded border border-amber-700 px-2 py-1.5 text-xs font-semibold text-amber-100 transition-colors hover:border-amber-500 disabled:cursor-not-allowed disabled:border-gray-800 disabled:text-gray-600"
         >
-          Записать
+          {CAPTURE_INBOX_LABELS.submit}
         </button>
       </div>
 
       {createMutation.error && (
         <div className="text-[11px] text-red-300">
-          {createMutation.error instanceof Error ? createMutation.error.message : 'Не удалось записать capture'}
+          {formatMutationError(createMutation.error, CAPTURE_INBOX_LABELS.createError)}
         </div>
       )}
 
       {(updateMutation.error || deleteMutation.error) && (
         <div className="text-[11px] text-red-300">
-          {formatMutationError(updateMutation.error || deleteMutation.error, 'Не удалось обработать capture')}
+          {formatMutationError(updateMutation.error || deleteMutation.error, CAPTURE_INBOX_LABELS.processError)}
         </div>
       )}
 
       {captures.length > 0 && (
         <div className="grid gap-1">
           <div className="text-[11px] font-medium uppercase text-gray-500">
-            Инбокс · {captures.length}
+            {CAPTURE_INBOX_LABELS.heading} · {captures.length}
           </div>
           <div className="grid max-h-28 gap-1 overflow-auto pr-1">
             {captures.map((capture) => (
@@ -422,14 +437,14 @@ function CaptureRow({
               }}
               className="rounded border border-gray-700 px-1.5 py-0.5 text-[11px] text-gray-300 hover:border-gray-500"
             >
-              Отмена
+              {CAPTURE_INBOX_LABELS.cancel}
             </button>
             <button
               type="submit"
               disabled={!trimmedDraft || busy}
               className="rounded border border-amber-700 px-1.5 py-0.5 text-[11px] font-semibold text-amber-100 hover:border-amber-500 disabled:cursor-not-allowed disabled:border-gray-800 disabled:text-gray-600"
             >
-              Сохранить
+              {CAPTURE_INBOX_LABELS.save}
             </button>
           </div>
         </div>
@@ -452,7 +467,7 @@ function CaptureRow({
         disabled={busy}
         className="shrink-0 rounded border border-amber-800 px-1.5 py-0.5 text-[11px] text-amber-200 hover:border-amber-500 disabled:cursor-not-allowed disabled:border-gray-800 disabled:text-gray-600"
       >
-        Править
+        {CAPTURE_INBOX_LABELS.edit}
       </button>
       <button
         type="button"
@@ -460,7 +475,7 @@ function CaptureRow({
         disabled={busy}
         className="shrink-0 rounded border border-red-900 px-1.5 py-0.5 text-[11px] text-red-200 hover:border-red-600 disabled:cursor-not-allowed disabled:border-gray-800 disabled:text-gray-600"
       >
-        Удалить
+        {CAPTURE_INBOX_LABELS.delete}
       </button>
       <button
         type="button"
@@ -468,7 +483,7 @@ function CaptureRow({
         disabled={busy}
         className="shrink-0 rounded border border-blue-800 px-1.5 py-0.5 text-[11px] text-blue-200 hover:border-blue-500 disabled:cursor-not-allowed disabled:border-gray-800 disabled:text-gray-600"
       >
-        В дело
+        {CAPTURE_INBOX_LABELS.makeItem}
       </button>
       <button
         type="button"
@@ -476,7 +491,7 @@ function CaptureRow({
         disabled={busy}
         className="shrink-0 rounded border border-emerald-800 px-1.5 py-0.5 text-[11px] text-emerald-200 hover:border-emerald-500 disabled:cursor-not-allowed disabled:border-gray-800 disabled:text-gray-600"
       >
-        В событие
+        {CAPTURE_INBOX_LABELS.appendEvent}
       </button>
       <button
         type="button"
@@ -484,7 +499,7 @@ function CaptureRow({
         disabled={busy}
         className="shrink-0 rounded border border-gray-700 px-1.5 py-0.5 text-[11px] text-gray-300 hover:border-gray-500 disabled:cursor-not-allowed disabled:border-gray-800 disabled:text-gray-600"
       >
-        Готово
+        {CAPTURE_INBOX_LABELS.done}
       </button>
     </div>
   )

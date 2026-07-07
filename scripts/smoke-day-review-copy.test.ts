@@ -8,6 +8,18 @@ import {
   formatTelemetryForReport,
   type DayReviewItem,
 } from '../apps/desktop/src/components/FocusPanel'
+import { CAPTURE_INBOX_LABELS } from '../apps/desktop/src/components/CaptureInbox'
+
+test('capture inbox controls keep interruption handling in Russian', () => {
+  assert.equal(CAPTURE_INBOX_LABELS.placeholder, 'Зафиксировать отвлечение...')
+  assert.equal(CAPTURE_INBOX_LABELS.submit, 'Записать')
+  assert.equal(CAPTURE_INBOX_LABELS.heading, 'Инбокс')
+  assert.equal(CAPTURE_INBOX_LABELS.makeItem, 'В дело')
+  assert.equal(CAPTURE_INBOX_LABELS.appendEvent, 'В событие')
+  assert.equal(CAPTURE_INBOX_LABELS.done, 'Готово')
+  assert.equal(CAPTURE_INBOX_LABELS.createError, 'Не удалось записать отвлечение')
+  assert.equal(CAPTURE_INBOX_LABELS.processError, 'Не удалось обработать отвлечение')
+})
 
 test('day review checklist keeps the evening ritual in Russian', () => {
   const items: DayReviewItem[] = [
@@ -63,6 +75,9 @@ test('copied report keeps key focus and telemetry sections localized', () => {
     'Total events: 3',
     'Start requests: 1',
     'Stop requests: 1',
+    'Capture follow-up reviews: 1',
+    'Capture usage reviews: 1',
+    'Capture failures create/resolve/update/delete/convert: 0/0/0/0/0',
     'Day closure started/completed: 1/1',
     'Last day closure duration: 0:07',
     '',
@@ -87,7 +102,12 @@ test('copied report keeps key focus and telemetry sections localized', () => {
   assert(localizedTelemetry.includes('Всего событий: 3'))
   assert(localizedTelemetry.includes('Закрытий дня начато/завершено: 1/1'))
   assert(localizedTelemetry.includes('Последняя длительность закрытия дня: 0:07'))
+  assert(localizedTelemetry.includes('Проверок открытых отвлечений: 1'))
+  assert(localizedTelemetry.includes('Проверок использования инбокса: 1'))
+  assert(localizedTelemetry.includes('Ошибок отвлечений: создание/закрытие/изменение/удаление/превращение: 0/0/0/0/0'))
   assert(localizedTelemetry.includes('### События по типам'))
   assert(!localizedTelemetry.includes('## App Telemetry'), 'raw English telemetry heading should not leak into copied report')
   assert(!localizedTelemetry.includes('Total events:'), 'raw English telemetry counter should not leak into copied report')
+  assert(!localizedTelemetry.includes('Проверок follow-up по отвлечениям:'), 'old mixed-language follow-up label should not leak into copied report')
+  assert(!localizedTelemetry.includes('Проверок использования Inbox:'), 'old mixed-language Inbox label should not leak into copied report')
 })

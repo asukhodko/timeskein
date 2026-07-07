@@ -426,11 +426,11 @@ function assessEvidence(evidence, minFocusSeconds) {
   }
 
   if (evidence.activityZoneTotals.length <= 1 && evidence.sessions.length > 0 && evidence.telemetry.activityZoneReviews === 0) {
-    reviewItems.push("В дне видна только одна зона активности. Подтверди, что coordination/recovery/idle/personal действительно не было или это не потерялось.");
+    reviewItems.push("В дне видна только одна зона активности. Подтверди, что координации, восстановления, простоя и личных дел действительно не было или это не потерялось.");
   }
 
   if (evidence.nonWorkSeconds === 0 && evidence.sessions.length > 0 && evidence.telemetry.activityZoneReviews === 0) {
-    reviewItems.push("Нерабочее время равно нулю. Проверь, что перерывы, recovery, coordination и personal не были случайно сложены в рабочий фокус.");
+    reviewItems.push("Нерабочее время равно нулю. Проверь, что перерывы, восстановление, координация и личные дела не были случайно сложены в рабочий фокус.");
   }
 
   if (
@@ -451,7 +451,7 @@ function assessEvidence(evidence, minFocusSeconds) {
   }
 
   if (evidence.workItemEvents.length === 0 && evidence.sessions.length > 0) {
-    reviewItems.push("Нет timestamped Work Item Events. Если важны детали конкретной задачи, добавь событие или подними capture в событие, не полагаясь на память.");
+    reviewItems.push("Нет timestamped Work Item Events. Если важны детали конкретной задачи, добавь событие или подними отвлечение в событие, не полагаясь на память.");
   }
 
   if (evidence.openCaptures.length > 0 && evidence.telemetry.captureFollowupReviews === 0) {
@@ -459,7 +459,7 @@ function assessEvidence(evidence, minFocusSeconds) {
   }
 
   if (evidence.capturesCreatedToday.length === 0 && evidence.telemetry.captureUsageReviews === 0) {
-    reviewItems.push("Сегодня не было capture. Если отвлечения были, Capture Inbox не проверен в бою.");
+    reviewItems.push("Сегодня не было отвлечений. Если отвлечения были, инбокс отвлечений не проверен в бою.");
   }
 
   if (evidence.capturesCreatedToday.length > 0 && evidence.capturesDuringActiveFocus === 0 && evidence.telemetry.captureUsageReviews === 0) {
@@ -519,7 +519,7 @@ function assessEvidence(evidence, minFocusSeconds) {
   }
 
   if (evidence.telemetry.captureFailures > 0) {
-    reviewItems.push(`Найдено ошибок Capture Inbox: ${evidence.telemetry.captureFailures}. Проверь, остался ли захват отвлечений надёжным.`);
+    reviewItems.push(`Найдено ошибок инбокса отвлечений: ${evidence.telemetry.captureFailures}. Проверь, остался ли захват отвлечений надёжным.`);
   }
 
   if (evidence.telemetry.correctionFailures > 0) {
@@ -590,12 +590,12 @@ function buildRcReport(date, path, evidence, assessment, minFocusSeconds, strict
     `- Зон активности в отчёте: ${evidence.activityZoneTotals.length}`,
     `- Больших разрывов: ${evidence.gaps.length}`,
     `- Больших разрывов объяснено: ${Math.min(evidence.gapExplanationEvents, evidence.gaps.length)}/${evidence.gaps.length}`,
-    `- Capture создано сегодня: ${evidence.capturesCreatedToday.length}`,
-    `- Capture во время активного фокуса: ${evidence.capturesDuringActiveFocus}`,
-    `- Открытых capture: ${evidence.openCaptures.length}`,
-    `- Проверок follow-up по открытым capture: ${evidence.telemetry.captureFollowupReviews}`,
+    `- Отвлечений создано сегодня: ${evidence.capturesCreatedToday.length}`,
+    `- Отвлечений во время активного фокуса: ${evidence.capturesDuringActiveFocus}`,
+    `- Открытых отвлечений: ${evidence.openCaptures.length}`,
+    `- Проверок открытых отвлечений: ${evidence.telemetry.captureFollowupReviews}`,
     `- Проверок зон активности: ${evidence.telemetry.activityZoneReviews}`,
-    `- Проверок использования Capture Inbox: ${evidence.telemetry.captureUsageReviews}`,
+    `- Проверок использования инбокса: ${evidence.telemetry.captureUsageReviews}`,
     `- Проверок путей входа: ${evidence.telemetry.entryPathReviews}`,
     `- Проверок входа через окно: ${evidence.telemetry.windowEntrypointReviews}`,
     `- Событий App Telemetry: ${evidence.telemetry.total}`,
@@ -604,7 +604,7 @@ function buildRcReport(date, path, evidence, assessment, minFocusSeconds, strict
     `- API-ошибок: ${evidence.telemetry.apiErrors}`,
     `- Ошибок копирования/manual fallback: ${evidence.telemetry.copyFailures}/${evidence.telemetry.manualCopyFallbacks}`,
     `- Ошибок старта/остановки: ${evidence.telemetry.startFailures}/${evidence.telemetry.stopFailures}`,
-    `- Ошибок Capture Inbox: ${evidence.telemetry.captureFailures}`,
+    `- Ошибок инбокса отвлечений: ${evidence.telemetry.captureFailures}`,
     `- Коррекций запрошено/применено/проверено/ошибок: ${evidence.telemetry.correctionRequests}/${evidence.telemetry.corrections}/${evidence.telemetry.correctionReviews}/${evidence.telemetry.correctionFailures}`,
     `- Закрытий дня начато/завершено: ${evidence.telemetry.dayClosureStarts}/${evidence.telemetry.dayClosureCompletions}`,
     `- Последняя длительность закрытия дня: ${evidence.telemetry.lastDayClosureDurationSeconds == null ? "n/a" : formatDuration(evidence.telemetry.lastDayClosureDurationSeconds)}`,
@@ -780,7 +780,7 @@ function formatGoalAuditMarkdown(evidence, assessment, minFocusSeconds) {
     {
       requirement: "Gaps and captures visible",
       status: gapCaptureStatus,
-      evidence: `${evidence.gaps.length} больших разрывов, ${Math.min(evidence.gapExplanationEvents, evidence.gaps.length)} объяснено, ${evidence.openCaptures.length} открытых capture, ${evidence.telemetry.captureFollowupReviews} follow-up проверок, ${evidence.telemetry.captureUsageReviews} проверок использования, ${evidence.capturesDuringActiveFocus}/${evidence.capturesCreatedToday.length} capture во время активного фокуса`,
+      evidence: `${evidence.gaps.length} больших разрывов, ${Math.min(evidence.gapExplanationEvents, evidence.gaps.length)} объяснено, ${evidence.openCaptures.length} открытых отвлечений, ${evidence.telemetry.captureFollowupReviews} проверок открытых отвлечений, ${evidence.telemetry.captureUsageReviews} проверок использования, ${evidence.capturesDuringActiveFocus}/${evidence.capturesCreatedToday.length} отвлечений во время активного фокуса`,
     },
     {
       requirement: "Window and menubar friction evidenced",
@@ -846,9 +846,9 @@ function formatGoalAuditMarkdown(evidence, assessment, minFocusSeconds) {
 
 function formatCaptureActivityMarkdown(captures) {
   const lines = [
-    "## Активность Capture Inbox",
+    "## История отвлечений",
     "",
-    "| Время | Состояние | Capture | Во время | Результат |",
+    "| Время | Состояние | Отвлечение | Во время | Результат |",
     "| --- | --- | --- | --- | --- |",
   ];
 

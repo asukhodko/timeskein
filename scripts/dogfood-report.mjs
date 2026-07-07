@@ -414,14 +414,14 @@ function formatTelemetryForReport(markdown) {
     .replace(/^Copy failures:/gm, "Ошибок копирования:")
     .replace(/^Manual copy fallbacks:/gm, "Ручных fallback-копирований:")
     .replace(/^Capture created\/resolved\/converted:/gm, "Отвлечений создано/закрыто/превращено:")
-    .replace(/^Capture follow-up reviews:/gm, "Проверок follow-up по отвлечениям:")
+    .replace(/^Capture follow-up reviews:/gm, "Проверок открытых отвлечений:")
     .replace(/^Work Item time badge reviews:/gm, "Проверок бейджей времени Work Item:")
     .replace(/^Activity Zone reviews:/gm, "Проверок зон активности:")
-    .replace(/^Capture usage reviews:/gm, "Проверок использования Inbox:")
+    .replace(/^Capture usage reviews:/gm, "Проверок использования инбокса:")
     .replace(/^Entry path reviews:/gm, "Проверок путей входа:")
     .replace(/^Window entrypoint reviews:/gm, "Проверок входа в окно:")
     .replace(/^Capture updated\/deleted:/gm, "Отвлечений изменено/удалено:")
-    .replace(/^Capture failures create\/resolve\/update\/delete\/convert:/gm, "Ошибок отвлечений create/resolve/update/delete/convert:")
+    .replace(/^Capture failures create\/resolve\/update\/delete\/convert:/gm, "Ошибок отвлечений: создание/закрытие/изменение/удаление/превращение:")
     .replace(/^Corrections requested\/applied\/reviewed\/failed:/gm, "Коррекций запрошено/применено/проверено/ошибок:")
     .replace(/^Day closure started\/completed:/gm, "Закрытий дня начато/завершено:")
     .replace(/^Last day closure duration:/gm, "Последняя длительность закрытия дня:")
@@ -499,7 +499,7 @@ function buildReviewChecklistItems({
     items.push({
       level: "review",
       title: "Confirm non-work tracked time",
-      detail: "Перерывы, recovery, coordination или personal могли потеряться",
+      detail: "Перерывы, восстановление, координация или личные дела могли потеряться",
     });
   }
 
@@ -517,7 +517,7 @@ function buildReviewChecklistItems({
     items.push({
       level: "review",
       title: "Capture Inbox untested today",
-      detail: "За день не было ни одного capture",
+      detail: "За день не было ни одного отвлечения",
     });
   }
 
@@ -687,7 +687,7 @@ function formatDailyControlGoalAuditMarkdown({
         hasReview("Resolve, convert, or accept open captures")
           ? "review"
           : "pass",
-      evidence: `${focusMarkdown.includes("## Gaps >=") ? "раздел разрывов есть" : "больших разрывов нет"}, открытых отвлечений: ${openCaptures.length}, проверок follow-up: ${captureFollowupReviews}, проверок Inbox: ${captureUsageReviews}, отвлечений за день: ${captureActivity.length}`,
+      evidence: `${focusMarkdown.includes("## Gaps >=") ? "раздел разрывов есть" : "больших разрывов нет"}, открытых отвлечений: ${openCaptures.length}, проверок открытых отвлечений: ${captureFollowupReviews}, проверок инбокса: ${captureUsageReviews}, отвлечений за день: ${captureActivity.length}`,
     },
     {
       requirement: "Window and menubar friction evidenced",

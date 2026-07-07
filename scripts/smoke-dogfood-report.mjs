@@ -317,7 +317,7 @@ try {
     "report review checklist should not flag open captures after explicit follow-up review"
   );
   assert(
-    reviewedCaptureStdout.includes("Проверок follow-up по отвлечениям: 1"),
+    reviewedCaptureStdout.includes("Проверок открытых отвлечений: 1"),
     "report telemetry should include capture follow-up review"
   );
 
@@ -338,7 +338,7 @@ try {
     "report review checklist should not flag missing captures after explicit usage review"
   );
   assert(
-    acceptedCaptureUsageStdout.includes("Проверок использования Inbox: 1"),
+    acceptedCaptureUsageStdout.includes("Проверок использования инбокса: 1"),
     "report telemetry should include capture usage review"
   );
 

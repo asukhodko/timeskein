@@ -101,9 +101,9 @@ try {
   assert(good.stdout.includes("## События дня"), "good day Day Events section is missing");
   assert(good.stdout.includes("Gap explained: meeting buffer was costly"), "good day Day Event text is missing");
   assert(good.stdout.includes("## События Work Item"), "good day Work Item Events section is missing");
-  assert(good.stdout.includes("Capture создано сегодня: 1"), "good day capture count is missing");
-  assert(good.stdout.includes("Capture во время активного фокуса: 1"), "good day active-focus capture count is missing");
-  assert(good.stdout.includes("## Активность Capture Inbox"), "good day capture activity section is missing");
+  assert(good.stdout.includes("Отвлечений создано сегодня: 1"), "good day capture count is missing");
+  assert(good.stdout.includes("Отвлечений во время активного фокуса: 1"), "good day active-focus capture count is missing");
+  assert(good.stdout.includes("## История отвлечений"), "good day capture activity section is missing");
   assert(good.stdout.includes("| закрыто | Check incoming request later |"), "good day capture activity row is missing");
 
   const goodStrict = await runRcCheck(goodDb, ["--strict"]);
@@ -333,7 +333,7 @@ try {
   `);
   const openCapture = await runRcCheck(openCaptureDb);
   assert(openCapture.code === 0, "open capture should be a review item, not a hard blocker");
-  assert(openCapture.stdout.includes("Открытых capture: 1"), "open capture count is missing");
+  assert(openCapture.stdout.includes("Открытых отвлечений: 1"), "open capture count is missing");
   assert(
     openCapture.stdout.includes("| Разрывы и отвлечения видны | проверить |"),
     "open capture should mark gap/capture audit for review"
@@ -355,7 +355,7 @@ try {
   const acceptedOpenCaptureStrict = await runRcCheck(acceptedOpenCaptureDb, ["--strict"]);
   assert(acceptedOpenCaptureStrict.code === 0, "accepted open capture should pass strict RC check");
   assert(
-    acceptedOpenCaptureStrict.stdout.includes("Проверок follow-up по открытым capture: 1"),
+    acceptedOpenCaptureStrict.stdout.includes("Проверок открытых отвлечений: 1"),
     "accepted open capture follow-up evidence is missing"
   );
   assert(
@@ -373,7 +373,7 @@ try {
   const noActiveFocusCapture = await runRcCheck(noActiveFocusCaptureDb);
   assert(noActiveFocusCapture.code === 0, "capture without active focus should be a review item, not a hard blocker");
   assert(
-    noActiveFocusCapture.stdout.includes("Capture во время активного фокуса: 0"),
+    noActiveFocusCapture.stdout.includes("Отвлечений во время активного фокуса: 0"),
     "active-focus capture count should show zero"
   );
   assert(
@@ -395,7 +395,7 @@ try {
   const acceptedNoActiveFocusCaptureStrict = await runRcCheck(acceptedNoActiveFocusCaptureDb, ["--strict"]);
   assert(acceptedNoActiveFocusCaptureStrict.code === 0, "accepted capture usage review should pass strict RC check");
   assert(
-    acceptedNoActiveFocusCaptureStrict.stdout.includes("Проверок использования Capture Inbox: 1"),
+    acceptedNoActiveFocusCaptureStrict.stdout.includes("Проверок использования инбокса: 1"),
     "accepted capture usage review evidence is missing"
   );
   assert(
@@ -408,13 +408,13 @@ try {
   await runSql(noCaptureDb, "DELETE FROM captures;");
   const noCapture = await runRcCheck(noCaptureDb);
   assert(noCapture.code === 0, "missing captures should be a review item, not a hard blocker");
-  assert(noCapture.stdout.includes("Capture создано сегодня: 0"), "missing capture count should show zero");
+  assert(noCapture.stdout.includes("Отвлечений создано сегодня: 0"), "missing capture count should show zero");
   assert(
     noCapture.stdout.includes("| Разрывы и отвлечения видны | проверить |"),
     "missing captures should mark gap/capture audit for review"
   );
   assert(
-    noCapture.stdout.includes("Capture Inbox не проверен в бою"),
+    noCapture.stdout.includes("инбокс отвлечений не проверен в бою"),
     "missing captures review item is missing"
   );
   const acceptedNoCaptureDb = join(tempDir, "accepted-no-capture.db");
@@ -426,7 +426,7 @@ try {
   const acceptedNoCaptureStrict = await runRcCheck(acceptedNoCaptureDb, ["--strict"]);
   assert(acceptedNoCaptureStrict.code === 0, "accepted no-capture usage review should pass strict RC check");
   assert(
-    acceptedNoCaptureStrict.stdout.includes("Capture Inbox не проверен в бою") === false,
+    acceptedNoCaptureStrict.stdout.includes("инбокс отвлечений не проверен в бою") === false,
     "accepted no-capture usage review should clear missing-capture review item"
   );
 
@@ -438,9 +438,9 @@ try {
   `);
   const captureFailure = await runRcCheck(captureFailureDb);
   assert(captureFailure.code === 0, "capture failure should be a review item, not a hard blocker");
-  assert(captureFailure.stdout.includes("Ошибок Capture Inbox: 1"), "capture failure count is missing");
+  assert(captureFailure.stdout.includes("Ошибок инбокса отвлечений: 1"), "capture failure count is missing");
   assert(
-    captureFailure.stdout.includes("Найдено ошибок Capture Inbox"),
+    captureFailure.stdout.includes("Найдено ошибок инбокса отвлечений"),
     "capture failure review item is missing"
   );
 

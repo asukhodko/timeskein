@@ -398,6 +398,8 @@ function buildDogfoodReport(
     lines.push(formatCaptureActivityMarkdown(captureActivity).trim(), "");
   }
 
+  lines.push(formatShortClosureMarkdown(telemetryMarkdown).trim(), "");
+
   lines.push(formatReviewChecklistMarkdown(reviewItems).trim(), "");
   lines.push(formatDailyControlGoalAuditMarkdown({
     activeFocus,
@@ -415,8 +417,6 @@ function buildDogfoodReport(
     humanFocusMarkdown.trim(),
     "",
     humanTelemetryMarkdown.trim(),
-    "",
-    formatShortClosureMarkdown(telemetryMarkdown).trim(),
     "",
     formatAdditionalReviewMarkdown().trim(),
   );

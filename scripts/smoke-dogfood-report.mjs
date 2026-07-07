@@ -206,6 +206,14 @@ try {
   );
   assert(stdout.includes("## Разрывы >= 20:00"), "report did not include significant gaps");
   assert(stdout.includes("## Короткое закрытие"), "report did not include short closure section");
+  assert(
+    stdout.indexOf("## Короткое закрытие") < stdout.indexOf("## Проверка перед отчётом"),
+    "short closure should come before the review checklist"
+  );
+  assert(
+    stdout.indexOf("## Короткое закрытие") < stdout.indexOf("## Данные фокуса"),
+    "short closure should come before detailed focus data"
+  );
   assert(stdout.includes("Данным можно доверять: да/нет"), "report did not include short trust prompt");
   assert(
     stdout.includes("Закрытие уложилось в 10 минут: да (7:00)"),

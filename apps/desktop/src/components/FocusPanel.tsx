@@ -1099,6 +1099,8 @@ async function buildDogfoodReportMarkdown(
   const reportFocusMarkdown = formatFocusMarkdownForReport(todayMarkdown)
   const reportTelemetryMarkdown = formatTelemetryForReport(appTelemetryMarkdown)
 
+  lines.push(formatShortClosureMarkdown(appTelemetryMarkdown).trim(), '')
+
   lines.push(
     formatReviewChecklistMarkdown(reviewItems).trim(),
     '',
@@ -1117,8 +1119,6 @@ async function buildDogfoodReportMarkdown(
     reportFocusMarkdown.trim(),
     '',
     reportTelemetryMarkdown.trim(),
-    '',
-    formatShortClosureMarkdown(appTelemetryMarkdown).trim(),
     '',
     formatAdditionalReviewMarkdown().trim(),
   )

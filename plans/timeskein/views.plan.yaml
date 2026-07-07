@@ -129,7 +129,7 @@ x:
         mgmt:
           health: yellow
           owner: a.sukhodko
-          next_sync_goal: Run one post-baseline dogfood day and close it with saved report, saved RC evidence, and strict dogfood:goal-check.
+          next_sync_goal: Run one measured evening closure from the review panel, copy a final report in <=10 minutes, save evidence, and pass strict dogfood:goal-check.
       future-directions:
         title: Future directions
         scope_nodes:

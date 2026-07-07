@@ -134,6 +134,7 @@ async function checkSavedEvidence(date) {
   }
 
   const weak = [];
+  const notPassing = [];
   const reportRequirements = [
     ["# Timeskein dogfood report"],
     ["## Данные фокуса", "## Focus Data"],
@@ -186,11 +187,15 @@ async function checkSavedEvidence(date) {
   for (const aliases of reportDailyControlRows) {
     if (!includesAny(report, aliases)) {
       weak.push(`${reportPath} Daily Control Goal Audit does not include ${aliases[0]}`);
+    } else if (!isPassingAuditStatus(findAuditRowStatus(report, aliases))) {
+      notPassing.push(`${reportPath} Daily Control Goal Audit row ${aliases[0]} is not passing`);
     }
   }
   for (const aliases of rcDailyControlRows) {
     if (!includesAny(rcCheck, aliases)) {
       weak.push(`${rcPath} Daily Control Goal Audit does not include ${aliases[0]}`);
+    } else if (!isPassingAuditStatus(findAuditRowStatus(rcCheck, aliases))) {
+      notPassing.push(`${rcPath} Daily Control Goal Audit row ${aliases[0]} is not passing`);
     }
   }
   for (const aliases of rcOnlyDailyControlRows) {
@@ -202,13 +207,20 @@ async function checkSavedEvidence(date) {
     }
   }
 
-  if (weak.length > 0) {
+  if (weak.length > 0 || notPassing.length > 0) {
     throw new Error(
       [
         `Saved dogfood evidence is incomplete for ${date}:`,
         ...weak.map((item) => `- ${item}`),
+        ...notPassing.map((item) => `- ${item}`),
         "",
-        `Regenerate it with: pnpm dogfood:finish:save -- --date ${date}`,
+        ...(weak.length > 0 ? [`Regenerate stale or incomplete files with: pnpm dogfood:finish:save -- --date ${date}`] : []),
+        ...(notPassing.length > 0
+          ? [
+              "Resolve the listed review rows before rerunning the final gate.",
+              `For day-closure duration: start from \`Начать закрытие дня\`, copy the final report within 10 minutes, then save evidence with \`pnpm dogfood:finish:save -- --date ${date}\`.`,
+            ]
+          : []),
       ].join("\n")
     );
   }
@@ -216,6 +228,24 @@ async function checkSavedEvidence(date) {
 
 function includesAny(text, aliases) {
   return aliases.some((needle) => text.includes(needle));
+}
+
+function findAuditRowStatus(text, aliases) {
+  for (const line of text.split("\n")) {
+    const cells = line
+      .split("|")
+      .slice(1, -1)
+      .map((cell) => cell.trim());
+    if (cells.length >= 2 && aliases.some((needle) => cells[0] === needle)) {
+      return cells[1];
+    }
+  }
+
+  return undefined;
+}
+
+function isPassingAuditStatus(status) {
+  return status === "pass" || status === "ок";
 }
 
 async function readEvidenceFile(path, missing) {

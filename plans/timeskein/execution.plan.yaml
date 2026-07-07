@@ -256,9 +256,8 @@ execution:
       confidence: 0.9
       note: Completed a full post-baseline dogfood day on 2026-07-06 with 7:30:36 tracked, 7:29:18 work focus, 1:18 non-work tracked, 19 entrances, Activity Zones, Day Events, Work Item Events, Capture Inbox conversion, Work Item today/total badge review, typed and selected/list starts, and window show/hide request evidence.
     ts.daily_control.goal_check:
-      progress: 1.0
+      progress: 0.8
       actual_start: "2026-07-06"
-      actual_finish: "2026-07-06"
-      updated_at: "2026-07-06T22:09:00+03:00"
-      confidence: 0.95
-      note: "`pnpm dogfood:finish:save -- --date 2026-07-06` saved the report and RC evidence. `pnpm dogfood:goal-check -- --date 2026-07-06` passed after running pnpm test, dogfood:preflight, packaged macOS smoke, and strict RC evidence."
+      updated_at: "2026-07-07T03:00:00+03:00"
+      confidence: 0.9
+      note: "`pnpm dogfood:finish:save -- --date 2026-07-06` saved the report and RC evidence. A current `pnpm dogfood:goal-check -- --date 2026-07-06` run passed saved-evidence freshness, pnpm test, dogfood:preflight, packaged macOS smoke, and then failed strict RC evidence only because there is no measured day-closure duration: 0/0 day_closure_started/day_closure_completed. The remaining proof is one measured evening closure started from the review panel and completed with a final report in <=10 minutes."

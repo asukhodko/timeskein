@@ -296,7 +296,7 @@ Post-factum correction is implemented for stopped focus sessions. `focus.create_
 
 ## Dogfood Findings
 
-The 2026-07-01, 2026-07-02, and 2026-07-03 dogfood days showed that the core timer loop works, and that Capture Inbox can preserve incoming events without switching away from the current focus. The first post-baseline slice added post-factum correction, entry/window fixes, Day Events, Work Item Events, Activity Zones, explicit Work Item time-badge review evidence, and strict report evidence. The 2026-07-06 dogfood day proved the whole daily-control loop in real use: 7:30:36 tracked, 19 entrances, Activity Zones, Day Events, Work Item Events, Capture Inbox conversion, Work Item today/total badge evidence, zero API/copy/start-stop failures, and a green `pnpm dogfood:goal-check`.
+The 2026-07-01, 2026-07-02, and 2026-07-03 dogfood days showed that the core timer loop works, and that Capture Inbox can preserve incoming events without switching away from the current focus. The first post-baseline slice added post-factum correction, entry/window fixes, Day Events, Work Item Events, Activity Zones, explicit Work Item time-badge review evidence, and strict report evidence. The 2026-07-06 dogfood day produced a strong daily-control trace in real use: 7:30:36 tracked, 19 entrances, Activity Zones, Day Events, Work Item Events, Capture Inbox conversion, Work Item today/total badge evidence, and zero API/copy/start-stop failures. Current strict `pnpm dogfood:goal-check -- --date 2026-07-06` still fails correctly because that saved day has no measured closure duration: no `day_closure_started` / `day_closure_completed` telemetry.
 
 High-signal findings:
 

@@ -263,11 +263,12 @@ The third real dogfood day on 2026-07-03 closed the Capture Inbox release-candid
 
 Remaining friction is tracked as post-baseline work. Post-factum focus correction, Work Item title/basic-field editing, today/total time columns, macOS window restore, native menu bar status refresh, and window show/hide request telemetry are implemented. The next dogfood day should verify the macOS entry fixes in real use through both show and hide request events.
 
-The 2026-07-06 post-baseline daily-control day passed the strict evidence gate,
-but it was closed with Codex help. The next dogfood day must specifically verify
-the evening closure ritual: start closure from the review panel, handle blockers
-and accepted review items, copy the final report, then pass `pnpm dogfood:goal-check`
-with `Day closure duration measured` at 10:00 or less.
+The 2026-07-06 post-baseline daily-control day produced strong evidence for the
+daily trace, but it did not pass the current strict goal gate because closure
+duration was not measured. The next dogfood closure must specifically verify the
+evening ritual: start closure from the review panel, handle blockers and accepted
+review items, copy the final report, then pass `pnpm dogfood:goal-check` with
+`Day closure duration measured` at 10:00 or less.
 
 For the stricter daily-use gate, use [Dogfood Release Candidate](dogfood-release-candidate.md). The day protocol explains how to run the test; the release-candidate gate decides whether the current baseline is good enough to replace Session.
 

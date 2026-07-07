@@ -5,7 +5,7 @@ nodes:
     title: Timeskein
     kind: product
     status: in_progress
-    notes: Manual-first, local-first work inventory. The post-baseline daily-control loop passed one full real dogfood day; the next push should reduce evening review friction and clarify the next product gate.
+    notes: Manual-first, local-first work inventory. The post-baseline daily-control loop completed one full real dogfood day; the remaining proof is a measured evening closure in 10 minutes or less.
     x:
       ops:
         attention_class: overview
@@ -503,8 +503,8 @@ nodes:
     title: Daily Control Dogfood Gate
     kind: phase
     parent: ts
-    status: done
-    notes: Passed on 2026-07-06. One real post-baseline day produced focus blocks, Activity Zones, Day Events, Work Item Events, Capture Activity, Work Item today/total evidence, and strict goal-check evidence.
+    status: in_progress
+    notes: The 2026-07-06 post-baseline day produced focus blocks, Activity Zones, Day Events, Work Item Events, Capture Activity, Work Item today/total evidence, and strong strict evidence. Current strict goal-check still requires a measured evening closure duration from day_closure_started/day_closure_completed.
     x:
       ops:
         attention_class: current
@@ -524,11 +524,11 @@ nodes:
     title: Close daily-control goal with strict evidence
     kind: milestone
     parent: ts.daily_control
-    status: done
+    status: in_progress
     milestone: true
     deps:
       - id: ts.daily_control.real_day
-    notes: "`pnpm dogfood:finish:save -- --date 2026-07-06` saved the report and RC evidence, and `pnpm dogfood:goal-check -- --date 2026-07-06` passed after strict evidence verified all significant gaps, captures, window entrypoints, correction review, and local gates."
+    notes: "`pnpm dogfood:finish:save -- --date 2026-07-06` saved the report and RC evidence. Current `pnpm dogfood:goal-check -- --date 2026-07-06` fails correctly because the day has no measured closure duration: 0/0 day_closure_started/day_closure_completed. The next real dogfood closure must start from `Начать закрытие дня` and finish with final `Копировать отчёт` in 10 minutes or less."
     x:
       ops:
         attention_class: current

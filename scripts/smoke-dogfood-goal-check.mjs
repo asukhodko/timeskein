@@ -119,6 +119,53 @@ try {
     "",
   ].join("\n");
 
+  const failingClosureReportRows = reportAuditRows.map((row) =>
+    row.replace("| Day closure duration measured | pass |", "| Day closure duration measured | review |")
+  );
+  const failingClosureRcRows = rcAuditRows.map((row) =>
+    row.replace("| Day closure duration measured | pass |", "| Day closure duration measured | review |")
+  );
+  await writeFile(
+    join(tempDir, "timeskein-dogfood-report-2026-06-30.md"),
+    [
+      "# Timeskein dogfood report - 2026-06-30",
+      "## Focus Data",
+      "## Daily Control Goal Audit",
+      "",
+      "| Requirement | Status | Evidence |",
+      "| --- | --- | --- |",
+      ...failingClosureReportRows,
+      "",
+      "## App Telemetry",
+      "",
+    ].join("\n")
+  );
+  await writeFile(
+    join(tempDir, "timeskein-dogfood-rc-check-2026-06-30.md"),
+    [
+      "# Timeskein dogfood RC check - 2026-06-30",
+      "## Evidence Summary",
+      "## Daily Control Goal Audit",
+      "",
+      "| Requirement | Status | Evidence |",
+      "| --- | --- | --- |",
+      ...failingClosureRcRows,
+      "",
+    ].join("\n")
+  );
+
+  const reviewEvidence = await runGoalCheck(["--check-saved-evidence-only", "--date", "2026-06-30"], tempDir);
+  assert(reviewEvidence.code !== 0, "saved evidence with review audit rows should fail before expensive gates");
+  assert(
+    `${reviewEvidence.stdout}${reviewEvidence.stderr}`.includes("Daily Control Goal Audit row Day closure duration measured is not passing"),
+    "review saved evidence error did not mention the non-passing closure-duration row"
+  );
+  assert(
+    `${reviewEvidence.stdout}${reviewEvidence.stderr}`.includes("start from `Начать закрытие дня`") &&
+      `${reviewEvidence.stdout}${reviewEvidence.stderr}`.includes("copy the final report within 10 minutes"),
+    "review saved evidence error did not explain how to create measured closure evidence"
+  );
+
   await writeFile(
     join(tempDir, "timeskein-dogfood-report-2026-06-30.md"),
     [

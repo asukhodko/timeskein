@@ -92,4 +92,4 @@ schedule:
       start: "2026-07-06"
       duration: 1d
     ts.daily_control.goal_check:
-      start: "2026-07-06"
+      start: "2026-07-07"

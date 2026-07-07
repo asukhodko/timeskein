@@ -5,12 +5,12 @@ This is the current machine-checkable roadmap for Timeskein. The source files li
 `tools/opskarta`.
 
 The macOS dogfood release baseline was accepted on 2026-07-03 after three real
-tracked workdays. The post-baseline daily-control gate passed on 2026-07-06
-after a full real workday with focus blocks, Activity Zones, Day Events, Work
-Item Events, Capture Inbox evidence, Work Item today/total evidence, and strict
-`pnpm dogfood:goal-check`. The near-term focus can now move from proving the
-daily loop to reducing evening review friction and choosing the next measurable
-product gate.
+tracked workdays. The 2026-07-06 post-baseline daily-control day produced a
+strong real workday trace with focus blocks, Activity Zones, Day Events, Work
+Item Events, Capture Inbox evidence, and Work Item today/total evidence. The
+remaining daily-control proof is narrower: one evening closure must be measured
+from `Начать закрытие дня` to final `Копировать отчёт`, take at most 10 minutes,
+and then pass strict `pnpm dogfood:goal-check`.
 
 The completed Daily Control Goal Audit in the UI/CLI dogfood report and in
 `pnpm dogfood:rc-check` checked whether a real day had enough evidence for focus
@@ -30,7 +30,8 @@ RC-check evidence file, so the evening package is collected in one step.
 For final goal closure, `pnpm dogfood:goal-check` first requires the saved
 dogfood report and RC evidence for the real local database, then runs
 `pnpm test`, `pnpm dogfood:preflight`, and strict RC evidence on the same code.
-This passed for 2026-07-06.
+The current saved 2026-07-06 evidence is intentionally not enough for closure
+because it lacks `day_closure_started` / `day_closure_completed` telemetry.
 
 ## Executive view
 
@@ -64,7 +65,7 @@ flowchart LR
     class capture_inbox exec_done
     dogfood_hardening["Dogfood<br/>hardening<br/>100%<br/>веха 2026-07-06"]
     class dogfood_hardening exec_done
-    daily_control_gate["Daily<br/>Control Gate<br/>100%<br/>веха 2026-07-06"]
+    daily_control_gate["Daily<br/>Control Gate<br/>100%<br/>веха 2026-07-07"]
     class daily_control_gate exec_done
     future_directions["Future<br/>directions<br/>n/a"]
     class future_directions exec_mgmt_neutral
@@ -135,7 +136,7 @@ gantt
     ✅ Session replacement dogfood baseline  :milestone, done, ts_hardening_dogfood_release,    2026-07-06, 0d
     section Daily Control Gate
     ✅ Run post-baseline daily-control dogfood day  :done, ts_daily_control_real_day,    2026-07-06, 1d
-    ✅ Close daily-control goal with strict evidence  :milestone, done, ts_daily_control_goal_check,    2026-07-06, 0d
+    🔄 Close daily-control goal with strict evidence  :milestone, active, ts_daily_control_goal_check,    2026-07-07, 0d
 ```
 
 ## Current work list
@@ -175,9 +176,7 @@ gantt
 - Rebuild macOS app for regular personal use [done] (1 focus-blocks) {100%}
 - Write dogfood release notes and known limitations [done] (1 focus-blocks) {100%}
 - Session replacement dogfood baseline [done] {100%}
-- Daily Control Dogfood Gate [done] (1 focus-blocks) {100%}
 - Run post-baseline daily-control dogfood day [done] (1 focus-blocks) {100%}
-- Close daily-control goal with strict evidence [done] {100%}
 - App entry UX [in_progress] (8 focus-blocks) {98%}
 - Reduce the path from intent to tracked work [in_progress] (2 focus-blocks) {90%}
 - Day review and export [in_progress] (16 focus-blocks) {93%}
@@ -187,6 +186,8 @@ gantt
 - Dogfood hardening [in_progress] (8 focus-blocks) {100%}
 - Add smoke checks for focus-session flows [in_progress] (2 focus-blocks) {99%}
 - Fix first dogfood friction [in_progress] (2 focus-blocks) {100%}
+- Daily Control Dogfood Gate [in_progress] (1 focus-blocks) {100%}
+- Close daily-control goal with strict evidence [in_progress] {80%}
 <!-- GENERATED:END -->
 
 ## Deferred directions

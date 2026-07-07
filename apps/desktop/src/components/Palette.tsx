@@ -33,6 +33,7 @@ import {
   type InventoryMode,
 } from '../utils/inventoryModes'
 import { formatWorkItemStateLabel } from '../utils/workItemLabels'
+import { ITEM_UI_LABELS } from '../utils/itemUiLabels'
 
 const todayListHeightStorageKey = 'timeskein.todayListHeightPx'
 const defaultTodayListHeightPx = 288
@@ -576,7 +577,7 @@ export default function Palette() {
       {/* Delete Confirmation */}
       {showDeleteConfirm && selectedItem && (
         <ConfirmDialog
-          title="Удалить Work Item"
+          title={ITEM_UI_LABELS.deleteTitle}
           message={`Удалить "${selectedItem.title}"?`}
           confirmLabel="Удалить"
           cancelLabel="Отмена"

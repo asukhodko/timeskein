@@ -21,6 +21,7 @@ import {
 import { CAPTURE_INBOX_LABELS } from '../apps/desktop/src/components/CaptureInbox'
 import { FOCUS_CORRECTION_LABELS } from '../apps/desktop/src/components/FocusCorrectionDialog'
 import { MISSED_FOCUS_BLOCK_LABELS } from '../apps/desktop/src/components/MissedFocusBlockDialog'
+import { ITEM_UI_LABELS, formatCreateItemError } from '../apps/desktop/src/utils/itemUiLabels'
 
 test('capture inbox controls keep interruption handling in Russian', () => {
   assert.equal(CAPTURE_INBOX_LABELS.placeholder, 'Зафиксировать отвлечение...')
@@ -31,6 +32,18 @@ test('capture inbox controls keep interruption handling in Russian', () => {
   assert.equal(CAPTURE_INBOX_LABELS.done, 'Готово')
   assert.equal(CAPTURE_INBOX_LABELS.createError, 'Не удалось записать отвлечение')
   assert.equal(CAPTURE_INBOX_LABELS.processError, 'Не удалось обработать отвлечение')
+})
+
+test('item dialogs keep user-facing wording in Russian', () => {
+  assert.equal(ITEM_UI_LABELS.createTitle, 'Создать дело')
+  assert.equal(ITEM_UI_LABELS.noteDescription, 'Описание дела')
+  assert.equal(ITEM_UI_LABELS.deleteTitle, 'Удалить дело')
+  assert.equal(formatCreateItemError(new Error('A work item with this title already exists')), 'Дело с таким названием уже есть')
+  assert.equal(formatCreateItemError('boom'), 'Не удалось создать дело')
+
+  const labels = Object.values(ITEM_UI_LABELS).join('\n')
+  assert(!labels.includes('Work Item'), 'user-facing item dialog labels should not expose the model-side term')
+  assert(!labels.includes('work item'), 'user-facing item dialog labels should not expose the model-side term')
 })
 
 test('focus correction labels keep evening fixes calm', () => {

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { appendTimestampedEventDraft } from '../utils/timestampedEventEntry'
+import { ITEM_UI_LABELS } from '../utils/itemUiLabels'
 
 interface NoteEditorProps {
   itemTitle: string
@@ -77,7 +78,7 @@ export default function NoteEditor({
         <div className="text-sm text-gray-400 mb-1">Править заметку для:</div>
         <div className="text-gray-200 font-medium mb-3 truncate">{itemTitle}</div>
 
-        <div className="mb-2 text-xs uppercase tracking-wide text-gray-500">Описание Work Item</div>
+        <div className="mb-2 text-xs uppercase tracking-wide text-gray-500">{ITEM_UI_LABELS.noteDescription}</div>
         <textarea
           ref={textareaRef}
           value={note}

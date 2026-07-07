@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useCreateWorkItem } from '../hooks/useInventory'
 import type { ActivityZone, WorkItemState, WorkItemType } from '@timeskein/contracts'
+import { ITEM_UI_LABELS, formatCreateItemError } from '../utils/itemUiLabels'
 
 interface CreateDialogProps {
   onClose: () => void
@@ -40,7 +41,7 @@ export default function CreateDialog({ onClose, initialTitle = '' }: CreateDialo
       onClose()
     } catch (error) {
       console.error('Failed to create work item:', error)
-      setError(error instanceof Error ? error.message : 'Failed to create work item')
+      setError(formatCreateItemError(error))
     }
   }
 
@@ -61,7 +62,7 @@ export default function CreateDialog({ onClose, initialTitle = '' }: CreateDialo
         className="bg-gray-800 rounded-lg border border-gray-700 p-4 w-96 shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-lg font-semibold text-gray-200 mb-4">Создать Work Item</h2>
+        <h2 className="text-lg font-semibold text-gray-200 mb-4">{ITEM_UI_LABELS.createTitle}</h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Title */}

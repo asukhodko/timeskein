@@ -554,77 +554,71 @@ function assessEvidence(evidence, minFocusSeconds) {
 
 function buildMissingDbReport(date, path) {
   return [
-    `# Timeskein dogfood RC check - ${date}`,
+    `# RC-аудит dogfood-дня Timeskein - ${date}`,
     "",
-    "Verdict: blocked",
+    "Вердикт: заблокировано",
     "",
-    `DB not found: ${path}`,
+    `База не найдена: ${path}`,
     "",
   ].join("\n");
 }
 
 function buildRcReport(date, path, evidence, assessment, minFocusSeconds, strict) {
-  const verdict = assessment.hardBlockers.length > 0
-    ? "blocked"
-    : strict && assessment.reviewItems.length > 0
-      ? "blocked by review items in strict mode"
-    : assessment.reviewItems.length > 0
-      ? "ready for human RC verdict, with review items"
-      : "ready for human RC verdict";
+  const verdict = formatRcVerdict(assessment, strict);
 
   const lines = [
-    `# Timeskein dogfood RC check - ${date}`,
+    `# RC-аудит dogfood-дня Timeskein - ${date}`,
     "",
-    `Verdict: ${verdict}`,
-    `DB: ${path}`,
-    `Strict mode: ${strict ? "yes" : "no"}`,
+    `Вердикт: ${verdict}`,
+    `База: ${path}`,
+    `Строгий режим: ${formatYesNo(strict)}`,
     "",
-    "## Evidence Summary",
+    "## Сводка доказательств",
     "",
-    `- Total tracked: ${formatDuration(evidence.totalFocusSeconds)} (review threshold: ${formatDuration(minFocusSeconds)})`,
-    `- Work focus: ${formatDuration(evidence.workFocusSeconds)}`,
-    `- Non-work tracked: ${formatDuration(evidence.nonWorkSeconds)}`,
-    `- Entrances: ${evidence.sessions.length}`,
-    `- Work Items in report: ${evidence.workItemTotals.length}`,
-    `- Work Item time badge reviews: ${evidence.telemetry.workItemTimeBadgeReviews}`,
-    `- Work Item notes in report: ${evidence.workItemNoteCount}`,
-    `- Day Events: ${evidence.dayEvents.length}`,
-    `- Day Events with Activity Zone: ${evidence.dayEventsWithZone}`,
-    `- Day Events during active focus: ${evidence.dayEventsDuringActiveFocus}`,
-    `- Work Item Events: ${evidence.workItemEvents.length}`,
-    `- Work Item Events during active focus: ${evidence.workItemEventsDuringActiveFocus}`,
-    `- Activity Zones in report: ${evidence.activityZoneTotals.length}`,
-    `- Significant gaps: ${evidence.gaps.length}`,
-    `- Significant gaps explained: ${Math.min(evidence.gapExplanationEvents, evidence.gaps.length)}/${evidence.gaps.length}`,
-    `- Captures created today: ${evidence.capturesCreatedToday.length}`,
-    `- Captures during active focus: ${evidence.capturesDuringActiveFocus}`,
-    `- Open captures: ${evidence.openCaptures.length}`,
-    `- Open capture follow-up reviews: ${evidence.telemetry.captureFollowupReviews}`,
-    `- Activity Zone reviews: ${evidence.telemetry.activityZoneReviews}`,
-    `- Capture usage reviews: ${evidence.telemetry.captureUsageReviews}`,
-    `- Entry path reviews: ${evidence.telemetry.entryPathReviews}`,
-    `- Window entrypoint reviews: ${evidence.telemetry.windowEntrypointReviews}`,
-    `- App telemetry events: ${evidence.telemetry.total}`,
-    `- Start/switch/stop requests: ${evidence.telemetry.startRequests}/${evidence.telemetry.switchRequests}/${evidence.telemetry.stopRequests}`,
-    `- Typed/selected entry requests: ${evidence.telemetry.typedEntryRequests}/${evidence.telemetry.selectedEntryRequests}`,
-    `- API errors: ${evidence.telemetry.apiErrors}`,
-    `- Copy failures/manual fallbacks: ${evidence.telemetry.copyFailures}/${evidence.telemetry.manualCopyFallbacks}`,
-    `- Start/stop failures: ${evidence.telemetry.startFailures}/${evidence.telemetry.stopFailures}`,
-    `- Capture failures: ${evidence.telemetry.captureFailures}`,
-    `- Corrections requested/applied/reviewed/failed: ${evidence.telemetry.correctionRequests}/${evidence.telemetry.corrections}/${evidence.telemetry.correctionReviews}/${evidence.telemetry.correctionFailures}`,
-    `- Day closure started/completed: ${evidence.telemetry.dayClosureStarts}/${evidence.telemetry.dayClosureCompletions}`,
-    `- Last day closure duration: ${evidence.telemetry.lastDayClosureDurationSeconds == null ? "n/a" : formatDuration(evidence.telemetry.lastDayClosureDurationSeconds)}`,
-    `- Window shown/hidden: ${evidence.telemetry.windowShown}/${evidence.telemetry.windowHidden}`,
-    `- Window show/hide requests: ${evidence.telemetry.windowShowRequested}/${evidence.telemetry.windowHideRequested}`,
-    `- Window drag starts: ${evidence.telemetry.windowDragStarted}`,
-    `- Duplicate Work Item title groups: ${evidence.duplicateTitles.length}`,
+    `- Всего учтено: ${formatDuration(evidence.totalFocusSeconds)} (порог review: ${formatDuration(minFocusSeconds)})`,
+    `- Рабочий фокус: ${formatDuration(evidence.workFocusSeconds)}`,
+    `- Нерабочее учтено: ${formatDuration(evidence.nonWorkSeconds)}`,
+    `- Входов: ${evidence.sessions.length}`,
+    `- Work Item в отчёте: ${evidence.workItemTotals.length}`,
+    `- Проверок бейджей времени Work Item: ${evidence.telemetry.workItemTimeBadgeReviews}`,
+    `- Заметок Work Item в отчёте: ${evidence.workItemNoteCount}`,
+    `- Событий дня: ${evidence.dayEvents.length}`,
+    `- Событий дня с зоной активности: ${evidence.dayEventsWithZone}`,
+    `- Событий дня во время активного фокуса: ${evidence.dayEventsDuringActiveFocus}`,
+    `- Событий Work Item: ${evidence.workItemEvents.length}`,
+    `- Событий Work Item во время активного фокуса: ${evidence.workItemEventsDuringActiveFocus}`,
+    `- Зон активности в отчёте: ${evidence.activityZoneTotals.length}`,
+    `- Больших разрывов: ${evidence.gaps.length}`,
+    `- Больших разрывов объяснено: ${Math.min(evidence.gapExplanationEvents, evidence.gaps.length)}/${evidence.gaps.length}`,
+    `- Capture создано сегодня: ${evidence.capturesCreatedToday.length}`,
+    `- Capture во время активного фокуса: ${evidence.capturesDuringActiveFocus}`,
+    `- Открытых capture: ${evidence.openCaptures.length}`,
+    `- Проверок follow-up по открытым capture: ${evidence.telemetry.captureFollowupReviews}`,
+    `- Проверок зон активности: ${evidence.telemetry.activityZoneReviews}`,
+    `- Проверок использования Capture Inbox: ${evidence.telemetry.captureUsageReviews}`,
+    `- Проверок путей входа: ${evidence.telemetry.entryPathReviews}`,
+    `- Проверок входа через окно: ${evidence.telemetry.windowEntrypointReviews}`,
+    `- Событий App Telemetry: ${evidence.telemetry.total}`,
+    `- Запросов старт/переключение/остановка: ${evidence.telemetry.startRequests}/${evidence.telemetry.switchRequests}/${evidence.telemetry.stopRequests}`,
+    `- Входов typed/selected: ${evidence.telemetry.typedEntryRequests}/${evidence.telemetry.selectedEntryRequests}`,
+    `- API-ошибок: ${evidence.telemetry.apiErrors}`,
+    `- Ошибок копирования/manual fallback: ${evidence.telemetry.copyFailures}/${evidence.telemetry.manualCopyFallbacks}`,
+    `- Ошибок старта/остановки: ${evidence.telemetry.startFailures}/${evidence.telemetry.stopFailures}`,
+    `- Ошибок Capture Inbox: ${evidence.telemetry.captureFailures}`,
+    `- Коррекций запрошено/применено/проверено/ошибок: ${evidence.telemetry.correctionRequests}/${evidence.telemetry.corrections}/${evidence.telemetry.correctionReviews}/${evidence.telemetry.correctionFailures}`,
+    `- Закрытий дня начато/завершено: ${evidence.telemetry.dayClosureStarts}/${evidence.telemetry.dayClosureCompletions}`,
+    `- Последняя длительность закрытия дня: ${evidence.telemetry.lastDayClosureDurationSeconds == null ? "n/a" : formatDuration(evidence.telemetry.lastDayClosureDurationSeconds)}`,
+    `- Окно показано/скрыто: ${evidence.telemetry.windowShown}/${evidence.telemetry.windowHidden}`,
+    `- Запросы показать/скрыть окно: ${evidence.telemetry.windowShowRequested}/${evidence.telemetry.windowHideRequested}`,
+    `- Начатых перетаскиваний окна: ${evidence.telemetry.windowDragStarted}`,
+    `- Групп дублей названий Work Item: ${evidence.duplicateTitles.length}`,
     "",
   ];
 
   lines.push(...formatGoalAuditMarkdown(evidence, assessment, minFocusSeconds), "");
 
   if (evidence.workItemTotals.length > 0) {
-    lines.push("## By Work Item", "", "| Duration | Entrances | Work Item |", "| ---: | ---: | --- |");
+    lines.push("## По Work Item", "", "| Длительность | Входов | Work Item |", "| ---: | ---: | --- |");
     for (const item of evidence.workItemTotals) {
       lines.push(`| ${formatDuration(item.activeSeconds)} | ${item.entrances} | ${escapeMarkdownTable(item.title)} |`);
     }
@@ -632,7 +626,7 @@ function buildRcReport(date, path, evidence, assessment, minFocusSeconds, strict
   }
 
   if (evidence.activityZoneTotals.length > 0) {
-    lines.push("## By Activity Zone", "", "| Duration | Entrances | Zone |", "| ---: | ---: | --- |");
+    lines.push("## По зонам активности", "", "| Длительность | Входов | Зона |", "| ---: | ---: | --- |");
     for (const item of evidence.activityZoneTotals) {
       lines.push(`| ${formatDuration(item.activeSeconds)} | ${item.entrances} | ${escapeMarkdownTable(formatActivityZoneLabel(item.zone))} |`);
     }
@@ -640,20 +634,20 @@ function buildRcReport(date, path, evidence, assessment, minFocusSeconds, strict
   }
 
   if (evidence.dayEvents.length > 0) {
-    lines.push("## Day Events", "", "| Time | Zone | During Focus | Event |", "| --- | --- | --- | --- |");
+    lines.push("## События дня", "", "| Время | Зона | Во время фокуса | Событие |", "| --- | --- | --- | --- |");
     for (const event of evidence.dayEvents) {
       lines.push(
-        `| ${escapeMarkdownTable(formatClockTime(event.ts))} | ${escapeMarkdownTable(event.activity_zone ? formatActivityZoneLabel(event.activity_zone) : "")} | ${escapeMarkdownTable(event.focus_session_id ? "yes" : "")} | ${escapeMarkdownTable(event.text)} |`
+        `| ${escapeMarkdownTable(formatClockTime(event.ts))} | ${escapeMarkdownTable(event.activity_zone ? formatActivityZoneLabel(event.activity_zone) : "")} | ${escapeMarkdownTable(event.focus_session_id ? "да" : "")} | ${escapeMarkdownTable(event.text)} |`
       );
     }
     lines.push("");
   }
 
   if (evidence.workItemEvents.length > 0) {
-    lines.push("## Work Item Events", "", "| Time | Work Item | During Focus | Event |", "| --- | --- | --- | --- |");
+    lines.push("## События Work Item", "", "| Время | Work Item | Во время фокуса | Событие |", "| --- | --- | --- | --- |");
     for (const event of evidence.workItemEvents) {
       lines.push(
-        `| ${escapeMarkdownTable(formatClockTime(event.ts))} | ${escapeMarkdownTable(event.work_item_title ?? "unknown Work Item")} | ${escapeMarkdownTable(event.focus_session_id ? "yes" : "")} | ${escapeMarkdownTable(event.text)} |`
+        `| ${escapeMarkdownTable(formatClockTime(event.ts))} | ${escapeMarkdownTable(event.work_item_title ?? "неизвестный Work Item")} | ${escapeMarkdownTable(event.focus_session_id ? "да" : "")} | ${escapeMarkdownTable(event.text)} |`
       );
     }
     lines.push("");
@@ -702,6 +696,26 @@ function buildRcReport(date, path, evidence, assessment, minFocusSeconds, strict
   return lines.join("\n");
 }
 
+function formatRcVerdict(assessment, strict) {
+  if (assessment.hardBlockers.length > 0) {
+    return "заблокировано";
+  }
+
+  if (strict && assessment.reviewItems.length > 0) {
+    return "заблокировано пунктами проверки в strict-режиме";
+  }
+
+  if (assessment.reviewItems.length > 0) {
+    return "готово к ручному RC-вердикту, есть пункты проверки";
+  }
+
+  return "готово к ручному RC-вердикту";
+}
+
+function formatYesNo(value) {
+  return value ? "да" : "нет";
+}
+
 function formatGoalAuditMarkdown(evidence, assessment, minFocusSeconds) {
   const gapCaptureStatus = evidence.sessions.length === 0
     ? "block"
@@ -727,7 +741,7 @@ function formatGoalAuditMarkdown(evidence, assessment, minFocusSeconds) {
     {
       requirement: "Final state clean",
       status: evidence.activeSessions.length === 0 && evidence.activeWorkItems.length === 0 ? "pass" : "block",
-      evidence: `${evidence.activeSessions.length} active focus session(s), ${evidence.activeWorkItems.length} active Work Item(s)`,
+      evidence: `${evidence.activeSessions.length} активных фокус-сессий, ${evidence.activeWorkItems.length} Work Item со статусом active`,
     },
     {
       requirement: "Focus blocks visible",
@@ -736,7 +750,7 @@ function formatGoalAuditMarkdown(evidence, assessment, minFocusSeconds) {
         : evidence.totalFocusSeconds >= minFocusSeconds
           ? "pass"
           : "review",
-      evidence: `${evidence.sessions.length} entrance(s), ${formatDuration(evidence.totalFocusSeconds)} tracked`,
+      evidence: `${evidence.sessions.length} входов, ${formatDuration(evidence.totalFocusSeconds)} учтено`,
     },
     {
       requirement: "Work Item totals available",
@@ -745,7 +759,7 @@ function formatGoalAuditMarkdown(evidence, assessment, minFocusSeconds) {
         : evidence.telemetry.workItemTimeBadgeReviews > 0
           ? "pass"
           : "review",
-      evidence: `${evidence.workItemTotals.length} Work Item total row(s), ${evidence.telemetry.workItemTimeBadgeReviews} UI badge review(s)`,
+      evidence: `${evidence.workItemTotals.length} строк итогов Work Item, ${evidence.telemetry.workItemTimeBadgeReviews} проверок бейджей UI`,
     },
     {
       requirement: "Activity Zones separated",
@@ -754,19 +768,19 @@ function formatGoalAuditMarkdown(evidence, assessment, minFocusSeconds) {
         : (evidence.activityZoneTotals.length > 1 && evidence.nonWorkSeconds > 0) || evidence.telemetry.activityZoneReviews > 0
           ? "pass"
           : "review",
-      evidence: `${evidence.activityZoneTotals.length} zone(s), ${formatDuration(evidence.workFocusSeconds)} work, ${formatDuration(evidence.nonWorkSeconds)} non-work, ${evidence.telemetry.activityZoneReviews} review(s)`,
+      evidence: `${evidence.activityZoneTotals.length} зон, ${formatDuration(evidence.workFocusSeconds)} work, ${formatDuration(evidence.nonWorkSeconds)} вне работы, ${evidence.telemetry.activityZoneReviews} проверок`,
     },
     {
       requirement: "Day and Work Item context present",
       status: evidence.dayEvents.length + evidence.workItemEvents.length + evidence.workItemNoteCount > 0
         ? "pass"
         : "review",
-      evidence: `${evidence.dayEvents.length} Day Event(s), ${evidence.workItemEvents.length} Work Item Event(s), ${evidence.workItemNoteCount} Work Item note(s)`,
+      evidence: `${evidence.dayEvents.length} Day Event, ${evidence.workItemEvents.length} Work Item Event, ${evidence.workItemNoteCount} заметок Work Item`,
     },
     {
       requirement: "Gaps and captures visible",
       status: gapCaptureStatus,
-      evidence: `${evidence.gaps.length} significant gap(s), ${Math.min(evidence.gapExplanationEvents, evidence.gaps.length)} explained, ${evidence.openCaptures.length} open capture(s), ${evidence.telemetry.captureFollowupReviews} follow-up review(s), ${evidence.telemetry.captureUsageReviews} usage review(s), ${evidence.capturesDuringActiveFocus}/${evidence.capturesCreatedToday.length} capture(s) during active focus`,
+      evidence: `${evidence.gaps.length} больших разрывов, ${Math.min(evidence.gapExplanationEvents, evidence.gaps.length)} объяснено, ${evidence.openCaptures.length} открытых capture, ${evidence.telemetry.captureFollowupReviews} follow-up проверок, ${evidence.telemetry.captureUsageReviews} проверок использования, ${evidence.capturesDuringActiveFocus}/${evidence.capturesCreatedToday.length} capture во время активного фокуса`,
     },
     {
       requirement: "Window and menubar friction evidenced",
@@ -776,7 +790,7 @@ function formatGoalAuditMarkdown(evidence, assessment, minFocusSeconds) {
         (windowRequestsCovered || evidence.telemetry.windowEntrypointReviews > 0)
           ? "pass"
           : "review",
-      evidence: `${evidence.telemetry.windowShown}/${evidence.telemetry.windowHidden} show/hide, ${evidence.telemetry.windowShowRequested}/${evidence.telemetry.windowHideRequested} show/hide request(s), ${evidence.telemetry.windowDragStarted} drag start(s), ${evidence.telemetry.windowEntrypointReviews} review(s), ${evidence.telemetry.apiErrors} API error(s)`,
+      evidence: `${evidence.telemetry.windowShown}/${evidence.telemetry.windowHidden} показов/скрытий, ${evidence.telemetry.windowShowRequested}/${evidence.telemetry.windowHideRequested} запросов показать/скрыть, ${evidence.telemetry.windowDragStarted} начал перетаскивания, ${evidence.telemetry.windowEntrypointReviews} проверок, ${evidence.telemetry.apiErrors} API-ошибок`,
     },
     {
       requirement: "Start and continue paths evidenced",
@@ -785,7 +799,7 @@ function formatGoalAuditMarkdown(evidence, assessment, minFocusSeconds) {
         : entryPathsCovered || evidence.telemetry.entryPathReviews > 0
           ? "pass"
           : "review",
-      evidence: `${evidence.telemetry.typedEntryRequests} typed, ${evidence.telemetry.selectedEntryRequests} selected/list, ${evidence.telemetry.stopRequests} stop request(s), ${evidence.telemetry.entryPathReviews} review(s)`,
+      evidence: `${evidence.telemetry.typedEntryRequests} typed, ${evidence.telemetry.selectedEntryRequests} selected/list, ${evidence.telemetry.stopRequests} stop-запросов, ${evidence.telemetry.entryPathReviews} проверок`,
     },
     {
       requirement: "Tracking correction or review evidenced",
@@ -794,7 +808,7 @@ function formatGoalAuditMarkdown(evidence, assessment, minFocusSeconds) {
         : evidence.telemetry.corrections > 0 || evidence.telemetry.correctionReviews > 0
           ? "pass"
           : "review",
-      evidence: `${evidence.telemetry.correctionRequests}/${evidence.telemetry.corrections}/${evidence.telemetry.correctionReviews}/${evidence.telemetry.correctionFailures} requested/applied/reviewed/failed`,
+      evidence: `${evidence.telemetry.correctionRequests}/${evidence.telemetry.corrections}/${evidence.telemetry.correctionReviews}/${evidence.telemetry.correctionFailures} запрошено/применено/проверено/ошибок`,
     },
     {
       requirement: "Day closure duration measured",
@@ -804,68 +818,108 @@ function formatGoalAuditMarkdown(evidence, assessment, minFocusSeconds) {
         evidence.telemetry.lastDayClosureDurationSeconds <= 10 * 60
           ? "pass"
           : "review",
-      evidence: `${evidence.telemetry.dayClosureStarts}/${evidence.telemetry.dayClosureCompletions} started/completed, last duration ${evidence.telemetry.lastDayClosureDurationSeconds == null ? "n/a" : formatDuration(evidence.telemetry.lastDayClosureDurationSeconds)}`,
+      evidence: `${evidence.telemetry.dayClosureStarts}/${evidence.telemetry.dayClosureCompletions} начато/завершено, последняя длительность ${evidence.telemetry.lastDayClosureDurationSeconds == null ? "n/a" : formatDuration(evidence.telemetry.lastDayClosureDurationSeconds)}`,
     },
     {
       requirement: "Hard blockers absent",
       status: assessment.hardBlockers.length === 0 ? "pass" : "block",
-      evidence: `${assessment.hardBlockers.length} hard blocker(s)`,
+      evidence: `${assessment.hardBlockers.length} жёстких блокеров`,
     },
     {
       requirement: "Local gates",
       status: "manual",
-      evidence: "Run pnpm dogfood:goal-check on the same code before closing the goal",
+      evidence: "Запусти pnpm dogfood:goal-check на том же коде перед закрытием цели",
     },
   ];
 
   return [
-    "## Daily Control Goal Audit",
+    "## Аудит закрытия дня",
     "",
-    "| Requirement | Status | Evidence |",
+    "| Проверка | Статус | Доказательство |",
     "| --- | --- | --- |",
     ...rows.map(
       (row) =>
-        `| ${escapeMarkdownTable(row.requirement)} | ${escapeMarkdownTable(row.status)} | ${escapeMarkdownTable(row.evidence)} |`
+        `| ${escapeMarkdownTable(formatGoalAuditRequirement(row.requirement))} | ${escapeMarkdownTable(formatGoalAuditStatus(row.status))} | ${escapeMarkdownTable(row.evidence)} |`
     ),
   ];
 }
 
 function formatCaptureActivityMarkdown(captures) {
   const lines = [
-    "## Capture Activity",
+    "## Активность Capture Inbox",
     "",
-    "| Time | State | Capture | During | Outcome |",
+    "| Время | Состояние | Capture | Во время | Результат |",
     "| --- | --- | --- | --- | --- |",
   ];
 
   for (const capture of captures) {
     lines.push(
-      `| ${escapeMarkdownTable(formatClockTime(capture.created_at))} | ${escapeMarkdownTable(capture.state)} | ${escapeMarkdownTable(capture.text)} | ${escapeMarkdownTable(formatCaptureDuring(capture))} | ${escapeMarkdownTable(formatCaptureOutcome(capture))} |`
+      `| ${escapeMarkdownTable(formatClockTime(capture.created_at))} | ${escapeMarkdownTable(formatCaptureState(capture.state))} | ${escapeMarkdownTable(capture.text)} | ${escapeMarkdownTable(formatCaptureDuring(capture))} | ${escapeMarkdownTable(formatCaptureOutcome(capture))} |`
     );
   }
 
   return `${lines.join("\n")}\n`;
 }
 
+function formatGoalAuditRequirement(requirement) {
+  const labels = new Map([
+    ["Final state clean", "Финальное состояние чистое"],
+    ["Focus blocks visible", "Фокус-блоки видны"],
+    ["Work Item totals available", "Итоги по Work Item есть"],
+    ["Activity Zones separated", "Зоны активности разделены"],
+    ["Day and Work Item context present", "Контекст дня и Work Item сохранён"],
+    ["Gaps and captures visible", "Разрывы и отвлечения видны"],
+    ["Window and menubar friction evidenced", "Окно и menu bar проверены"],
+    ["Start and continue paths evidenced", "Старт и продолжение проверены"],
+    ["Tracking correction or review evidenced", "Коррекция трекинга проверена"],
+    ["Day closure duration measured", "Длительность закрытия измерена"],
+    ["Hard blockers absent", "Жёстких блокеров нет"],
+    ["Local gates", "Локальные проверки"],
+  ]);
+
+  return labels.get(requirement) ?? requirement;
+}
+
+function formatGoalAuditStatus(status) {
+  const labels = new Map([
+    ["pass", "ок"],
+    ["review", "проверить"],
+    ["block", "блокер"],
+    ["manual", "вручную"],
+  ]);
+
+  return labels.get(status) ?? status;
+}
+
+function formatCaptureState(state) {
+  const labels = new Map([
+    ["open", "открыто"],
+    ["resolved", "закрыто"],
+    ["converted", "превращено"],
+  ]);
+
+  return labels.get(state) ?? state;
+}
+
 function formatCaptureDuring(capture) {
   if (!capture.focus_session_id) {
-    return "no active focus";
+    return "нет активного фокуса";
   }
 
-  return capture.focus_work_item_title ?? capture.focus_title ?? "linked focus block";
+  return capture.focus_work_item_title ?? capture.focus_title ?? "связанный фокус-блок";
 }
 
 function formatCaptureOutcome(capture) {
   if (capture.state === "resolved") {
-    return `resolved ${formatClockTime(capture.resolved_at ?? capture.updated_at)}`;
+    return `закрыто ${formatClockTime(capture.resolved_at ?? capture.updated_at)}`;
   }
 
   if (capture.state === "converted") {
     const itemTitle = capture.work_item_title ? ` -> ${capture.work_item_title}` : "";
-    return `converted ${formatClockTime(capture.converted_at ?? capture.updated_at)}${itemTitle}`;
+    return `превращено ${formatClockTime(capture.converted_at ?? capture.updated_at)}${itemTitle}`;
   }
 
-  return "open";
+  return "открыто";
 }
 
 function isGapExplanationText(text) {

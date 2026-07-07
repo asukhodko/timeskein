@@ -89,7 +89,7 @@ try {
     "saved default report did not include daily control audit"
   );
   assert(
-    defaultRcMarkdown.includes("## Daily Control Goal Audit"),
+    defaultRcMarkdown.includes("## Аудит закрытия дня"),
     "saved RC check did not include daily control audit"
   );
 

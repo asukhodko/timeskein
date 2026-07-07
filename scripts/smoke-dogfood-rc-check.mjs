@@ -60,48 +60,48 @@ try {
 
   const good = await runRcCheck(goodDb);
   assert(good.code === 0, "good day should not be blocked");
-  assert(good.stdout.includes("Verdict: ready for human RC verdict"), "good day verdict is missing");
-  assert(good.stdout.includes("Strict mode: no"), "good day strict-mode marker is missing");
-  assert(good.stdout.includes("Total tracked: 3:30:00"), "good day total tracked is missing");
-  assert(good.stdout.includes("Work focus: 2:00:00"), "good day work focus is missing");
-  assert(good.stdout.includes("Non-work tracked: 1:30:00"), "good day non-work tracked is missing");
-  assert(good.stdout.includes("Work Item time badge reviews: 1"), "good day Work Item badge review count is missing");
-  assert(good.stdout.includes("Activity Zones in report: 2"), "good day zone count is missing");
-  assert(good.stdout.includes("Significant gaps: 1"), "good day significant gap count is missing");
-  assert(good.stdout.includes("Significant gaps explained: 1/1"), "good day explained gap count is missing");
-  assert(good.stdout.includes("Day Events: 1"), "good day Day Events count is missing");
-  assert(good.stdout.includes("Day Events with Activity Zone: 1"), "good day zoned Day Events count is missing");
-  assert(good.stdout.includes("Day Events during active focus: 1"), "good day active-focus Day Events count is missing");
-  assert(good.stdout.includes("Work Item Events: 1"), "good day Work Item Events count is missing");
-  assert(good.stdout.includes("Start/switch/stop requests: 2/0/1"), "good day entry request count is missing");
-  assert(good.stdout.includes("Typed/selected entry requests: 1/1"), "good day entry control count is missing");
-  assert(good.stdout.includes("Corrections requested/applied/reviewed/failed: 1/1/0/0"), "good day correction telemetry is missing");
-  assert(good.stdout.includes("Day closure started/completed: 1/1"), "good day closure telemetry is missing");
-  assert(good.stdout.includes("Last day closure duration: 7:00"), "good day closure duration is missing");
-  assert(good.stdout.includes("Window shown/hidden: 1/1"), "good day window telemetry is missing");
-  assert(good.stdout.includes("Window show/hide requests: 1/1"), "good day window request telemetry is missing");
-  assert(good.stdout.includes("## Daily Control Goal Audit"), "good day goal audit section is missing");
-  assert(good.stdout.includes("| Focus blocks visible | pass |"), "good day focus-block audit row is missing");
-  assert(good.stdout.includes("| Work Item totals available | pass |"), "good day Work Item totals audit row is missing");
-  assert(good.stdout.includes("| Activity Zones separated | pass |"), "good day activity-zone audit row is missing");
-  assert(good.stdout.includes("| Gaps and captures visible | pass |"), "good day gap/capture audit row is missing");
-  assert(good.stdout.includes("| Start and continue paths evidenced | pass |"), "good day entry-path audit row is missing");
-  assert(good.stdout.includes("| Tracking correction or review evidenced | pass |"), "good day correction audit row is missing");
-  assert(good.stdout.includes("| Day closure duration measured | pass |"), "good day closure-duration audit row is missing");
-  assert(good.stdout.includes("| Local gates | manual |"), "good day local-gates audit row is missing");
+  assert(good.stdout.includes("Вердикт: готово к ручному RC-вердикту"), "good day verdict is missing");
+  assert(good.stdout.includes("Строгий режим: нет"), "good day strict-mode marker is missing");
+  assert(good.stdout.includes("Всего учтено: 3:30:00"), "good day total tracked is missing");
+  assert(good.stdout.includes("Рабочий фокус: 2:00:00"), "good day work focus is missing");
+  assert(good.stdout.includes("Нерабочее учтено: 1:30:00"), "good day non-work tracked is missing");
+  assert(good.stdout.includes("Проверок бейджей времени Work Item: 1"), "good day Work Item badge review count is missing");
+  assert(good.stdout.includes("Зон активности в отчёте: 2"), "good day zone count is missing");
+  assert(good.stdout.includes("Больших разрывов: 1"), "good day significant gap count is missing");
+  assert(good.stdout.includes("Больших разрывов объяснено: 1/1"), "good day explained gap count is missing");
+  assert(good.stdout.includes("Событий дня: 1"), "good day Day Events count is missing");
+  assert(good.stdout.includes("Событий дня с зоной активности: 1"), "good day zoned Day Events count is missing");
+  assert(good.stdout.includes("Событий дня во время активного фокуса: 1"), "good day active-focus Day Events count is missing");
+  assert(good.stdout.includes("Событий Work Item: 1"), "good day Work Item Events count is missing");
+  assert(good.stdout.includes("Запросов старт/переключение/остановка: 2/0/1"), "good day entry request count is missing");
+  assert(good.stdout.includes("Входов typed/selected: 1/1"), "good day entry control count is missing");
+  assert(good.stdout.includes("Коррекций запрошено/применено/проверено/ошибок: 1/1/0/0"), "good day correction telemetry is missing");
+  assert(good.stdout.includes("Закрытий дня начато/завершено: 1/1"), "good day closure telemetry is missing");
+  assert(good.stdout.includes("Последняя длительность закрытия дня: 7:00"), "good day closure duration is missing");
+  assert(good.stdout.includes("Окно показано/скрыто: 1/1"), "good day window telemetry is missing");
+  assert(good.stdout.includes("Запросы показать/скрыть окно: 1/1"), "good day window request telemetry is missing");
+  assert(good.stdout.includes("## Аудит закрытия дня"), "good day goal audit section is missing");
+  assert(good.stdout.includes("| Фокус-блоки видны | ок |"), "good day focus-block audit row is missing");
+  assert(good.stdout.includes("| Итоги по Work Item есть | ок |"), "good day Work Item totals audit row is missing");
+  assert(good.stdout.includes("| Зоны активности разделены | ок |"), "good day activity-zone audit row is missing");
+  assert(good.stdout.includes("| Разрывы и отвлечения видны | ок |"), "good day gap/capture audit row is missing");
+  assert(good.stdout.includes("| Старт и продолжение проверены | ок |"), "good day entry-path audit row is missing");
+  assert(good.stdout.includes("| Коррекция трекинга проверена | ок |"), "good day correction audit row is missing");
+  assert(good.stdout.includes("| Длительность закрытия измерена | ок |"), "good day closure-duration audit row is missing");
+  assert(good.stdout.includes("| Локальные проверки | вручную |"), "good day local-gates audit row is missing");
   assert(good.stdout.includes("pnpm dogfood:goal-check"), "good day local-gates audit did not mention goal-check");
-  assert(good.stdout.includes("## By Activity Zone"), "good day zone section is missing");
-  assert(good.stdout.includes("## Day Events"), "good day Day Events section is missing");
+  assert(good.stdout.includes("## По зонам активности"), "good day zone section is missing");
+  assert(good.stdout.includes("## События дня"), "good day Day Events section is missing");
   assert(good.stdout.includes("Gap explained: meeting buffer was costly"), "good day Day Event text is missing");
-  assert(good.stdout.includes("## Work Item Events"), "good day Work Item Events section is missing");
-  assert(good.stdout.includes("Captures created today: 1"), "good day capture count is missing");
-  assert(good.stdout.includes("Captures during active focus: 1"), "good day active-focus capture count is missing");
-  assert(good.stdout.includes("## Capture Activity"), "good day capture activity section is missing");
-  assert(good.stdout.includes("| resolved | Check incoming request later |"), "good day capture activity row is missing");
+  assert(good.stdout.includes("## События Work Item"), "good day Work Item Events section is missing");
+  assert(good.stdout.includes("Capture создано сегодня: 1"), "good day capture count is missing");
+  assert(good.stdout.includes("Capture во время активного фокуса: 1"), "good day active-focus capture count is missing");
+  assert(good.stdout.includes("## Активность Capture Inbox"), "good day capture activity section is missing");
+  assert(good.stdout.includes("| закрыто | Check incoming request later |"), "good day capture activity row is missing");
 
   const goodStrict = await runRcCheck(goodDb, ["--strict"]);
   assert(goodStrict.code === 0, "good day should pass strict RC check");
-  assert(goodStrict.stdout.includes("Strict mode: yes"), "strict RC check marker is missing");
+  assert(goodStrict.stdout.includes("Строгий режим: да"), "strict RC check marker is missing");
 
   const singleZoneDb = join(tempDir, "single-zone.db");
   await copyDb(goodDb, singleZoneDb);
@@ -125,11 +125,11 @@ try {
   const acceptedSingleZoneStrict = await runRcCheck(acceptedSingleZoneDb, ["--strict"]);
   assert(acceptedSingleZoneStrict.code === 0, "accepted Activity Zone review should pass strict RC check");
   assert(
-    acceptedSingleZoneStrict.stdout.includes("Activity Zone reviews: 1"),
+    acceptedSingleZoneStrict.stdout.includes("Проверок зон активности: 1"),
     "accepted Activity Zone review evidence is missing"
   );
   assert(
-    acceptedSingleZoneStrict.stdout.includes("| Activity Zones separated | pass |"),
+    acceptedSingleZoneStrict.stdout.includes("| Зоны активности разделены | ок |"),
     "accepted Activity Zone review should pass Activity Zone audit row"
   );
 
@@ -139,7 +139,7 @@ try {
   const unexplainedGapStrict = await runRcCheck(unexplainedGapDb, ["--strict"]);
   assert(unexplainedGapStrict.code !== 0, "strict RC check should fail when significant gaps are not explained");
   assert(
-    unexplainedGapStrict.stdout.includes("| Gaps and captures visible | review |"),
+    unexplainedGapStrict.stdout.includes("| Разрывы и отвлечения видны | проверить |"),
     "unexplained gaps should mark gap/capture audit for review"
   );
   assert(
@@ -165,11 +165,11 @@ try {
   const acceptedNoSelectedEntryStrict = await runRcCheck(acceptedNoSelectedEntryDb, ["--strict"]);
   assert(acceptedNoSelectedEntryStrict.code === 0, "accepted entry path review should pass strict RC check");
   assert(
-    acceptedNoSelectedEntryStrict.stdout.includes("Entry path reviews: 1"),
+    acceptedNoSelectedEntryStrict.stdout.includes("Проверок путей входа: 1"),
     "accepted entry path review evidence is missing"
   );
   assert(
-    acceptedNoSelectedEntryStrict.stdout.includes("| Start and continue paths evidenced | pass |"),
+    acceptedNoSelectedEntryStrict.stdout.includes("| Старт и продолжение проверены | ок |"),
     "accepted entry path review should pass entry audit row"
   );
 
@@ -195,11 +195,11 @@ try {
   const acceptedNoWindowRequestStrict = await runRcCheck(acceptedNoWindowRequestDb, ["--strict"]);
   assert(acceptedNoWindowRequestStrict.code === 0, "accepted window entrypoint review should pass strict RC check");
   assert(
-    acceptedNoWindowRequestStrict.stdout.includes("Window entrypoint reviews: 1"),
+    acceptedNoWindowRequestStrict.stdout.includes("Проверок входа через окно: 1"),
     "accepted window entrypoint review evidence is missing"
   );
   assert(
-    acceptedNoWindowRequestStrict.stdout.includes("| Window and menubar friction evidenced | pass |"),
+    acceptedNoWindowRequestStrict.stdout.includes("| Окно и menu bar проверены | ок |"),
     "accepted window entrypoint review should pass window audit row"
   );
 
@@ -213,7 +213,7 @@ try {
     "strict RC check should explain missing window hide request evidence when show exists"
   );
   assert(
-    showOnlyWindowRequestStrict.stdout.includes("| Window and menubar friction evidenced | review |"),
+    showOnlyWindowRequestStrict.stdout.includes("| Окно и menu bar проверены | проверить |"),
     "missing hide request should mark window audit for review"
   );
 
@@ -227,7 +227,7 @@ try {
     "strict RC check should explain missing window show request evidence when hide exists"
   );
   assert(
-    hideOnlyWindowRequestStrict.stdout.includes("| Window and menubar friction evidenced | review |"),
+    hideOnlyWindowRequestStrict.stdout.includes("| Окно и menu bar проверены | проверить |"),
     "missing show request should mark window audit for review"
   );
 
@@ -241,7 +241,7 @@ try {
     "strict RC check should explain missing Work Item badge review evidence"
   );
   assert(
-    noBadgeReviewStrict.stdout.includes("| Work Item totals available | review |"),
+    noBadgeReviewStrict.stdout.includes("| Итоги по Work Item есть | проверить |"),
     "missing Work Item badge review should mark Work Item totals audit for review"
   );
 
@@ -259,7 +259,7 @@ try {
     "strict RC check should not show the old English closure-duration warning"
   );
   assert(
-    noClosureStrict.stdout.includes("| Day closure duration measured | review |"),
+    noClosureStrict.stdout.includes("| Длительность закрытия измерена | проверить |"),
     "missing closure duration should mark closure audit for review"
   );
 
@@ -269,7 +269,7 @@ try {
   assert(saved.stdout.includes(`Сохранён RC-аудит dogfood-дня Timeskein: ${savedPath}`), "save output path is missing");
   assert(!saved.stdout.includes("Saved Timeskein dogfood RC check:"), "save output leaked old English RC check message");
   const savedMarkdown = await readFile(savedPath, "utf8");
-  assert(savedMarkdown.includes("# Timeskein dogfood RC check - 2026-06-30"), "saved RC check title is missing");
+  assert(savedMarkdown.includes("# RC-аудит dogfood-дня Timeskein - 2026-06-30"), "saved RC check title is missing");
   assert(savedMarkdown.includes("Ручной RC-вердикт"), "saved RC check manual verdict is missing");
 
   const reviewedOnlyDb = join(tempDir, "reviewed-only.db");
@@ -282,7 +282,7 @@ try {
   const reviewedOnly = await runRcCheck(reviewedOnlyDb);
   assert(reviewedOnly.code === 0, "accepted correction review should not block");
   assert(
-    reviewedOnly.stdout.includes("Corrections requested/applied/reviewed/failed: 0/0/1/0"),
+    reviewedOnly.stdout.includes("Коррекций запрошено/применено/проверено/ошибок: 0/0/1/0"),
     "accepted correction review telemetry is missing"
   );
   assert(
@@ -314,8 +314,8 @@ try {
   `);
   const legacy = await runRcCheck(legacyDb, ["--min-focus-minutes", "60"]);
   assert(legacy.code === 0, "legacy schema should not crash the RC check");
-  assert(legacy.stdout.includes("Total tracked: 2:00:00"), "legacy schema total tracked is missing");
-  assert(legacy.stdout.includes("## Daily Control Goal Audit"), "legacy schema goal audit section is missing");
+  assert(legacy.stdout.includes("Всего учтено: 2:00:00"), "legacy schema total tracked is missing");
+  assert(legacy.stdout.includes("## Аудит закрытия дня"), "legacy schema goal audit section is missing");
   assert(legacy.stdout.includes("| 2:00:00 | 1 | Work |"), "legacy schema should fall back to Work zone");
 
   const openCaptureDb = join(tempDir, "open-capture.db");
@@ -326,16 +326,16 @@ try {
   `);
   const openCapture = await runRcCheck(openCaptureDb);
   assert(openCapture.code === 0, "open capture should be a review item, not a hard blocker");
-  assert(openCapture.stdout.includes("Open captures: 1"), "open capture count is missing");
+  assert(openCapture.stdout.includes("Открытых capture: 1"), "open capture count is missing");
   assert(
-    openCapture.stdout.includes("| Gaps and captures visible | review |"),
+    openCapture.stdout.includes("| Разрывы и отвлечения видны | проверить |"),
     "open capture should mark gap/capture audit for review"
   );
   assert(openCapture.stdout.includes("Что проверить"), "open capture review section is missing");
   const openCaptureStrict = await runRcCheck(openCaptureDb, ["--strict"]);
   assert(openCaptureStrict.code !== 0, "strict RC check should fail on review items");
   assert(
-    openCaptureStrict.stdout.includes("Verdict: blocked by review items in strict mode"),
+    openCaptureStrict.stdout.includes("Вердикт: заблокировано пунктами проверки в strict-режиме"),
     "strict RC check should explain review-item failure"
   );
 
@@ -348,11 +348,11 @@ try {
   const acceptedOpenCaptureStrict = await runRcCheck(acceptedOpenCaptureDb, ["--strict"]);
   assert(acceptedOpenCaptureStrict.code === 0, "accepted open capture should pass strict RC check");
   assert(
-    acceptedOpenCaptureStrict.stdout.includes("Open capture follow-up reviews: 1"),
+    acceptedOpenCaptureStrict.stdout.includes("Проверок follow-up по открытым capture: 1"),
     "accepted open capture follow-up evidence is missing"
   );
   assert(
-    acceptedOpenCaptureStrict.stdout.includes("| Gaps and captures visible | pass |"),
+    acceptedOpenCaptureStrict.stdout.includes("| Разрывы и отвлечения видны | ок |"),
     "accepted open capture should pass gap/capture audit row"
   );
   assert(
@@ -366,11 +366,11 @@ try {
   const noActiveFocusCapture = await runRcCheck(noActiveFocusCaptureDb);
   assert(noActiveFocusCapture.code === 0, "capture without active focus should be a review item, not a hard blocker");
   assert(
-    noActiveFocusCapture.stdout.includes("Captures during active focus: 0"),
+    noActiveFocusCapture.stdout.includes("Capture во время активного фокуса: 0"),
     "active-focus capture count should show zero"
   );
   assert(
-    noActiveFocusCapture.stdout.includes("| Gaps and captures visible | review |"),
+    noActiveFocusCapture.stdout.includes("| Разрывы и отвлечения видны | проверить |"),
     "capture without active focus should mark gap/capture audit for review"
   );
   assert(
@@ -388,11 +388,11 @@ try {
   const acceptedNoActiveFocusCaptureStrict = await runRcCheck(acceptedNoActiveFocusCaptureDb, ["--strict"]);
   assert(acceptedNoActiveFocusCaptureStrict.code === 0, "accepted capture usage review should pass strict RC check");
   assert(
-    acceptedNoActiveFocusCaptureStrict.stdout.includes("Capture usage reviews: 1"),
+    acceptedNoActiveFocusCaptureStrict.stdout.includes("Проверок использования Capture Inbox: 1"),
     "accepted capture usage review evidence is missing"
   );
   assert(
-    acceptedNoActiveFocusCaptureStrict.stdout.includes("| Gaps and captures visible | pass |"),
+    acceptedNoActiveFocusCaptureStrict.stdout.includes("| Разрывы и отвлечения видны | ок |"),
     "accepted capture usage review should pass gap/capture audit row"
   );
 
@@ -401,9 +401,9 @@ try {
   await runSql(noCaptureDb, "DELETE FROM captures;");
   const noCapture = await runRcCheck(noCaptureDb);
   assert(noCapture.code === 0, "missing captures should be a review item, not a hard blocker");
-  assert(noCapture.stdout.includes("Captures created today: 0"), "missing capture count should show zero");
+  assert(noCapture.stdout.includes("Capture создано сегодня: 0"), "missing capture count should show zero");
   assert(
-    noCapture.stdout.includes("| Gaps and captures visible | review |"),
+    noCapture.stdout.includes("| Разрывы и отвлечения видны | проверить |"),
     "missing captures should mark gap/capture audit for review"
   );
   assert(
@@ -431,7 +431,7 @@ try {
   `);
   const captureFailure = await runRcCheck(captureFailureDb);
   assert(captureFailure.code === 0, "capture failure should be a review item, not a hard blocker");
-  assert(captureFailure.stdout.includes("Capture failures: 1"), "capture failure count is missing");
+  assert(captureFailure.stdout.includes("Ошибок Capture Inbox: 1"), "capture failure count is missing");
   assert(
     captureFailure.stdout.includes("Найдено ошибок Capture Inbox"),
     "capture failure review item is missing"

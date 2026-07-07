@@ -75,9 +75,9 @@ try {
   await writeFile(
     join(tempDir, "timeskein-dogfood-rc-check-2026-06-30.md"),
     [
-      "# Timeskein dogfood RC check - 2026-06-30",
-      "## Evidence Summary",
-      "## Daily Control Goal Audit",
+      "# RC-аудит dogfood-дня Timeskein - 2026-06-30",
+      "## Сводка доказательств",
+      "## Аудит закрытия дня",
       "",
     ].join("\n")
   );
@@ -103,8 +103,18 @@ try {
     "| Hard blockers absent | pass | 0 blocker(s) |",
   ];
   const rcAuditRows = [
-    ...reportAuditRows,
-    "| Local gates | manual | Run pnpm dogfood:goal-check on the same code before closing the goal |",
+    "| Финальное состояние чистое | ок | 0 активных фокус-сессий, 0 Work Item со статусом active |",
+    "| Фокус-блоки видны | ок | 3 входов, 2:00 учтено |",
+    "| Итоги по Work Item есть | ок | 2 строк итогов Work Item, 1 проверок бейджей UI |",
+    "| Зоны активности разделены | ок | 2 зон, 1:30 work, 0:30 вне работы |",
+    "| Контекст дня и Work Item сохранён | ок | 1 Day Event, 1 Work Item Event, 1 заметок Work Item |",
+    "| Разрывы и отвлечения видны | ок | 1 больших разрывов, 1 объяснено, 0 открытых capture |",
+    "| Окно и menu bar проверены | ок | 2/2 показов/скрытий |",
+    "| Старт и продолжение проверены | ок | 1 typed, 1 selected/list, 2 stop-запросов |",
+    "| Коррекция трекинга проверена | ок | 0/0/1/0 запрошено/применено/проверено/ошибок |",
+    "| Длительность закрытия измерена | ок | 1/1 начато/завершено, последняя длительность 7:00 |",
+    "| Жёстких блокеров нет | ок | 0 жёстких блокеров |",
+    "| Локальные проверки | вручную | Запусти pnpm dogfood:goal-check на том же коде перед закрытием цели |",
   ];
   const reportAuditMarkdown = [
     "## Daily Control Goal Audit",
@@ -115,9 +125,9 @@ try {
     "",
   ].join("\n");
   const rcAuditMarkdown = [
-    "## Daily Control Goal Audit",
+    "## Аудит закрытия дня",
     "",
-    "| Requirement | Status | Evidence |",
+    "| Проверка | Статус | Доказательство |",
     "| --- | --- | --- |",
     ...rcAuditRows,
     "",
@@ -127,7 +137,7 @@ try {
     row.replace("| Day closure duration measured | pass |", "| Day closure duration measured | review |")
   );
   const failingClosureRcRows = rcAuditRows.map((row) =>
-    row.replace("| Day closure duration measured | pass |", "| Day closure duration measured | review |")
+    row.replace("| Длительность закрытия измерена | ок |", "| Длительность закрытия измерена | проверить |")
   );
   await writeFile(
     join(tempDir, "timeskein-dogfood-report-2026-06-30.md"),
@@ -147,11 +157,11 @@ try {
   await writeFile(
     join(tempDir, "timeskein-dogfood-rc-check-2026-06-30.md"),
     [
-      "# Timeskein dogfood RC check - 2026-06-30",
-      "## Evidence Summary",
-      "## Daily Control Goal Audit",
+      "# RC-аудит dogfood-дня Timeskein - 2026-06-30",
+      "## Сводка доказательств",
+      "## Аудит закрытия дня",
       "",
-      "| Requirement | Status | Evidence |",
+      "| Проверка | Статус | Доказательство |",
       "| --- | --- | --- |",
       ...failingClosureRcRows,
       "",
@@ -161,7 +171,7 @@ try {
   const reviewEvidence = await runGoalCheck(["--check-saved-evidence-only", "--date", "2026-06-30"], tempDir);
   assert(reviewEvidence.code !== 0, "saved evidence with review audit rows should fail before expensive gates");
   assert(
-    `${reviewEvidence.stdout}${reviewEvidence.stderr}`.includes("строка аудита «Day closure duration measured» ещё не в статусе ok/pass"),
+    `${reviewEvidence.stdout}${reviewEvidence.stderr}`.includes("строка аудита «Длительность закрытия измерена» ещё не в статусе ok/pass"),
     "review saved evidence error did not mention the non-passing closure-duration row"
   );
   assert(
@@ -183,8 +193,8 @@ try {
   await writeFile(
     join(tempDir, "timeskein-dogfood-rc-check-2026-06-30.md"),
     [
-      "# Timeskein dogfood RC check - 2026-06-30",
-      "## Evidence Summary",
+      "# RC-аудит dogfood-дня Timeskein - 2026-06-30",
+      "## Сводка доказательств",
       rcAuditMarkdown,
       "",
     ].join("\n")

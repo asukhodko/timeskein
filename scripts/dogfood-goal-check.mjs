@@ -142,9 +142,9 @@ async function checkSavedEvidence(date) {
     ["## Телеметрия приложения", "## App Telemetry"],
   ];
   const rcRequirements = [
-    ["# Timeskein dogfood RC check"],
-    ["## Evidence Summary"],
-    ["## Daily Control Goal Audit"],
+    ["# RC-аудит dogfood-дня Timeskein", "# Timeskein dogfood RC check"],
+    ["## Сводка доказательств", "## Evidence Summary"],
+    ["## Аудит закрытия дня", "## Daily Control Goal Audit"],
   ];
   const reportDailyControlRows = [
     ["Финальное состояние чистое", "Final state clean"],
@@ -160,19 +160,19 @@ async function checkSavedEvidence(date) {
     ["Жёстких блокеров нет", "Hard blockers absent"],
   ];
   const rcDailyControlRows = [
-    ["Final state clean"],
-    ["Focus blocks visible"],
-    ["Work Item totals available"],
-    ["Activity Zones separated"],
-    ["Day and Work Item context present"],
-    ["Gaps and captures visible"],
-    ["Window and menubar friction evidenced"],
-    ["Start and continue paths evidenced"],
-    ["Tracking correction or review evidenced"],
-    ["Day closure duration measured"],
-    ["Hard blockers absent"],
+    ["Финальное состояние чистое", "Final state clean"],
+    ["Фокус-блоки видны", "Focus blocks visible"],
+    ["Итоги по Work Item есть", "Work Item totals available"],
+    ["Зоны активности разделены", "Activity Zones separated"],
+    ["Контекст дня и Work Item сохранён", "Day and Work Item context present"],
+    ["Разрывы и отвлечения видны", "Gaps and captures visible"],
+    ["Окно и menu bar проверены", "Window and menubar friction evidenced"],
+    ["Старт и продолжение проверены", "Start and continue paths evidenced"],
+    ["Коррекция трекинга проверена", "Tracking correction or review evidenced"],
+    ["Длительность закрытия измерена", "Day closure duration measured"],
+    ["Жёстких блокеров нет", "Hard blockers absent"],
   ];
-  const rcOnlyDailyControlRows = [["Local gates"]];
+  const rcOnlyDailyControlRows = [["Локальные проверки", "Local gates"]];
 
   for (const aliases of reportRequirements) {
     if (!includesAny(report, aliases)) {

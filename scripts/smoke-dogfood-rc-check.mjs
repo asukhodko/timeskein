@@ -112,7 +112,7 @@ try {
   const singleZoneStrict = await runRcCheck(singleZoneDb, ["--strict"]);
   assert(singleZoneStrict.code !== 0, "strict RC check should fail when Activity Zone coverage is unreviewed");
   assert(
-    singleZoneStrict.stdout.includes("Only one Activity Zone appears in the day"),
+    singleZoneStrict.stdout.includes("видна только одна зона активности"),
     "strict RC check should explain single-zone evidence"
   );
 
@@ -143,7 +143,7 @@ try {
     "unexplained gaps should mark gap/capture audit for review"
   );
   assert(
-    unexplainedGapStrict.stdout.includes("significant gap(s) lack a Day Event explanation"),
+    unexplainedGapStrict.stdout.includes("больших разрывов без объяснения Day Event"),
     "strict RC check should explain missing gap explanation"
   );
 
@@ -153,7 +153,7 @@ try {
   const noSelectedEntryStrict = await runRcCheck(noSelectedEntryDb, ["--strict"]);
   assert(noSelectedEntryStrict.code !== 0, "strict RC check should fail without selected/list entry evidence");
   assert(
-    noSelectedEntryStrict.stdout.includes("No selected/list Work Item entry request found"),
+    noSelectedEntryStrict.stdout.includes("Нет входа через выбранный Work Item из списка"),
     "strict RC check should explain missing selected/list entry evidence"
   );
   const acceptedNoSelectedEntryDb = join(tempDir, "accepted-no-selected-entry.db");
@@ -179,11 +179,11 @@ try {
   const noWindowRequestStrict = await runRcCheck(noWindowRequestDb, ["--strict"]);
   assert(noWindowRequestStrict.code !== 0, "strict RC check should fail without window request evidence");
   assert(
-    noWindowRequestStrict.stdout.includes("No window show request telemetry found"),
+    noWindowRequestStrict.stdout.includes("Нет telemetry-запроса показать окно"),
     "strict RC check should explain missing window show request evidence"
   );
   assert(
-    noWindowRequestStrict.stdout.includes("No window hide request telemetry found"),
+    noWindowRequestStrict.stdout.includes("Нет telemetry-запроса скрыть окно"),
     "strict RC check should explain missing window hide request evidence"
   );
   const acceptedNoWindowRequestDb = join(tempDir, "accepted-no-window-request.db");
@@ -209,7 +209,7 @@ try {
   const showOnlyWindowRequestStrict = await runRcCheck(showOnlyWindowRequestDb, ["--strict"]);
   assert(showOnlyWindowRequestStrict.code !== 0, "strict RC check should fail without hide request evidence");
   assert(
-    showOnlyWindowRequestStrict.stdout.includes("No window hide request telemetry found"),
+    showOnlyWindowRequestStrict.stdout.includes("Нет telemetry-запроса скрыть окно"),
     "strict RC check should explain missing window hide request evidence when show exists"
   );
   assert(
@@ -223,7 +223,7 @@ try {
   const hideOnlyWindowRequestStrict = await runRcCheck(hideOnlyWindowRequestDb, ["--strict"]);
   assert(hideOnlyWindowRequestStrict.code !== 0, "strict RC check should fail without show request evidence");
   assert(
-    hideOnlyWindowRequestStrict.stdout.includes("No window show request telemetry found"),
+    hideOnlyWindowRequestStrict.stdout.includes("Нет telemetry-запроса показать окно"),
     "strict RC check should explain missing window show request evidence when hide exists"
   );
   assert(
@@ -237,7 +237,7 @@ try {
   const noBadgeReviewStrict = await runRcCheck(noBadgeReviewDb, ["--strict"]);
   assert(noBadgeReviewStrict.code !== 0, "strict RC check should fail without Work Item badge review evidence");
   assert(
-    noBadgeReviewStrict.stdout.includes("No Work Item today/total badge review telemetry found"),
+    noBadgeReviewStrict.stdout.includes("Нет подтверждения проверки бейджей today/total"),
     "strict RC check should explain missing Work Item badge review evidence"
   );
   assert(
@@ -270,7 +270,7 @@ try {
   assert(!saved.stdout.includes("Saved Timeskein dogfood RC check:"), "save output leaked old English RC check message");
   const savedMarkdown = await readFile(savedPath, "utf8");
   assert(savedMarkdown.includes("# Timeskein dogfood RC check - 2026-06-30"), "saved RC check title is missing");
-  assert(savedMarkdown.includes("Manual RC Verdict"), "saved RC check manual verdict is missing");
+  assert(savedMarkdown.includes("Ручной RC-вердикт"), "saved RC check manual verdict is missing");
 
   const reviewedOnlyDb = join(tempDir, "reviewed-only.db");
   await copyDb(goodDb, reviewedOnlyDb);
@@ -286,7 +286,7 @@ try {
     "accepted correction review telemetry is missing"
   );
   assert(
-    reviewedOnly.stdout.includes("No focus correction or correction-review telemetry found") === false,
+    reviewedOnly.stdout.includes("Нет коррекции фокуса и нет подтверждения проверки коррекций") === false,
     "accepted correction review should clear missing-correction review item"
   );
 
@@ -331,7 +331,7 @@ try {
     openCapture.stdout.includes("| Gaps and captures visible | review |"),
     "open capture should mark gap/capture audit for review"
   );
-  assert(openCapture.stdout.includes("Review Items"), "open capture review section is missing");
+  assert(openCapture.stdout.includes("Что проверить"), "open capture review section is missing");
   const openCaptureStrict = await runRcCheck(openCaptureDb, ["--strict"]);
   assert(openCaptureStrict.code !== 0, "strict RC check should fail on review items");
   assert(
@@ -356,7 +356,7 @@ try {
     "accepted open capture should pass gap/capture audit row"
   );
   assert(
-    acceptedOpenCaptureStrict.stdout.includes("open capture(s) remain") === false,
+    acceptedOpenCaptureStrict.stdout.includes("открытых отвлечений осталось") === false,
     "accepted open capture should clear open-capture review item"
   );
 
@@ -374,7 +374,7 @@ try {
     "capture without active focus should mark gap/capture audit for review"
   );
   assert(
-    noActiveFocusCapture.stdout.includes("none were linked to an active focus session"),
+    noActiveFocusCapture.stdout.includes("ни один не связан с активной фокус-сессией"),
     "missing active-focus capture review item"
   );
   const noActiveFocusCaptureStrict = await runRcCheck(noActiveFocusCaptureDb, ["--strict"]);
@@ -407,7 +407,7 @@ try {
     "missing captures should mark gap/capture audit for review"
   );
   assert(
-    noCapture.stdout.includes("Capture Inbox was not tested in battle"),
+    noCapture.stdout.includes("Capture Inbox не проверен в бою"),
     "missing captures review item is missing"
   );
   const acceptedNoCaptureDb = join(tempDir, "accepted-no-capture.db");
@@ -419,7 +419,7 @@ try {
   const acceptedNoCaptureStrict = await runRcCheck(acceptedNoCaptureDb, ["--strict"]);
   assert(acceptedNoCaptureStrict.code === 0, "accepted no-capture usage review should pass strict RC check");
   assert(
-    acceptedNoCaptureStrict.stdout.includes("Capture Inbox was not tested in battle") === false,
+    acceptedNoCaptureStrict.stdout.includes("Capture Inbox не проверен в бою") === false,
     "accepted no-capture usage review should clear missing-capture review item"
   );
 
@@ -433,7 +433,7 @@ try {
   assert(captureFailure.code === 0, "capture failure should be a review item, not a hard blocker");
   assert(captureFailure.stdout.includes("Capture failures: 1"), "capture failure count is missing");
   assert(
-    captureFailure.stdout.includes("Capture Inbox failure event"),
+    captureFailure.stdout.includes("Найдено ошибок Capture Inbox"),
     "capture failure review item is missing"
   );
 
@@ -441,7 +441,7 @@ try {
   await migrate(emptyDb);
   const empty = await runRcCheck(emptyDb);
   assert(empty.code !== 0, "empty day should be blocked");
-  assert(empty.stdout.includes("No focus blocks found"), "empty day blocker is missing");
+  assert(empty.stdout.includes("За эту дату нет фокус-блоков"), "empty day blocker is missing");
 
   const duplicateDb = join(tempDir, "duplicate.db");
   await copyDb(goodDb, duplicateDb);
@@ -451,7 +451,7 @@ try {
   `);
   const duplicate = await runRcCheck(duplicateDb);
   assert(duplicate.code !== 0, "duplicate title should be blocked");
-  assert(duplicate.stdout.includes("Duplicate Work Item title"), "duplicate title blocker is missing");
+  assert(duplicate.stdout.includes("Дублируется название Work Item"), "duplicate title blocker is missing");
 
   const activeDb = join(tempDir, "active.db");
   await copyDb(goodDb, activeDb);
@@ -464,7 +464,7 @@ try {
   `);
   const active = await runRcCheck(activeDb);
   assert(active.code !== 0, "active session should be blocked");
-  assert(active.stdout.includes("Active focus session is still running"), "active session blocker is missing");
+  assert(active.stdout.includes("Активный фокус-блок ещё идёт"), "active session blocker is missing");
 
   console.log(
     JSON.stringify(

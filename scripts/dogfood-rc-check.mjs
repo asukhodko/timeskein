@@ -403,34 +403,34 @@ function assessEvidence(evidence, minFocusSeconds) {
 
   for (const session of evidence.activeSessions) {
     hardBlockers.push(
-      `Active focus session is still running: ${session.work_item_title ?? session.title} since ${formatClockTime(session.started_at)}`
+      `Активный фокус-блок ещё идёт: ${session.work_item_title ?? session.title}, с ${formatClockTime(session.started_at)}`
     );
   }
 
   for (const item of evidence.activeWorkItems) {
-    hardBlockers.push(`Active Work Item is still marked active: ${item.title}`);
+    hardBlockers.push(`У Work Item всё ещё активный статус: ${item.title}`);
   }
 
   if (evidence.sessions.length === 0) {
-    hardBlockers.push("No focus blocks found for this date.");
+    hardBlockers.push("За эту дату нет фокус-блоков.");
   }
 
   for (const duplicate of evidence.duplicateTitles) {
-    hardBlockers.push(`Duplicate Work Item title: ${duplicate.titles}`);
+    hardBlockers.push(`Дублируется название Work Item: ${duplicate.titles}`);
   }
 
   if (evidence.totalFocusSeconds < minFocusSeconds && evidence.sessions.length > 0) {
     reviewItems.push(
-      `Total tracked is ${formatDuration(evidence.totalFocusSeconds)}, below the RC review threshold ${formatDuration(minFocusSeconds)}. Confirm whether this was still a full workday.`
+      `Всего учтено ${formatDuration(evidence.totalFocusSeconds)}, меньше RC-порога ${formatDuration(minFocusSeconds)}. Подтверди, что это всё равно был полноценный рабочий день.`
     );
   }
 
   if (evidence.activityZoneTotals.length <= 1 && evidence.sessions.length > 0 && evidence.telemetry.activityZoneReviews === 0) {
-    reviewItems.push("Only one Activity Zone appears in the day. Confirm whether coordination/recovery/idle/personal time was intentionally absent or missed.");
+    reviewItems.push("В дне видна только одна зона активности. Подтверди, что coordination/recovery/idle/personal действительно не было или это не потерялось.");
   }
 
   if (evidence.nonWorkSeconds === 0 && evidence.sessions.length > 0 && evidence.telemetry.activityZoneReviews === 0) {
-    reviewItems.push("Non-work tracked time is zero. Confirm breaks, recovery, coordination, and personal blocks were not folded into work focus.");
+    reviewItems.push("Нерабочее время равно нулю. Проверь, что перерывы, recovery, coordination и personal не были случайно сложены в рабочий фокус.");
   }
 
   if (
@@ -439,35 +439,35 @@ function assessEvidence(evidence, minFocusSeconds) {
     evidence.workItemNoteCount === 0 &&
     evidence.sessions.length > 0
   ) {
-    reviewItems.push("No Day Events, Work Item notes, or timestamped Work Item Events found. If the report needs memory reconstruction, add context before treating it as final.");
+    reviewItems.push("Нет событий дня, заметок Work Item или timestamped Work Item Events. Если без памяти день не восстановить, добавь контекст перед финальным отчётом.");
   }
 
   if (evidence.sessions.length > 0 && evidence.workItemTotals.length > 0 && evidence.telemetry.workItemTimeBadgeReviews === 0) {
-    reviewItems.push("No Work Item today/total badge review telemetry found. Check touched Work Item cards and accept that review before closing the goal.");
+    reviewItems.push("Нет подтверждения проверки бейджей today/total у Work Item. Посмотри карточки затронутых Work Item и прими эту проверку перед закрытием цели.");
   }
 
   if (evidence.dayEvents.length > 0 && evidence.dayEventsWithZone === 0) {
-    reviewItems.push("Day Events exist, but none have an Activity Zone. Confirm buffers, recovery, idle, coordination, and personal notes are classified before the final verdict.");
+    reviewItems.push("События дня есть, но ни у одного нет зоны активности. Перед финальным вердиктом классифицируй buffer/recovery/idle/coordination/personal или подтверди, что это не нужно.");
   }
 
   if (evidence.workItemEvents.length === 0 && evidence.sessions.length > 0) {
-    reviewItems.push("No timestamped Work Item Events found. If any task-specific detail mattered, add or promote an event before relying on memory.");
+    reviewItems.push("Нет timestamped Work Item Events. Если важны детали конкретной задачи, добавь событие или подними capture в событие, не полагаясь на память.");
   }
 
   if (evidence.openCaptures.length > 0 && evidence.telemetry.captureFollowupReviews === 0) {
-    reviewItems.push(`${evidence.openCaptures.length} open capture(s) remain. Resolve, convert, or explicitly accept them as follow-up.`);
+    reviewItems.push(`${evidence.openCaptures.length} открытых отвлечений осталось. Закрой, преврати в Work Item или явно прими как follow-up.`);
   }
 
   if (evidence.capturesCreatedToday.length === 0 && evidence.telemetry.captureUsageReviews === 0) {
-    reviewItems.push("No captures were created today. If there were interruptions, Capture Inbox was not tested in battle.");
+    reviewItems.push("Сегодня не было capture. Если отвлечения были, Capture Inbox не проверен в бою.");
   }
 
   if (evidence.capturesCreatedToday.length > 0 && evidence.capturesDuringActiveFocus === 0 && evidence.telemetry.captureUsageReviews === 0) {
-    reviewItems.push("Captures were created, but none were linked to an active focus session. Capture Inbox did not prove interruption handling during focus.");
+    reviewItems.push("Capture создавались, но ни один не связан с активной фокус-сессией. Inbox ещё не доказал, что умеет удерживать фокус при отвлечениях.");
   }
 
   if (evidence.telemetry.total === 0) {
-    reviewItems.push("No App Telemetry events found for this date.");
+    reviewItems.push("За эту дату нет событий App Telemetry.");
   }
 
   if (
@@ -475,19 +475,19 @@ function assessEvidence(evidence, minFocusSeconds) {
     evidence.telemetry.startRequests + evidence.telemetry.switchRequests === 0 &&
     evidence.telemetry.entryPathReviews === 0
   ) {
-    reviewItems.push("No focus start/switch request telemetry found. Entry cost is not evidenced for this day.");
+    reviewItems.push("Нет telemetry-запросов старта/переключения фокуса. Цена входа за этот день не доказана.");
   }
 
   if (evidence.sessions.length > 0 && evidence.telemetry.typedEntryRequests === 0 && evidence.telemetry.entryPathReviews === 0) {
-    reviewItems.push("No typed focus entry request found. Start a new Work Item by typed title before closing the goal.");
+    reviewItems.push("Нет входа через ввод названия. Перед закрытием цели стартуй новый Work Item typed-вводом или явно прими эту проверку.");
   }
 
   if (evidence.sessions.length > 0 && evidence.telemetry.selectedEntryRequests === 0 && evidence.telemetry.entryPathReviews === 0) {
-    reviewItems.push("No selected/list Work Item entry request found. Continue an existing Work Item from the list before closing the goal.");
+    reviewItems.push("Нет входа через выбранный Work Item из списка. Перед закрытием цели продолжи существующий Work Item из списка или явно прими эту проверку.");
   }
 
   if (evidence.sessions.length > 0 && evidence.telemetry.stopRequests === 0 && evidence.telemetry.entryPathReviews === 0) {
-    reviewItems.push("No focus stop request telemetry found. Stop flow cost is not evidenced for this day.");
+    reviewItems.push("Нет telemetry-запросов остановки фокуса. Стоимость stop-flow за этот день не доказана.");
   }
 
   if (
@@ -495,39 +495,39 @@ function assessEvidence(evidence, minFocusSeconds) {
     evidence.telemetry.windowShown + evidence.telemetry.windowHidden === 0 &&
     evidence.telemetry.windowEntrypointReviews === 0
   ) {
-    reviewItems.push("No window show/hide telemetry found. Entry/window friction is not evidenced for this day.");
+    reviewItems.push("Нет telemetry показа/скрытия окна. Трение входа через окно за этот день не доказано.");
   }
 
   if (evidence.telemetry.total > 0 && evidence.telemetry.windowShowRequested === 0 && evidence.telemetry.windowEntrypointReviews === 0) {
-    reviewItems.push("No window show request telemetry found. Test tray/menu/shortcut/reopen entry before closing the goal.");
+    reviewItems.push("Нет telemetry-запроса показать окно. Проверь tray/menu/shortcut/reopen вход или явно прими эту проверку перед закрытием цели.");
   }
 
   if (evidence.telemetry.total > 0 && evidence.telemetry.windowHideRequested === 0 && evidence.telemetry.windowEntrypointReviews === 0) {
-    reviewItems.push("No window hide request telemetry found. Test Esc/close/menu hide before closing the goal.");
+    reviewItems.push("Нет telemetry-запроса скрыть окно. Проверь Esc/close/menu hide или явно прими эту проверку перед закрытием цели.");
   }
 
   if (evidence.telemetry.apiErrors > 0) {
-    reviewItems.push(`${evidence.telemetry.apiErrors} API error event(s) found. Check whether any tracking data was lost.`);
+    reviewItems.push(`Найдено API-ошибок: ${evidence.telemetry.apiErrors}. Проверь, не потерялись ли данные трекинга.`);
   }
 
   if (evidence.telemetry.copyFailures > 0 || evidence.telemetry.manualCopyFallbacks > 0) {
-    reviewItems.push("Report copy friction occurred. Check whether evening export was still cheap enough.");
+    reviewItems.push("При копировании отчёта было трение. Проверь, осталось ли вечернее экспортирование достаточно дешёвым.");
   }
 
   if (evidence.telemetry.startFailures > 0 || evidence.telemetry.stopFailures > 0) {
-    reviewItems.push("Focus start/stop failures occurred. Check whether they broke trust in the timer.");
+    reviewItems.push("Были ошибки старта/остановки фокуса. Проверь, не сломали ли они доверие к таймеру.");
   }
 
   if (evidence.telemetry.captureFailures > 0) {
-    reviewItems.push(`${evidence.telemetry.captureFailures} Capture Inbox failure event(s) found. Check whether interruption capture stayed trustworthy.`);
+    reviewItems.push(`Найдено ошибок Capture Inbox: ${evidence.telemetry.captureFailures}. Проверь, остался ли захват отвлечений надёжным.`);
   }
 
   if (evidence.telemetry.correctionFailures > 0) {
-    reviewItems.push(`${evidence.telemetry.correctionFailures} focus correction failure event(s) found. Check whether tracking errors were still fixable before the final report.`);
+    reviewItems.push(`Найдено ошибок коррекции фокуса: ${evidence.telemetry.correctionFailures}. Проверь, можно ли было исправить трекинг перед финальным отчётом.`);
   }
 
   if (evidence.telemetry.corrections === 0 && evidence.telemetry.correctionReviews === 0 && evidence.sessions.length > 0) {
-    reviewItems.push("No focus correction or correction-review telemetry found. If no correction was needed, explicitly accept that; otherwise test add/edit/split correction before closing the goal.");
+    reviewItems.push("Нет коррекции фокуса и нет подтверждения проверки коррекций. Если коррекция не требовалась, явно прими это; иначе проверь add/edit/split перед закрытием цели.");
   }
 
   if (evidence.telemetry.dayClosureCompletions === 0 || evidence.telemetry.lastDayClosureDurationSeconds == null) {
@@ -542,7 +542,7 @@ function assessEvidence(evidence, minFocusSeconds) {
 
   if (evidence.unexplainedGapCount > 0) {
     reviewItems.push(
-      `${evidence.unexplainedGapCount} of ${evidence.gaps.length} significant gap(s) lack a Day Event explanation. Use Explain or add a Day Event before closing the goal.`
+      `${evidence.unexplainedGapCount} из ${evidence.gaps.length} больших разрывов без объяснения Day Event. Используй Explain или добавь событие дня перед закрытием цели.`
     );
   }
 
@@ -664,7 +664,7 @@ function buildRcReport(date, path, evidence, assessment, minFocusSeconds, strict
   }
 
   if (assessment.hardBlockers.length > 0) {
-    lines.push("## Hard Blockers", "");
+    lines.push("## Что мешает", "");
     for (const item of assessment.hardBlockers) {
       lines.push(`- ${item}`);
     }
@@ -672,7 +672,7 @@ function buildRcReport(date, path, evidence, assessment, minFocusSeconds, strict
   }
 
   if (assessment.reviewItems.length > 0) {
-    lines.push("## Review Items", "");
+    lines.push("## Что проверить", "");
     for (const item of assessment.reviewItems) {
       lines.push(`- ${item}`);
     }
@@ -680,22 +680,22 @@ function buildRcReport(date, path, evidence, assessment, minFocusSeconds, strict
   }
 
   lines.push(
-    "## Manual RC Verdict",
+    "## Ручной RC-вердикт",
     "",
-    "- Timeskein was the primary tracker for the full day: yes/no",
-    "- Activity Zones separated work from coordination/recovery/idle/personal well enough: yes/no",
-    "- Day Events, Work Item Events, or notes reduced memory reconstruction: yes/no",
-    "- Tracking mistakes could be corrected before the final report: yes/no",
-    "- Capture Inbox preserved focus instead of becoming another pile: yes/no",
-    "- Report is enough without memory reconstruction: yes/no",
-    "- Remaining limitations are acceptable for daily use: yes/no",
-    "- Final RC decision: pass/fail",
+    "- Timeskein был основным трекером всего дня: да/нет",
+    "- Зоны активности достаточно отделили работу от coordination/recovery/idle/personal: да/нет",
+    "- Day Events, Work Item Events или заметки снизили восстановление дня по памяти: да/нет",
+    "- Ошибки трекинга можно было исправить перед финальным отчётом: да/нет",
+    "- Capture Inbox удерживал фокус, а не стал ещё одной кучей: да/нет",
+    "- Отчёта достаточно без реконструкции по памяти: да/нет",
+    "- Оставшиеся ограничения приемлемы для ежедневного использования: да/нет",
+    "- Финальное RC-решение: pass/fail",
     "",
-    "## Next",
+    "## Что дальше",
     "",
-    "- If blocked, fix only the listed blockers and run another dogfood day.",
-    "- If review items remain, fill the manual verdict before marking the roadmap milestone done.",
-    "- If the verdict passes, update docs/opskarta and commit the dogfood release baseline.",
+    "- Если есть блокеры, исправь только перечисленные блокеры и проведи ещё один dogfood-день.",
+    "- Если остались пункты проверки, заполни ручной вердикт перед закрытием milestone.",
+    "- Если вердикт pass, обнови docs/opskarta и закоммить dogfood release baseline.",
     ""
   );
 

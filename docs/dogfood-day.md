@@ -422,7 +422,7 @@ pnpm dogfood:goal-check
 ```
 
 The final goal gate also checks that the saved report contains the grouped `Проверка перед отчётом` section and the `Ближайшее действие` line. If the saved file still has an old flat checklist or lacks the next-action line, regenerate the evidence with `pnpm dogfood:finish:save -- --date YYYY-MM-DD`.
-When measured closure evidence is present and every `Аудит закрытия дня` row is already `ок`, `pnpm dogfood:finish:save` prints the exact dated `pnpm dogfood:goal-check -- --date YYYY-MM-DD` command for the final gate. If the saved report is still a draft, the command prints its saved status explicitly and keeps the next step under `Что ещё осталось`. If measured closure exists but audit rows are still pending, it prints those pending rows and points back to `Проверка перед отчётом`.
+When measured closure evidence is present and every `Аудит закрытия дня` row is already `ок`, `pnpm dogfood:finish:save` prints the exact dated `pnpm dogfood:goal-check -- --date YYYY-MM-DD` command for the final gate. If the saved report is still a draft, the command prints its saved status explicitly and repeats `Ближайшее действие` from the report under `Что ещё осталось`, so the next action stays visible even from the terminal. If measured closure exists but audit rows are still pending, it prints those pending rows and points back to `Проверка перед отчётом`.
 
 The RC-check scripts read old SQLite databases defensively. If a previous dogfood day was captured before Activity Zone columns existed, reports fall back to `Work` rather than crashing. A fresh dogfood day should still be started through the app so real migrations run before new data is captured.
 

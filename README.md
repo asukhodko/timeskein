@@ -189,7 +189,7 @@ Before marking the daily-control goal complete, run the final gate after `pnpm d
 pnpm dogfood:goal-check
 ```
 
-When measured closure evidence is present and every `Аудит закрытия дня` row is already `ок`, `pnpm dogfood:finish:save` prints the exact dated `dogfood:goal-check` command to run next. If the saved report is still a draft, the command prints its saved status explicitly and keeps the next step under `Что ещё осталось`. If measured closure exists but audit rows are still pending, it prints those pending rows and tells you to return to `Проверка перед отчётом` first.
+When measured closure evidence is present and every `Аудит закрытия дня` row is already `ок`, `pnpm dogfood:finish:save` prints the exact dated `dogfood:goal-check` command to run next. If the saved report is still a draft, the command prints its saved status explicitly, repeats `Ближайшее действие` from the report under `Что ещё осталось`, and keeps the next step visible without reopening the Markdown. If measured closure exists but audit rows are still pending, it prints those pending rows and tells you to return to `Проверка перед отчётом` first.
 
 If you close yesterday's dogfood day after midnight, pass the date explicitly:
 

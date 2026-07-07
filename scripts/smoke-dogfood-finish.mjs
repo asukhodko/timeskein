@@ -94,6 +94,7 @@ try {
       cleanSavedDefault.stdout.includes("длительность закрытия не измерена или больше 10 минут") &&
       cleanSavedDefault.stdout.includes("Статус сохранённого отчёта:") &&
       cleanSavedDefault.stdout.includes("черновик") &&
+      cleanSavedDefault.stdout.includes("Ближайшее действие из отчёта:") &&
       cleanSavedDefault.stdout.includes("pnpm dogfood:finish:save -- --date 2026-06-30"),
     "finish --save did not calmly explain missing measured closure and saved draft report state"
   );
@@ -121,6 +122,7 @@ try {
       measuredPendingDefault.stdout.includes("ещё не готов для финального закрытия дня") &&
       measuredPendingDefault.stdout.includes("Статус сохранённого отчёта:") &&
       measuredPendingDefault.stdout.includes("черновик") &&
+      measuredPendingDefault.stdout.includes("Ближайшее действие из отчёта:") &&
       measuredPendingDefault.stdout.includes("pnpm dogfood:finish:save -- --date 2026-06-30"),
     "finish --save did not calmly explain pending daily-control audit rows and saved draft report state"
   );

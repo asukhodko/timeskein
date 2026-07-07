@@ -60,12 +60,13 @@ if (outputPath) {
     await saveRcCheck(dateArg, dbPath);
   }
   const reportState = findReportState(stdout);
+  const reviewNextAction = findReviewNextAction(stdout);
   const closureStatus = findAuditRowStatus(stdout, ["Длительность закрытия измерена", "Day closure duration measured"]);
   const pendingAuditRows = findPendingAuditRows(stdout);
   if (closureStatus && !isPassingAuditStatus(closureStatus)) {
-    process.stdout.write(buildMeasuredClosureWarning(dateArg, reportState));
+    process.stdout.write(buildMeasuredClosureWarning(dateArg, reportState, reviewNextAction));
   } else if (pendingAuditRows.length > 0 || (reportState && !isFinalReportState(reportState))) {
-    process.stdout.write(buildPendingReviewWarning(dateArg, pendingAuditRows, reportState));
+    process.stdout.write(buildPendingReviewWarning(dateArg, pendingAuditRows, reportState, reviewNextAction));
   } else if (options.save && process.exitCode == null) {
     process.stdout.write(buildGoalCheckNextStep(dateArg));
   }
@@ -237,20 +238,21 @@ function buildNotReadyReport(date, path, items) {
   return `${lines.join("\n")}\n`;
 }
 
-function buildMeasuredClosureWarning(date, reportState) {
+function buildMeasuredClosureWarning(date, reportState, reviewNextAction) {
   return [
     "",
     "## Что ещё осталось",
     "",
     "- Отчёт сохранён, но это ещё не финальное закрытие дня: длительность закрытия не измерена или больше 10 минут.",
     ...formatReportStateWarning(reportState),
+    ...formatReviewNextActionWarning(reviewNextAction),
     "- В Timeskein нажми `Начать закрытие дня`, спокойно пройди `Проверка перед отчётом` и дойди до финального `Копировать отчёт` за 10 минут или меньше.",
     `- Затем повтори: \`pnpm dogfood:finish:save -- --date ${date}\`.`,
     "",
   ].join("\n");
 }
 
-function buildPendingReviewWarning(date, rows, reportState) {
+function buildPendingReviewWarning(date, rows, reportState, reviewNextAction) {
   const visibleRows = rows.slice(0, 5).map((row) => `- ${row.requirement}: ${row.status}`);
   if (rows.length > visibleRows.length) {
     visibleRows.push(`- Ещё строк: ${rows.length - visibleRows.length}`);
@@ -264,6 +266,7 @@ function buildPendingReviewWarning(date, rows, reportState) {
     "",
     "- Отчёт сохранён как рабочий артефакт, но ещё не готов для финального закрытия дня.",
     ...formatReportStateWarning(reportState),
+    ...formatReviewNextActionWarning(reviewNextAction),
     ...visibleRows,
     "- Вернись к `Проверка перед отчётом`: исправь пункты в «Дописать или исправить» и осознанно прими спорные проверки.",
     `- Затем повтори: \`pnpm dogfood:finish:save -- --date ${date}\`.`,
@@ -277,6 +280,14 @@ function formatReportStateWarning(reportState) {
   }
 
   return [`- Статус сохранённого отчёта: \`${reportState}\`.`];
+}
+
+function formatReviewNextActionWarning(reviewNextAction) {
+  if (!reviewNextAction) {
+    return [];
+  }
+
+  return [`- Ближайшее действие из отчёта: ${reviewNextAction}`];
 }
 
 function buildGoalCheckNextStep(date) {
@@ -346,6 +357,20 @@ function extractSection(text, headings) {
 function findReportState(text) {
   for (const line of text.split("\n")) {
     const match = line.match(/^Статус отчёта:\s*(.+)$/);
+    if (match) return match[1].trim();
+  }
+
+  return undefined;
+}
+
+function findReviewNextAction(text) {
+  const section = extractSection(text, ["## Проверка перед отчётом", "## Review before report"]);
+  if (!section) {
+    return undefined;
+  }
+
+  for (const line of section.split("\n")) {
+    const match = line.match(/^Ближайшее действие:\s*(.+)$/);
     if (match) return match[1].trim();
   }
 

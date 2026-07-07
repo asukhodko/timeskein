@@ -197,6 +197,12 @@ async function checkSavedEvidence(date) {
     weak.push(`В ${reportPath} раздел «Проверка перед отчётом» должен содержать строку «Ближайшее действие»`);
   }
   const reviewNextAction = findReviewNextAction(report);
+  const shortClosureVerdict = findShortClosureVerdict(report);
+  if (!shortClosureVerdict) {
+    weak.push(`В ${reportPath} раздел «Короткое закрытие» должен содержать строку «Закрытие уложилось в 10 минут»`);
+  } else if (!isPassingShortClosureVerdict(shortClosureVerdict)) {
+    notPassing.push(`В ${reportPath} короткое закрытие ещё не подтверждает критерий 10 минут: ${shortClosureVerdict}`);
+  }
   for (const aliases of rcRequirements) {
     if (!includesAny(rcCheck, aliases)) {
       weak.push(`В ${rcPath} нет раздела «${aliases[0]}»`);
@@ -341,6 +347,24 @@ function findReviewNextAction(text) {
   }
 
   return undefined;
+}
+
+function findShortClosureVerdict(text) {
+  const section = extractMarkdownSection(text, ["## Короткое закрытие"]);
+  if (!section) {
+    return undefined;
+  }
+
+  for (const line of section.split("\n")) {
+    const match = line.match(/^-\s*(Закрытие уложилось в 10 минут:\s*.+)$/);
+    if (match) return match[1].trim().replace(/\.$/, "");
+  }
+
+  return undefined;
+}
+
+function isPassingShortClosureVerdict(value) {
+  return /^Закрытие уложилось в 10 минут:\s*да(?:\s|\(|$)/u.test(value);
 }
 
 function extractMarkdownSection(text, headings) {

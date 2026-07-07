@@ -169,6 +169,15 @@ try {
     "- Следующий шаг после закрытия: запустить goal-check.",
     "",
   ].join("\n");
+  const incompleteShortClosureMarkdown = [
+    "## Короткое закрытие",
+    "",
+    "- Данным можно доверять: да",
+    "- Закрытие уложилось в 10 минут: нет данных (закрытие не измерено)",
+    "- Главное наблюдение дня: закрытие ещё не доказано.",
+    "- Следующий шаг после закрытия: пересохранить evidence.",
+    "",
+  ].join("\n");
   const groupedReviewWithoutNextActionMarkdown = [
     "## Проверка перед отчётом",
     "",
@@ -351,6 +360,27 @@ try {
   assert(
     `${missingShortClosureEvidence.stdout}${missingShortClosureEvidence.stderr}`.includes("нет раздела «## Короткое закрытие»"),
     "saved evidence without short closure did not mention the missing short closure section"
+  );
+
+  await writeFile(
+    join(tempDir, "timeskein-dogfood-report-2026-06-30.md"),
+    [
+      "# Dogfood-отчёт Timeskein - 2026-06-30",
+      "Статус отчёта: финальный — нет активных фокус-блоков, активных дел и незакрытых проверок",
+      "## Focus Data",
+      incompleteShortClosureMarkdown,
+      groupedReviewMarkdown,
+      reportAuditMarkdown,
+      "## App Telemetry",
+      "",
+    ].join("\n")
+  );
+
+  const incompleteShortClosureEvidence = await runGoalCheck(["--check-saved-evidence-only", "--date", "2026-06-30"], tempDir);
+  assert(incompleteShortClosureEvidence.code !== 0, "saved evidence with non-passing short closure should fail");
+  assert(
+    `${incompleteShortClosureEvidence.stdout}${incompleteShortClosureEvidence.stderr}`.includes("короткое закрытие ещё не подтверждает критерий 10 минут"),
+    "saved evidence with non-passing short closure did not explain the failed short closure verdict"
   );
 
   await writeFile(

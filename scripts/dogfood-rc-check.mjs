@@ -37,7 +37,7 @@ const shouldFail =
 
 if (outputPath) {
   await writeFile(outputPath, output);
-  process.stdout.write(`Сохранён RC-аудит закрытия дня Timeskein: ${outputPath}\n`);
+  process.stdout.write(`Сохранена проверка закрытия дня Timeskein: ${outputPath}\n`);
 } else {
   process.stdout.write(output);
 }
@@ -421,7 +421,7 @@ function assessEvidence(evidence, minFocusSeconds) {
 
   if (evidence.totalFocusSeconds < minFocusSeconds && evidence.sessions.length > 0) {
     reviewItems.push(
-      `Всего учтено ${formatDuration(evidence.totalFocusSeconds)}, меньше RC-порога ${formatDuration(minFocusSeconds)}. Подтверди, что это всё равно был полноценный рабочий день.`
+      `Всего учтено ${formatDuration(evidence.totalFocusSeconds)}, меньше порога проверки ${formatDuration(minFocusSeconds)}. Подтверди, что это всё равно был полноценный рабочий день.`
     );
   }
 
@@ -554,7 +554,7 @@ function assessEvidence(evidence, minFocusSeconds) {
 
 function buildMissingDbReport(date, path) {
   return [
-    `# RC-аудит закрытия дня Timeskein - ${date}`,
+    `# Проверка закрытия дня Timeskein - ${date}`,
     "",
     "Вердикт: заблокировано",
     "",
@@ -567,7 +567,7 @@ function buildRcReport(date, path, evidence, assessment, minFocusSeconds, strict
   const verdict = formatRcVerdict(assessment, strict);
 
   const lines = [
-    `# RC-аудит закрытия дня Timeskein - ${date}`,
+    `# Проверка закрытия дня Timeskein - ${date}`,
     "",
     `Вердикт: ${verdict}`,
     `База: ${path}`,
@@ -674,7 +674,7 @@ function buildRcReport(date, path, evidence, assessment, minFocusSeconds, strict
   }
 
   lines.push(
-    "## Ручной RC-вердикт",
+    "## Ручной вердикт",
     "",
     "- Timeskein был основным трекером всего дня: да/нет",
     "- Зоны активности достаточно отделили работу от координации, восстановления, простоя и личных дел: да/нет",
@@ -683,13 +683,13 @@ function buildRcReport(date, path, evidence, assessment, minFocusSeconds, strict
     "- Capture Inbox удерживал фокус, а не стал ещё одной кучей: да/нет",
     "- Отчёта достаточно без реконструкции по памяти: да/нет",
     "- Оставшиеся ограничения приемлемы для ежедневного использования: да/нет",
-    "- Финальное RC-решение: pass/fail",
+    "- Финальное решение: pass/fail",
     "",
     "## Что дальше",
     "",
     "- Если есть блокеры, исправь только перечисленные блокеры и проведи ещё один день Timeskein.",
     "- Если остались пункты проверки, заполни ручной вердикт перед закрытием milestone.",
-    "- Если вердикт pass, обнови docs/opskarta и закоммить dogfood release baseline.",
+    "- Если вердикт pass, обнови docs/opskarta и закоммить baseline пробной эксплуатации.",
     ""
   );
 
@@ -706,10 +706,10 @@ function formatRcVerdict(assessment, strict) {
   }
 
   if (assessment.reviewItems.length > 0) {
-    return "готово к ручному RC-вердикту, есть пункты проверки";
+    return "готово к ручному вердикту, есть пункты проверки";
   }
 
-  return "готово к ручному RC-вердикту";
+  return "готово к ручному вердикту";
 }
 
 function formatYesNo(value) {

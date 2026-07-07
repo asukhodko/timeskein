@@ -156,7 +156,7 @@ try {
   await writeFile(
     join(tempDir, "timeskein-dogfood-rc-check-2026-06-30.md"),
     [
-      "# RC-аудит закрытия дня Timeskein - 2026-06-30",
+      "# Проверка закрытия дня Timeskein - 2026-06-30",
       "## Сводка доказательств",
       "## Аудит закрытия дня",
       "",
@@ -285,7 +285,7 @@ try {
   await writeFile(
     join(tempDir, "timeskein-dogfood-rc-check-2026-06-30.md"),
     [
-      "# RC-аудит закрытия дня Timeskein - 2026-06-30",
+      "# Проверка закрытия дня Timeskein - 2026-06-30",
       "## Сводка доказательств",
       "## Аудит закрытия дня",
       "",
@@ -333,7 +333,7 @@ try {
   await writeFile(
     join(tempDir, "timeskein-dogfood-rc-check-2026-06-30.md"),
     [
-      "# RC-аудит закрытия дня Timeskein - 2026-06-30",
+      "# Проверка закрытия дня Timeskein - 2026-06-30",
       "## Сводка доказательств",
       rcAuditMarkdown,
       "",
@@ -389,7 +389,7 @@ try {
   await writeFile(
     join(tempDir, "timeskein-dogfood-rc-check-2026-06-30.md"),
     [
-      "# RC-аудит закрытия дня Timeskein - 2026-06-30",
+      "# Проверка закрытия дня Timeskein - 2026-06-30",
       "## Сводка доказательств",
       rcAuditMarkdown,
       "",
@@ -462,7 +462,7 @@ try {
   await writeFile(
     join(tempDir, "timeskein-dogfood-rc-check-2026-06-30.md"),
     [
-      "# RC-аудит закрытия дня Timeskein - 2026-06-30",
+      "# Проверка закрытия дня Timeskein - 2026-06-30",
       "## Сводка доказательств",
       rcAuditMarkdown,
       "",

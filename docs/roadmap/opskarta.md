@@ -14,7 +14,7 @@ not require Codex to explain the next closure step, and then pass strict
 `pnpm dogfood:goal-check -- --no-codex-guidance`.
 
 The completed `Аудит закрытия дня` in the UI/CLI dogfood report and in
-`pnpm dogfood:rc-check` checked whether a real day had enough evidence for focus
+`pnpm dogfood:rc-check` checked whether a real day had enough closure evidence for focus
 blocks, Work Item totals, Activity Zones, notes/events, captures, gaps,
 corrections, and app-friction review. Work Item totals required an explicit UI
 checklist acceptance that touched Work Item cards showed day/total time, not
@@ -27,13 +27,13 @@ is quit during an already started dogfood day, `pnpm dogfood:continue` reopens
 it through readiness continue mode and the same process/preflight/app-open guard
 as the normal start path.
 `pnpm dogfood:finish:save` now saves both the readable day report and the
-RC-check evidence file, so the evening package is collected in one step.
+closure-check evidence file, so the evening package is collected in one step.
 For final goal closure, `pnpm dogfood:finish:save` points to
 `pnpm dogfood:goal-check -- --date YYYY-MM-DD --no-codex-guidance` only after measured closure is present and the saved
 `Аудит закрытия дня` has no pending rows. The goal check first requires the
-saved dogfood report and RC evidence for the real local database, verifies the
+saved dogfood report and closure evidence for the real local database, verifies the
 grouped review checklist plus `Ближайшее действие`, then runs `pnpm test`,
-`pnpm dogfood:preflight`, and strict RC evidence on the same code.
+`pnpm dogfood:preflight`, and strict closure evidence on the same code.
 The current saved 2026-07-06 evidence is intentionally not enough for closure
 because it lacks `day_closure_started` / `day_closure_completed` telemetry.
 

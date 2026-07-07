@@ -157,7 +157,7 @@ function printHelp() {
 
 Запускает финальную локальную проверку цели про дешёвое вечернее закрытие дня:
 
-1. сохранённый отчёт закрытия дня и RC-аудит есть за выбранную дату
+1. сохранённый отчёт закрытия дня и проверка закрытия дня есть за выбранную дату
 2. есть явное подтверждение \`--no-codex-guidance\`, что закрытие прошло без подсказок Codex
 3. pnpm test
 4. pnpm dogfood:preflight
@@ -219,7 +219,7 @@ async function checkSavedEvidence(date) {
     ["## Телеметрия приложения", "## App Telemetry"],
   ];
   const rcRequirements = [
-    ["# RC-аудит закрытия дня Timeskein", "# RC-аудит dogfood-дня Timeskein", "# Timeskein dogfood RC check"],
+    ["# Проверка закрытия дня Timeskein", "# RC-аудит закрытия дня Timeskein", "# RC-аудит dogfood-дня Timeskein", "# Timeskein dogfood RC check"],
     ["## Сводка доказательств", "## Evidence Summary"],
     ["## Аудит закрытия дня", "## Daily Control Goal Audit"],
   ];
@@ -317,7 +317,7 @@ function buildMissingEvidenceMessage(date, missing) {
     "## До финальной проверки",
     "",
     "- Сохранённые материалы дня Timeskein ещё не найдены.",
-    `- Сохрани вечерний отчёт и RC-аудит: \`pnpm dogfood:finish:save -- --date ${date}\`.`,
+    `- Сохрани вечерний отчёт и проверку закрытия дня: \`pnpm dogfood:finish:save -- --date ${date}\`.`,
     "",
     "## Детали",
     "",

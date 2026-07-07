@@ -43,7 +43,7 @@ if (!existsSync(dbPath)) {
 
 if (blockers.length > 0) {
   process.stdout.write(buildNotReadyReport(dateArg, dbPath, blockers));
-  process.exit(1);
+  process.exit(options.softFail ? 0 : 1);
 }
 
 const reportArgs = [resolve(repoRoot, "scripts/dogfood-report.mjs"), "--date", dateArg, "--db", dbPath];
@@ -90,6 +90,8 @@ function parseArgs(args) {
       result.out = args[++index];
     } else if (arg === "--save") {
       result.save = true;
+    } else if (arg === "--soft-fail") {
+      result.softFail = true;
     } else if (arg === "--help" || arg === "-h") {
       printHelp();
       process.exit(0);
@@ -102,12 +104,13 @@ function parseArgs(args) {
 }
 
 function printHelp() {
-  console.log(`Использование: pnpm dogfood:finish [--date YYYY-MM-DD] [--db path/to/timeskein.db] [--save | --out path.md]
+  console.log(`Использование: pnpm dogfood:finish [--date YYYY-MM-DD] [--db path/to/timeskein.db] [--save | --out path.md] [--soft-fail]
 
 Закрывает день Timeskein: проверяет, что нет активного фокус-блока, нет дела с активным статусом, и за день есть хотя бы один фокус-блок.
 При успехе печатает Markdown-отчёт или сохраняет его в файл, если передан --save или --out.
 С --save рядом с дневным отчётом также сохраняется dogfood RC check.
-При блокировке печатает Markdown-диагностику с понятным следующим шагом и завершается с кодом 1.`);
+При блокировке печатает Markdown-диагностику с понятным следующим шагом и завершается с кодом 1.
+С --soft-fail ожидаемая блокировка завершает команду кодом 0; это удобно для вечернего ручного маршрута через pnpm.`);
 }
 
 function outputReportPath(options, date) {

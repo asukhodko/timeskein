@@ -204,6 +204,13 @@ try {
   );
   assert(!active.stdout.includes("Active focus session is still running"), "active day leaked old English active-focus blocker");
 
+  const activeSoft = await runFinish(activeDb, ["--soft-fail"]);
+  assert(activeSoft.code === 0, "soft-fail active day should keep the manual closure route calm");
+  assert(
+    activeSoft.stdout.includes("Ближайшее действие: останови активный фокус-блок в Timeskein кнопкой `Стоп`."),
+    "soft-fail active day did not preserve the blocked next action"
+  );
+
   const splitBrainDb = join(tempDir, "split-brain.db");
   await migrate(splitBrainDb);
   await runSql(splitBrainDb, `
@@ -238,6 +245,18 @@ try {
     "split-brain day did not suggest stop-active"
   );
 
+  const packageSoft = await runFinishPackage(splitBrainDb);
+  assert(packageSoft.code === 0, "pnpm dogfood:finish:save should soft-fail on expected blockers");
+  assert(
+    packageSoft.stdout.includes("Закрытие дня Timeskein заблокировано") &&
+      packageSoft.stdout.includes("Ближайшее действие: сними активный статус с дела"),
+    "pnpm dogfood:finish:save did not keep blocked diagnostics visible"
+  );
+  assert(
+    !`${packageSoft.stdout}${packageSoft.stderr}`.includes("[ELIFECYCLE]"),
+    "pnpm dogfood:finish:save leaked pnpm lifecycle noise on an expected blocker"
+  );
+
   console.log(
     JSON.stringify(
       {
@@ -267,6 +286,27 @@ async function runFinish(path, extraArgs = [], cwd = repoRoot) {
     const { stdout, stderr } = await execFileAsync(
       "node",
       [join(repoRoot, "scripts/dogfood-finish.mjs"), "--db", path, "--date", "2026-06-30", ...extraArgs],
+      {
+        cwd,
+        maxBuffer: 10 * 1024 * 1024,
+      }
+    );
+
+    return { code: 0, stdout, stderr };
+  } catch (error) {
+    return {
+      code: error.code ?? 1,
+      stdout: error.stdout ?? "",
+      stderr: error.stderr ?? "",
+    };
+  }
+}
+
+async function runFinishPackage(path, cwd = repoRoot) {
+  try {
+    const { stdout, stderr } = await execFileAsync(
+      "pnpm",
+      ["dogfood:finish:save", "--", "--db", path, "--date", "2026-06-30"],
       {
         cwd,
         maxBuffer: 10 * 1024 * 1024,

@@ -56,33 +56,45 @@ try {
     [join(repoRoot, "scripts/dogfood-metrics.mjs"), "--db", dbPath, "--date", "2026-06-30"],
     { cwd: repoRoot }
   );
-  assert(metricsStdout.includes("## App Telemetry"), "metrics did not include App Telemetry header");
-  assert(metricsStdout.includes("Total events: 31"), "metrics did not count events");
-  assert(metricsStdout.includes("Start requests: 1"), "metrics did not count start requests");
-  assert(metricsStdout.includes("Typed/selected entry requests: 1/0"), "metrics did not count entry request controls");
-  assert(metricsStdout.includes("Manual copy fallbacks: 1"), "metrics did not count manual copy fallbacks");
-  assert(metricsStdout.includes("Window show/hide requests: 1/1"), "metrics did not count window requests");
-  assert(metricsStdout.includes("Capture created/resolved/converted: 1/1/0"), "metrics did not count capture outcomes");
-  assert(metricsStdout.includes("Capture follow-up reviews: 1"), "metrics did not count capture follow-up reviews");
-  assert(metricsStdout.includes("Work Item time badge reviews: 1"), "metrics did not count Work Item time badge reviews");
-  assert(metricsStdout.includes("Activity Zone reviews: 1"), "metrics did not count Activity Zone reviews");
-  assert(metricsStdout.includes("Capture usage reviews: 1"), "metrics did not count capture usage reviews");
-  assert(metricsStdout.includes("Entry path reviews: 1"), "metrics did not count entry path reviews");
-  assert(metricsStdout.includes("Window entrypoint reviews: 1"), "metrics did not count window entrypoint reviews");
-  assert(metricsStdout.includes("Capture updated/deleted: 1/1"), "metrics did not count capture cleanup");
-  assert(metricsStdout.includes("Capture failures create/resolve/update/delete/convert: 0/0/0/0/1"), "metrics did not count capture failures");
-  assert(metricsStdout.includes("Corrections requested/applied/reviewed/failed: 1/1/1/1"), "metrics did not count corrections");
-  assert(metricsStdout.includes("Day closure started/completed: 1/1"), "metrics did not count day closure events");
-  assert(metricsStdout.includes("Last day closure duration: 7:30"), "metrics did not calculate day closure duration");
-  assert(metricsStdout.includes("Stale runtime recoveries: 1"), "metrics did not count stale recoveries");
-  assert(metricsStdout.includes("Average start latency: 1000ms"), "metrics did not calculate start latency");
+  assert(metricsStdout.includes("## Телеметрия приложения"), "metrics did not include localized telemetry header");
+  assert(metricsStdout.includes("Всего событий: 31"), "metrics did not count events");
+  assert(metricsStdout.includes("Запросов старта: 1"), "metrics did not count start requests");
+  assert(metricsStdout.includes("Входов вводом/из списка: 1/0"), "metrics did not count entry request controls");
+  assert(metricsStdout.includes("Ручных fallback-копирований: 1"), "metrics did not count manual copy fallbacks");
+  assert(metricsStdout.includes("Запросов показать/скрыть окно: 1/1"), "metrics did not count window requests");
+  assert(metricsStdout.includes("Отвлечений создано/закрыто/превращено: 1/1/0"), "metrics did not count capture outcomes");
+  assert(metricsStdout.includes("Проверок открытых отвлечений: 1"), "metrics did not count capture follow-up reviews");
+  assert(metricsStdout.includes("Проверок бейджей времени дел: 1"), "metrics did not count Work Item time badge reviews");
+  assert(metricsStdout.includes("Проверок зон активности: 1"), "metrics did not count Activity Zone reviews");
+  assert(metricsStdout.includes("Проверок использования инбокса: 1"), "metrics did not count capture usage reviews");
+  assert(metricsStdout.includes("Проверок путей входа: 1"), "metrics did not count entry path reviews");
+  assert(metricsStdout.includes("Проверок входа в окно: 1"), "metrics did not count window entrypoint reviews");
+  assert(metricsStdout.includes("Отвлечений исправлено/удалено: 1/1"), "metrics did not count capture cleanup");
+  assert(metricsStdout.includes("Ошибок отвлечений создать/закрыть/исправить/удалить/превратить: 0/0/0/0/1"), "metrics did not count capture failures");
+  assert(metricsStdout.includes("Коррекций запрошено/применено/проверено/ошибок: 1/1/1/1"), "metrics did not count corrections");
+  assert(metricsStdout.includes("Закрытие дня начато/завершено: 1/1"), "metrics did not count day closure events");
+  assert(metricsStdout.includes("Последняя длительность закрытия дня: 7:30"), "metrics did not calculate day closure duration");
+  assert(metricsStdout.includes("Восстановлений stale runtime: 1"), "metrics did not count stale recoveries");
+  assert(metricsStdout.includes("Средняя задержка старта: 1000ms"), "metrics did not calculate start latency");
+  assert(!metricsStdout.includes("## App Telemetry"), "metrics leaked raw English telemetry header");
+
+  const { stdout: rawMetricsStdout } = await execFileAsync(
+    "node",
+    [join(repoRoot, "scripts/dogfood-metrics.mjs"), "--db", dbPath, "--date", "2026-06-30", "--raw"],
+    { cwd: repoRoot }
+  );
+  assert(rawMetricsStdout.includes("## App Telemetry"), "raw metrics did not include compatibility telemetry header");
+  assert(rawMetricsStdout.includes("Work Item time badge reviews: 1"), "raw metrics did not keep compatibility labels");
 
   const { stdout: exportStdout } = await execFileAsync(
     "node",
     [join(repoRoot, "scripts/export-app-events.mjs"), "--db", dbPath, "--date", "2026-06-30"],
     { cwd: repoRoot }
   );
-  assert(exportStdout.includes("# Timeskein app events"), "event export did not include title");
+  assert(exportStdout.includes("# События приложения Timeskein"), "event export did not include localized title");
+  assert(exportStdout.includes("Всего событий: 31"), "event export did not include localized count");
+  assert(exportStdout.includes("| Время | Источник | Тип | Дело | Фокус-блок | Тех. payload |"), "event export did not include localized table header");
+  assert(!exportStdout.includes("# Timeskein app events"), "event export leaked old English title");
   assert(exportStdout.includes("focus_start_requested"), "event export did not include start request");
   assert(exportStdout.includes("window_show_requested"), "event export did not include window request");
   assert(exportStdout.includes("capture_created"), "event export did not include capture event");

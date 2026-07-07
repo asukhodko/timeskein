@@ -163,7 +163,8 @@ Dogfood launch helper:
 - `pnpm dogfood:macos` rebuilds and opens the packaged app as a low-level development/manual-debugging helper; normal dogfood days should use `dogfood:start` or `dogfood:continue` because those commands inspect the real day state before opening the app
 - `pnpm open:macos-app` refuses by default when `timeskein-desktop` is already running, so a dogfood start does not silently activate an old process; `--check-only` validates bundle plus guard without opening the app, and `--check-running-only` runs only the process guard before preflight has built the app
 - `pnpm export:focus-day` prints a Markdown day report from the local SQLite database as a fallback to UI copy
-- `pnpm dogfood:metrics` prints dogfood telemetry aggregates from the local SQLite app-event journal, including start/stop failure counts and accepted open-capture reviews
+- `pnpm dogfood:metrics` prints Russian dogfood telemetry aggregates from the local SQLite app-event journal, including start/stop failure counts and accepted open-capture reviews; `--raw` keeps the older technical labels for scripts that parse the output
+- `pnpm export:app-events` prints a Russian Markdown table of local technical app events for inspecting product friction after a dogfood day
 - `pnpm export:app-events` prints a Markdown event table for deeper inspection of show/hide/start/switch/stop/copy/API behavior
 - `pnpm dogfood:report` prints a Markdown dogfood report with Russian focus data, a Russian review checklist, a Russian daily-closure audit, Day Events, interruption history, open captures, human-readable app telemetry, and evening review prompts, marked as a draft if a focus block, Work Item, or review check still needs attention
 

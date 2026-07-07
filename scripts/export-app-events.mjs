@@ -46,9 +46,9 @@ function parseArgs(args) {
 }
 
 function printHelp() {
-  console.log(`Usage: pnpm export:app-events [--date YYYY-MM-DD] [--db path/to/timeskein.db]
+  console.log(`Использование: pnpm export:app-events [--date YYYY-MM-DD] [--db path/to/timeskein.db]
 
-Prints a Markdown app-event table from local Timeskein SQLite.`);
+Печатает Markdown-таблицу локальных технических событий Timeskein.`);
 }
 
 function parseLocalDate(value) {
@@ -100,11 +100,11 @@ function buildEventsMarkdown(events, day) {
     day: "2-digit",
   });
   const lines = [
-    `# Timeskein app events - ${dateTitle}`,
+    `# События приложения Timeskein - ${dateTitle}`,
     "",
-    `Total events: ${events.length}`,
+    `Всего событий: ${events.length}`,
     "",
-    "| Time | Source | Kind | Work Item | Focus Session | Payload |",
+    "| Время | Источник | Тип | Дело | Фокус-блок | Тех. payload |",
     "| --- | --- | --- | --- | --- | --- |",
   ];
 

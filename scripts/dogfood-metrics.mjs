@@ -21,7 +21,7 @@ const from = startOfLocalDay(date);
 const to = nextLocalDay(from);
 const events = await loadEvents(dbPath, from, to);
 
-process.stdout.write(buildTelemetryMarkdown(events));
+process.stdout.write(buildTelemetryMarkdown(events, { raw: Boolean(options.raw) }));
 
 function parseArgs(args) {
   const result = {};
@@ -34,6 +34,8 @@ function parseArgs(args) {
       result.db = args[++index];
     } else if (arg === "--date") {
       result.date = args[++index];
+    } else if (arg === "--raw") {
+      result.raw = true;
     } else if (arg === "--help" || arg === "-h") {
       printHelp();
       process.exit(0);
@@ -46,9 +48,10 @@ function parseArgs(args) {
 }
 
 function printHelp() {
-  console.log(`Usage: pnpm dogfood:metrics [--date YYYY-MM-DD] [--db path/to/timeskein.db]
+  console.log(`Использование: pnpm dogfood:metrics [--date YYYY-MM-DD] [--db path/to/timeskein.db] [--raw]
 
-Prints a Markdown App Telemetry section from local Timeskein app_events.`);
+Печатает Markdown-сводку локальной технической телеметрии Timeskein.
+По умолчанию вывод человекочитаемый на русском. --raw оставляет старые технические labels для внутренних скриптов.`);
 }
 
 function parseLocalDate(value) {
@@ -102,43 +105,82 @@ async function tableExists(path, tableName) {
   return (rows[0]?.count ?? 0) > 0;
 }
 
-function buildTelemetryMarkdown(events) {
+function buildTelemetryMarkdown(events, { raw = false } = {}) {
   const summary = summarizeEvents(events);
-  const lines = [
-    "## App Telemetry",
-    "",
-    `Total events: ${summary.total}`,
-    `Start requests: ${summary.startRequests}`,
-    `Switch requests: ${summary.switchRequests}`,
-    `Stop requests: ${summary.stopRequests}`,
-    `Typed/selected entry requests: ${summary.typedEntryRequests}/${summary.selectedEntryRequests}`,
-    `Start/stop failures: ${summary.startFailures}/${summary.stopFailures}`,
-    `Window shown/hidden: ${summary.windowShown}/${summary.windowHidden}`,
-    `Window show/hide requests: ${summary.windowShowRequested}/${summary.windowHideRequested}`,
-    `Window drag starts: ${summary.windowDragStarted}`,
-    `Copy failures: ${summary.copyFailures}`,
-    `Manual copy fallbacks: ${summary.manualCopyFallbacks}`,
-    `Capture created/resolved/converted: ${summary.captureCreated}/${summary.captureResolved}/${summary.captureConverted}`,
-    `Capture follow-up reviews: ${summary.captureFollowupReviews}`,
-    `Work Item time badge reviews: ${summary.workItemTimeBadgeReviews}`,
-    `Activity Zone reviews: ${summary.activityZoneReviews}`,
-    `Capture usage reviews: ${summary.captureUsageReviews}`,
-    `Entry path reviews: ${summary.entryPathReviews}`,
-    `Window entrypoint reviews: ${summary.windowEntrypointReviews}`,
-    `Capture updated/deleted: ${summary.captureUpdated}/${summary.captureDeleted}`,
-    `Capture failures create/resolve/update/delete/convert: ${summary.captureCreateFailures}/${summary.captureResolveFailures}/${summary.captureUpdateFailures}/${summary.captureDeleteFailures}/${summary.captureConvertFailures}`,
-    `Corrections requested/applied/reviewed/failed: ${summary.correctionRequests}/${summary.corrections}/${summary.correctionReviews}/${summary.correctionFailures}`,
-    `Day closure started/completed: ${summary.dayClosureStarts}/${summary.dayClosureCompletions}`,
-    `Last day closure duration: ${summary.lastDayClosureDurationSeconds == null ? "n/a" : formatDuration(summary.lastDayClosureDurationSeconds)}`,
-    `API errors: ${summary.apiErrors}`,
-    `Already-active start attempts: ${summary.alreadyActiveStartAttempts}`,
-    `Stale runtime recoveries: ${summary.staleRuntimeRecoveries}`,
-    `Average start latency: ${summary.averageStartLatencyMs == null ? "n/a" : `${summary.averageStartLatencyMs}ms`}`,
-    `Slow window-to-focus gaps: ${summary.slowWindowToFocusCount}`,
-  ];
+  const lines = raw
+    ? [
+        "## App Telemetry",
+        "",
+        `Total events: ${summary.total}`,
+        `Start requests: ${summary.startRequests}`,
+        `Switch requests: ${summary.switchRequests}`,
+        `Stop requests: ${summary.stopRequests}`,
+        `Typed/selected entry requests: ${summary.typedEntryRequests}/${summary.selectedEntryRequests}`,
+        `Start/stop failures: ${summary.startFailures}/${summary.stopFailures}`,
+        `Window shown/hidden: ${summary.windowShown}/${summary.windowHidden}`,
+        `Window show/hide requests: ${summary.windowShowRequested}/${summary.windowHideRequested}`,
+        `Window drag starts: ${summary.windowDragStarted}`,
+        `Copy failures: ${summary.copyFailures}`,
+        `Manual copy fallbacks: ${summary.manualCopyFallbacks}`,
+        `Capture created/resolved/converted: ${summary.captureCreated}/${summary.captureResolved}/${summary.captureConverted}`,
+        `Capture follow-up reviews: ${summary.captureFollowupReviews}`,
+        `Work Item time badge reviews: ${summary.workItemTimeBadgeReviews}`,
+        `Activity Zone reviews: ${summary.activityZoneReviews}`,
+        `Capture usage reviews: ${summary.captureUsageReviews}`,
+        `Entry path reviews: ${summary.entryPathReviews}`,
+        `Window entrypoint reviews: ${summary.windowEntrypointReviews}`,
+        `Capture updated/deleted: ${summary.captureUpdated}/${summary.captureDeleted}`,
+        `Capture failures create/resolve/update/delete/convert: ${summary.captureCreateFailures}/${summary.captureResolveFailures}/${summary.captureUpdateFailures}/${summary.captureDeleteFailures}/${summary.captureConvertFailures}`,
+        `Corrections requested/applied/reviewed/failed: ${summary.correctionRequests}/${summary.corrections}/${summary.correctionReviews}/${summary.correctionFailures}`,
+        `Day closure started/completed: ${summary.dayClosureStarts}/${summary.dayClosureCompletions}`,
+        `Last day closure duration: ${summary.lastDayClosureDurationSeconds == null ? "n/a" : formatDuration(summary.lastDayClosureDurationSeconds)}`,
+        `API errors: ${summary.apiErrors}`,
+        `Already-active start attempts: ${summary.alreadyActiveStartAttempts}`,
+        `Stale runtime recoveries: ${summary.staleRuntimeRecoveries}`,
+        `Average start latency: ${summary.averageStartLatencyMs == null ? "n/a" : `${summary.averageStartLatencyMs}ms`}`,
+        `Slow window-to-focus gaps: ${summary.slowWindowToFocusCount}`,
+      ]
+    : [
+        "## Телеметрия приложения",
+        "",
+        `Всего событий: ${summary.total}`,
+        `Запросов старта: ${summary.startRequests}`,
+        `Запросов переключения: ${summary.switchRequests}`,
+        `Запросов остановки: ${summary.stopRequests}`,
+        `Входов вводом/из списка: ${summary.typedEntryRequests}/${summary.selectedEntryRequests}`,
+        `Ошибок старта/остановки: ${summary.startFailures}/${summary.stopFailures}`,
+        `Окно показано/скрыто: ${summary.windowShown}/${summary.windowHidden}`,
+        `Запросов показать/скрыть окно: ${summary.windowShowRequested}/${summary.windowHideRequested}`,
+        `Начатых перетаскиваний окна: ${summary.windowDragStarted}`,
+        `Ошибок копирования: ${summary.copyFailures}`,
+        `Ручных fallback-копирований: ${summary.manualCopyFallbacks}`,
+        `Отвлечений создано/закрыто/превращено: ${summary.captureCreated}/${summary.captureResolved}/${summary.captureConverted}`,
+        `Проверок открытых отвлечений: ${summary.captureFollowupReviews}`,
+        `Проверок бейджей времени дел: ${summary.workItemTimeBadgeReviews}`,
+        `Проверок зон активности: ${summary.activityZoneReviews}`,
+        `Проверок использования инбокса: ${summary.captureUsageReviews}`,
+        `Проверок путей входа: ${summary.entryPathReviews}`,
+        `Проверок входа в окно: ${summary.windowEntrypointReviews}`,
+        `Отвлечений исправлено/удалено: ${summary.captureUpdated}/${summary.captureDeleted}`,
+        `Ошибок отвлечений создать/закрыть/исправить/удалить/превратить: ${summary.captureCreateFailures}/${summary.captureResolveFailures}/${summary.captureUpdateFailures}/${summary.captureDeleteFailures}/${summary.captureConvertFailures}`,
+        `Коррекций запрошено/применено/проверено/ошибок: ${summary.correctionRequests}/${summary.corrections}/${summary.correctionReviews}/${summary.correctionFailures}`,
+        `Закрытие дня начато/завершено: ${summary.dayClosureStarts}/${summary.dayClosureCompletions}`,
+        `Последняя длительность закрытия дня: ${summary.lastDayClosureDurationSeconds == null ? "нет данных" : formatDuration(summary.lastDayClosureDurationSeconds)}`,
+        `Ошибок API: ${summary.apiErrors}`,
+        `Попыток старта уже активного дела: ${summary.alreadyActiveStartAttempts}`,
+        `Восстановлений stale runtime: ${summary.staleRuntimeRecoveries}`,
+        `Средняя задержка старта: ${summary.averageStartLatencyMs == null ? "нет данных" : `${summary.averageStartLatencyMs}ms`}`,
+        `Медленных разрывов окно-фокус: ${summary.slowWindowToFocusCount}`,
+      ];
 
   if (Object.keys(summary.byKind).length > 0) {
-    lines.push("", "### Events By Kind", "", "| Count | Kind |", "| ---: | --- |");
+    lines.push(
+      "",
+      raw ? "### Events By Kind" : "### События по типам",
+      "",
+      raw ? "| Count | Kind |" : "| Кол-во | Тип |",
+      "| ---: | --- |"
+    );
     for (const [kind, count] of Object.entries(summary.byKind).sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0]))) {
       lines.push(`| ${count} | ${escapeMarkdownTable(kind)} |`);
     }

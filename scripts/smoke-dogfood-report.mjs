@@ -203,6 +203,12 @@ try {
     stdout.includes("Закрытие уложилось в 10 минут: да (7:00)"),
     "report did not prefill short closure duration verdict"
   );
+  assert(stdout.includes("## Дополнительный разбор"), "report did not include optional deep-review section");
+  assert(
+    stdout.includes("Этот раздел не обязателен для закрытия дня"),
+    "report did not make the deep-review section optional"
+  );
+  assert(!stdout.includes("## Вечерний разбор"), "report should not make the deep-review section sound mandatory");
   assert(stdout.includes("### Цена входа"), "report did not include entry cost prompts");
   assert(stdout.includes("Данных достаточно для разговора о дне: да/нет"), "report did not include verdict prompts");
 

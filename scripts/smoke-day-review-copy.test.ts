@@ -83,13 +83,13 @@ test('focus correction labels keep evening fixes calm', () => {
 test('day review checklist keeps the evening ritual in Russian', () => {
   const items: DayReviewItem[] = [
     { level: 'blocker', title: 'Stop the active focus block', detail: 'Вход в день' },
-    { level: 'blocker', title: 'Clear active Work Item state', detail: '1 Work Item с активным статусом' },
+    { level: 'blocker', title: 'Clear active Work Item state', detail: '1 дело с активным статусом' },
     { level: 'review', title: 'Classify significant gaps', detail: '1/2 больших разрывов без события дня' },
     { level: 'review', title: 'Resolve, convert, or accept open captures', detail: '1 открыто' },
     {
       level: 'review',
       title: 'Confirm Work Item today/total badges',
-      detail: '2 Work Item были в работе сегодня',
+      detail: '2 дела были в работе сегодня',
       action: 'accept_work_item_time_badges',
     },
     { level: 'review', title: 'Exercise start and continue paths', detail: '1 вводом, 0 из списка, 1 остановок' },
@@ -137,6 +137,7 @@ test('day review checklist keeps the evening ritual in Russian', () => {
   assert(markdown.includes('Можно копировать финальный отчёт'), 'ready label should be localized')
   assert(!markdown.includes('Review before report'), 'old English heading should not leak into the report')
   assert(!markdown.includes('Stop the active focus block'), 'old English blocker should not leak into the report')
+  assert(!markdown.includes('Work Item'), 'model-side Work Item wording should not leak into review checklist')
   assert(!markdown.includes('Work Item с активным статусом'), 'model-side wording should not leak into review details')
 })
 

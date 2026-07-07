@@ -1421,7 +1421,7 @@ function buildDayReviewItems({
     items.push({
       level: 'blocker',
       title: 'Clear active Work Item state',
-      detail: `${activeWorkItems.length} Work Item с активным статусом`,
+      detail: `${formatCount(activeWorkItems.length, 'дело', 'дела', 'дел')} с активным статусом`,
     })
   }
 
@@ -1474,7 +1474,7 @@ function buildDayReviewItems({
     items.push({
       level: 'review',
       title: 'Confirm Work Item today/total badges',
-      detail: `${touchedWorkItemIds.size} Work Item были в работе сегодня`,
+      detail: `${formatCount(touchedWorkItemIds.size, 'дело было', 'дела были', 'дел было')} в работе сегодня`,
       action: 'accept_work_item_time_badges',
     })
   }

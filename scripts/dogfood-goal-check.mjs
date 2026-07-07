@@ -234,7 +234,7 @@ async function checkSavedEvidence(date) {
     ["Старт и продолжение проверены", "Start and continue paths evidenced"],
     ["Коррекция трекинга проверена", "Tracking correction or review evidenced"],
     ["Длительность закрытия измерена", "Day closure duration measured"],
-    ["Жёстких блокеров нет", "Hard blockers absent"],
+    ["Красных пунктов нет", "Жёстких блокеров нет", "Hard blockers absent"],
   ];
   const rcDailyControlRows = [
     ["Финальное состояние чистое", "Final state clean"],
@@ -247,7 +247,7 @@ async function checkSavedEvidence(date) {
     ["Старт и продолжение проверены", "Start and continue paths evidenced"],
     ["Коррекция трекинга проверена", "Tracking correction or review evidenced"],
     ["Длительность закрытия измерена", "Day closure duration measured"],
-    ["Жёстких блокеров нет", "Hard blockers absent"],
+    ["Красных пунктов нет", "Жёстких блокеров нет", "Hard blockers absent"],
   ];
   const rcOnlyDailyControlRows = [["Локальные проверки", "Local gates"]];
 

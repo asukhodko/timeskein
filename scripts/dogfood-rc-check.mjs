@@ -878,7 +878,7 @@ function formatGoalAuditMarkdown(evidence, assessment, minFocusSeconds) {
     {
       requirement: "Hard blockers absent",
       status: assessment.hardBlockers.length === 0 ? "pass" : "block",
-      evidence: formatCount(assessment.hardBlockers.length, "жёсткий блокер", "жёстких блокера", "жёстких блокеров"),
+      evidence: formatCount(assessment.hardBlockers.length, "красный пункт", "красных пункта", "красных пунктов"),
     },
     {
       requirement: "Local gates",
@@ -928,7 +928,7 @@ function formatGoalAuditRequirement(requirement) {
     ["Start and continue paths evidenced", "Старт и продолжение проверены"],
     ["Tracking correction or review evidenced", "Коррекция трекинга проверена"],
     ["Day closure duration measured", "Длительность закрытия измерена"],
-    ["Hard blockers absent", "Жёстких блокеров нет"],
+    ["Hard blockers absent", "Красных пунктов нет", "Жёстких блокеров нет"],
     ["Local gates", "Локальные проверки"],
   ]);
 
@@ -939,7 +939,7 @@ function formatGoalAuditStatus(status) {
   const labels = new Map([
     ["pass", "ок"],
     ["review", "проверить"],
-    ["block", "блокер"],
+    ["block", "красный пункт", "блокер"],
     ["manual", "вручную"],
   ]);
 

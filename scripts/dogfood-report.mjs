@@ -47,10 +47,10 @@ const DAILY_CONTROL_REQUIREMENT_LABELS = {
   "Start and continue paths evidenced": "Старт и продолжение проверены",
   "Tracking correction or review evidenced": "Коррекция трекинга проверена",
   "Day closure duration measured": "Длительность закрытия измерена",
-  "Hard blockers absent": "Жёстких блокеров нет",
+  "Hard blockers absent": "Красных пунктов нет",
 };
 const DAILY_CONTROL_STATUS_LABELS = {
-  block: "блокер",
+  block: "красный пункт",
   pass: "ок",
   review: "проверить",
   manual: "вручную",
@@ -939,7 +939,7 @@ function formatDailyControlGoalAuditMarkdown({
     {
       requirement: "Hard blockers absent",
       status: activeFocus || activeWorkItems.length > 0 ? "block" : "pass",
-      evidence: formatCount(reviewItems.filter((item) => item.level === "blocker").length, "блокер", "блокера", "блокеров"),
+      evidence: formatCount(reviewItems.filter((item) => item.level === "blocker").length, "красный пункт", "красных пункта", "красных пунктов"),
     },
   ];
 

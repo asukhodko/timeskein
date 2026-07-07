@@ -86,7 +86,7 @@ Rerun the release-candidate evidence check when you want to inspect it without r
 pnpm dogfood:rc-check:save
 ```
 
-`dogfood:rc-check` does not replace the human verdict. It catches hard blockers
+`dogfood:rc-check` does not replace the human verdict. It catches red items
 and prints review items that must be resolved or consciously accepted before the
 milestone can be marked done.
 Use the final goal gate before marking the daily-control goal complete. Run it

@@ -98,7 +98,7 @@ try {
   assert(missingEvidence.code !== 0, "missing saved evidence should fail");
   assert(
     `${missingEvidence.stdout}${missingEvidence.stderr}`.includes("# Финальная проверка пока не готова") &&
-      `${missingEvidence.stdout}${missingEvidence.stderr}`.includes("## Что ещё осталось") &&
+      `${missingEvidence.stdout}${missingEvidence.stderr}`.includes("## До финальной проверки") &&
       `${missingEvidence.stdout}${missingEvidence.stderr}`.includes("Сохранённые материалы дня Timeskein ещё не найдены") &&
       `${missingEvidence.stdout}${missingEvidence.stderr}`.includes("pnpm dogfood:finish:save -- --date 2026-06-30"),
     "missing saved evidence error is missing"
@@ -300,7 +300,7 @@ try {
   assert(reviewEvidence.code !== 0, "saved evidence with review audit rows should fail before expensive gates");
   assert(
     `${reviewEvidence.stdout}${reviewEvidence.stderr}`.includes("# Финальная проверка пока не готова") &&
-      `${reviewEvidence.stdout}${reviewEvidence.stderr}`.includes("## Что ещё осталось"),
+      `${reviewEvidence.stdout}${reviewEvidence.stderr}`.includes("## До финальной проверки"),
     "review saved evidence error did not use the calm not-ready wrapper"
   );
   assert(

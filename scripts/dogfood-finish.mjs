@@ -267,7 +267,7 @@ function formatBlockedNextAction(items) {
 function buildMeasuredClosureWarning(date, reportState, reviewNextAction) {
   return [
     "",
-    "## Что ещё осталось",
+    "## До финального отчёта",
     "",
     "- Отчёт сохранён, но это ещё не финальное закрытие дня: длительность закрытия не измерена или больше 10 минут.",
     ...formatReportStateWarning(reportState),
@@ -288,7 +288,7 @@ function buildPendingReviewWarning(date, rows, reportState, reviewNextAction) {
 
   return [
     "",
-    "## Что ещё осталось",
+    "## До финального отчёта",
     "",
     "- Отчёт сохранён как рабочий артефакт, но ещё не готов для финального закрытия дня.",
     ...formatReportStateWarning(reportState),

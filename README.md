@@ -198,7 +198,7 @@ If you only want to inspect whether the saved evidence is ready, without running
 pnpm dogfood:goal-check:status -- --date YYYY-MM-DD
 ```
 
-When measured closure evidence is present and every `Аудит закрытия дня` row is already `ок`, `pnpm dogfood:finish:save` prints the short closure verdict, reminds that a day with Codex guidance is not proof for the active goal, and prints the exact dated `dogfood:goal-check` command with `--no-codex-guidance` to run next. If the saved report is still a draft, the command prints its saved status explicitly, repeats `Ближайшее действие` from the report under `Что ещё осталось`, and keeps the next step visible without reopening the Markdown. If measured closure exists but audit rows are still pending, it prints those pending rows and tells you to return to `Проверка перед отчётом` first.
+When measured closure evidence is present and every `Аудит закрытия дня` row is already `ок`, `pnpm dogfood:finish:save` prints the short closure verdict, reminds that a day with Codex guidance is not proof for the active goal, and prints the exact dated `dogfood:goal-check` command with `--no-codex-guidance` to run next. If the saved report is still a draft, the command prints its saved status explicitly, repeats `Ближайшее действие` from the report under `До финального отчёта`, and keeps the next step visible without reopening the Markdown. If measured closure exists but audit rows are still pending, it prints those pending rows and tells you to return to `Проверка перед отчётом` first.
 
 If you close yesterday's dogfood day after midnight, pass the date explicitly:
 

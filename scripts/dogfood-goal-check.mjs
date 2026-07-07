@@ -314,7 +314,7 @@ function buildMissingEvidenceMessage(date, missing) {
   return [
     "# Финальная проверка пока не готова",
     "",
-    "## Что ещё осталось",
+    "## До финальной проверки",
     "",
     "- Сохранённые материалы дня Timeskein ещё не найдены.",
     `- Сохрани вечерний отчёт и RC-аудит: \`pnpm dogfood:finish:save -- --date ${date}\`.`,
@@ -329,7 +329,7 @@ function buildMissingNoCodexGuidanceMessage(date) {
   return [
     "# Финальная проверка пока не готова",
     "",
-    "## Что ещё осталось",
+    "## До финальной проверки",
     "",
     "- Нужна явная отметка, что вечернее закрытие прошло без подсказок Codex.",
     `- Если ты шёл по \`Ближайшее действие\` и не спрашивал Codex, запусти: \`pnpm dogfood:goal-check -- --date ${date} --no-codex-guidance\`.`,
@@ -341,7 +341,7 @@ function buildIncompleteEvidenceMessage(date, weak, notPassing, reviewNextAction
   return [
     "# Финальная проверка пока не готова",
     "",
-    "## Что ещё осталось",
+    "## До финальной проверки",
     "",
     ...(weak.length > 0 ? [`- Пересобери устаревшие или неполные файлы: \`pnpm dogfood:finish:save -- --date ${date}\`.`] : []),
     ...formatReviewNextActionHint(reviewNextAction),

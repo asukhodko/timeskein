@@ -96,7 +96,7 @@ try {
     "finish --save leaked old English saved evidence messages"
   );
   assert(
-    cleanSavedDefault.stdout.includes("## Что ещё осталось") &&
+    cleanSavedDefault.stdout.includes("## До финального отчёта") &&
       cleanSavedDefault.stdout.includes("это ещё не финальное закрытие дня") &&
       cleanSavedDefault.stdout.includes("длительность закрытия не измерена или больше 10 минут") &&
       cleanSavedDefault.stdout.includes("Статус сохранённого отчёта:") &&
@@ -125,7 +125,7 @@ try {
   const measuredPendingDefault = await runFinish(cleanDb, ["--save"], tempDir);
   assert(measuredPendingDefault.code === 0, "measured day with pending review should save default report and RC check");
   assert(
-    measuredPendingDefault.stdout.includes("## Что ещё осталось") &&
+    measuredPendingDefault.stdout.includes("## До финального отчёта") &&
       measuredPendingDefault.stdout.includes("ещё не готов для финального закрытия дня") &&
       measuredPendingDefault.stdout.includes("Статус сохранённого отчёта:") &&
       measuredPendingDefault.stdout.includes("черновик") &&

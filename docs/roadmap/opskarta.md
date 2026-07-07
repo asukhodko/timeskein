@@ -12,7 +12,7 @@ remaining daily-control proof is narrower: one evening closure must be measured
 from `Начать закрытие дня` to final `Копировать отчёт`, take at most 10 minutes,
 and then pass strict `pnpm dogfood:goal-check`.
 
-The completed Daily Control Goal Audit in the UI/CLI dogfood report and in
+The completed `Аудит закрытия дня` in the UI/CLI dogfood report and in
 `pnpm dogfood:rc-check` checked whether a real day had enough evidence for focus
 blocks, Work Item totals, Activity Zones, notes/events, captures, gaps,
 corrections, and app-friction review. Work Item totals required an explicit UI

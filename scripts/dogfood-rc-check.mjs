@@ -79,12 +79,12 @@ function parseArgs(args) {
 }
 
 function printHelp() {
-  console.log(`Usage: pnpm dogfood:rc-check [--date YYYY-MM-DD] [--db path/to/timeskein.db] [--min-focus-minutes N] [--strict] [--save | --out path.md]
+  console.log(`Использование: pnpm dogfood:rc-check [--date YYYY-MM-DD] [--db path/to/timeskein.db] [--min-focus-minutes N] [--strict] [--save | --out path.md]
 
-Checks whether the saved Timeskein data is enough for the Dogfood Release Candidate verdict.
-It exits with code 1 for hard blockers such as active state, duplicate Work Item titles, or an empty day.
-Review items are printed but keep exit code 0 because the final RC verdict still needs human judgment.
-With --strict, review items also make the command exit with code 1. Use this before marking the daily-control goal complete.`);
+Проверяет, достаточно ли данных Timeskein для dogfood RC-вердикта.
+Команда завершается с кодом 1 при жёстких блокерах: активное состояние, дубли названий Work Item или пустой день.
+Пункты проверки печатаются, но без --strict оставляют код 0, потому что финальный RC-вердикт всё ещё требует человеческого решения.
+С --strict пункты проверки тоже дают код 1. Используй это перед закрытием цели про дешёвое вечернее закрытие дня.`);
 }
 
 function outputReportPath(options, date) {

@@ -113,7 +113,7 @@ selected/list continuation evidence, focus correction/review telemetry, measured
 day-closure duration, and
 window/show-hide telemetry, including both show and hide request counts from
 window entrypoints.
-The `Daily Control Goal Audit` section maps that evidence to the current
+The `Аудит закрытия дня` section maps that evidence to the current
 daily-control goal, so the next dogfood day can be judged requirement by
 requirement instead of by memory. The same audit is included in the normal UI
 and CLI dogfood reports before the raw focus data.

@@ -11,6 +11,13 @@ const repoRoot = resolve(import.meta.dirname, "..");
 const tempDir = await mkdtemp(join(tmpdir(), "timeskein-dogfood-rc-check-smoke-"));
 
 try {
+  const { stdout: helpStdout } = await execFileAsync("node", [join(repoRoot, "scripts/dogfood-rc-check.mjs"), "--help"], {
+    cwd: repoRoot,
+  });
+  assert(helpStdout.includes("Использование: pnpm dogfood:rc-check"), "RC check help title is not localized");
+  assert(helpStdout.includes("Проверяет, достаточно ли данных Timeskein"), "RC check help body is not localized");
+  assert(!helpStdout.includes("Usage:"), "RC check help leaked old English usage");
+
   const goodDb = join(tempDir, "good.db");
   await migrate(goodDb);
   await runSql(goodDb, `

@@ -18,6 +18,7 @@ import {
   isDayClosureReadyForFinalReport,
   isFinalDayClosureReport,
   shouldCompactAcceptAsIsReviewItems,
+  shouldShowDayReviewDetails,
   shouldSummarizeReadyReviewItems,
   type DayClosureStage,
 } from '../utils/dayClosure'
@@ -1504,22 +1505,33 @@ function DayReviewPanel({
   const readyItems = items.filter((item) => item.level === 'ok')
   const bulkAcceptReviewActions = getBulkAcceptableReviewActions(items) as DayReviewAction[]
   const compactAcceptReviews = shouldCompactAcceptAsIsReviewItems(items)
+  const showReviewDetails = shouldShowDayReviewDetails(closureStage)
   const summarizedReadyItems = shouldSummarizeReadyReviewItems({
     blockerCount: blockers.length,
     reviewCount: reviews.length,
     readyCount: readyItems.length,
   })
-  const statusClass = blockers.length > 0
-    ? 'border-red-900/70 bg-red-950/20'
-    : reviews.length > 0
-      ? 'border-amber-900/70 bg-amber-950/20'
-      : 'border-emerald-900/70 bg-emerald-950/20'
-  const statusText = blockers.length > 0
-    ? `${blockers.length} ${pluralRu(blockers.length, 'блокер', 'блокера', 'блокеров')}`
-    : reviews.length > 0
-      ? `${reviews.length} ${pluralRu(reviews.length, 'проверка', 'проверки', 'проверок')}`
-      : 'готово'
-  const nextStep = formatDayReviewNextStep(items)
+  const statusClass = !showReviewDetails
+    ? 'border-gray-800 bg-gray-950/20'
+    : blockers.length > 0
+      ? 'border-red-900/70 bg-red-950/20'
+      : reviews.length > 0
+        ? 'border-amber-900/70 bg-amber-950/20'
+        : 'border-emerald-900/70 bg-emerald-950/20'
+  const statusText = closureStage === 'no_data'
+    ? 'нет данных'
+    : closureStage === 'not_started'
+      ? 'не начато'
+      : blockers.length > 0
+        ? `${blockers.length} ${pluralRu(blockers.length, 'блокер', 'блокера', 'блокеров')}`
+        : reviews.length > 0
+          ? `${reviews.length} ${pluralRu(reviews.length, 'проверка', 'проверки', 'проверок')}`
+          : 'готово'
+  const nextStep = closureStage === 'no_data'
+    ? 'дождаться первых фокус-блоков за день.'
+    : closureStage === 'not_started'
+      ? 'вечером нажать «Начать закрытие дня», когда день правда пора закрывать.'
+      : formatDayReviewNextStep(items)
   const prompt = formatDayClosurePrompt(closureStage, {
     blockers: blockers.length,
     reviews: reviews.length,
@@ -1542,7 +1554,7 @@ function DayReviewPanel({
               закрытие {formatDuration(closureElapsedSeconds)}
             </span>
           )}
-          {bulkAcceptReviewActions.length > 0 && !compactAcceptReviews && onAction && (
+          {showReviewDetails && bulkAcceptReviewActions.length > 0 && !compactAcceptReviews && onAction && (
             <button
               type="button"
               onClick={() => {
@@ -1574,24 +1586,24 @@ function DayReviewPanel({
       <div className="rounded border border-gray-800/80 bg-gray-950/20 px-2 py-1 text-[11px] text-gray-300">
         <span className="font-medium text-gray-200">Ближайшее действие:</span> {nextStep}
       </div>
-      {blockers.length > 0 && (
+      {showReviewDetails && blockers.length > 0 && (
         <DayReviewGroup title="Сначала закрыть" items={blockers} onAction={onAction} />
       )}
-      {actionReviews.length > 0 && (
+      {showReviewDetails && actionReviews.length > 0 && (
         <DayReviewGroup title="Дописать или исправить" items={actionReviews} onAction={onAction} />
       )}
-      {acceptReviews.length > 0 && compactAcceptReviews && (
+      {showReviewDetails && acceptReviews.length > 0 && compactAcceptReviews && (
         <CompactAcceptReviewGroup items={acceptReviews} onAcceptAll={acceptAllReviews} canAccept={Boolean(onAction)} />
       )}
-      {acceptReviews.length > 0 && !compactAcceptReviews && (
+      {showReviewDetails && acceptReviews.length > 0 && !compactAcceptReviews && (
         <DayReviewGroup title="Осознанно проверить" items={acceptReviews} onAction={onAction} />
       )}
-      {summarizedReadyItems && (
+      {showReviewDetails && summarizedReadyItems && (
         <div className="text-[11px] text-gray-500">
           Уже чисто: {readyItems.length} {pluralRu(readyItems.length, 'пункт', 'пункта', 'пунктов')}.
         </div>
       )}
-      {!summarizedReadyItems && readyItems.length > 0 && blockers.length === 0 && reviews.length === 0 && (
+      {showReviewDetails && !summarizedReadyItems && readyItems.length > 0 && blockers.length === 0 && reviews.length === 0 && (
         <DayReviewGroup title="Готово" items={readyItems} onAction={onAction} />
       )}
     </div>

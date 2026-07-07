@@ -31,11 +31,11 @@ const homeDir = await mkdtemp(join(tmpdir(), "timeskein-open-smoke-"));
 let child;
 
 try {
-  const checkClear = await runOpenApp(["--check-running-only"]);
-  assert(checkClear.code === 0, "open:macos-app --check-running-only should pass before smoke app starts");
+  const checkClear = await runOpenApp(["--check-running-only", "--allow-running"]);
+  assert(checkClear.code === 0, "open:macos-app --check-running-only --allow-running should pass before smoke app starts");
   assert(
-    checkClear.stdout.includes("No running timeskein-desktop process found"),
-    "open:macos-app --check-running-only did not report a clear running-process guard"
+    hasRunningProcessGuard(checkClear.stdout),
+    "open:macos-app --check-running-only did not report the running-process guard"
   );
 
   child = spawn(appBinary, [], {
@@ -64,6 +64,16 @@ try {
   assert(
     runningBlocked.stderr.includes("Timeskein already appears to be running"),
     "open:macos-app --check-running-only did not explain the running-app blocker"
+  );
+
+  const runningAllowed = await runOpenApp(["--check-running-only", "--allow-running"]);
+  assert(
+    runningAllowed.code === 0,
+    "open:macos-app --check-running-only --allow-running should pass while timeskein-desktop is running"
+  );
+  assert(
+    runningAllowed.stdout.includes("Running timeskein-desktop process allowed"),
+    "open:macos-app --allow-running did not report the allowed running process"
   );
 
   const blocked = await runOpenApp();
@@ -133,6 +143,13 @@ function assert(condition, message) {
   if (!condition) {
     throw new Error(message);
   }
+}
+
+function hasRunningProcessGuard(output) {
+  return (
+    output.includes("No running timeskein-desktop process found") ||
+    output.includes("Running timeskein-desktop process allowed")
+  );
 }
 
 async function assertMacosWindowPolicy() {

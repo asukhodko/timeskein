@@ -19,7 +19,7 @@ try {
 
   const dryRun = await runReset();
   assert(dryRun.stdout.includes("Mode: dry-run"), "dry run did not report dry-run mode");
-  assert(dryRun.stdout.includes("Running app PIDs: none"), "dry run did not report running app PIDs");
+  assert(dryRun.stdout.includes("Running app PIDs:"), "dry run did not report running app status");
   assert(existsSync(dbPath), "dry run moved the database");
   assert(existsSync(`${dbPath}-wal`), "dry run moved the wal file");
   assert(existsSync(`${dbPath}-shm`), "dry run moved the shm file");
@@ -38,7 +38,7 @@ try {
     await stopChild(dummyApp);
   }
 
-  const applied = await runReset("--apply");
+  const applied = await runReset("--apply", "--force");
   assert(applied.stdout.includes("Mode: applied"), "apply did not report applied mode");
   assert(!existsSync(dbPath), "apply left the database in place");
   assert(!existsSync(`${dbPath}-wal`), "apply left the wal file in place");

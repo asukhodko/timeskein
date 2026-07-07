@@ -8,6 +8,7 @@ import {
   isDayClosureReadyForFinalReport,
   isFinalDayClosureReport,
   shouldCompactAcceptAsIsReviewItems,
+  shouldShowDayReviewDetails,
   shouldSummarizeReadyReviewItems,
 } from '../apps/desktop/src/utils/dayClosure'
 
@@ -71,6 +72,14 @@ test('day closure stage guides the evening review ritual', () => {
     }),
     'ready'
   )
+})
+
+test('day review details stay hidden until the evening closure ritual starts', () => {
+  assert.equal(shouldShowDayReviewDetails('no_data'), false)
+  assert.equal(shouldShowDayReviewDetails('not_started'), false)
+  assert.equal(shouldShowDayReviewDetails('blocked'), true)
+  assert.equal(shouldShowDayReviewDetails('review'), true)
+  assert.equal(shouldShowDayReviewDetails('ready'), true)
 })
 
 test('ready review items stay compact while unresolved checks remain', () => {

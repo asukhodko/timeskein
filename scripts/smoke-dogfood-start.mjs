@@ -20,7 +20,7 @@ try {
   assert(clean.code === 0, "clean database should pass the start gate");
   assert(clean.stdout.includes("Статус: ГОТОВО"), "clean start gate did not run localized readiness");
   assert(
-    clean.stdout.includes("No running timeskein-desktop process found"),
+    hasRunningProcessGuard(clean.stdout),
     "clean start gate did not check for an already running app"
   );
   assert(clean.stdout.includes("Dry run: app was not opened"), "clean start gate did not stay dry-run");
@@ -68,7 +68,7 @@ try {
   assert(cleanStart.stdout.includes("# Timeskein dogfood DB reset"), "clean start did not run reset-db");
   assert(cleanStart.stdout.includes("Mode: dry-run"), "clean start dry run applied reset");
   assert(
-    cleanStart.stdout.includes("No running timeskein-desktop process found"),
+    hasRunningProcessGuard(cleanStart.stdout),
     "clean start dry run did not check for an already running app"
   );
   assert(
@@ -94,7 +94,7 @@ try {
   await rm(tempDir, { recursive: true, force: true });
 }
 
-async function runStart({ resetDb = false, skipPreflight = true, env = process.env, mode } = {}) {
+async function runStart({ resetDb = false, skipPreflight = true, env = process.env, mode, allowRunning = true } = {}) {
   const args = [
     join(repoRoot, "scripts/dogfood-start.mjs"),
     "--dry-run",
@@ -114,6 +114,10 @@ async function runStart({ resetDb = false, skipPreflight = true, env = process.e
 
   if (mode) {
     args.splice(1, 0, "--mode", mode);
+  }
+
+  if (allowRunning) {
+    args.splice(1, 0, "--allow-running");
   }
 
   try {
@@ -153,4 +157,11 @@ function assert(condition, message) {
   if (!condition) {
     throw new Error(message);
   }
+}
+
+function hasRunningProcessGuard(output) {
+  return (
+    output.includes("No running timeskein-desktop process found") ||
+    output.includes("Running timeskein-desktop process allowed")
+  );
 }

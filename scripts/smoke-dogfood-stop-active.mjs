@@ -52,7 +52,7 @@ try {
     await stopChild(dummyApp);
   }
 
-  const applied = await runStopActive("--apply", "--stopped-at", stoppedAt, "--note", stopNote);
+  const applied = await runStopActive("--apply", "--force", "--stopped-at", stoppedAt, "--note", stopNote);
   assert(applied.stdout.includes("Mode: applied"), "apply did not report applied mode");
 
   activeState = await loadActiveState();

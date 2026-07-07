@@ -43,6 +43,10 @@ export function shouldSummarizeReadyReviewItems(counts: DayClosureReviewCounts) 
   return counts.readyCount > 0 && (counts.blockerCount > 0 || counts.reviewCount > 0)
 }
 
+export function shouldShowDayReviewDetails(stage: DayClosureStage) {
+  return stage === 'blocked' || stage === 'review' || stage === 'ready'
+}
+
 export function shouldCompactAcceptAsIsReviewItems(items: BulkAcceptableReviewItem[]) {
   return getBulkAcceptableReviewActions(items).length > 0
 }

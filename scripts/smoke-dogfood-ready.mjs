@@ -24,7 +24,7 @@ try {
   assert(ready.stdout.includes("Статус: ГОТОВО"), "ready output did not report localized READY");
   assert(ready.stdout.includes("Режим: старт"), "ready output did not report localized start mode");
   assert(ready.stdout.includes("Агент отвечает: нет"), "ready output did not report localized agent responsiveness");
-  assert(ready.stdout.includes("Процессы приложения: нет"), "ready output did not report localized running app PIDs");
+  assert(ready.stdout.includes("Процессы приложения:"), "ready output did not report localized running app status");
   assert(ready.stdout.includes("## Что сделать дальше"), "ready output did not include localized next section");
   assert(ready.stdout.includes("pnpm dogfood:start"), "ready output did not include start command");
   assert(

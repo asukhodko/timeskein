@@ -19,7 +19,7 @@ try {
     await run(process.execPath, resetArgs);
 
     if (options.dryRun) {
-      await run(process.execPath, [resolve(repoRoot, "scripts/open-macos-app.mjs"), "--check-running-only"]);
+      await run(process.execPath, openMacosAppArgs("--check-running-only"));
       if (!options.skipPreflight) {
         await run("pnpm", ["dogfood:preflight"]);
       }
@@ -41,7 +41,7 @@ try {
 
   await run(process.execPath, readyArgs);
 
-  await run(process.execPath, [resolve(repoRoot, "scripts/open-macos-app.mjs"), "--check-running-only"]);
+  await run(process.execPath, openMacosAppArgs("--check-running-only"));
 
   if (!options.skipPreflight) {
     await run("pnpm", ["dogfood:preflight"]);
@@ -50,7 +50,7 @@ try {
   if (options.dryRun) {
     console.log("\nTimeskein dogfood start gate passed. Dry run: app was not opened.");
   } else {
-    await run(process.execPath, [resolve(repoRoot, "scripts/open-macos-app.mjs")]);
+    await run(process.execPath, openMacosAppArgs());
     await run(process.execPath, [resolve(repoRoot, "scripts/dogfood-agent-status.mjs")]);
     console.log("\nTimeskein dogfood start gate passed. App opened and embedded agent is responsive.");
   }
@@ -89,6 +89,8 @@ function parseArgs(args) {
       result.resetDb = true;
     } else if (arg === "--skip-preflight") {
       result.skipPreflight = true;
+    } else if (arg === "--allow-running") {
+      result.allowRunning = true;
     } else if (arg === "--help" || arg === "-h") {
       printHelp();
       process.exit(0);
@@ -101,7 +103,7 @@ function parseArgs(args) {
 }
 
 function printHelp() {
-  console.log(`Usage: pnpm dogfood:start [--mode start|continue] [--skip-preflight] [--dry-run] [--reset-db] [--date YYYY-MM-DD] [--db path/to/timeskein.db]
+  console.log(`Usage: pnpm dogfood:start [--mode start|continue] [--skip-preflight] [--dry-run] [--reset-db] [--allow-running] [--date YYYY-MM-DD] [--db path/to/timeskein.db]
 
 Runs the dogfood start gate:
 1. optional database backup reset when --reset-db is passed;
@@ -111,7 +113,16 @@ Runs the dogfood start gate:
 5. opens the macOS app, unless --dry-run is passed;
 6. waits for the embedded agent to become responsive.
 
-With --reset-db --dry-run, only prints the reset plan and checks the running-process/preflight gates. It does not move database files.`);
+With --reset-db --dry-run, only prints the reset plan and checks the running-process/preflight gates. It does not move database files.
+By default, the start gate refuses when Timeskein is already running. Use --allow-running only when intentionally reusing or activating the current app process.`);
+}
+
+function openMacosAppArgs(...extraArgs) {
+  const args = [resolve(repoRoot, "scripts/open-macos-app.mjs"), ...extraArgs];
+  if (options.allowRunning) {
+    args.push("--allow-running");
+  }
+  return args;
 }
 
 function run(command, args) {

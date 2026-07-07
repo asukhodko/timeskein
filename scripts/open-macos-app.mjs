@@ -27,7 +27,11 @@ if (runningPids.length > 0 && !options.allowRunning) {
 }
 
 if (options.checkRunningOnly) {
-  console.log("No running timeskein-desktop process found.");
+  if (runningPids.length > 0) {
+    console.log(`Running timeskein-desktop process allowed: PID ${runningPids.join(", ")}`);
+  } else {
+    console.log("No running timeskein-desktop process found.");
+  }
   process.exit(0);
 }
 

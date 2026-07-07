@@ -429,6 +429,12 @@ Before marking the daily-control goal complete, run the final gate after `pnpm d
 pnpm dogfood:goal-check -- --no-codex-guidance
 ```
 
+For a calm read-only check during or after closure, use the status command. It does not close the goal and does not run expensive gates; it only says whether the saved evidence is ready and what strict command remains:
+
+```bash
+pnpm dogfood:goal-check:status -- --date YYYY-MM-DD
+```
+
 The final goal gate also checks that the saved report contains `Короткое закрытие`, the generated `Закрытие уложилось в 10 минут` line with a `да` verdict, the grouped `Проверка перед отчётом` section, and the `Ближайшее действие` line. If the saved file still has an old flat checklist, lacks the short closure section, lacks a passing measured-closure line, or lacks the next-action line, regenerate the evidence with `pnpm dogfood:finish:save -- --date YYYY-MM-DD`.
 When measured closure evidence is present and every `Аудит закрытия дня` row is already `ок`, `pnpm dogfood:finish:save` prints the short closure verdict, warns that Codex-guided closure is not proof for the active goal, and prints the exact dated `pnpm dogfood:goal-check -- --date YYYY-MM-DD --no-codex-guidance` command for the final gate. If the saved report is still a draft, the command prints its saved status explicitly and repeats `Ближайшее действие` from the report under `Что ещё осталось`, so the next action stays visible even from the terminal. If measured closure exists but audit rows are still pending, it prints those pending rows and points back to `Проверка перед отчётом`.
 

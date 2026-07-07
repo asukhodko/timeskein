@@ -53,7 +53,21 @@ try {
   assert(helpStdout.includes("Использование: pnpm dogfood:goal-check"), "goal-check help title is not localized");
   assert(helpStdout.includes("финальный локальный gate"), "goal-check help body is not localized");
   assert(helpStdout.includes("--no-codex-guidance"), "goal-check help did not mention the no-Codex attestation flag");
+  assert(helpStdout.includes("dogfood:goal-check:status"), "goal-check help did not mention the status command");
   assert(!helpStdout.includes("Usage:"), "goal-check help leaked old English usage");
+
+  const { stdout: packageStatusStdout } = await execFileAsync(
+    "pnpm",
+    ["dogfood:goal-check:status", "--", "--date", "2099-01-01"],
+    { cwd: repoRoot, maxBuffer: 10 * 1024 * 1024 }
+  );
+  assert(
+    packageStatusStdout.includes("# Финальная проверка пока не готова") &&
+      packageStatusStdout.includes("## Мягкая проверка") &&
+      packageStatusStdout.includes("не закрывает цель"),
+    "package status command should show a soft not-ready message"
+  );
+  assert(!packageStatusStdout.includes("ELIFECYCLE"), "package status command should not show pnpm lifecycle noise");
 
   const { stdout: realDryRunStdout } = await execFileAsync(
     "node",
@@ -97,6 +111,21 @@ try {
   assert(
     !`${missingEvidence.stdout}${missingEvidence.stderr}`.includes("Saved dogfood evidence is missing"),
     "missing saved evidence error should not use the old English wording"
+  );
+
+  const missingEvidenceStatus = await runGoalCheck(["--status", "--date", "2026-06-30"], tempDir);
+  assert(missingEvidenceStatus.code === 0, "status mode should not fail on missing saved evidence");
+  assert(
+    missingEvidenceStatus.stdout.includes("# Финальная проверка пока не готова") &&
+      missingEvidenceStatus.stdout.includes("## Мягкая проверка") &&
+      missingEvidenceStatus.stdout.includes("Она не закрывает цель") &&
+      missingEvidenceStatus.stdout.includes("pnpm dogfood:goal-check -- --date 2026-06-30 --no-codex-guidance"),
+    "status mode missing-evidence message is incomplete"
+  );
+  assert(
+    !`${missingEvidenceStatus.stdout}${missingEvidenceStatus.stderr}`.includes("Error:") &&
+      !`${missingEvidenceStatus.stdout}${missingEvidenceStatus.stderr}`.includes("at checkSavedEvidence"),
+    "status mode missing-evidence message should not print a JavaScript stack trace"
   );
 
   const missingEvidenceFromFullCheck = await runGoalCheck(["--date", "2026-06-30", "--no-codex-guidance"], tempDir);
@@ -445,6 +474,16 @@ try {
   assert(
     savedEvidence.stdout.includes("Сохранённые материалы дня Timeskein за 2026-06-30 найдены."),
     "saved evidence success message is missing"
+  );
+
+  const readyStatus = await runGoalCheck(["--status", "--date", "2026-06-30"], tempDir);
+  assert(readyStatus.code === 0, "status mode should pass with complete saved evidence");
+  assert(
+    readyStatus.stdout.includes("# Статус финальной проверки цели Timeskein") &&
+      readyStatus.stdout.includes("Сохранённые материалы дня Timeskein за 2026-06-30 найдены.") &&
+      readyStatus.stdout.includes("pnpm dogfood:goal-check -- --date 2026-06-30 --no-codex-guidance") &&
+      readyStatus.stdout.includes("Если Codex понадобился как навигатор"),
+    "status mode ready message is incomplete"
   );
 
   console.log(

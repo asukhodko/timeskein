@@ -56,6 +56,23 @@ if (options.checkSavedEvidenceOnly) {
   }
 }
 
+if (options.status) {
+  try {
+    await checkSavedEvidence(date);
+    console.log(buildStatusReadyMessage(date));
+    process.exit(0);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (message.startsWith("# Финальная проверка пока не готова")) {
+      console.log(buildStatusNotReadyMessage(date, message));
+      process.exit(0);
+    }
+
+    process.stderr.write(`${message}\n`);
+    process.exit(1);
+  }
+}
+
 if (options.dryRun) {
   console.log("# Финальная проверка цели Timeskein — dry run");
   console.log("");
@@ -112,6 +129,8 @@ function parseArgs(args) {
       result.checkSavedEvidenceOnly = true;
     } else if (arg === "--no-codex-guidance") {
       result.noCodexGuidance = true;
+    } else if (arg === "--status") {
+      result.status = true;
     } else if (arg === "--dry-run") {
       result.dryRun = true;
     } else if (arg === "--help" || arg === "-h") {
@@ -134,7 +153,7 @@ function parseArgs(args) {
 }
 
 function printHelp() {
-  console.log(`Использование: pnpm dogfood:goal-check [--date YYYY-MM-DD] [--no-codex-guidance] [--db path/to/timeskein.db] [--min-focus-minutes N] [--save | --out path.md] [--skip-saved-evidence-check] [--dry-run]
+  console.log(`Использование: pnpm dogfood:goal-check [--date YYYY-MM-DD] [--no-codex-guidance] [--db path/to/timeskein.db] [--min-focus-minutes N] [--save | --out path.md] [--skip-saved-evidence-check] [--status] [--dry-run]
 
 Запускает финальный локальный gate для цели про дешёвое вечернее закрытие дня:
 
@@ -144,7 +163,36 @@ function printHelp() {
 4. pnpm dogfood:preflight
 5. dogfood:rc-check --strict для выбранного dogfood-дня
 
-Используй это после реального dogfood-дня, перед закрытием цели.`);
+Используй это после реального dogfood-дня, перед закрытием цели.
+
+Для спокойного просмотра состояния без дорогих проверок и без падения на ожидаемой неготовности:
+
+  pnpm dogfood:goal-check:status -- --date YYYY-MM-DD`);
+}
+
+function buildStatusReadyMessage(date) {
+  return [
+    "# Статус финальной проверки цели Timeskein",
+    "",
+    `Сохранённые материалы дня Timeskein за ${date} найдены.`,
+    "",
+    "## Что дальше",
+    "",
+    `- Если вечернее закрытие прошло без подсказок Codex, запусти строгую проверку: \`pnpm dogfood:goal-check -- --date ${date} --no-codex-guidance\`.`,
+    "- Если Codex понадобился как навигатор закрытия, этот день ещё не закрывает цель.",
+  ].join("\n");
+}
+
+function buildStatusNotReadyMessage(date, message) {
+  return [
+    message,
+    "",
+    "## Мягкая проверка",
+    "",
+    "- Эта команда только показывает состояние.",
+    "- Она не закрывает цель и не запускает локальные gate.",
+    `- Когда материалы будут готовы, строгая проверка останется такой: \`pnpm dogfood:goal-check -- --date ${date} --no-codex-guidance\`.`,
+  ].join("\n");
 }
 
 async function checkSavedEvidence(date) {

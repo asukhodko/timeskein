@@ -31,6 +31,9 @@ See [Dogfood Release Baseline](docs/dogfood-release-baseline.md) for the accepte
 
 The current execution roadmap is maintained as an opskarta v3 plan set:
 [Timeskein opskarta roadmap](docs/roadmap/opskarta.md).
+The next meaning layer is described in
+[Periodic Reflection Roadmap](docs/roadmap/0003-periodic-reflection-roadmap.md)
+and [RFC-0008](docs/rfc/0008-periodic-reports-and-reflection.md).
 
 ## Project Structure
 
@@ -361,6 +364,7 @@ If macOS rejects all three, use the macOS menu bar item or normal app switching.
 - [Current Implementation](docs/current-implementation.md) - what runs today
 - [Dogfood Day Protocol](docs/dogfood-day.md) - one-day Session replacement trial
 - [opskarta Roadmap](docs/roadmap/opskarta.md) - current machine-checkable roadmap
+- [Periodic Reflection Roadmap](docs/roadmap/0003-periodic-reflection-roadmap.md) - arbitrary-period reports and reflection loops
 - [MVP Technical Spec](mvp-technical%20specifications.md) - detailed requirements
 - [Glossary](docs/glossary.md) - term definitions
 - [ADRs](docs/adr/) - architecture decision records

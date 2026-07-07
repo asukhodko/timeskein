@@ -111,6 +111,8 @@ Timeskein проектируется как система, которая:
 - **Thread** — сквозная тема/проект, связывающая эпизоды (производное, Level 2+).
 - **Mark** — пользовательский маркер ("важно", "закрыл", "вернуться").
 - **Distraction Mark** — авто-mark для классификации off-task активности (Level 3).
+- **Track** — долгий смысловой контейнер для отчётов по проекту, инициативе, роли или человеку.
+- **Reflection Session** — сохранённый обзор периода: выводы, решения и следующие точки фокуса.
 
 ### Capture Profile
 
@@ -245,3 +247,4 @@ MVP ориентирован на одну функцию:
 - RFC-0005: Event Ingest + SourceNode + Pairing
 - RFC-0006: Retention/TTL + Distillation
 - RFC-0007: Screen Evidence Source Node (Evidence-Mode)
+- RFC-0008: Periodic Reports and Reflection Loops

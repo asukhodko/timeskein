@@ -533,6 +533,102 @@ nodes:
       ops:
         attention_class: current
 
+  ts.periodic_reflection:
+    title: Periodic reflection and meaning reports
+    kind: phase
+    parent: ts
+    status: planned
+    notes: "Build arbitrary-period reports that answer what the user got from the period: real focus, active tracks, noise, recovery, open loops, and performance-review evidence. Keep the first slice outcome-first and based on existing manual data before adding automated context collection."
+    x:
+      ops:
+        attention_class: future
+  ts.periodic_reflection.period_export:
+    title: Export arbitrary-period reports from existing data
+    kind: task
+    parent: ts.periodic_reflection
+    status: planned
+    effort: 3
+    deps:
+      - id: ts.daily_control.goal_check
+    notes: CLI-first report.period / pnpm report:period over a date range, with Markdown and JSON, totals by day, Work Item, Activity Zone, gaps, captures, Day Events, Work Item Events, data-quality warnings, and focus-tuning questions.
+    x:
+      ops:
+        attention_class: future
+  ts.periodic_reflection.report_profiles:
+    title: Add weekly, sprint, track, and performance report profiles
+    kind: task
+    parent: ts.periodic_reflection
+    status: planned
+    effort: 3
+    deps:
+      - id: ts.periodic_reflection.period_export
+    notes: "Different periods should answer different questions: week tunes the next focus, sprint compares intention to flow, track retrospective reconstructs one project, and quarter-performance separates facts from contribution wording."
+    x:
+      ops:
+        attention_class: future
+  ts.periodic_reflection.context_links:
+    title: Preserve external artifacts and user thoughts as report evidence
+    kind: task
+    parent: ts.periodic_reflection
+    status: planned
+    effort: 3
+    deps:
+      - id: ts.periodic_reflection.period_export
+    notes: Make refs, Work Item Events, Day Events, capture origin, and manually recorded thoughts visible as evidence for state, result, blocker, or next action. Prefer meaning reconstruction over raw context collection.
+    x:
+      ops:
+        attention_class: future
+  ts.periodic_reflection.tracks_labels:
+    title: Introduce Tracks, Labels, and historical snapshots
+    kind: task
+    parent: ts.periodic_reflection
+    status: planned
+    effort: 5
+    deps:
+      - id: ts.periodic_reflection.report_profiles
+      - id: ts.periodic_reflection.context_links
+    notes: Add Track as the main long-lived meaning container, Labels as cross-cutting slices, and snapshots on focus blocks/events so old reports remain historically honest after taxonomy changes.
+    x:
+      ops:
+        attention_class: future
+  ts.periodic_reflection.operational_reality:
+    title: Build operational reality panel
+    kind: task
+    parent: ts.periodic_reflection
+    status: planned
+    effort: 5
+    deps:
+      - id: ts.periodic_reflection.tracks_labels
+    notes: Show what is currently active, waiting, blocked, stale-but-important, or a meeting tail, with confidence, last touched time, evidence, and next action when honest.
+    x:
+      ops:
+        attention_class: future
+  ts.periodic_reflection.reflection_sessions:
+    title: Save period conclusions as Reflection Sessions
+    kind: task
+    parent: ts.periodic_reflection
+    status: planned
+    effort: 3
+    deps:
+      - id: ts.periodic_reflection.report_profiles
+    notes: Store findings, decisions, next focus points, and links to created or updated Work Items so a review changes the working system instead of becoming a lost chat artifact.
+    x:
+      ops:
+        attention_class: future
+  ts.periodic_reflection.llm_pack:
+    title: Export LLM packs with redaction controls
+    kind: epic
+    parent: ts.periodic_reflection
+    status: deferred
+    effort: 5
+    deps:
+      - id: ts.periodic_reflection.period_export
+      - id: ts.periodic_reflection.context_links
+    notes: Prepare structured Markdown/JSON packages, questions, warnings, and redaction modes for local or explicit remote LLM analysis.
+    x:
+      ops:
+        attention_class: future
+
   ts.future:
     title: Future directions
     kind: phase

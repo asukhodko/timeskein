@@ -130,6 +130,14 @@ x:
           health: yellow
           owner: a.sukhodko
           next_sync_goal: Run one measured evening closure from the review panel, copy a final report in <=10 minutes, save evidence, and pass strict dogfood:goal-check.
+      periodic-reflection:
+        title: Periodic Reflection
+        scope_nodes:
+          - ts.periodic_reflection
+        mgmt:
+          health: neutral
+          owner: a.sukhodko
+          sync_note: "Next meaning layer after the daily-control loop: arbitrary-period reports, focus tuning, Track/Label slices, operational reality, and performance-review evidence. First slice should use existing manual data before adding automated context collection."
       future-directions:
         title: Future directions
         scope_nodes:
@@ -158,6 +166,9 @@ x:
         to: daily-control-gate
         type: required
       - from: daily-control-gate
+        to: periodic-reflection
+        type: required
+      - from: periodic-reflection
         to: future-directions
         type: context
         label: later
@@ -171,6 +182,7 @@ x:
           - capture-inbox
           - dogfood-hardening
           - daily-control-gate
+          - periodic-reflection
           - future-directions
         direction: LR
         color_mode: mgmt_hybrid

@@ -70,6 +70,8 @@ flowchart LR
     class dogfood_hardening exec_done
     daily_control_gate["Daily<br/>Control Gate<br/>100%<br/>веха 2026-07-07"]
     class daily_control_gate exec_done
+    periodic_reflection["Periodic<br/>Reflection<br/>~0%"]
+    class periodic_reflection exec_mgmt_neutral
     future_directions["Future<br/>directions<br/>n/a"]
     class future_directions exec_mgmt_neutral
 
@@ -79,7 +81,8 @@ flowchart LR
     day_review_export --> capture_inbox
     capture_inbox --> dogfood_hardening
     dogfood_hardening --> daily_control_gate
-    daily_control_gate -. later .-> future_directions
+    daily_control_gate --> periodic_reflection
+    periodic_reflection -. later .-> future_directions
 ```
 
 Near-term plan should stay narrow: reduce daily-review friction and choose the next measurable gate before reopening sync, Evidence Mode, or platform expansion.
@@ -202,12 +205,20 @@ gantt
 -->
 <!-- GENERATED:START -->
 - Activity Evidence Layer experiments [deferred] (8 focus-blocks)
+- Add weekly, sprint, track, and performance report profiles [planned] (3 focus-blocks)
 - Android client path [deferred] (8 focus-blocks)
+- Build operational reality panel [planned] (5 focus-blocks)
 - Complete broader Manual Inventory UX [deferred] (8 focus-blocks)
 - Evidence Mode [deferred] (20 focus-blocks)
 - Explicit context capture and SourceNodes [deferred] (13 focus-blocks)
+- Export LLM packs with redaction controls [deferred] (5 focus-blocks)
+- Export arbitrary-period reports from existing data [planned] (3 focus-blocks)
 - Future directions [deferred] (83 focus-blocks)
+- Introduce Tracks, Labels, and historical snapshots [planned] (5 focus-blocks)
 - Pause, resume, and cancel focus sessions [deferred] (5 focus-blocks)
+- Periodic reflection and meaning reports [planned] (27 focus-blocks)
+- Preserve external artifacts and user thoughts as report evidence [planned] (3 focus-blocks)
+- Save period conclusions as Reflection Sessions [planned] (3 focus-blocks)
 - Sync and multi-device continuity [deferred] (13 focus-blocks)
 - Windows packaging and tray behavior [deferred] (8 focus-blocks)
 <!-- GENERATED:END -->

@@ -41,7 +41,8 @@ The system answers questions like:
 8. **[Technical Specifications (RFC)](rfc/README.md)** - Detailed technical designs
 9. **[MVP User Stories](mvp/README.md)** - Features and acceptance criteria
 10. **[opskarta Roadmap](roadmap/opskarta.md)** - Current machine-checkable execution plan
-11. **[Roadmap Archive](roadmap/README.md)** - Older roadmap documents and related links
+11. **[Periodic Reflection Roadmap](roadmap/0003-periodic-reflection-roadmap.md)** - Planned arbitrary-period reports and reflection loop
+12. **[Roadmap Archive](roadmap/README.md)** - Older roadmap documents and related links
 
 ---
 
@@ -79,6 +80,7 @@ All documentation below is the **source of truth** for the project.
 | [RFC-0005](rfc/0005-event-ingest-source-nodes.md) | Level 2+ | Event Ingest + SourceNode + Pairing |
 | [RFC-0006](rfc/0006-retention-ttl-distillation.md) | Level 2+ | Retention, TTL, Distillation |
 | [RFC-0007](rfc/0007-evidence-mode-screen-evidence-source-node.md) | Level 3 | Screen Evidence Source Node (Evidence-Mode) |
+| [RFC-0008](rfc/0008-periodic-reports-and-reflection.md) | Level 0+ / Level 2+ | Periodic reports, arbitrary-range exports, Track/Label slices, LLM packs, and reflection loops |
 
 ### User Stories
 
@@ -97,6 +99,7 @@ All documentation below is the **source of truth** for the project.
 | [opskarta.md](roadmap/opskarta.md) | Current opskarta v3 roadmap and generated views |
 | [0001-mvp-execution-roadmap.md](roadmap/0001-mvp-execution-roadmap.md) | MVP execution plan and phases |
 | [0002-level3-evidence-mode-roadmap.md](roadmap/0002-level3-evidence-mode-roadmap.md) | Level 3 Evidence-Mode roadmap (post-MVP) |
+| [0003-periodic-reflection-roadmap.md](roadmap/0003-periodic-reflection-roadmap.md) | Periodic reports, Track/Label slices, Reflection Sessions, and performance-review evidence |
 
 ---
 

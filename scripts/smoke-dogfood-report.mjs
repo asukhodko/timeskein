@@ -76,6 +76,7 @@ try {
   assert(stdout.includes("## Данные фокуса"), "report did not include focus data section");
   assert(stdout.includes("## Телеметрия приложения"), "report did not include app telemetry section");
   assert(stdout.includes("## Проверка перед отчётом"), "report did not include review checklist section");
+  assert(stdout.includes("Ближайшее действие:"), "report review checklist did not include next action");
   assert(stdout.includes("### Дописать или исправить"), "report review checklist did not group fix-up items");
   assert(stdout.includes("### Осознанно проверить"), "report review checklist did not group accept-as-is items");
   assert(stdout.includes("## Аудит закрытия дня"), "report did not include daily-control audit section");

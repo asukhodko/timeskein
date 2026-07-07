@@ -894,7 +894,7 @@ function extractMarkdownSection(markdown, title) {
 }
 
 function formatReviewChecklistMarkdown(items) {
-  const lines = ["## Проверка перед отчётом", ""];
+  const lines = ["## Проверка перед отчётом", "", `Ближайшее действие: ${formatDayReviewNextStep(items)}`, ""];
   const blockers = items.filter((item) => item.level === "blocker");
   const reviews = items.filter((item) => item.level === "review");
   const fixups = reviews.filter((item) => !isAcceptAsIsReviewItem(item));
@@ -907,6 +907,40 @@ function formatReviewChecklistMarkdown(items) {
   appendReviewChecklistGroup(lines, "Готово", ready);
 
   return `${lines.join("\n")}\n`;
+}
+
+function formatDayReviewNextStep(items) {
+  const blockers = items.filter((item) => item.level === "blocker");
+  if (blockers.length > 0) {
+    return formatNextStep("закрыть блокер", blockers);
+  }
+
+  const reviews = items.filter((item) => item.level === "review");
+  const fixups = reviews.filter((item) => !isAcceptAsIsReviewItem(item));
+  if (fixups.length > 0) {
+    return formatNextStep("дописать или исправить", fixups);
+  }
+
+  const accepts = reviews.filter((item) => isAcceptAsIsReviewItem(item));
+  if (accepts.length > 1) {
+    return `осознанно проверить ${accepts.length} ${pluralRu(accepts.length, "пункт", "пункта", "пунктов")} или нажать «Всё проверено», если данные уже честные.`;
+  }
+
+  if (accepts.length === 1) {
+    return formatNextStep("осознанно проверить", accepts);
+  }
+
+  if (items.some((item) => item.level === "ok")) {
+    return "скопировать финальный отчёт.";
+  }
+
+  return "дождаться первых фокус-блоков за день.";
+}
+
+function formatNextStep(prefix, items) {
+  const title = REVIEW_TITLE_LABELS[items[0].title] ?? items[0].title;
+  const rest = items.length > 1 ? ` Ещё ${items.length - 1}.` : "";
+  return `${prefix}: ${title}.${rest}`;
 }
 
 function appendReviewChecklistGroup(lines, title, items) {

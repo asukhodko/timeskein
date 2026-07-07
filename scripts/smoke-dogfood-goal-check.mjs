@@ -304,7 +304,7 @@ try {
     "review saved evidence error did not use the calm not-ready wrapper"
   );
   assert(
-    `${reviewEvidence.stdout}${reviewEvidence.stderr}`.includes("строка аудита «Длительность закрытия измерена» ещё не в статусе ok/pass"),
+    `${reviewEvidence.stdout}${reviewEvidence.stderr}`.includes("строка аудита «Длительность закрытия измерена» ещё не подтверждена"),
     "review saved evidence error did not mention the non-passing closure-duration row"
   );
   assert(

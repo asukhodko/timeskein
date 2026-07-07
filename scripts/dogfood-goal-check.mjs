@@ -286,14 +286,14 @@ async function checkSavedEvidence(date) {
     if (!includesAny(report, aliases)) {
       weak.push(`В ${reportPath} нет строки аудита «${aliases[0]}»`);
     } else if (!isPassingAuditStatus(findAuditRowStatus(report, aliases))) {
-      notPassing.push(`В ${reportPath} строка аудита «${aliases[0]}» ещё не в статусе ok/pass`);
+      notPassing.push(`В ${reportPath} строка аудита «${aliases[0]}» ещё не подтверждена`);
     }
   }
   for (const aliases of rcDailyControlRows) {
     if (!includesAny(rcCheck, aliases)) {
       weak.push(`В ${rcPath} нет строки аудита «${aliases[0]}»`);
     } else if (!isPassingAuditStatus(findAuditRowStatus(rcCheck, aliases))) {
-      notPassing.push(`В ${rcPath} строка аудита «${aliases[0]}» ещё не в статусе ok/pass`);
+      notPassing.push(`В ${rcPath} строка аудита «${aliases[0]}» ещё не подтверждена`);
     }
   }
   for (const aliases of rcOnlyDailyControlRows) {
@@ -469,7 +469,7 @@ async function readEvidenceFile(path, missing) {
   try {
     const text = await readFile(path, "utf8");
     if (text.trim().length === 0) {
-      missing.push(`${path} is empty`);
+      missing.push(`пустой файл: ${path}`);
       return "";
     }
     return text;

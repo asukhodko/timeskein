@@ -42,7 +42,9 @@ if (options.checkSavedEvidenceOnly) {
 }
 
 if (options.dryRun) {
-  console.log("# Timeskein dogfood goal check - dry run");
+  console.log("# Финальная проверка цели Timeskein — dry run");
+  console.log("");
+  console.log("Будут выполнены команды:");
   console.log("");
   for (const [command, args] of steps) {
     console.log(`- ${formatCommand(command, args)}`);
@@ -54,7 +56,7 @@ for (const [command, args] of steps) {
   await run(command, args);
 }
 
-console.log("\nTimeskein dogfood goal check passed.");
+console.log("\nФинальная проверка цели Timeskein прошла.");
 
 function parseArgs(args) {
   const result = {};
@@ -102,16 +104,16 @@ function parseArgs(args) {
 }
 
 function printHelp() {
-  console.log(`Usage: pnpm dogfood:goal-check [--date YYYY-MM-DD] [--db path/to/timeskein.db] [--min-focus-minutes N] [--save | --out path.md] [--skip-saved-evidence-check] [--dry-run]
+  console.log(`Использование: pnpm dogfood:goal-check [--date YYYY-MM-DD] [--db path/to/timeskein.db] [--min-focus-minutes N] [--save | --out path.md] [--skip-saved-evidence-check] [--dry-run]
 
-Runs the final local gate for the active daily-control goal:
+Запускает финальный локальный gate для цели про дешёвое вечернее закрытие дня:
 
-1. saved dogfood report and RC evidence exist for the selected date
+1. сохранённый dogfood-отчёт и RC-аудит есть за выбранную дату
 2. pnpm test
 3. pnpm dogfood:preflight
-4. dogfood:rc-check --strict for the selected dogfood day
+4. dogfood:rc-check --strict для выбранного dogfood-дня
 
-Use this after a real dogfood day, before marking the goal complete.`);
+Используй это после реального dogfood-дня, перед закрытием цели.`);
 }
 
 async function checkSavedEvidence(date) {

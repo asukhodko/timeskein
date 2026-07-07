@@ -28,7 +28,9 @@ try {
     { cwd: repoRoot }
   );
 
-  assert(stdout.includes("# Timeskein dogfood goal check - dry run"), "dry-run title is missing");
+  assert(stdout.includes("# Финальная проверка цели Timeskein — dry run"), "dry-run title is missing");
+  assert(stdout.includes("Будут выполнены команды:"), "dry-run command intro is missing");
+  assert(!stdout.includes("# Timeskein dogfood goal check - dry run"), "dry-run leaked old English title");
   assert(stdout.includes("- pnpm test"), "dry-run did not include pnpm test");
   assert(stdout.includes("- pnpm dogfood:preflight"), "dry-run did not include dogfood preflight");
   assert(stdout.includes("node scripts/dogfood-rc-check.mjs --strict"), "dry-run did not include strict RC check");
@@ -40,6 +42,13 @@ try {
     stdout.includes("--check-saved-evidence-only") === false,
     "dry-run with explicit DB should not require saved real-day evidence"
   );
+
+  const { stdout: helpStdout } = await execFileAsync("node", ["scripts/dogfood-goal-check.mjs", "--help"], {
+    cwd: repoRoot,
+  });
+  assert(helpStdout.includes("Использование: pnpm dogfood:goal-check"), "goal-check help title is not localized");
+  assert(helpStdout.includes("финальный локальный gate"), "goal-check help body is not localized");
+  assert(!helpStdout.includes("Usage:"), "goal-check help leaked old English usage");
 
   const { stdout: realDryRunStdout } = await execFileAsync(
     "node",

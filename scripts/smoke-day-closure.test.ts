@@ -4,6 +4,7 @@ import test from 'node:test'
 import {
   getBulkAcceptableReviewActions,
   getDayClosureStage,
+  isBulkAcceptableReviewAction,
   isDayClosureReadyForFinalReport,
   isFinalDayClosureReport,
   shouldSummarizeReadyReviewItems,
@@ -134,4 +135,7 @@ test('bulk accept is only available for purely optional review checks', () => {
     ]),
     []
   )
+  assert.equal(isBulkAcceptableReviewAction('accept_activity_zones'), true)
+  assert.equal(isBulkAcceptableReviewAction('stage_significant_gap'), false)
+  assert.equal(isBulkAcceptableReviewAction('stage_day_context'), false)
 })

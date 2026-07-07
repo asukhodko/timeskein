@@ -14,6 +14,7 @@ import { formatClockTime, formatDuration, truncate } from '../utils/formatTime'
 import {
   getBulkAcceptableReviewActions,
   getDayClosureStage,
+  isBulkAcceptableReviewAction,
   isDayClosureReadyForFinalReport,
   isFinalDayClosureReport,
   shouldSummarizeReadyReviewItems,
@@ -1449,6 +1450,8 @@ function DayReviewPanel({
 }) {
   const blockers = items.filter((item) => item.level === 'blocker')
   const reviews = items.filter((item) => item.level === 'review')
+  const actionReviews = reviews.filter((item) => !isBulkAcceptableReviewAction(item.action))
+  const acceptReviews = reviews.filter((item) => isBulkAcceptableReviewAction(item.action))
   const readyItems = items.filter((item) => item.level === 'ok')
   const bulkAcceptReviewActions = getBulkAcceptableReviewActions(items) as DayReviewAction[]
   const summarizedReadyItems = shouldSummarizeReadyReviewItems({
@@ -1520,8 +1523,11 @@ function DayReviewPanel({
       {blockers.length > 0 && (
         <DayReviewGroup title="Сначала закрыть" items={blockers} onAction={onAction} />
       )}
-      {reviews.length > 0 && (
-        <DayReviewGroup title="Проверить перед финалом" items={reviews} onAction={onAction} />
+      {actionReviews.length > 0 && (
+        <DayReviewGroup title="Дописать или исправить" items={actionReviews} onAction={onAction} />
+      )}
+      {acceptReviews.length > 0 && (
+        <DayReviewGroup title="Осознанно проверить" items={acceptReviews} onAction={onAction} />
       )}
       {summarizedReadyItems && (
         <div className="text-[11px] text-gray-500">

@@ -7,6 +7,7 @@ import {
   formatDayClosurePrompt,
   formatDogfoodReportState,
   formatGapDayEventDraft,
+  buildTrayStatusTitle,
   formatFocusMarkdownForReport,
   formatReportButtonLabel,
   formatReviewChecklistMarkdown,
@@ -63,6 +64,31 @@ test('clock time stays 24-hour and Russian-facing', () => {
   assert.equal(formatClockTime(undefined), 'сейчас')
   assert(!formatClockTime('2026-07-07T13:14:00').includes('PM'))
   assert(!formatClockTime('2026-07-07T01:14:00').includes('AM'))
+})
+
+test('tray status labels stay Russian-facing', () => {
+  const now = new Date('2026-07-07T10:30:00+03:00')
+  assert.equal(buildTrayStatusTitle(undefined, now, 65 * 60), '1h5m сегодня')
+  assert.equal(
+    buildTrayStatusTitle(
+      {
+        id: 'focus-1',
+        title: 'Проверка',
+        state: 'active',
+        started_at: '2026-07-07T10:10:00+03:00',
+        stopped_at: undefined,
+        note: undefined,
+        target_seconds: 15 * 60,
+        active_seconds: 20 * 60,
+        over_target_seconds: 5 * 60,
+        work_item_id: 'item-1',
+        work_item_title: 'Проверка',
+        activity_zone: 'work',
+      },
+      now
+    ),
+    '20m в фокусе +5m'
+  )
 })
 
 test('focus correction labels keep evening fixes calm', () => {

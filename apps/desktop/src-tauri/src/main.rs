@@ -56,7 +56,7 @@ fn set_tray_status_title_value<R: Runtime>(
     let tooltip = title
         .as_ref()
         .map(|value| format!("Timeskein: {value}"))
-        .unwrap_or_else(|| "Timeskein: idle".to_string());
+        .unwrap_or_else(|| "Timeskein: нет фокуса".to_string());
 
     tray.set_title(title).map_err(|error| error.to_string())?;
     tray.set_tooltip(Some(tooltip))
@@ -172,12 +172,12 @@ async fn fetch_tray_focus_title(port: u16) -> anyhow::Result<Option<String>> {
     let active = format_tray_duration(active_seconds);
     if over_target_seconds > 0 {
         return Ok(Some(format!(
-            "{active} Focus +{}",
+            "{active} в фокусе +{}",
             format_tray_duration(over_target_seconds)
         )));
     }
 
-    Ok(Some(format!("{active} Focus")))
+    Ok(Some(format!("{active} в фокусе")))
 }
 
 async fn fetch_tray_day_title(port: u16) -> anyhow::Result<Option<String>> {
@@ -200,7 +200,7 @@ async fn fetch_tray_day_title(port: u16) -> anyhow::Result<Option<String>> {
 
     if active_seconds_total > 0 {
         return Ok(Some(format!(
-            "{} Today",
+            "{} сегодня",
             format_tray_duration(active_seconds_total)
         )));
     }
@@ -419,16 +419,16 @@ fn main() {
             app.manage(agent);
 
             // Create tray menu
-            let quit = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
+            let quit = MenuItem::with_id(app, "quit", "Выйти", true, None::<&str>)?;
             let toggle =
-                MenuItem::with_id(app, "toggle", "Show/Hide Timeskein", true, None::<&str>)?;
+                MenuItem::with_id(app, "toggle", "Показать/скрыть Timeskein", true, None::<&str>)?;
 
             let menu = Menu::with_items(app, &[&toggle, &quit])?;
 
             // Create tray icon
             let _tray = TrayIconBuilder::with_id("main")
                 .icon(app.default_window_icon().unwrap().clone())
-                .tooltip("Timeskein: idle")
+                .tooltip("Timeskein: нет фокуса")
                 .menu(&menu)
                 .show_menu_on_left_click(false)
                 .on_menu_event(|app, event| match event.id.as_ref() {

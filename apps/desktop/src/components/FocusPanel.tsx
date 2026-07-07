@@ -3189,9 +3189,9 @@ function sessionCrossesWindow(session: FocusSessionView, from: Date, to: Date, n
   return startedAt < from.getTime() || stoppedAt > to.getTime()
 }
 
-function buildTrayStatusTitle(session: FocusSessionView | undefined, now: Date, activeSecondsTotal = 0) {
+export function buildTrayStatusTitle(session: FocusSessionView | undefined, now: Date, activeSecondsTotal = 0) {
   if (!session || session.state !== 'active') {
-    return activeSecondsTotal > 0 ? `${formatTrayDuration(activeSecondsTotal)} Today` : undefined
+    return activeSecondsTotal > 0 ? `${formatTrayDuration(activeSecondsTotal)} сегодня` : undefined
   }
 
   const elapsedSeconds = Math.max(
@@ -3201,10 +3201,10 @@ function buildTrayStatusTitle(session: FocusSessionView | undefined, now: Date, 
   const overTargetSeconds = Math.max(0, elapsedSeconds - session.target_seconds)
   const elapsed = formatTrayDuration(elapsedSeconds)
   if (overTargetSeconds > 0) {
-    return `${elapsed} Focus +${formatTrayDuration(overTargetSeconds)}`
+    return `${elapsed} в фокусе +${formatTrayDuration(overTargetSeconds)}`
   }
 
-  return `${elapsed} Focus`
+  return `${elapsed} в фокусе`
 }
 
 function formatTrayDuration(totalSeconds: number) {
@@ -3243,7 +3243,7 @@ function ActiveFocusSession({
             <div className="truncate text-sm font-semibold text-gray-100">{session.title}</div>
             {session.work_item_id && (
               <span className="rounded border border-emerald-500/40 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-emerald-300">
-                item
+                дело
               </span>
             )}
           </div>

@@ -171,6 +171,22 @@ async function assertMacosWindowPolicy() {
     "Tauri main.rs must run the native tray status updater"
   );
   assert(
+    mainSource.includes('"Показать/скрыть Timeskein"') &&
+      mainSource.includes('"Выйти"') &&
+      mainSource.includes('"Timeskein: нет фокуса"'),
+    "Tauri tray menu must keep user-facing labels in Russian"
+  );
+  assert(
+    mainSource.includes("{active} в фокусе") && mainSource.includes("{} сегодня"),
+    "Tauri tray status must keep focus/day labels in Russian"
+  );
+  assert(
+    !mainSource.includes('"Show/Hide Timeskein"') &&
+      !mainSource.includes('"Quit"') &&
+      !mainSource.includes('"Timeskein: idle"'),
+    "Tauri tray menu must not leak old English labels"
+  );
+  assert(
     mainSource.includes("tauri_plugin_global_shortcut::Builder::new().build()") &&
       mainSource.includes(".global_shortcut()") &&
       mainSource.includes("toggle_main_window(app, \"global_shortcut\")"),

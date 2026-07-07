@@ -1054,7 +1054,7 @@ async function buildDogfoodReportMarkdown(
     lines.push(
       '## Блокер финального отчёта',
       '',
-      `- Активный Work Item: ${activeFocus.work_item_title ?? activeFocus.title}`,
+      `- Активное дело: ${activeFocus.work_item_title ?? activeFocus.title}`,
       `- Старт: ${formatClockTime(activeFocus.started_at)}`,
       `- Текущая длительность: ${formatDuration(activeFocus.active_seconds)}`,
       '- Останови активный блок перед финальным отчётом.',
@@ -1066,8 +1066,8 @@ async function buildDogfoodReportMarkdown(
     lines.push(
       '## Блокер финального отчёта',
       '',
-      ...activeWorkItems.map((item) => `- Work Item с активным статусом: ${item.title}`),
-      '- Сними активный статус с Work Item перед финальным отчётом.',
+      ...activeWorkItems.map((item) => `- Дело с активным статусом: ${item.title}`),
+      '- Сними активный статус с дела перед финальным отчётом.',
       ''
     )
   }
@@ -1077,7 +1077,7 @@ async function buildDogfoodReportMarkdown(
       '## Открытые отвлечения',
       '',
       ...openCaptures.map((capture) => `- ${formatClockTime(capture.created_at)} ${formatMarkdownListText(capture.text)}`),
-      '- Разбери их: закрыть, превратить в Work Item, добавить событием или явно оставить открытыми.',
+      '- Разбери их: закрыть, превратить в дело, добавить событием или явно оставить открытыми.',
       ''
     )
   }
@@ -1118,7 +1118,7 @@ async function buildDogfoodReportMarkdown(
     '',
     '- Что поправлено вручную:',
     '- Что осталось спорным:',
-    '- Где Work Item слишком широкий или неверный:',
+    '- Где дело слишком широкое или неверное:',
     '',
     '### Разрывы и восстановление',
     '',
@@ -1699,22 +1699,40 @@ function reviewItemDotClass(level: DayReviewItem['level']) {
 export function formatDayReviewItem(item: DayReviewItem) {
   return {
     title: REVIEW_TITLE_LABELS[item.title] ?? item.title,
-    detail: item.detail,
+    detail: formatDayReviewDetail(item.detail),
   }
+}
+
+function formatDayReviewDetail(detail?: string) {
+  if (!detail) return detail
+
+  const activeWorkItemMatch = detail.match(/^(\d+) Work Item с активным статусом$/)
+  if (activeWorkItemMatch) {
+    const count = Number(activeWorkItemMatch[1])
+    return `${count} ${pluralRu(count, 'дело', 'дела', 'дел')} с активным статусом`
+  }
+
+  const touchedWorkItemMatch = detail.match(/^(\d+) Work Item были в работе сегодня$/)
+  if (touchedWorkItemMatch) {
+    const count = Number(touchedWorkItemMatch[1])
+    return `${count} ${pluralRu(count, 'дело было', 'дела были', 'дел было')} в работе сегодня`
+  }
+
+  return detail
 }
 
 const REVIEW_TITLE_LABELS: Record<string, string> = {
   'Stop the active focus block': 'Остановить активный фокус-блок',
-  'Clear active Work Item state': 'Снять активный статус с Work Item',
+  'Clear active Work Item state': 'Снять активный статус с дела',
   'Resolve, convert, or accept open captures': 'Разобрать открытые отвлечения',
   'Classify significant gaps': 'Объяснить большие разрывы',
   'Explain current open gap': 'Объяснить текущий открытый разрыв',
   'Review Activity Zone coverage': 'Проверить зоны активности',
   'Confirm non-work tracked time': 'Проверить нерабочее время',
-  'Confirm Work Item today/total badges': 'Проверить today/total у Work Item',
+  'Confirm Work Item today/total badges': 'Проверить today/total у дел',
   'Capture Inbox untested today': 'Инбокс отвлечений сегодня не проверен',
   'Captures were not linked to active focus': 'Отвлечения не были связаны с активным фокусом',
-  'No day or Work Item notes/events': 'Нет дневных или Work Item событий',
+  'No day or Work Item notes/events': 'Нет событий дня или дел',
   'Exercise start and continue paths': 'Проверить старт и продолжение',
   'Test window entrypoints': 'Проверить входы в окно',
   'Review failed focus corrections': 'Проверить ошибки коррекции фокуса',
@@ -1725,9 +1743,9 @@ const REVIEW_TITLE_LABELS: Record<string, string> = {
 const DAILY_CONTROL_REQUIREMENT_LABELS: Record<string, string> = {
   'Final state clean': 'Финальное состояние чистое',
   'Focus blocks visible': 'Фокус-блоки видны',
-  'Work Item totals available': 'Итоги по Work Item есть',
+  'Work Item totals available': 'Итоги по делам есть',
   'Activity Zones separated': 'Зоны активности разделены',
-  'Day and Work Item context present': 'Контекст дня и Work Item сохранён',
+  'Day and Work Item context present': 'Контекст дня и дел сохранён',
   'Gaps and captures visible': 'Разрывы и отвлечения видны',
   'Window and menubar friction evidenced': 'Окно и строка меню проверены',
   'Start and continue paths evidenced': 'Старт и продолжение проверены',
@@ -1762,11 +1780,11 @@ export function formatDogfoodReportState({
   pendingReviewItemCount: number
 }) {
   if (activeFocus) return 'черновик — фокус-блок ещё активен'
-  if (activeWorkItemCount > 0) return 'черновик — у Work Item ещё стоит активный статус'
+  if (activeWorkItemCount > 0) return 'черновик — у дела ещё стоит активный статус'
   if (pendingReviewItemCount > 0) {
     return `черновик — осталось ${pendingReviewItemCount} ${pluralRu(pendingReviewItemCount, 'проверка', 'проверки', 'проверок')} перед финальным отчётом`
   }
-  return 'финальный — нет активных фокус-блоков, активных Work Item и незакрытых проверок'
+  return 'финальный — нет активных фокус-блоков, активных дел и незакрытых проверок'
 }
 
 export function formatReviewChecklistMarkdown(items: DayReviewItem[]) {

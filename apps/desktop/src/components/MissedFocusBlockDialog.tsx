@@ -7,6 +7,20 @@ import { formatActivityZoneBadge } from '../utils/workItemLabels'
 
 const activityZones: ActivityZone[] = ['work', 'coordination', 'recovery', 'idle', 'personal']
 
+export const MISSED_FOCUS_BLOCK_LABELS = {
+  title: 'Добавить пропущенный блок',
+  subtitle: 'Коррекция задним числом',
+  state: 'остановлен',
+  workItem: 'Дело',
+  startedAt: 'Начало',
+  stoppedAt: 'Конец',
+  activityZone: 'Зона активности',
+  note: 'Заметка',
+  cancel: 'Отмена',
+  submit: 'Добавить',
+  error: 'Не удалось добавить блок',
+} as const
+
 interface MissedFocusBlockDialogProps {
   initialTitle?: string
   initialActivityZone?: ActivityZone
@@ -87,17 +101,17 @@ export default function MissedFocusBlockDialog({
       >
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
-            <div className="text-lg font-semibold text-gray-100">Добавить пропущенный блок</div>
-            <div className="text-xs text-gray-500">Коррекция задним числом</div>
+            <div className="text-lg font-semibold text-gray-100">{MISSED_FOCUS_BLOCK_LABELS.title}</div>
+            <div className="text-xs text-gray-500">{MISSED_FOCUS_BLOCK_LABELS.subtitle}</div>
           </div>
           <span className="rounded border border-gray-700 px-2 py-1 text-xs text-gray-400">
-            остановлен
+            {MISSED_FOCUS_BLOCK_LABELS.state}
           </span>
         </div>
 
         <div className="grid gap-3 md:grid-cols-2">
           <label className="grid gap-1 text-sm text-gray-300 md:col-span-2">
-            <span>Work Item</span>
+            <span>{MISSED_FOCUS_BLOCK_LABELS.workItem}</span>
             <input
               autoFocus
               value={title}
@@ -107,7 +121,7 @@ export default function MissedFocusBlockDialog({
           </label>
 
           <label className="grid gap-1 text-sm text-gray-300">
-            <span>Начало</span>
+            <span>{MISSED_FOCUS_BLOCK_LABELS.startedAt}</span>
             <input
               type="datetime-local"
               step="1"
@@ -118,7 +132,7 @@ export default function MissedFocusBlockDialog({
           </label>
 
           <label className="grid gap-1 text-sm text-gray-300">
-            <span>Конец</span>
+            <span>{MISSED_FOCUS_BLOCK_LABELS.stoppedAt}</span>
             <input
               type="datetime-local"
               step="1"
@@ -129,7 +143,7 @@ export default function MissedFocusBlockDialog({
           </label>
 
           <label className="grid gap-1 text-sm text-gray-300 md:col-span-2">
-            <span>Зона активности</span>
+            <span>{MISSED_FOCUS_BLOCK_LABELS.activityZone}</span>
             <select
               value={activityZone}
               onChange={(event) => setActivityZone(event.target.value as ActivityZone)}
@@ -144,7 +158,7 @@ export default function MissedFocusBlockDialog({
           </label>
 
           <label className="grid gap-1 text-sm text-gray-300 md:col-span-2">
-            <span>Заметка</span>
+            <span>{MISSED_FOCUS_BLOCK_LABELS.note}</span>
             <input
               value={note}
               onChange={(event) => setNote(event.target.value)}
@@ -155,7 +169,7 @@ export default function MissedFocusBlockDialog({
 
         {createMutation.error && (
           <div className="mt-3 text-xs text-red-300">
-            {createMutation.error instanceof Error ? createMutation.error.message : 'Не удалось добавить блок'}
+            {createMutation.error instanceof Error ? createMutation.error.message : MISSED_FOCUS_BLOCK_LABELS.error}
           </div>
         )}
 
@@ -165,14 +179,14 @@ export default function MissedFocusBlockDialog({
             onClick={onClose}
             className="rounded-md px-3 py-2 text-sm text-gray-300 hover:bg-gray-700"
           >
-            Отмена
+            {MISSED_FOCUS_BLOCK_LABELS.cancel}
           </button>
           <button
             type="submit"
             disabled={!title.trim() || !startedAt || !stoppedAt || createMutation.isPending}
             className="rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-500 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-500"
           >
-            Добавить
+            {MISSED_FOCUS_BLOCK_LABELS.submit}
           </button>
         </div>
       </form>

@@ -17,6 +17,8 @@ import {
   type Gap,
 } from '../apps/desktop/src/components/FocusPanel'
 import { CAPTURE_INBOX_LABELS } from '../apps/desktop/src/components/CaptureInbox'
+import { FOCUS_CORRECTION_LABELS } from '../apps/desktop/src/components/FocusCorrectionDialog'
+import { MISSED_FOCUS_BLOCK_LABELS } from '../apps/desktop/src/components/MissedFocusBlockDialog'
 
 test('capture inbox controls keep interruption handling in Russian', () => {
   assert.equal(CAPTURE_INBOX_LABELS.placeholder, 'Зафиксировать отвлечение...')
@@ -29,10 +31,33 @@ test('capture inbox controls keep interruption handling in Russian', () => {
   assert.equal(CAPTURE_INBOX_LABELS.processError, 'Не удалось обработать отвлечение')
 })
 
+test('focus correction labels keep evening fixes calm', () => {
+  assert.equal(FOCUS_CORRECTION_LABELS.title, 'Исправить фокус-блок')
+  assert.equal(FOCUS_CORRECTION_LABELS.workItem, 'Дело')
+  assert.equal(FOCUS_CORRECTION_LABELS.splitAt, 'Граница разделения')
+  assert.equal(FOCUS_CORRECTION_LABELS.secondWorkItem, 'Дело после разделения')
+  assert.equal(FOCUS_CORRECTION_LABELS.secondNote, 'Заметка для второго блока')
+  assert.equal(MISSED_FOCUS_BLOCK_LABELS.title, 'Добавить пропущенный блок')
+  assert.equal(MISSED_FOCUS_BLOCK_LABELS.workItem, 'Дело')
+
+  const correctionLabels = Object.values(FOCUS_CORRECTION_LABELS).join('\n')
+  const missedBlockLabels = Object.values(MISSED_FOCUS_BLOCK_LABELS).join('\n')
+  assert(!correctionLabels.includes('Правый Work Item'), 'split correction should not use model-side wording')
+  assert(!correctionLabels.includes('Заметка справа'), 'split correction should not use spatial wording')
+  assert(!missedBlockLabels.includes('Work Item'), 'missed-block correction should use user-facing wording')
+})
+
 test('day review checklist keeps the evening ritual in Russian', () => {
   const items: DayReviewItem[] = [
     { level: 'blocker', title: 'Stop the active focus block', detail: 'Вход в день' },
+    { level: 'blocker', title: 'Clear active Work Item state', detail: '1 Work Item с активным статусом' },
     { level: 'review', title: 'Classify significant gaps', detail: '1/2 больших разрывов без события дня' },
+    {
+      level: 'review',
+      title: 'Confirm Work Item today/total badges',
+      detail: '2 Work Item были в работе сегодня',
+      action: 'accept_work_item_time_badges',
+    },
     {
       level: 'review',
       title: 'Review Activity Zone coverage',
@@ -43,9 +68,13 @@ test('day review checklist keeps the evening ritual in Russian', () => {
   ]
 
   assert.equal(formatDayReviewItem(items[0]).title, 'Остановить активный фокус-блок')
-  assert.equal(formatDayReviewItem(items[1]).title, 'Объяснить большие разрывы')
-  assert.equal(formatDayReviewItem(items[2]).title, 'Проверить зоны активности')
-  assert.equal(formatDayReviewItem(items[3]).title, 'Можно копировать финальный отчёт')
+  assert.equal(formatDayReviewItem(items[1]).title, 'Снять активный статус с дела')
+  assert.equal(formatDayReviewItem(items[1]).detail, '1 дело с активным статусом')
+  assert.equal(formatDayReviewItem(items[2]).title, 'Объяснить большие разрывы')
+  assert.equal(formatDayReviewItem(items[3]).title, 'Проверить today/total у дел')
+  assert.equal(formatDayReviewItem(items[3]).detail, '2 дела были в работе сегодня')
+  assert.equal(formatDayReviewItem(items[4]).title, 'Проверить зоны активности')
+  assert.equal(formatDayReviewItem(items[5]).title, 'Можно копировать финальный отчёт')
 
   const markdown = formatReviewChecklistMarkdown(items)
   assert(markdown.includes('## Проверка перед отчётом'), 'review checklist heading should be localized')
@@ -58,11 +87,14 @@ test('day review checklist keeps the evening ritual in Russian', () => {
   assert(markdown.includes('### Осознанно проверить'), 'accept-as-is group should be explicit')
   assert(markdown.includes('### Готово'), 'ready group should be explicit')
   assert(markdown.includes('Остановить активный фокус-блок'), 'blocker label should be localized')
+  assert(markdown.includes('Снять активный статус с дела'), 'active Work Item blocker should be user-facing')
   assert(markdown.includes('Объяснить большие разрывы'), 'review label should be localized')
+  assert(markdown.includes('Проверить today/total у дел'), 'Work Item badge review should be user-facing')
   assert(markdown.includes('Проверить зоны активности'), 'optional review label should be localized')
   assert(markdown.includes('Можно копировать финальный отчёт'), 'ready label should be localized')
   assert(!markdown.includes('Review before report'), 'old English heading should not leak into the report')
   assert(!markdown.includes('Stop the active focus block'), 'old English blocker should not leak into the report')
+  assert(!markdown.includes('Work Item с активным статусом'), 'model-side wording should not leak into review details')
 })
 
 test('day review next step points to one calm action', () => {
@@ -123,7 +155,7 @@ test('dogfood report state stays draft until review items are clear', () => {
   )
   assert.equal(
     formatDogfoodReportState({ activeFocus: false, activeWorkItemCount: 1, pendingReviewItemCount: 0 }),
-    'черновик — у Work Item ещё стоит активный статус'
+    'черновик — у дела ещё стоит активный статус'
   )
   assert.equal(
     formatDogfoodReportState({ activeFocus: false, activeWorkItemCount: 0, pendingReviewItemCount: 2 }),
@@ -131,7 +163,7 @@ test('dogfood report state stays draft until review items are clear', () => {
   )
   assert.equal(
     formatDogfoodReportState({ activeFocus: false, activeWorkItemCount: 0, pendingReviewItemCount: 0 }),
-    'финальный — нет активных фокус-блоков, активных Work Item и незакрытых проверок'
+    'финальный — нет активных фокус-блоков, активных дел и незакрытых проверок'
   )
 })
 

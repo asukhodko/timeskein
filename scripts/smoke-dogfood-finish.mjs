@@ -89,13 +89,13 @@ try {
     "finish --save leaked old English saved evidence messages"
   );
   assert(
-    cleanSavedDefault.stdout.includes("## Внимание") &&
-      cleanSavedDefault.stdout.includes("цель закрытия дня ещё не доказана") &&
+    cleanSavedDefault.stdout.includes("## Что ещё осталось") &&
+      cleanSavedDefault.stdout.includes("это ещё не финальное закрытие дня") &&
       cleanSavedDefault.stdout.includes("длительность закрытия не измерена или больше 10 минут") &&
       cleanSavedDefault.stdout.includes("Статус сохранённого отчёта:") &&
       cleanSavedDefault.stdout.includes("черновик") &&
       cleanSavedDefault.stdout.includes("pnpm dogfood:finish:save -- --date 2026-06-30"),
-    "finish --save did not warn about missing measured closure and saved draft report state"
+    "finish --save did not calmly explain missing measured closure and saved draft report state"
   );
   const defaultReportMarkdown = await readFile(defaultReportPath, "utf8");
   const defaultRcMarkdown = await readFile(defaultRcPath, "utf8");
@@ -117,11 +117,12 @@ try {
   const measuredPendingDefault = await runFinish(cleanDb, ["--save"], tempDir);
   assert(measuredPendingDefault.code === 0, "measured day with pending review should save default report and RC check");
   assert(
-    measuredPendingDefault.stdout.includes("аудит закрытия дня ещё не весь в статусе `ок`") &&
+    measuredPendingDefault.stdout.includes("## Что ещё осталось") &&
+      measuredPendingDefault.stdout.includes("ещё не готов для финального закрытия дня") &&
       measuredPendingDefault.stdout.includes("Статус сохранённого отчёта:") &&
       measuredPendingDefault.stdout.includes("черновик") &&
       measuredPendingDefault.stdout.includes("pnpm dogfood:finish:save -- --date 2026-06-30"),
-    "finish --save did not warn about pending daily-control audit rows and saved draft report state"
+    "finish --save did not calmly explain pending daily-control audit rows and saved draft report state"
   );
   assert(
     !measuredPendingDefault.stdout.includes("pnpm dogfood:goal-check"),
@@ -166,7 +167,7 @@ try {
   );
   assert(!measuredSavedDefault.stdout.includes("gate цели"), "finish --save leaked old gate wording");
   assert(
-    !measuredSavedDefault.stdout.includes("цель закрытия дня ещё не доказана"),
+    !measuredSavedDefault.stdout.includes("это ещё не финальное закрытие дня"),
     "finish --save should not warn about missing measured closure after closure telemetry exists"
   );
   assert(

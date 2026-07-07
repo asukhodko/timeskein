@@ -604,6 +604,11 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
       return
     }
 
+    if (action === 'stage_day_context') {
+      stageDayEvent('Контекст дня: ')
+      return
+    }
+
     const actionId = createTelemetryActionId()
     const kind = reviewActionEventKind(action)
     const touchedWorkItemCount = new Set(sessions.map((session) => session.work_item_id).filter(Boolean)).size
@@ -873,6 +878,7 @@ function reviewActionEventKind(action: DayReviewAction): AppEventKind {
       return 'window_entrypoints_reviewed'
     case 'stage_significant_gap':
     case 'stage_open_gap':
+    case 'stage_day_context':
       throw new Error(`Review action does not map to telemetry: ${action}`)
   }
 }
@@ -1222,6 +1228,7 @@ export type DayReviewAction =
   | 'accept_window_entrypoints'
   | 'stage_significant_gap'
   | 'stage_open_gap'
+  | 'stage_day_context'
 
 function countPendingReviewItems(items: DayReviewItem[]) {
   return items.filter((item) => item.level !== 'ok').length
@@ -1357,6 +1364,7 @@ function buildDayReviewItems({
       level: 'review',
       title: 'No day or Work Item notes/events',
       detail: 'Добавь контекст, если отчёт всё ещё требует памяти',
+      action: 'stage_day_context',
     })
   }
 
@@ -1604,6 +1612,8 @@ export function formatReviewActionLabel(action: DayReviewAction) {
     case 'stage_significant_gap':
     case 'stage_open_gap':
       return 'Объяснить'
+    case 'stage_day_context':
+      return 'Добавить контекст'
     case 'accept_open_captures':
       return 'Оставить открытыми'
     case 'accept_work_item_time_badges':

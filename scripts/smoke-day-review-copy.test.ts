@@ -54,6 +54,7 @@ test('day review action buttons explain what will happen', () => {
     accept_entry_paths: 'Пути проверены',
     accept_window_entrypoints: 'Окно проверено',
     accept_tracking_accuracy: 'Трекинг верен',
+    stage_day_context: 'Добавить контекст',
   }
 
   for (const [action, label] of Object.entries(labels) as [DayReviewAction, string][]) {

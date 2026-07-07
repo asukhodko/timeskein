@@ -17,57 +17,57 @@ const dbPath = options.db
 const supportDir = dirname(dbPath);
 const appBundlePath = resolve("target/release/bundle/macos/Timeskein.app");
 
-const lines = [`# Timeskein dogfood readiness - ${formatLocalDate(date)}`, ""];
+const lines = [`# Готовность Timeskein dogfood - ${formatLocalDate(date)}`, ""];
 const blockers = [];
 const warnings = [];
 const nextActions = [];
 const responsiveAgent = await detectResponsiveAgent(supportDir);
 const runningPids = await runningTimeskeinPids();
 
-lines.push(`Mode: ${mode}`);
-lines.push(`DB: ${dbPath}`);
-lines.push(`App bundle: ${existsSync(appBundlePath) ? appBundlePath : "not built yet"}`);
-lines.push(`Agent responsive: ${responsiveAgent ?? "no"}`);
-lines.push(`Running app PIDs: ${runningPids.length > 0 ? runningPids.join(", ") : "none"}`);
+lines.push(`Режим: ${formatMode(mode)}`);
+lines.push(`База: ${dbPath}`);
+lines.push(`Приложение: ${existsSync(appBundlePath) ? appBundlePath : "сборка ещё не найдена"}`);
+lines.push(`Агент отвечает: ${responsiveAgent ?? "нет"}`);
+lines.push(`Процессы приложения: ${runningPids.length > 0 ? runningPids.join(", ") : "нет"}`);
 lines.push("");
 
 if (!existsSync(dbPath)) {
-  warnings.push("Timeskein database does not exist yet. The macOS app should create it on first launch.");
+  warnings.push("База Timeskein ещё не создана. macOS-приложение должно создать её при первом запуске.");
 } else {
   try {
     const summary = await loadSummary(dbPath, date);
     addSummary(lines, blockers, warnings, nextActions, summary, responsiveAgent, runningPids, mode);
   } catch (error) {
-    blockers.push(`Could not inspect Timeskein database: ${error instanceof Error ? error.message : String(error)}`);
+    blockers.push(`Не удалось прочитать базу Timeskein: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
 if (!existsSync(appBundlePath)) {
-  warnings.push("macOS app bundle is not built yet. `pnpm dogfood:start` will build it through preflight before opening the app.");
+  warnings.push("macOS-приложение ещё не собрано. `pnpm dogfood:start` соберёт его через preflight перед открытием.");
 }
 
 if (responsiveAgent) {
-  warnings.push("Timeskein agent is already responsive. Quit the existing app before a clean dogfood start so the fresh packaged app is used.");
+  warnings.push("Агент Timeskein уже отвечает. Перед чистым dogfood-стартом закрой текущее приложение, чтобы использовать свежую сборку.");
 }
 
 if (runningPids.length > 0) {
-  warnings.push("Timeskein app process is already running. Quit it before a clean dogfood start so the fresh packaged app is used.");
+  warnings.push("Процесс Timeskein уже запущен. Перед чистым dogfood-стартом закрой его, чтобы использовать свежую сборку.");
 }
 
-lines.push(`Status: ${blockers.length === 0 ? "READY" : "NOT READY"}`, "");
-appendSection(lines, "Blockers", blockers);
-appendSection(lines, "Warnings", warnings);
+lines.push(`Статус: ${blockers.length === 0 ? "ГОТОВО" : "НЕ ГОТОВО"}`, "");
+appendSection(lines, "Блокеры", blockers);
+appendSection(lines, "Предупреждения", warnings);
 
 if (blockers.length === 0) {
   appendReadyNext(lines, mode);
   appendDailyControlChecklist(lines);
 } else {
-  lines.push("## Next", "");
+  lines.push("## Что сделать дальше", "");
   for (const action of unique(nextActions)) {
     lines.push(`- ${action}`);
   }
-  lines.push(`- Manual backup command if needed: ${backupCommand(dbPath)}`);
-  lines.push("- Re-run `pnpm dogfood:ready` before using Timeskein instead of Session.");
+  lines.push(`- Команда ручного бэкапа, если понадобится: ${backupCommand(dbPath)}`);
+  lines.push("- Перед использованием Timeskein вместо Session снова выполни `pnpm dogfood:ready`.");
 }
 
 process.stdout.write(`${lines.join("\n")}\n`);
@@ -77,13 +77,13 @@ if (blockers.length > 0) {
 }
 
 function appendDailyControlChecklist(lines) {
-  lines.push("## Памятка Daily-Control", "");
-  lines.push("- Проверь входы в окно: menu bar, глобальный хоткей (`Ctrl+Shift+Space`, fallback `Ctrl+Option+Space` или `Cmd+Option+Space`), возврат через macOS, скрытие через Esc или закрытие окна.");
+  lines.push("## Памятка закрытия дня", "");
+  lines.push("- Проверь входы в окно: menu bar, глобальный хоткей (`Ctrl+Shift+Space`, запасной `Ctrl+Option+Space` или `Cmd+Option+Space`), возврат через macOS, скрытие через Esc или закрытие окна.");
   lines.push("- Начни один новый Work Item вводом названия и продолжи один существующий Work Item из списка.");
   lines.push("- Когда у затронутого Work Item появится фокус-время, проверь бейджи `today` и `total` в списке дел, затем нажми `Бейджи верны` в соответствующей проверке.");
   lines.push("- Используй минимум две зоны активности, включая одну нерабочую: координация, восстановление, простой или личные дела.");
   lines.push("- Добавь одно событие дня через `Добавить событие дня...` для буфера, разрыва, восстановления или коррекции трекинга.");
-  lines.push("- Добавь или продвинь одно timestamped-событие Work Item, если для задачи важна конкретная подробность.");
+  lines.push("- Добавь или продвинь одно событие Work Item с временем, если для задачи важна конкретная подробность.");
   lines.push("- Во время активного фокуса зафиксируй хотя бы одно входящее отвлечение через `Зафиксировать отвлечение...`, затем закрой его, преврати `В дело`/`В событие` или явно оставь открытым.");
   lines.push("- Перед финальным отчётом поправь одну безопасную деталь трекинга или нажми `Трекинг верен` у проверки точности трекинга.");
   lines.push("- Вечером нажми `Начать закрытие дня`, убери красные блокеры, осознанно отметь оставшиеся жёлтые проверки и дойди до финального `Копировать отчёт` за 10 минут или меньше.");
@@ -93,14 +93,14 @@ function appendDailyControlChecklist(lines) {
 }
 
 function appendReadyNext(lines, mode) {
-  lines.push("## Next", "");
+  lines.push("## Что сделать дальше", "");
   if (mode === "continue") {
-    lines.push("- Continue the current dogfood day in Timeskein.");
-    lines.push("- If the app is not open, use `pnpm dogfood:continue` to run the continue gate and open the packaged app.");
+    lines.push("- Продолжай текущий dogfood-день в Timeskein.");
+    lines.push("- Если приложение не открыто, выполни `pnpm dogfood:continue`: команда проверит состояние дня и откроет собранное приложение.");
   } else {
-    lines.push("- Start the dogfood day with `pnpm dogfood:start`.");
-    lines.push("- If warnings mention an already running app or agent, quit Timeskein first so the fresh packaged app is used.");
-    lines.push("- If you intentionally want a clean trial database, preview with `pnpm dogfood:start:clean:preview`, then use `pnpm dogfood:start:clean`.");
+    lines.push("- Начни dogfood-день командой `pnpm dogfood:start`.");
+    lines.push("- Если предупреждения говорят о запущенном приложении или агенте, сначала закрой Timeskein, чтобы использовать свежую сборку.");
+    lines.push("- Если нужна чистая тестовая база, сначала посмотри план через `pnpm dogfood:start:clean:preview`, затем выполни `pnpm dogfood:start:clean`.");
   }
   lines.push("");
 }
@@ -136,11 +136,11 @@ function parseArgs(args) {
 }
 
 function printHelp() {
-  console.log(`Usage: pnpm dogfood:ready [--mode start|continue] [--date YYYY-MM-DD] [--db path/to/timeskein.db]
+  console.log(`Использование: pnpm dogfood:ready [--mode start|continue] [--date YYYY-MM-DD] [--db path/to/timeskein.db]
 
-Checks the real local Timeskein database before a one-day Session replacement trial.
-The command is read-only and exits with code 1 when the selected mode is not safe.
-Mode start requires a clean day. Mode continue allows existing focus blocks and one coherent active focus.`);
+Проверяет реальную локальную базу Timeskein перед однодневной заменой Session.
+Команда ничего не меняет и завершается с кодом 1, если выбранный режим небезопасен.
+Режим start требует чистого дня. Режим continue разрешает уже начатый день и один согласованный активный фокус.`);
 }
 
 function parseLocalDate(value) {
@@ -239,14 +239,14 @@ function sqliteReadArgs(path, sql) {
 function addSummary(lines, blockers, warnings, nextActions, summary, responsiveAgent, runningPids, mode) {
   const todaySeconds = summary.todaySessions.reduce((sum, session) => sum + session.active_seconds, 0);
 
-  lines.push("## Summary", "");
-  lines.push(`- Work Items: ${summary.counts.work_items}`);
-  lines.push(`- Focus sessions: ${summary.counts.focus_sessions}`);
-  lines.push(`- Active focus sessions: ${summary.activeSessions.length}`);
-  lines.push(`- Active Work Items: ${summary.activeWorkItems.length}`);
-  lines.push(`- Today's focus blocks: ${summary.todaySessions.length}`);
-  lines.push(`- Today's focus total: ${formatDuration(todaySeconds)}`);
-  lines.push(`- Duplicate normalized titles: ${summary.duplicateTitles.length}`);
+  lines.push("## Сводка", "");
+  lines.push(`- Work Item: ${summary.counts.work_items}`);
+  lines.push(`- Фокус-сессий: ${summary.counts.focus_sessions}`);
+  lines.push(`- Активных фокус-сессий: ${summary.activeSessions.length}`);
+  lines.push(`- Активных Work Item: ${summary.activeWorkItems.length}`);
+  lines.push(`- Фокус-блоков сегодня: ${summary.todaySessions.length}`);
+  lines.push(`- Фокус сегодня: ${formatDuration(todaySeconds)}`);
+  lines.push(`- Групп дублей названий: ${summary.duplicateTitles.length}`);
   lines.push("");
 
   if (mode === "continue") {
@@ -265,16 +265,16 @@ function addSummary(lines, blockers, warnings, nextActions, summary, responsiveA
 
   if (summary.duplicateTitles.length > 0) {
     for (const duplicate of summary.duplicateTitles.slice(0, 5)) {
-      blockers.push(`Duplicate Work Item title group (${duplicate.count}): ${duplicate.titles}`);
+      blockers.push(`Дублируется название Work Item (${duplicate.count}): ${duplicate.titles}`);
     }
     if (summary.duplicateTitles.length > 5) {
-      blockers.push(`Duplicate title groups omitted: ${summary.duplicateTitles.length - 5}`);
+      blockers.push(`Ещё групп дублей: ${summary.duplicateTitles.length - 5}`);
     }
-    nextActions.push("For a clean one-day trial, prefer `pnpm dogfood:reset-db` over manual duplicate cleanup.");
+    nextActions.push("Для чистого однодневного теста лучше выполнить `pnpm dogfood:reset-db`, а не разбирать дубли вручную.");
   }
 
   if (summary.counts.work_items === 0) {
-    warnings.push("No Work Items yet. That is fine for a fresh trial; typed focus starts will create them.");
+    warnings.push("Work Item пока нет. Для свежего теста это нормально: ввод названия создаст их при старте фокуса.");
   }
 }
 
@@ -284,62 +284,62 @@ function addStartModeFindings(blockers, warnings, nextActions, summary, todaySec
   if (summary.activeSessions.length > 0) {
     for (const session of summary.activeSessions) {
       blockers.push(
-        `Active focus session: ${session.work_item_title ?? session.title} since ${formatClockTime(session.started_at)}`
+        `Активная фокус-сессия: ${session.work_item_title ?? session.title}, с ${formatClockTime(session.started_at)}`
       );
     }
   }
 
   if (summary.activeWorkItems.length > 0) {
     for (const item of summary.activeWorkItems) {
-      blockers.push(`Active Work Item: ${item.title}`);
+      blockers.push(`Активный Work Item: ${item.title}`);
     }
   }
 
   if (hasExistingDayBlocks) {
     blockers.push(
-      `Today already has ${summary.todaySessions.length} focus block(s), total ${formatDuration(todaySeconds)}. This will contaminate a clean one-day trial.`
+      `Сегодня уже есть фокус-блоки: ${summary.todaySessions.length}, всего ${formatDuration(todaySeconds)}. Это смешает чистый однодневный тест со старыми данными.`
     );
-    nextActions.push("For a clean one-day trial with existing blocks, prefer reset over stop-active: dry-run `pnpm dogfood:reset-db`.");
+    nextActions.push("Для чистого однодневного теста с уже существующими блоками лучше reset, а не stop-active: сначала выполни dry-run `pnpm dogfood:reset-db`.");
     if (responsiveAgent) {
-      nextActions.push("Quit Timeskein before applying the reset; `dogfood:reset-db -- --apply` refuses while the agent is responsive.");
+      nextActions.push("Перед применением reset закрой Timeskein: `dogfood:reset-db -- --apply` откажется работать, пока агент отвечает.");
     } else if (runningPids.length > 0) {
-      nextActions.push("Quit Timeskein before applying the reset; `dogfood:reset-db -- --apply` refuses while the app process is running.");
+      nextActions.push("Перед применением reset закрой Timeskein: `dogfood:reset-db -- --apply` откажется работать, пока процесс приложения запущен.");
     }
-    nextActions.push("If the reset plan looks right, run `pnpm dogfood:reset-db -- --apply`.");
+    nextActions.push("Если план reset выглядит правильно, выполни `pnpm dogfood:reset-db -- --apply`.");
   }
 
   if (summary.activeSessions.length > 0) {
     const reason = hasExistingDayBlocks
-      ? "If you want to preserve the current database instead of starting clean, dry-run `pnpm dogfood:stop-active`."
-      : "Stop the active focus block in Timeskein, or dry-run `pnpm dogfood:stop-active`.";
+      ? "Если хочешь сохранить текущую базу вместо чистого старта, сначала выполни dry-run `pnpm dogfood:stop-active`."
+      : "Останови активный фокус-блок в Timeskein или сначала выполни dry-run `pnpm dogfood:stop-active`.";
     nextActions.push(reason);
-    nextActions.push("If the stop plan looks right, run `pnpm dogfood:stop-active -- --apply`.");
+    nextActions.push("Если план остановки выглядит правильно, выполни `pnpm dogfood:stop-active -- --apply`.");
   }
 
   if (summary.activeWorkItems.length > 0) {
-    nextActions.push("Clear active Work Items by stopping the current focus block or running `pnpm dogfood:stop-active -- --apply`.");
+    nextActions.push("Сними активный статус с Work Item: останови текущий фокус-блок или выполни `pnpm dogfood:stop-active -- --apply`.");
   }
 }
 
 function addContinueModeFindings(blockers, warnings, nextActions, summary, todaySeconds) {
   if (summary.todaySessions.length > 0) {
     warnings.push(
-      `Selected day already has ${summary.todaySessions.length} focus block(s), total ${formatDuration(todaySeconds)}. Continue mode treats this as an existing dogfood day.`
+      `В выбранном дне уже есть фокус-блоки: ${summary.todaySessions.length}, всего ${formatDuration(todaySeconds)}. Режим продолжения считает это уже начатым dogfood-днём.`
     );
   }
 
   if (summary.activeSessions.length > 1) {
-    blockers.push(`Multiple active focus sessions: ${summary.activeSessions.length}`);
-    nextActions.push("Dry-run `pnpm dogfood:stop-active`, then apply it if the plan looks right.");
+    blockers.push(`Несколько активных фокус-сессий: ${summary.activeSessions.length}`);
+    nextActions.push("Сначала выполни dry-run `pnpm dogfood:stop-active`, затем примени план, если он выглядит правильно.");
     return;
   }
 
   if (summary.activeSessions.length === 0) {
     if (summary.activeWorkItems.length > 0) {
       for (const item of summary.activeWorkItems) {
-        blockers.push(`Active Work Item without active focus session: ${item.title}`);
+        blockers.push(`Work Item активен, но активной фокус-сессии нет: ${item.title}`);
       }
-      nextActions.push("Clear active Work Items with `pnpm dogfood:stop-active -- --apply` or change their state in the app.");
+      nextActions.push("Сними активный статус через `pnpm dogfood:stop-active -- --apply` или поменяй состояние в приложении.");
     }
     return;
   }
@@ -349,22 +349,22 @@ function addContinueModeFindings(blockers, warnings, nextActions, summary, today
 
   if (summary.activeWorkItems.length !== 1) {
     blockers.push(
-      `Active focus session exists, but active Work Item count is ${summary.activeWorkItems.length}; expected exactly 1.`
+      `Активная фокус-сессия есть, но активных Work Item: ${summary.activeWorkItems.length}; ожидался ровно один.`
     );
-    nextActions.push("Dry-run `pnpm dogfood:stop-active`, then apply it if the plan looks right.");
+    nextActions.push("Сначала выполни dry-run `pnpm dogfood:stop-active`, затем примени план, если он выглядит правильно.");
     return;
   }
 
   if (activeSession.work_item_id !== activeWorkItem.id) {
     blockers.push(
-      `Active focus session is linked to ${activeSession.work_item_title ?? activeSession.title}, but active Work Item is ${activeWorkItem.title}.`
+      `Активная фокус-сессия связана с ${activeSession.work_item_title ?? activeSession.title}, а активный Work Item — ${activeWorkItem.title}.`
     );
-    nextActions.push("Switch focus in the app, or dry-run `pnpm dogfood:stop-active` and apply it if the plan looks right.");
+    nextActions.push("Переключи фокус в приложении или выполни dry-run `pnpm dogfood:stop-active` и примени план, если он выглядит правильно.");
     return;
   }
 
   warnings.push(
-    `Dogfood day is already in progress: ${activeWorkItem.title} since ${formatClockTime(activeSession.started_at)}.`
+    `Dogfood-день уже идёт: ${activeWorkItem.title}, с ${formatClockTime(activeSession.started_at)}.`
   );
 }
 
@@ -424,11 +424,15 @@ function unique(values) {
   return [...new Set(values)];
 }
 
+function formatMode(value) {
+  return value === "continue" ? "продолжение" : "старт";
+}
+
 function appendSection(lines, title, items) {
   lines.push(`## ${title}`, "");
 
   if (items.length === 0) {
-    lines.push("- none", "");
+    lines.push("- нет", "");
     return;
   }
 

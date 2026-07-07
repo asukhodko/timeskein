@@ -21,23 +21,23 @@ try {
 
   const ready = await runReady();
   assert(ready.code === 0, "clean database should be ready");
-  assert(ready.stdout.includes("Status: READY"), "ready output did not report READY");
-  assert(ready.stdout.includes("Mode: start"), "ready output did not report start mode");
-  assert(ready.stdout.includes("Agent responsive: no"), "ready output did not report agent responsiveness");
-  assert(ready.stdout.includes("Running app PIDs: none"), "ready output did not report running app PIDs");
-  assert(ready.stdout.includes("## Next"), "ready output did not include next section");
+  assert(ready.stdout.includes("Статус: ГОТОВО"), "ready output did not report localized READY");
+  assert(ready.stdout.includes("Режим: старт"), "ready output did not report localized start mode");
+  assert(ready.stdout.includes("Агент отвечает: нет"), "ready output did not report localized agent responsiveness");
+  assert(ready.stdout.includes("Процессы приложения: нет"), "ready output did not report localized running app PIDs");
+  assert(ready.stdout.includes("## Что сделать дальше"), "ready output did not include localized next section");
   assert(ready.stdout.includes("pnpm dogfood:start"), "ready output did not include start command");
   assert(
     ready.stdout.includes("pnpm dogfood:start:clean:preview"),
     "ready output did not include clean-start preview command"
   );
-  assert(ready.stdout.includes("## Памятка Daily-Control"), "ready output did not include daily-control checklist");
+  assert(ready.stdout.includes("## Памятка закрытия дня"), "ready output did not include day-closure checklist");
   assert(
     ready.stdout.includes("Проверь входы в окно"),
     "ready output did not include window entrypoint reminder"
   );
   assert(
-    ready.stdout.includes("Ctrl+Shift+Space") && ready.stdout.includes("Cmd+Option+Space"),
+    ready.stdout.includes("Ctrl+Shift+Space") && ready.stdout.includes("запасной") && ready.stdout.includes("Cmd+Option+Space"),
     "ready output did not include concrete global shortcut candidates"
   );
   assert(
@@ -66,11 +66,11 @@ try {
     const readyWithProcess = await runReady();
     assert(readyWithProcess.code === 0, "clean database with running app process should still be DB-ready");
     assert(
-      !readyWithProcess.stdout.includes("Running app PIDs: none"),
+      !readyWithProcess.stdout.includes("Процессы приложения: нет"),
       "ready output did not detect running app process"
     );
     assert(
-      readyWithProcess.stdout.includes("Timeskein app process is already running"),
+      readyWithProcess.stdout.includes("Процесс Timeskein уже запущен"),
       "ready output did not warn about running app process"
     );
   } finally {
@@ -93,39 +93,39 @@ try {
 
   const dirty = await runReady();
   assert(dirty.code !== 0, "dirty database should not be ready");
-  assert(dirty.stdout.includes("Status: NOT READY"), "dirty output did not report NOT READY");
-  assert(dirty.stdout.includes("Active focus session"), "dirty output did not mention active focus");
-  assert(dirty.stdout.includes("Active Work Item"), "dirty output did not mention active work item");
-  assert(dirty.stdout.includes("Today already has 2 focus block"), "dirty output did not mention today's blocks");
-  assert(dirty.stdout.includes("Duplicate Work Item title group"), "dirty output did not mention duplicate titles");
+  assert(dirty.stdout.includes("Статус: НЕ ГОТОВО"), "dirty output did not report localized NOT READY");
+  assert(dirty.stdout.includes("Активная фокус-сессия"), "dirty output did not mention localized active focus");
+  assert(dirty.stdout.includes("Активный Work Item"), "dirty output did not mention localized active work item");
+  assert(dirty.stdout.includes("Сегодня уже есть фокус-блоки: 2"), "dirty output did not mention localized today's blocks");
+  assert(dirty.stdout.includes("Дублируется название Work Item"), "dirty output did not mention localized duplicate titles");
   assert(dirty.stdout.includes("pnpm dogfood:stop-active"), "dirty output did not suggest stop-active");
   assert(dirty.stdout.includes("pnpm dogfood:reset-db"), "dirty output did not suggest reset-db");
   assert(
-    !dirty.stdout.includes("## Daily-Control Checklist"),
+    !dirty.stdout.includes("## Памятка закрытия дня"),
     "dirty output should not show daily-control checklist before readiness blockers are fixed"
   );
   assert(
-    dirty.stdout.includes("prefer reset over stop-active"),
+    dirty.stdout.includes("лучше reset, а не stop-active"),
     "dirty output did not prioritize reset for a contaminated clean trial"
   );
-  assert(dirty.stdout.includes("Manual backup command"), "dirty output did not include manual backup fallback");
+  assert(dirty.stdout.includes("Команда ручного бэкапа"), "dirty output did not include localized manual backup fallback");
 
   await runSql("DELETE FROM work_items WHERE id IN ('w2', 'w3');");
 
   const continuing = await runReady(["--mode", "continue"]);
   assert(continuing.code === 0, "continue mode should allow an existing coherent dogfood day");
-  assert(continuing.stdout.includes("Mode: continue"), "continue output did not report continue mode");
-  assert(continuing.stdout.includes("Status: READY"), "continue output did not report READY");
+  assert(continuing.stdout.includes("Режим: продолжение"), "continue output did not report localized continue mode");
+  assert(continuing.stdout.includes("Статус: ГОТОВО"), "continue output did not report localized READY");
   assert(
-    continuing.stdout.includes("Continue mode treats this as an existing dogfood day"),
+    continuing.stdout.includes("Режим продолжения считает это уже начатым dogfood-днём"),
     "continue output did not explain existing focus blocks"
   );
   assert(
-    continuing.stdout.includes("Dogfood day is already in progress: Dogfood Dirty"),
+    continuing.stdout.includes("Dogfood-день уже идёт: Dogfood Dirty"),
     "continue output did not identify the active coherent focus"
   );
   assert(
-    continuing.stdout.includes("Continue the current dogfood day in Timeskein"),
+    continuing.stdout.includes("Продолжай текущий dogfood-день в Timeskein"),
     "continue output did not include continue next action"
   );
   assert(
@@ -133,7 +133,7 @@ try {
     "continue output did not include guarded continue command"
   );
   assert(
-    continuing.stdout.includes("## Памятка Daily-Control"),
+    continuing.stdout.includes("## Памятка закрытия дня"),
     "continue output did not include daily-control checklist"
   );
 
@@ -148,7 +148,7 @@ try {
   const splitBrain = await runReady(["--mode", "continue"]);
   assert(splitBrain.code !== 0, "continue mode should reject mismatched active Work Item");
   assert(
-    splitBrain.stdout.includes("Active focus session is linked to Dogfood Dirty, but active Work Item is Overlapping Dirty"),
+    splitBrain.stdout.includes("Активная фокус-сессия связана с Dogfood Dirty, а активный Work Item — Overlapping Dirty"),
     "continue output did not explain active Work Item mismatch"
   );
 

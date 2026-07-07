@@ -26,7 +26,7 @@ During the day:
 - stop with optional note by pressing `Enter` in the stop-note field;
 - watch the short `12m Focus` counter in the macOS menu bar while a block is running;
 - hide/show the app from the menu bar item, the registered global shortcut
-  (`Ctrl+Shift+Space`, fallback `Ctrl+Option+Space` or `Cmd+Option+Space`),
+  (`Ctrl+Shift+Space`, запасной `Ctrl+Option+Space` или `Cmd+Option+Space`),
   or `Esc` when no dialog is open.
 
 End of day:
@@ -41,7 +41,7 @@ End of day:
 - if the button says `Копировать черновик`, stop the active focus block or clear the active Work Item before treating the report as final; draft copy can start the closure timer, but only a final report completes it;
 - if the button says `Копировать с проверками`, finish or consciously accept the remaining review items before treating the report as closed;
 - use `Копировать день` when only the raw day picture is needed;
-- if clipboard access is unavailable, copy the selected Markdown from the fallback text box;
+- if clipboard access is unavailable, copy the selected Markdown from the reserve text box;
 - if you want saved Markdown evidence, run `pnpm dogfood:finish:save`; it writes both the day report and the RC check;
 - if UI copy fails, run `pnpm dogfood:finish > timeskein-dogfood-report.md`;
 - if only the raw day picture is needed, run `pnpm export:focus-day > timeskein-day.md`.
@@ -95,7 +95,7 @@ pnpm dogfood:status
 ```
 
 If readiness reports active focus, active Work Items, duplicate titles, or existing blocks for today, fix that before treating Timeskein as the source of truth for the day. The readiness report includes exact next commands and shows whether the embedded agent or app process is already alive.
-When readiness is clean, the same report prints the next start command and the Daily-Control Checklist for the next dogfood day. Use it as the morning reminder for the paths that must be intentionally exercised before the evening `finish:save` step tells you whether to return to review or run the final `goal-check`.
+When readiness is clean, the same report prints the next start command and the `Памятка закрытия дня` checklist for the next dogfood day. Use it as the morning reminder for the paths that must be intentionally exercised before the evening `finish:save` step tells you whether to return to review or run the final `goal-check`.
 
 The default readiness mode is a clean start gate. After the day already has real focus blocks, use continue mode for a health check:
 
@@ -180,7 +180,7 @@ that the timer still works. During the day, deliberately exercise these paths
 when the real situation appears:
 
 - open, hide, and restore Timeskein through the menu bar, the registered global
-  shortcut (`Ctrl+Shift+Space`, fallback `Ctrl+Option+Space` or
+  shortcut (`Ctrl+Shift+Space`, запасной `Ctrl+Option+Space` или
   `Cmd+Option+Space`), `Esc`, Command+Tab, and the normal app entrypoint; the
   final telemetry should include non-zero show and hide requests from window
   entrypoints;

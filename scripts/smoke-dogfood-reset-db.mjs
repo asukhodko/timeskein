@@ -54,7 +54,7 @@ try {
     [join(repoRoot, "scripts/dogfood-ready.mjs"), "--db", dbPath, "--date", "2026-06-30"],
     { cwd: repoRoot }
   );
-  assert(ready.stdout.includes("Status: READY"), "missing database should be ready after reset");
+  assert(ready.stdout.includes("Статус: ГОТОВО"), "missing database should be ready after reset");
 
   console.log(
     JSON.stringify(

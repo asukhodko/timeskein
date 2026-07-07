@@ -18,7 +18,7 @@ try {
 
   const clean = await runStart();
   assert(clean.code === 0, "clean database should pass the start gate");
-  assert(clean.stdout.includes("Status: READY"), "clean start gate did not run readiness");
+  assert(clean.stdout.includes("Статус: ГОТОВО"), "clean start gate did not run localized readiness");
   assert(
     clean.stdout.includes("No running timeskein-desktop process found"),
     "clean start gate did not check for an already running app"
@@ -35,13 +35,13 @@ try {
 
   const dirty = await runStart();
   assert(dirty.code !== 0, "dirty database should fail the start gate");
-  assert(dirty.stdout.includes("Status: NOT READY"), "dirty start gate did not report NOT READY");
-  assert(dirty.stdout.includes("Active focus session"), "dirty start gate did not mention active focus");
+  assert(dirty.stdout.includes("Статус: НЕ ГОТОВО"), "dirty start gate did not report localized NOT READY");
+  assert(dirty.stdout.includes("Активная фокус-сессия"), "dirty start gate did not mention localized active focus");
 
   const continuing = await runStart({ mode: "continue" });
   assert(continuing.code === 0, "coherent active dogfood day should pass the continue gate");
-  assert(continuing.stdout.includes("Mode: continue"), "continue start gate did not use continue readiness");
-  assert(continuing.stdout.includes("Status: READY"), "continue start gate did not report READY");
+  assert(continuing.stdout.includes("Режим: продолжение"), "continue start gate did not use localized continue readiness");
+  assert(continuing.stdout.includes("Статус: ГОТОВО"), "continue start gate did not report localized READY");
   assert(continuing.stdout.includes("Dry run: app was not opened"), "continue start gate did not stay dry-run");
 
   const fakeBin = join(tempDir, "fake-bin");
@@ -57,7 +57,7 @@ try {
     },
   });
   assert(dirtyWithoutSkip.code !== 0, "dirty database should fail before preflight");
-  assert(dirtyWithoutSkip.stdout.includes("Status: NOT READY"), "dirty start gate did not run readiness first");
+  assert(dirtyWithoutSkip.stdout.includes("Статус: НЕ ГОТОВО"), "dirty start gate did not run localized readiness first");
   assert(
     !dirtyWithoutSkip.stderr.includes("preflight should not run"),
     "dirty start gate ran preflight before readiness"

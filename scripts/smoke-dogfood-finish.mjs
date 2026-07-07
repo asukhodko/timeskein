@@ -25,6 +25,10 @@ try {
   assert(empty.stdout.includes("За 2026-06-30 нет фокус-блоков"), "empty day did not explain missing blocks");
   assert(empty.stdout.includes("## Что сделать дальше"), "empty day did not show localized next steps");
   assert(
+    empty.stdout.includes("Ближайшее действие: закрывать пока нечего; вернись к закрытию после первого фокус-блока за этот день."),
+    "empty day did not show one calm next action"
+  );
+  assert(
     !empty.stdout.includes("dogfood-дня") &&
       !empty.stdout.includes("DB:") &&
       !empty.stdout.includes("## Blockers") &&
@@ -194,6 +198,10 @@ try {
   const active = await runFinish(activeDb);
   assert(active.code !== 0, "active day should not finish");
   assert(active.stdout.includes("Активный фокус-блок ещё идёт"), "active day did not explain active focus");
+  assert(
+    active.stdout.includes("Ближайшее действие: останови активный фокус-блок в Timeskein кнопкой `Стоп`."),
+    "active day did not prioritize the one active-focus stop action"
+  );
   assert(!active.stdout.includes("Active focus session is still running"), "active day leaked old English active-focus blocker");
 
   const splitBrainDb = join(tempDir, "split-brain.db");
@@ -210,6 +218,12 @@ try {
   assert(
     splitBrain.stdout.includes("У дела всё ещё активный статус"),
     "split-brain day did not explain active work item"
+  );
+  assert(
+    splitBrain.stdout.includes(
+      "Ближайшее действие: сними активный статус с дела в Timeskein или сначала выполни `pnpm dogfood:stop-active`."
+    ),
+    "split-brain day did not show one active-status next action"
   );
   assert(
     !splitBrain.stdout.includes("У Work Item всё ещё активный статус"),

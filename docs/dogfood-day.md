@@ -380,14 +380,17 @@ For the preferred evening review artifact, generate the dogfood report:
 pnpm dogfood:finish:save
 ```
 
-This writes `timeskein-dogfood-report-YYYY-MM-DD.md` in the current directory. To print the report to stdout instead:
-It also writes `timeskein-dogfood-rc-check-YYYY-MM-DD.md`, so the evening evidence package has both the readable report and the stricter RC audit.
+This writes `timeskein-dogfood-report-YYYY-MM-DD.md` and
+`timeskein-dogfood-rc-check-YYYY-MM-DD.md` in the current directory, so the
+evening evidence package has both the readable report and the stricter RC audit.
+To print the report to stdout instead:
 
 ```bash
 pnpm dogfood:finish > timeskein-dogfood-report.md
 ```
 
 `dogfood:finish` refuses to produce a final report while a focus block or Work Item is still active, or when there are no focus blocks for the selected date.
+When it refuses, the blocked report starts with one `Ближайшее действие`: stop the active focus block, clear the stuck active item, wait until the day has at least one focus block, or check the database path.
 Дневной отчёт включает раздел `Заметки дел` для затронутых дел с непустой заметкой. Это текущий контекст дела. Для наблюдений, привязанных к конкретному моменту дня, используй timestamped-события дел; они попадают в отдельный раздел `События дел`. Если событие записано с ошибкой или не в той форме, исправь или удали его в панели `События дел` перед копированием финального отчёта.
 Используй `Добавить событие дня...` для наблюдений, которые объясняют день, но не принадлежат одному делу: буфер перед тяжёлой встречей, recovery debt, напоминание о коррекции трекинга или причина разрыва. Выбирай зону явно, если наблюдение относится к `coordination`, `recovery`, `idle` или `personal`; иначе Timeskein использует контекст текущего фокуса или выбранного дела. У значимых разрывов и текущего открытого разрыва есть shortcut `Записать`, который готовит событие дня с интервалом, длительностью и `Восстановление` как начальной зоной. Эти заметки попадают в `События дня`, их можно редактировать, менять им зону или удалять перед копированием финального отчёта.
 The dogfood report also includes `История отвлечений` for every capture created during the selected day, including captures that were already resolved or converted. `Открытые отвлечения` remains a separate action list for unresolved inbox entries.

@@ -230,6 +230,8 @@ function buildNotReadyReport(date, path, items) {
     "",
     "## Что сделать дальше",
     "",
+    `Ближайшее действие: ${formatBlockedNextAction(items)}`,
+    "",
     "- Если идёт активный фокус-блок, останови его в Timeskein.",
     "- Если застрял только активный статус дела, сначала выполни `pnpm dogfood:stop-active` и примени план, если он выглядит правильно.",
     "- Если закрываешь другой день, повтори команду с `--date YYYY-MM-DD`.",
@@ -237,6 +239,26 @@ function buildNotReadyReport(date, path, items) {
   );
 
   return `${lines.join("\n")}\n`;
+}
+
+function formatBlockedNextAction(items) {
+  if (items.some((item) => item.startsWith("Активный фокус-блок ещё идёт:"))) {
+    return "останови активный фокус-блок в Timeskein кнопкой `Стоп`.";
+  }
+
+  if (items.some((item) => item.startsWith("У дела всё ещё активный статус:"))) {
+    return "сними активный статус с дела в Timeskein или сначала выполни `pnpm dogfood:stop-active`.";
+  }
+
+  if (items.some((item) => item.includes("нет фокус-блоков"))) {
+    return "закрывать пока нечего; вернись к закрытию после первого фокус-блока за этот день.";
+  }
+
+  if (items.some((item) => item.startsWith("База Timeskein не найдена:"))) {
+    return "проверь путь к базе или запусти Timeskein, чтобы он создал локальную базу.";
+  }
+
+  return "исправь первый блокер из списка выше и повтори команду.";
 }
 
 function buildMeasuredClosureWarning(date, reportState, reviewNextAction) {

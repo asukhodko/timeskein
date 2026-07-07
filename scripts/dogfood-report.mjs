@@ -364,11 +364,7 @@ function buildDogfoodReport(
     "",
     humanTelemetryMarkdown.trim(),
     "",
-    "## Короткое закрытие",
-    "",
-    "- Данным можно доверять: да/нет",
-    "- Главное наблюдение дня:",
-    "- Следующий шаг после закрытия:",
+    formatShortClosureMarkdown(telemetryMarkdown).trim(),
     "",
     "## Вечерний разбор",
     "",
@@ -474,6 +470,29 @@ function localizeActivityZoneCells(markdown) {
       return rawCells.join("|");
     })
     .join("\n");
+}
+
+function formatShortClosureMarkdown(telemetryMarkdown) {
+  return [
+    "## Короткое закрытие",
+    "",
+    "- Данным можно доверять: да/нет",
+    formatShortClosureDurationLine(telemetryMarkdown),
+    "- Главное наблюдение дня:",
+    "- Следующий шаг после закрытия:",
+  ].join("\n");
+}
+
+function formatShortClosureDurationLine(telemetryMarkdown) {
+  const closureCounts = parseCountPair(extractLineValue(telemetryMarkdown, "Day closure started/completed"));
+  const lastClosureDuration = parseDurationSeconds(extractLineValue(telemetryMarkdown, "Last day closure duration"));
+
+  if (!closureCounts?.right || lastClosureDuration == null) {
+    return "- Закрытие уложилось в 10 минут: нет данных (закрытие не измерено)";
+  }
+
+  const verdict = lastClosureDuration <= 10 * 60 ? "да" : "нет";
+  return `- Закрытие уложилось в 10 минут: ${verdict} (${formatDuration(lastClosureDuration)})`;
 }
 
 function formatTelemetryForReport(markdown) {

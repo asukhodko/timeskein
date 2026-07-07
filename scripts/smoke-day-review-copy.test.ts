@@ -10,6 +10,7 @@ import {
   formatReportButtonLabel,
   formatReviewChecklistMarkdown,
   formatReviewActionLabel,
+  formatShortClosureMarkdown,
   formatTelemetryForReport,
   isOpenGapExplanationText,
   pickNextGapForReview,
@@ -334,4 +335,12 @@ test('copied report keeps key focus and telemetry sections localized', () => {
   assert(!localizedTelemetry.includes('Total events:'), 'raw English telemetry counter should not leak into copied report')
   assert(!localizedTelemetry.includes('Проверок follow-up по отвлечениям:'), 'old mixed-language follow-up label should not leak into copied report')
   assert(!localizedTelemetry.includes('Проверок использования Inbox:'), 'old mixed-language Inbox label should not leak into copied report')
+
+  const shortClosure = formatShortClosureMarkdown(telemetryMarkdown)
+  assert(shortClosure.includes('## Короткое закрытие'))
+  assert(shortClosure.includes('Закрытие уложилось в 10 минут: да (0:07)'))
+  assert(shortClosure.includes('Главное наблюдение дня:'))
+
+  const missingClosure = formatShortClosureMarkdown('## App Telemetry\n\nTotal events: 0')
+  assert(missingClosure.includes('Закрытие уложилось в 10 минут: нет данных (закрытие не измерено)'))
 })

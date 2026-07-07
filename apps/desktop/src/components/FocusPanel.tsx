@@ -1118,11 +1118,7 @@ async function buildDogfoodReportMarkdown(
     '',
     reportTelemetryMarkdown.trim(),
     '',
-    '## Короткое закрытие',
-    '',
-    '- Данным можно доверять: да/нет',
-    '- Главное наблюдение дня:',
-    '- Следующий шаг после закрытия:',
+    formatShortClosureMarkdown(appTelemetryMarkdown).trim(),
     '',
     '## Вечерний разбор',
     '',
@@ -1263,6 +1259,29 @@ export function formatTelemetryForReport(markdown: string) {
     .replace(/^Slow window-to-focus gaps:/gm, 'Медленных разрывов окно->фокус:')
     .replace(/^### Events By Kind$/m, '### События по типам')
     .replace(/^\| Count \| Kind \|$/gm, '| Кол-во | Тип |')
+}
+
+export function formatShortClosureMarkdown(appTelemetryMarkdown: string) {
+  return [
+    '## Короткое закрытие',
+    '',
+    '- Данным можно доверять: да/нет',
+    formatShortClosureDurationLine(appTelemetryMarkdown),
+    '- Главное наблюдение дня:',
+    '- Следующий шаг после закрытия:',
+  ].join('\n')
+}
+
+function formatShortClosureDurationLine(appTelemetryMarkdown: string) {
+  const closureCounts = parseCountPair(extractLineValue(appTelemetryMarkdown, 'Day closure started/completed'))
+  const lastClosureDuration = parseDurationSeconds(extractLineValue(appTelemetryMarkdown, 'Last day closure duration'))
+
+  if (!closureCounts?.right || lastClosureDuration == null) {
+    return '- Закрытие уложилось в 10 минут: нет данных (закрытие не измерено)'
+  }
+
+  const verdict = lastClosureDuration <= 10 * 60 ? 'да' : 'нет'
+  return `- Закрытие уложилось в 10 минут: ${verdict} (${formatDuration(lastClosureDuration)})`
 }
 
 export type Gap = {

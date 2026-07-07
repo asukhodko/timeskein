@@ -199,6 +199,10 @@ try {
   assert(stdout.includes("## Разрывы >= 20:00"), "report did not include significant gaps");
   assert(stdout.includes("## Короткое закрытие"), "report did not include short closure section");
   assert(stdout.includes("Данным можно доверять: да/нет"), "report did not include short trust prompt");
+  assert(
+    stdout.includes("Закрытие уложилось в 10 минут: да (7:00)"),
+    "report did not prefill short closure duration verdict"
+  );
   assert(stdout.includes("### Цена входа"), "report did not include entry cost prompts");
   assert(stdout.includes("Данных достаточно для разговора о дне: да/нет"), "report did not include verdict prompts");
 
@@ -227,6 +231,10 @@ try {
   assert(
     thinEvidenceStdout.includes("Нет событий дня или дел"),
     "report review checklist did not flag missing day/Work Item context"
+  );
+  assert(
+    thinEvidenceStdout.includes("Закрытие уложилось в 10 минут: нет данных (закрытие не измерено)"),
+    "report did not explain missing closure measurement in the short closure section"
   );
   assert(
     thinEvidenceStdout.includes("Проверить время по делам"),

@@ -139,6 +139,7 @@ async function checkSavedEvidence(date) {
     ["# Dogfood-отчёт Timeskein", "# Timeskein dogfood report"],
     ["## Данные фокуса", "## Focus Data"],
     ["## Короткое закрытие"],
+    ["Закрытие уложилось в 10 минут"],
     ["## Проверка перед отчётом", "## Review before report"],
     ["## Аудит закрытия дня", "## Daily Control Goal Audit"],
     ["## Телеметрия приложения", "## App Telemetry"],

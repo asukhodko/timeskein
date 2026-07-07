@@ -282,14 +282,14 @@ If macOS rejects all three, use the macOS menu bar item or normal app switching.
 | Key | Action |
 |-----|--------|
 | `↑` / `↓` | Navigate items |
-| `T` | Touch (update last_seen) |
-| `P` | Pin/unpin item |
+| `T` | Обновить время касания дела |
+| `P` | Закрепить или открепить дело |
 | `S` or `1-6` | Change state menu |
 | `N` | Edit note |
 | `R` | Refs panel (add/remove/open) |
 | `Enter` | Open primary ref in browser, or edit the selected item when it has no refs |
-| `E` | Edit selected Work Item |
-| `Alt+1` / `Alt+2` / `Alt+3` / `Alt+4` | Switch Work Item list mode: Recent / Today / Pinned / All |
+| `E` | Править выбранное дело |
+| `Alt+1` / `Alt+2` / `Alt+3` / `Alt+4` | Переключить список дел: недавние / сегодня / закреплённые / все |
 | `Shift+Delete` | Delete item (with confirmation) |
 | `C` or `Alt+N` | Create new item |
 | `Esc` | Close dialogs; hide the macOS window when no dialog is open |
@@ -298,12 +298,12 @@ If macOS rejects all three, use the macOS menu bar item or normal app switching.
 
 | Что нажать | Что произойдёт |
 |---------|--------|
-| Поле «На чём сейчас фокус?» + `Старт` | Найти или создать Work Item по названию и начать фокус |
+| Поле «На чём сейчас фокус?» + `Старт` | Найти или создать дело по названию и начать фокус |
 | Поле «Переключиться на...» + `Переключить` | Остановить текущий блок и начать следующий по названию |
 | Поле «Зафиксировать отвлечение...» + `Записать` | Сохранить входящее событие, не останавливая и не переключая фокус |
-| Пустое поле фокуса + `Space` | Начать или переключить фокус на выбранный Work Item |
-| `Начать` / `Переключиться` на выбранном Work Item | Продолжить фокус на выбранном Work Item |
-| Двойной клик по Work Item | Начать или переключить фокус на этот Work Item |
+| Пустое поле фокуса + `Space` | Начать или переключить фокус на выбранное дело |
+| `Начать` / `Переключиться` на выбранном деле | Продолжить фокус на выбранном деле |
+| Двойной клик по делу | Начать или переключить фокус на это дело |
 | «Заметка при остановке» + `Enter` или `Стоп` | Остановить активный фокус-блок и при необходимости сохранить заметку |
 | `Добавить пропущенный блок` в «Сегодня» | Добавить пропущенный остановленный блок перед финальным отчётом |
 | `Править` в строке «Сегодня» | Исправить остановленный фокус-блок или разделить его на два |
@@ -335,10 +335,10 @@ If macOS rejects all three, use the macOS menu bar item or normal app switching.
 - Day totals count the part of each focus block that overlaps the selected local day
 - Russian review checklist in Today and copied dogfood reports: active-state blockers, open captures, significant gaps, open gap, Activity Zone coverage, non-work tracking, capture coverage, Work Item context coverage, current closure stage, elapsed closure time, compact summary of already-clean checks, `Объяснить` actions for gap Day Events, and specific accept-as-is actions for optional checks: `Зоны верны`, `Инбокс проверен`, `Пути проверены`, `Окно проверено`, `Трекинг верен`, `Время верно`, and `Оставить открытыми`; before `Начать закрытие дня`, Today keeps the checklist compact and does not show the full evening queue as daytime background pressure, the report button starts closure before it offers any copy action, and `Ближайшее действие` names the exact button or gesture for the current blocker, single review item, or final report copy
 - Markdown day-closure report from the Today panel or CLI, with Russian focus data, Work Item totals, Activity Zone totals, Day Events, Work Item notes and timestamped events for touched items, significant gaps, Russian interruption history, open captures, review checklist/prompts, a short closure section for the minimal evening note with the measured 10-minute verdict prefilled, and draft status while a focus block, Work Item, or review check still needs attention
-- macOS menu bar item shows the active focus duration as a short `12m Focus` status while a block is running, and today's total when no block is active
+- macOS menu bar item shows the active focus duration as a short `12 мин в фокусе` status while a block is running, and today's total when no block is active
 - Work item states: active, waiting, blocked, done, someday, unknown
 - Work Item activity zones: work, coordination, recovery, idle, personal; focus blocks keep their own zone snapshot for report correction
-- Work Item list shows last touched time plus day/total tracked time when available
+- Work Item list shows Russian last-touched time like `5 мин назад` plus day/total tracked time when available
 - Work Item list can be narrowed to `Recent`, `Today`, `Pinned`, or `All`; typed search scans the matching inventory regardless of the current mode
 - Today list height can be resized by dragging the divider above the Work Item search and reset with a double-click
 - Refs: URLs, file paths, issue keys with conflict detection

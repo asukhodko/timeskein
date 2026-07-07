@@ -1,11 +1,10 @@
 /**
- * Format a relative time string from an ISO date
+ * Format a relative time string from an ISO date.
  */
-export function formatRelativeTime(isoDate: string | undefined): string {
+export function formatRelativeTime(isoDate: string | undefined, now = new Date()): string {
   if (!isoDate) return '—'
 
   const date = new Date(isoDate)
-  const now = new Date()
   const diffMs = now.getTime() - date.getTime()
   const diffSec = Math.floor(diffMs / 1000)
   const diffMin = Math.floor(diffSec / 60)
@@ -13,15 +12,15 @@ export function formatRelativeTime(isoDate: string | undefined): string {
   const diffDay = Math.floor(diffHour / 24)
 
   if (diffSec < 60) {
-    return 'now'
+    return 'сейчас'
   } else if (diffMin < 60) {
-    return `${diffMin}m`
+    return `${diffMin} мин назад`
   } else if (diffHour < 24) {
-    return `${diffHour}h`
+    return `${diffHour} ч назад`
   } else if (diffDay < 30) {
-    return `${diffDay}d`
+    return `${diffDay} дн назад`
   } else {
-    return date.toLocaleDateString()
+    return date.toLocaleDateString('ru-RU')
   }
 }
 

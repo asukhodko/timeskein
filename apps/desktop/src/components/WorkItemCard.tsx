@@ -35,7 +35,6 @@ export default function WorkItemCard({
   onDoubleClick,
 }: WorkItemCardProps) {
   const lastSeen = formatRelativeTime(item.last_seen_at)
-  const lastSeenLabel = lastSeen === '—' ? lastSeen : lastSeen === 'now' ? 'сейчас' : `${lastSeen} назад`
   const timeBadges = getWorkItemTimeBadges(item)
 
   return (
@@ -114,7 +113,7 @@ export default function WorkItemCard({
 
           {/* Last seen */}
           <span className="w-14 text-right" title={item.last_seen_at || 'Нет касаний'}>
-            {lastSeenLabel}
+            {lastSeen}
           </span>
         </div>
       </div>

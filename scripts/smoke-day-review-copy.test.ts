@@ -24,7 +24,7 @@ import { CAPTURE_INBOX_LABELS } from '../apps/desktop/src/components/CaptureInbo
 import { FOCUS_CORRECTION_LABELS } from '../apps/desktop/src/components/FocusCorrectionDialog'
 import { MISSED_FOCUS_BLOCK_LABELS } from '../apps/desktop/src/components/MissedFocusBlockDialog'
 import { APP_UI_LABELS } from '../apps/desktop/src/utils/appUiLabels'
-import { formatClockTime } from '../apps/desktop/src/utils/formatTime'
+import { formatClockTime, formatRelativeTime } from '../apps/desktop/src/utils/formatTime'
 import { ITEM_UI_LABELS, formatCreateItemError } from '../apps/desktop/src/utils/itemUiLabels'
 
 test('capture inbox controls keep interruption handling in Russian', () => {
@@ -64,6 +64,20 @@ test('clock time stays 24-hour and Russian-facing', () => {
   assert.equal(formatClockTime(undefined), 'сейчас')
   assert(!formatClockTime('2026-07-07T13:14:00').includes('PM'))
   assert(!formatClockTime('2026-07-07T01:14:00').includes('AM'))
+})
+
+test('relative time stays Russian-facing in work item cards', () => {
+  const now = new Date('2026-07-07T12:00:00+03:00')
+
+  assert.equal(formatRelativeTime(undefined, now), '—')
+  assert.equal(formatRelativeTime('2026-07-07T11:59:30+03:00', now), 'сейчас')
+  assert.equal(formatRelativeTime('2026-07-07T11:55:00+03:00', now), '5 мин назад')
+  assert.equal(formatRelativeTime('2026-07-07T10:00:00+03:00', now), '2 ч назад')
+  assert.equal(formatRelativeTime('2026-07-04T12:00:00+03:00', now), '3 дн назад')
+  assert(!formatRelativeTime('2026-07-07T11:55:00+03:00', now).includes('m'))
+  assert(!formatRelativeTime('2026-07-07T10:00:00+03:00', now).includes('h'))
+  assert(!formatRelativeTime('2026-07-04T12:00:00+03:00', now).includes('d'))
+  assert(!formatRelativeTime('2026-07-07T11:59:30+03:00', now).includes('now'))
 })
 
 test('tray status labels stay Russian-facing', () => {

@@ -7,6 +7,7 @@ const options = parseArgs(process.argv.slice(2));
 const date = options.date ?? formatLocalDate(new Date());
 const rcArgs = ["scripts/dogfood-rc-check.mjs", "--strict"];
 const shouldCheckSavedEvidence = !options.db && !options.skipSavedEvidenceCheck;
+const shouldRequireNoCodexGuidance = !options.db && !options.checkSavedEvidenceOnly;
 
 if (options.db) {
   rcArgs.push("--db", options.db);
@@ -26,13 +27,20 @@ if (options.out) {
   rcArgs.push("--out", options.out);
 }
 
-const steps = [
+const savedEvidenceSteps = [
   ...(shouldCheckSavedEvidence
     ? [["node", ["scripts/dogfood-goal-check.mjs", "--check-saved-evidence-only", "--date", date]]]
     : []),
+];
+const verificationSteps = [
   ["pnpm", ["test"]],
   ["pnpm", ["dogfood:preflight"]],
   [process.execPath, rcArgs],
+];
+const dryRunSteps = [
+  ...savedEvidenceSteps,
+  ...(shouldRequireNoCodexGuidance ? [["self", ["--no-codex-guidance"]]] : []),
+  ...verificationSteps,
 ];
 
 if (options.checkSavedEvidenceOnly) {
@@ -51,18 +59,30 @@ if (options.dryRun) {
   console.log("");
   console.log("Будут выполнены команды:");
   console.log("");
-  for (const [command, args] of steps) {
+  for (const [command, args] of dryRunSteps) {
     console.log(`- ${formatCommand(command, args)}`);
   }
   process.exit(0);
 }
 
-for (const [command, args] of steps) {
+for (const [command, args] of savedEvidenceSteps) {
+  await run(command, args);
+}
+
+if (shouldRequireNoCodexGuidance && !options.noCodexGuidance) {
+  process.stderr.write(`${buildMissingNoCodexGuidanceMessage(date)}\n`);
+  process.exit(1);
+}
+
+if (shouldRequireNoCodexGuidance) {
+  console.log("\nПодтверждение: закрытие прошло без подсказок Codex.");
+}
+
+for (const [command, args] of verificationSteps) {
   await run(command, args);
 }
 
 console.log("\nФинальная проверка цели Timeskein прошла.");
-console.log("Если во время вечернего закрытия пришлось спрашивать Codex, что делать дальше, не закрывай цель по этому дню: повтори dogfood-день.");
 
 function parseArgs(args) {
   const result = {};
@@ -88,6 +108,8 @@ function parseArgs(args) {
       result.skipSavedEvidenceCheck = true;
     } else if (arg === "--check-saved-evidence-only") {
       result.checkSavedEvidenceOnly = true;
+    } else if (arg === "--no-codex-guidance") {
+      result.noCodexGuidance = true;
     } else if (arg === "--dry-run") {
       result.dryRun = true;
     } else if (arg === "--help" || arg === "-h") {
@@ -110,14 +132,15 @@ function parseArgs(args) {
 }
 
 function printHelp() {
-  console.log(`Использование: pnpm dogfood:goal-check [--date YYYY-MM-DD] [--db path/to/timeskein.db] [--min-focus-minutes N] [--save | --out path.md] [--skip-saved-evidence-check] [--dry-run]
+  console.log(`Использование: pnpm dogfood:goal-check [--date YYYY-MM-DD] [--no-codex-guidance] [--db path/to/timeskein.db] [--min-focus-minutes N] [--save | --out path.md] [--skip-saved-evidence-check] [--dry-run]
 
 Запускает финальный локальный gate для цели про дешёвое вечернее закрытие дня:
 
 1. сохранённый dogfood-отчёт и RC-аудит есть за выбранную дату
-2. pnpm test
-3. pnpm dogfood:preflight
-4. dogfood:rc-check --strict для выбранного dogfood-дня
+2. есть явное подтверждение \`--no-codex-guidance\`, что закрытие прошло без подсказок Codex
+3. pnpm test
+4. pnpm dogfood:preflight
+5. dogfood:rc-check --strict для выбранного dogfood-дня
 
 Используй это после реального dogfood-дня, перед закрытием цели.`);
 }
@@ -249,6 +272,18 @@ function buildMissingEvidenceMessage(date, missing) {
     "## Детали",
     "",
     ...missing.map((item) => `- ${item}`),
+  ].join("\n");
+}
+
+function buildMissingNoCodexGuidanceMessage(date) {
+  return [
+    "# Финальная проверка пока не готова",
+    "",
+    "## Что ещё осталось",
+    "",
+    "- Нужна явная отметка, что вечернее закрытие прошло без подсказок Codex.",
+    `- Если ты шёл по \`Ближайшее действие\` и не спрашивал Codex, запусти: \`pnpm dogfood:goal-check -- --date ${date} --no-codex-guidance\`.`,
+    "- Если Codex всё же понадобился как навигатор закрытия, этот день не закрывает цель: проведи ещё один dogfood-день.",
   ].join("\n");
 }
 
@@ -425,6 +460,10 @@ function run(command, args) {
 }
 
 function formatCommand(command, args) {
+  if (command === "self" && args[0] === "--no-codex-guidance") {
+    return "подтверждение: --no-codex-guidance (закрытие прошло без подсказок Codex)";
+  }
+
   const displayCommand = command === process.execPath ? "node" : command;
   return [displayCommand, ...args].map(shellQuote).join(" ");
 }

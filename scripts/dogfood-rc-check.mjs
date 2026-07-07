@@ -828,7 +828,7 @@ function formatGoalAuditMarkdown(evidence, assessment, minFocusSeconds) {
     {
       requirement: "Local gates",
       status: "manual",
-      evidence: "Запусти pnpm dogfood:goal-check на том же коде перед закрытием цели",
+      evidence: "Запусти pnpm dogfood:goal-check -- --no-codex-guidance на том же коде перед закрытием цели",
     },
   ];
 

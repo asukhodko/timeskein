@@ -299,7 +299,7 @@ function buildGoalCheckNextStep(date, shortClosureVerdict) {
     "- Отчёт финальный, закрытие измерено, аудит чистый.",
     ...(shortClosureVerdict ? [`- Короткое закрытие: ${shortClosureVerdict}.`] : []),
     "- Если во время закрытия пришлось спрашивать Codex, что делать дальше, не считай этот день доказательством цели: проведи ещё один dogfood-день.",
-    `- Запусти финальную проверку цели: \`pnpm dogfood:goal-check -- --date ${date}\`.`,
+    `- Запусти финальную проверку цели: \`pnpm dogfood:goal-check -- --date ${date} --no-codex-guidance\`.`,
     "",
   ].join("\n");
 }

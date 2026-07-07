@@ -68,7 +68,7 @@ try {
     "ready output did not explain pending audit finish flow"
   );
   assert(
-    ready.stdout.includes("pnpm dogfood:goal-check -- --date YYYY-MM-DD") &&
+    ready.stdout.includes("pnpm dogfood:goal-check -- --date YYYY-MM-DD --no-codex-guidance") &&
       ready.stdout.includes("Короткое закрытие: Закрытие уложилось в 10 минут: да") &&
       ready.stdout.includes("напечатанному следующему шагу"),
     "ready output did not explain the printed goal-check next step"

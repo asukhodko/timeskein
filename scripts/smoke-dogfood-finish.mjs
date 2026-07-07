@@ -166,7 +166,7 @@ try {
       measuredSavedDefault.stdout.includes("финальную проверку цели") &&
       measuredSavedDefault.stdout.includes("Короткое закрытие: Закрытие уложилось в 10 минут: да (7:00).") &&
       measuredSavedDefault.stdout.includes("Если во время закрытия пришлось спрашивать Codex") &&
-      measuredSavedDefault.stdout.includes("pnpm dogfood:goal-check -- --date 2026-06-30"),
+      measuredSavedDefault.stdout.includes("pnpm dogfood:goal-check -- --date 2026-06-30 --no-codex-guidance"),
     "finish --save did not print the final goal-check next step after measured closure"
   );
   assert(!measuredSavedDefault.stdout.includes("gate цели"), "finish --save leaked old gate wording");

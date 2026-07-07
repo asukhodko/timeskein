@@ -34,6 +34,10 @@ try {
   assert(stdout.includes("- pnpm test"), "dry-run did not include pnpm test");
   assert(stdout.includes("- pnpm dogfood:preflight"), "dry-run did not include dogfood preflight");
   assert(stdout.includes("node scripts/dogfood-rc-check.mjs --strict"), "dry-run did not include strict RC check");
+  assert(
+    !stdout.includes("подтверждение: --no-codex-guidance"),
+    "dry-run with explicit DB should not require no-Codex self-attestation"
+  );
   assert(stdout.includes("--date 2026-06-30"), "dry-run did not pass date to RC check");
   assert(stdout.includes("--min-focus-minutes 42"), "dry-run did not pass min focus threshold to RC check");
   assert(stdout.includes("--out '/tmp/timeskein rc.md'"), "dry-run did not quote output path");
@@ -48,6 +52,7 @@ try {
   });
   assert(helpStdout.includes("Использование: pnpm dogfood:goal-check"), "goal-check help title is not localized");
   assert(helpStdout.includes("финальный локальный gate"), "goal-check help body is not localized");
+  assert(helpStdout.includes("--no-codex-guidance"), "goal-check help did not mention the no-Codex attestation flag");
   assert(!helpStdout.includes("Usage:"), "goal-check help leaked old English usage");
 
   const { stdout: realDryRunStdout } = await execFileAsync(
@@ -58,6 +63,21 @@ try {
   assert(
     realDryRunStdout.includes("node scripts/dogfood-goal-check.mjs --check-saved-evidence-only --date 2026-06-30"),
     "real dry-run did not include saved evidence check"
+  );
+  assert(
+    realDryRunStdout.includes("подтверждение: --no-codex-guidance"),
+    "real dry-run did not include no-Codex self-attestation"
+  );
+
+  const missingNoCodexGuidance = await runGoalCheck(
+    ["--skip-saved-evidence-check", "--date", "2026-06-30"],
+    tempDir
+  );
+  assert(missingNoCodexGuidance.code !== 0, "real goal check should require no-Codex self-attestation");
+  assert(
+    `${missingNoCodexGuidance.stdout}${missingNoCodexGuidance.stderr}`.includes("--no-codex-guidance") &&
+      `${missingNoCodexGuidance.stdout}${missingNoCodexGuidance.stderr}`.includes("без подсказок Codex"),
+    "missing no-Codex self-attestation error is missing"
   );
 
   const missingEvidence = await runGoalCheck(["--check-saved-evidence-only", "--date", "2026-06-30"], tempDir);
@@ -132,7 +152,7 @@ try {
     "| Коррекция трекинга проверена | ок | 0/0/1/0 запрошено/применено/проверено/ошибок |",
     "| Длительность закрытия измерена | ок | 1/1 начато/завершено, последняя длительность 7:00 |",
     "| Жёстких блокеров нет | ок | 0 жёстких блокеров |",
-    "| Локальные проверки | вручную | Запусти pnpm dogfood:goal-check на том же коде перед закрытием цели |",
+    "| Локальные проверки | вручную | Запусти pnpm dogfood:goal-check -- --no-codex-guidance на том же коде перед закрытием цели |",
   ];
   const reportAuditMarkdown = [
     "## Daily Control Goal Audit",

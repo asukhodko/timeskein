@@ -11,7 +11,7 @@ Item Events, Capture Inbox evidence, and Work Item day/total time evidence. The
 remaining daily-control proof is narrower: one evening closure must be measured
 from `Начать закрытие дня` to final `Копировать отчёт`, take at most 10 minutes,
 not require Codex to explain the next closure step, and then pass strict
-`pnpm dogfood:goal-check`.
+`pnpm dogfood:goal-check -- --no-codex-guidance`.
 
 The completed `Аудит закрытия дня` in the UI/CLI dogfood report and in
 `pnpm dogfood:rc-check` checked whether a real day had enough evidence for focus
@@ -29,7 +29,7 @@ as the normal start path.
 `pnpm dogfood:finish:save` now saves both the readable day report and the
 RC-check evidence file, so the evening package is collected in one step.
 For final goal closure, `pnpm dogfood:finish:save` points to
-`pnpm dogfood:goal-check` only after measured closure is present and the saved
+`pnpm dogfood:goal-check -- --date YYYY-MM-DD --no-codex-guidance` only after measured closure is present and the saved
 `Аудит закрытия дня` has no pending rows. The goal check first requires the
 saved dogfood report and RC evidence for the real local database, verifies the
 grouped review checklist plus `Ближайшее действие`, then runs `pnpm test`,

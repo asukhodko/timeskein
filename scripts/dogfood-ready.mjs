@@ -302,6 +302,7 @@ function addStartModeFindings(blockers, warnings, nextActions, summary, todaySec
     blockers.push(
       `Сегодня уже есть фокус-блоки: ${summary.todaySessions.length}, всего ${formatDuration(todaySeconds)}. Это смешает чистый однодневный тест со старыми данными.`
     );
+    nextActions.push("Если это уже начатый реальный dogfood-день, проверь его режимом продолжения: `pnpm dogfood:ready -- --mode continue`.");
     nextActions.push("Для чистого однодневного теста с уже существующими блоками лучше reset, а не stop-active: сначала выполни dry-run `pnpm dogfood:reset-db`.");
     if (responsiveAgent) {
       nextActions.push("Перед применением reset закрой Timeskein: `dogfood:reset-db -- --apply` откажется работать, пока агент отвечает.");

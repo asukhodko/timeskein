@@ -128,6 +128,10 @@ try {
     dirty.stdout.includes("лучше reset, а не stop-active"),
     "dirty output did not prioritize reset for a contaminated clean trial"
   );
+  assert(
+    dirty.stdout.includes("pnpm dogfood:ready -- --mode continue"),
+    "dirty output did not suggest continue mode for an already started real dogfood day"
+  );
   assert(dirty.stdout.includes("Команда ручного бэкапа"), "dirty output did not include localized manual backup fallback");
 
   await runSql("DELETE FROM work_items WHERE id IN ('w2', 'w3');");

@@ -84,6 +84,10 @@ test('copied report keeps key focus and telemetry sections localized', () => {
     'Non-work tracked: 0:10:00',
     'Entrances: 2',
     '',
+    '| Time | Duration | Zone | Work Item | Note |',
+    '| --- | ---: | --- | --- | --- |',
+    '| 12:00-12:50 | 0:50 | Work | Проверка |  |',
+    '',
     '## By Work Item',
     '',
     '| Duration | Entrances | Work Item |',
@@ -125,10 +129,14 @@ test('copied report keeps key focus and telemetry sections localized', () => {
   const localizedFocus = formatFocusMarkdownForReport(focusMarkdown)
   assert(localizedFocus.includes('# Фокус-день Timeskein — 02.07.2026'))
   assert(localizedFocus.includes('Всего учтено: 1:00:00'))
+  assert(localizedFocus.includes('| 12:00-12:50 | 0:50 | Работа | Проверка |  |'))
   assert(localizedFocus.includes('## По Work Item'))
   assert(localizedFocus.includes('## События дня'))
+  assert(localizedFocus.includes('| 12:00 | Восстановление | day | Перерыв |'))
   assert(localizedFocus.includes('## События Work Item'))
   assert(!localizedFocus.includes('Total tracked:'), 'raw English focus summary should not leak into copied report')
+  assert(!localizedFocus.includes('| Work |'), 'raw English Work zone should not leak into copied report')
+  assert(!localizedFocus.includes('| Recovery |'), 'raw English Recovery zone should not leak into copied report')
   assert(!localizedFocus.includes('## Day Events'), 'raw English day events heading should not leak into copied report')
 
   const localizedTelemetry = formatTelemetryForReport(telemetryMarkdown)

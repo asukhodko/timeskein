@@ -323,7 +323,7 @@ try {
   assert(legacy.code === 0, "legacy schema should not crash the RC check");
   assert(legacy.stdout.includes("Всего учтено: 2:00:00"), "legacy schema total tracked is missing");
   assert(legacy.stdout.includes("## Аудит закрытия дня"), "legacy schema goal audit section is missing");
-  assert(legacy.stdout.includes("| 2:00:00 | 1 | Work |"), "legacy schema should fall back to Work zone");
+  assert(legacy.stdout.includes("| 2:00:00 | 1 | Работа |"), "legacy schema should fall back to localized Work zone");
 
   const openCaptureDb = join(tempDir, "open-capture.db");
   await copyDb(goodDb, openCaptureDb);

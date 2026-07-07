@@ -387,7 +387,7 @@ function buildDogfoodReport(
 }
 
 function formatFocusMarkdownForReport(markdown) {
-  return markdown
+  return localizeActivityZoneCells(markdown)
     .replace(/^# Timeskein focus day - (.+)$/m, "# Фокус-день Timeskein — $1")
     .replace(/^Total tracked:/gm, "Всего учтено:")
     .replace(/^Work focus:/gm, "Рабочий фокус:")
@@ -408,6 +408,49 @@ function formatFocusMarkdownForReport(markdown) {
     .replace(/^## Gaps >=/gm, "## Разрывы >=")
     .replace(/^## Open Gap$/gm, "## Текущий открытый разрыв")
     .replace(/ since last stopped block$/gm, " после последнего остановленного блока");
+}
+
+function localizeActivityZoneCells(markdown) {
+  const englishZoneLabels = {
+    Work: "Работа",
+    Coordination: "Координация",
+    Recovery: "Восстановление",
+    Idle: "Простой",
+    Personal: "Личное",
+  };
+  let zoneColumnIndex = null;
+
+  return markdown
+    .split("\n")
+    .map((line) => {
+      if (!line.startsWith("|")) {
+        zoneColumnIndex = null;
+        return line;
+      }
+
+      const rawCells = line.split("|");
+      const cells = rawCells.slice(1, -1).map((cell) => cell.trim());
+      const headerZoneIndex = cells.findIndex((cell) => cell === "Zone");
+      if (headerZoneIndex !== -1) {
+        zoneColumnIndex = headerZoneIndex;
+        return line;
+      }
+
+      if (zoneColumnIndex == null) {
+        return line;
+      }
+
+      const rawCellIndex = zoneColumnIndex + 1;
+      const current = rawCells[rawCellIndex]?.trim();
+      const label = current ? englishZoneLabels[current] : undefined;
+      if (!label) {
+        return line;
+      }
+
+      rawCells[rawCellIndex] = ` ${label} `;
+      return rawCells.join("|");
+    })
+    .join("\n");
 }
 
 function formatTelemetryForReport(markdown) {

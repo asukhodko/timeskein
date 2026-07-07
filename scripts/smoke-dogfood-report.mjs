@@ -169,8 +169,8 @@ try {
   assert(stdout.includes("Нерабочее учтено: 30:00"), "report did not include exported non-work total");
   assert(stdout.includes("## По Work Item"), "report did not include work item totals");
   assert(stdout.includes("## По зонам активности"), "report did not include activity zone totals");
-  assert(stdout.includes("| 35:00 | 2 | Work |"), "report did not include Work zone total");
-  assert(stdout.includes("| 30:00 | 1 | Coordination |"), "report did not include Coordination zone total");
+  assert(stdout.includes("| 35:00 | 2 | Работа |"), "report did not include localized Work zone total");
+  assert(stdout.includes("| 30:00 | 1 | Координация |"), "report did not include localized Coordination zone total");
   assert(stdout.includes("## Заметки Work Item"), "report did not include Work Item Notes section");
   assert(
     stdout.includes("- Deep Work: Keep the implementation context here."),
@@ -183,8 +183,12 @@ try {
   );
   assert(stdout.includes("## События дня"), "report did not include Day Events section");
   assert(
-    stdout.includes("| Work | Deep Work | buffer before meeting felt expensive |"),
+    stdout.includes("| Работа | Deep Work | buffer before meeting felt expensive |"),
     "report did not include day event"
+  );
+  assert(
+    !stdout.includes("| 35:00 | 2 | Work |") && !stdout.includes("| 30:00 | 1 | Coordination |"),
+    "report leaked old English activity zone labels"
   );
   assert(stdout.includes("## Разрывы >= 20:00"), "report did not include significant gaps");
   assert(stdout.includes("### Цена входа"), "report did not include entry cost prompts");

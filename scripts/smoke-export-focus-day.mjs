@@ -72,8 +72,8 @@ try {
   );
   assert(stdout.includes("## By Work Item"), "export did not include By Work Item section");
   assert(stdout.includes("## By Activity Zone"), "export did not include By Activity Zone section");
-  assert(stdout.includes("| 45:00 | 3 | Work |"), "export did not aggregate Work zone");
-  assert(stdout.includes("| 30:00 | 1 | Coordination |"), "export did not aggregate Coordination zone");
+  assert(stdout.includes("| 45:00 | 3 | Работа |"), "export did not aggregate localized Work zone");
+  assert(stdout.includes("| 30:00 | 1 | Координация |"), "export did not aggregate localized Coordination zone");
   assert(stdout.includes("| 45:00 | 3 | Deep Work |"), "export did not aggregate Deep Work");
   assert(stdout.includes("| 30:00 | 1 | Meetings |"), "export did not aggregate Meetings");
   assert(stdout.includes("## Work Item Notes"), "export did not include Work Item Notes section");
@@ -88,11 +88,11 @@ try {
   );
   assert(stdout.includes("## Day Events"), "export did not include Day Events section");
   assert(
-    stdout.includes("| Work | Deep Work | buffer before meeting felt expensive |"),
+    stdout.includes("| Работа | Deep Work | buffer before meeting felt expensive |"),
     "export did not include focus-linked day event"
   );
   assert(
-    stdout.includes("| Recovery | day | recovery was not enough |"),
+    stdout.includes("| Восстановление | day | recovery was not enough |"),
     "export did not include day-level recovery event"
   );
   assert(stdout.includes("## Gaps >= 20:00"), "export did not include significant gaps section");
@@ -130,7 +130,7 @@ try {
   assert(activeStdout.includes("Non-work tracked: 30:00"), "active export did not include running non-work total");
   assert(activeStdout.includes("Entrances: 5"), "active export did not include running entrance count");
   assert(activeStdout.includes("Active Draft Work"), "active export did not include active work item");
-  assert(activeStdout.includes("-now | 15:00 | Work | Active Draft Work"), "active export did not show active block ending at now");
+  assert(activeStdout.includes("-now | 15:00 | Работа | Active Draft Work"), "active export did not show active block ending at now");
   assert(!activeStdout.includes("## Open Gap"), "active export showed open gap while latest block is active");
 
   const legacyDbPath = join(tempDir, "legacy.db");
@@ -171,7 +171,7 @@ try {
   );
   assert(legacyStdout.includes("Total tracked: 30:00"), "legacy export did not include expected total");
   assert(legacyStdout.includes("Work focus: 30:00"), "legacy export did not fall back to Work focus");
-  assert(legacyStdout.includes("| 30:00 | 1 | Work |"), "legacy export did not include fallback Work zone total");
+  assert(legacyStdout.includes("| 30:00 | 1 | Работа |"), "legacy export did not include fallback Work zone total");
 
   console.log(
     JSON.stringify(

@@ -20,6 +20,7 @@ import {
   shouldSummarizeReadyReviewItems,
   type DayClosureStage,
 } from '../utils/dayClosure'
+import { formatActivityZoneBadge } from '../utils/workItemLabels'
 import CaptureInbox from './CaptureInbox'
 import FocusCorrectionDialog from './FocusCorrectionDialog'
 import MissedFocusBlockDialog from './MissedFocusBlockDialog'
@@ -1148,7 +1149,7 @@ async function buildDogfoodReportMarkdown(
 }
 
 export function formatFocusMarkdownForReport(markdown: string) {
-  return markdown
+  return localizeActivityZoneCells(markdown)
     .replace(/^# Timeskein focus day - (.+)$/m, '# Фокус-день Timeskein — $1')
     .replace(/^Total tracked:/gm, 'Всего учтено:')
     .replace(/^Work focus:/gm, 'Рабочий фокус:')
@@ -1169,6 +1170,49 @@ export function formatFocusMarkdownForReport(markdown: string) {
     .replace(/^## Gaps >=/gm, '## Разрывы >=')
     .replace(/^## Open Gap$/gm, '## Текущий открытый разрыв')
     .replace(/ since last stopped block$/gm, ' после последнего остановленного блока')
+}
+
+function localizeActivityZoneCells(markdown: string) {
+  const englishZoneLabels: Record<string, string> = {
+    Work: formatActivityZoneBadge('work'),
+    Coordination: formatActivityZoneBadge('coordination'),
+    Recovery: formatActivityZoneBadge('recovery'),
+    Idle: formatActivityZoneBadge('idle'),
+    Personal: formatActivityZoneBadge('personal'),
+  }
+  let zoneColumnIndex: number | null = null
+
+  return markdown
+    .split('\n')
+    .map((line) => {
+      if (!line.startsWith('|')) {
+        zoneColumnIndex = null
+        return line
+      }
+
+      const rawCells = line.split('|')
+      const cells = rawCells.slice(1, -1).map((cell) => cell.trim())
+      const headerZoneIndex = cells.findIndex((cell) => cell === 'Zone')
+      if (headerZoneIndex !== -1) {
+        zoneColumnIndex = headerZoneIndex
+        return line
+      }
+
+      if (zoneColumnIndex == null) {
+        return line
+      }
+
+      const rawCellIndex = zoneColumnIndex + 1
+      const current = rawCells[rawCellIndex]?.trim()
+      const label = current ? englishZoneLabels[current] : undefined
+      if (!label) {
+        return line
+      }
+
+      rawCells[rawCellIndex] = ` ${label} `
+      return rawCells.join('|')
+    })
+    .join('\n')
 }
 
 export function formatTelemetryForReport(markdown: string) {
@@ -2673,15 +2717,7 @@ function formatMarkdownListText(value: string) {
 }
 
 function formatActivityZoneLabel(zone: ActivityZone) {
-  const labels: Record<ActivityZone, string> = {
-    work: 'Work',
-    coordination: 'Coordination',
-    recovery: 'Recovery',
-    idle: 'Idle',
-    personal: 'Personal',
-  }
-
-  return labels[zone]
+  return formatActivityZoneBadge(zone)
 }
 
 function formatLocalDate(date: Date) {

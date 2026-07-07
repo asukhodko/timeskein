@@ -3,6 +3,7 @@ import type { FormEvent } from 'react'
 import type { ActivityZone } from '@timeskein/contracts'
 import { useCreateStoppedFocusSession } from '../hooks/useFocusSessions'
 import { logAppEvent } from '../api/client'
+import { formatActivityZoneBadge } from '../utils/workItemLabels'
 
 const activityZones: ActivityZone[] = ['work', 'coordination', 'recovery', 'idle', 'personal']
 
@@ -199,14 +200,7 @@ function fromLocalInputValue(value: string) {
 }
 
 function formatZoneLabel(zone: ActivityZone) {
-  const labels: Record<ActivityZone, string> = {
-    work: 'Work',
-    coordination: 'Coordination',
-    recovery: 'Recovery',
-    idle: 'Idle',
-    personal: 'Personal',
-  }
-  return labels[zone]
+  return formatActivityZoneBadge(zone)
 }
 
 function createTelemetryActionId() {

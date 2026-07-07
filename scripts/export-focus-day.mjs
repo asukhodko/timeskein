@@ -566,14 +566,14 @@ function formatMarkdownListText(value) {
 
 function formatActivityZoneLabel(zone) {
   const labels = {
-    work: "Work",
-    coordination: "Coordination",
-    recovery: "Recovery",
-    idle: "Idle",
-    personal: "Personal",
+    work: "Работа",
+    coordination: "Координация",
+    recovery: "Восстановление",
+    idle: "Простой",
+    personal: "Личное",
   };
 
-  return labels[zone] ?? "Work";
+  return labels[zone] ?? "Работа";
 }
 
 function formatDuration(totalSeconds) {

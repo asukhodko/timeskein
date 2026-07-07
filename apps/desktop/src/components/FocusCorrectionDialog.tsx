@@ -4,6 +4,7 @@ import type { ActivityZone, FocusSessionView } from '@timeskein/contracts'
 import { useSplitFocusSession, useUpdateFocusSession } from '../hooks/useFocusSessions'
 import { formatClockTime } from '../utils/formatTime'
 import { logAppEvent } from '../api/client'
+import { formatActivityZoneBadge } from '../utils/workItemLabels'
 
 const activityZones: ActivityZone[] = ['work', 'coordination', 'recovery', 'idle', 'personal']
 
@@ -291,14 +292,7 @@ function midpointIso(session: FocusSessionView) {
 }
 
 function formatZoneLabel(zone: ActivityZone) {
-  const labels: Record<ActivityZone, string> = {
-    work: 'Work',
-    coordination: 'Coordination',
-    recovery: 'Recovery',
-    idle: 'Idle',
-    personal: 'Personal',
-  }
-  return labels[zone]
+  return formatActivityZoneBadge(zone)
 }
 
 function createTelemetryActionId() {

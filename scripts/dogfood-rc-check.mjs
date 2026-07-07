@@ -447,7 +447,7 @@ function assessEvidence(evidence, minFocusSeconds) {
   }
 
   if (evidence.dayEvents.length > 0 && evidence.dayEventsWithZone === 0) {
-    reviewItems.push("События дня есть, но ни у одного нет зоны активности. Перед финальным вердиктом классифицируй buffer/recovery/idle/coordination/personal или подтверди, что это не нужно.");
+    reviewItems.push("События дня есть, но ни у одного нет зоны активности. Перед финальным вердиктом выбери зону: буфер, восстановление, простой, координация или личное; либо подтверди, что это не нужно.");
   }
 
   if (evidence.workItemEvents.length === 0 && evidence.sessions.length > 0) {
@@ -768,7 +768,7 @@ function formatGoalAuditMarkdown(evidence, assessment, minFocusSeconds) {
         : (evidence.activityZoneTotals.length > 1 && evidence.nonWorkSeconds > 0) || evidence.telemetry.activityZoneReviews > 0
           ? "pass"
           : "review",
-      evidence: `${evidence.activityZoneTotals.length} зон, ${formatDuration(evidence.workFocusSeconds)} work, ${formatDuration(evidence.nonWorkSeconds)} вне работы, ${evidence.telemetry.activityZoneReviews} проверок`,
+      evidence: `${evidence.activityZoneTotals.length} зон, ${formatDuration(evidence.workFocusSeconds)} работа, ${formatDuration(evidence.nonWorkSeconds)} вне работы, ${evidence.telemetry.activityZoneReviews} проверок`,
     },
     {
       requirement: "Day and Work Item context present",
@@ -1006,15 +1006,15 @@ function gapsBetweenSessions(sessionsOldestFirst) {
 function formatActivityZoneLabel(zone) {
   switch (zone) {
     case "work":
-      return "Work";
+      return "Работа";
     case "coordination":
-      return "Coordination";
+      return "Координация";
     case "recovery":
-      return "Recovery";
+      return "Восстановление";
     case "idle":
-      return "Idle";
+      return "Простой";
     case "personal":
-      return "Personal";
+      return "Личное";
     default:
       return zone;
   }

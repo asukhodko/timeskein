@@ -54,8 +54,12 @@ try {
   const missingEvidence = await runGoalCheck(["--check-saved-evidence-only", "--date", "2026-06-30"], tempDir);
   assert(missingEvidence.code !== 0, "missing saved evidence should fail");
   assert(
-    `${missingEvidence.stdout}${missingEvidence.stderr}`.includes("Saved dogfood evidence is missing for 2026-06-30"),
+    `${missingEvidence.stdout}${missingEvidence.stderr}`.includes("Не найдены сохранённые материалы dogfood-дня за 2026-06-30"),
     "missing saved evidence error is missing"
+  );
+  assert(
+    !`${missingEvidence.stdout}${missingEvidence.stderr}`.includes("Saved dogfood evidence is missing"),
+    "missing saved evidence error should not use the old English wording"
   );
 
   await writeFile(
@@ -81,7 +85,7 @@ try {
   const weakEvidence = await runGoalCheck(["--check-saved-evidence-only", "--date", "2026-06-30"], tempDir);
   assert(weakEvidence.code !== 0, "saved evidence without audit rows should fail");
   assert(
-    `${weakEvidence.stdout}${weakEvidence.stderr}`.includes("Daily Control Goal Audit does not include Финальное состояние чистое"),
+    `${weakEvidence.stdout}${weakEvidence.stderr}`.includes("нет строки аудита «Финальное состояние чистое»"),
     "weak saved evidence error did not mention missing audit rows"
   );
 
@@ -157,12 +161,12 @@ try {
   const reviewEvidence = await runGoalCheck(["--check-saved-evidence-only", "--date", "2026-06-30"], tempDir);
   assert(reviewEvidence.code !== 0, "saved evidence with review audit rows should fail before expensive gates");
   assert(
-    `${reviewEvidence.stdout}${reviewEvidence.stderr}`.includes("Daily Control Goal Audit row Day closure duration measured is not passing"),
+    `${reviewEvidence.stdout}${reviewEvidence.stderr}`.includes("строка аудита «Day closure duration measured» ещё не в статусе ok/pass"),
     "review saved evidence error did not mention the non-passing closure-duration row"
   );
   assert(
-    `${reviewEvidence.stdout}${reviewEvidence.stderr}`.includes("start from `Начать закрытие дня`") &&
-      `${reviewEvidence.stdout}${reviewEvidence.stderr}`.includes("copy the final report within 10 minutes"),
+    `${reviewEvidence.stdout}${reviewEvidence.stderr}`.includes("нажми `Начать закрытие дня`") &&
+      `${reviewEvidence.stdout}${reviewEvidence.stderr}`.includes("скопируй финальный отчёт за 10 минут или меньше"),
     "review saved evidence error did not explain how to create measured closure evidence"
   );
 
@@ -189,7 +193,7 @@ try {
   const savedEvidence = await runGoalCheck(["--check-saved-evidence-only", "--date", "2026-06-30"], tempDir);
   assert(savedEvidence.code === 0, "saved evidence check should pass with both evidence files");
   assert(
-    savedEvidence.stdout.includes("Saved dogfood evidence found for 2026-06-30."),
+    savedEvidence.stdout.includes("Сохранённые материалы dogfood-дня за 2026-06-30 найдены."),
     "saved evidence success message is missing"
   );
 

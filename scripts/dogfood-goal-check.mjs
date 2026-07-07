@@ -37,7 +37,7 @@ const steps = [
 
 if (options.checkSavedEvidenceOnly) {
   await checkSavedEvidence(date);
-  console.log(`Saved dogfood evidence found for ${date}.`);
+  console.log(`Сохранённые материалы dogfood-дня за ${date} найдены.`);
   process.exit(0);
 }
 
@@ -125,10 +125,10 @@ async function checkSavedEvidence(date) {
   if (missing.length > 0) {
     throw new Error(
       [
-        `Saved dogfood evidence is missing for ${date}:`,
+        `Не найдены сохранённые материалы dogfood-дня за ${date}:`,
         ...missing.map((item) => `- ${item}`),
         "",
-        `Run: pnpm dogfood:finish:save -- --date ${date}`,
+        `Сохрани вечерний отчёт и RC-аудит: pnpm dogfood:finish:save -- --date ${date}`,
       ].join("\n")
     );
   }
@@ -176,49 +176,49 @@ async function checkSavedEvidence(date) {
 
   for (const aliases of reportRequirements) {
     if (!includesAny(report, aliases)) {
-      weak.push(`${reportPath} does not include ${aliases[0]}`);
+      weak.push(`В ${reportPath} нет раздела «${aliases[0]}»`);
     }
   }
   for (const aliases of rcRequirements) {
     if (!includesAny(rcCheck, aliases)) {
-      weak.push(`${rcPath} does not include ${aliases[0]}`);
+      weak.push(`В ${rcPath} нет раздела «${aliases[0]}»`);
     }
   }
   for (const aliases of reportDailyControlRows) {
     if (!includesAny(report, aliases)) {
-      weak.push(`${reportPath} Daily Control Goal Audit does not include ${aliases[0]}`);
+      weak.push(`В ${reportPath} нет строки аудита «${aliases[0]}»`);
     } else if (!isPassingAuditStatus(findAuditRowStatus(report, aliases))) {
-      notPassing.push(`${reportPath} Daily Control Goal Audit row ${aliases[0]} is not passing`);
+      notPassing.push(`В ${reportPath} строка аудита «${aliases[0]}» ещё не в статусе ok/pass`);
     }
   }
   for (const aliases of rcDailyControlRows) {
     if (!includesAny(rcCheck, aliases)) {
-      weak.push(`${rcPath} Daily Control Goal Audit does not include ${aliases[0]}`);
+      weak.push(`В ${rcPath} нет строки аудита «${aliases[0]}»`);
     } else if (!isPassingAuditStatus(findAuditRowStatus(rcCheck, aliases))) {
-      notPassing.push(`${rcPath} Daily Control Goal Audit row ${aliases[0]} is not passing`);
+      notPassing.push(`В ${rcPath} строка аудита «${aliases[0]}» ещё не в статусе ok/pass`);
     }
   }
   for (const aliases of rcOnlyDailyControlRows) {
     if (!includesAny(rcCheck, aliases)) {
-      weak.push(`${rcPath} Daily Control Goal Audit does not include ${aliases[0]}`);
+      weak.push(`В ${rcPath} нет строки аудита «${aliases[0]}»`);
     }
     if (includesAny(report, aliases)) {
-      weak.push(`${reportPath} Daily Control Goal Audit should leave ${aliases[0]} to the RC/goal-check layer`);
+      weak.push(`В ${reportPath} строка «${aliases[0]}» должна оставаться на уровне RC/goal-check, а не в дневном отчёте`);
     }
   }
 
   if (weak.length > 0 || notPassing.length > 0) {
     throw new Error(
       [
-        `Saved dogfood evidence is incomplete for ${date}:`,
+        `Сохранённые материалы dogfood-дня за ${date} неполные:`,
         ...weak.map((item) => `- ${item}`),
         ...notPassing.map((item) => `- ${item}`),
         "",
-        ...(weak.length > 0 ? [`Regenerate stale or incomplete files with: pnpm dogfood:finish:save -- --date ${date}`] : []),
+        ...(weak.length > 0 ? [`Пересобери устаревшие или неполные файлы: pnpm dogfood:finish:save -- --date ${date}`] : []),
         ...(notPassing.length > 0
           ? [
-              "Resolve the listed review rows before rerunning the final gate.",
-              `For day-closure duration: start from \`Начать закрытие дня\`, copy the final report within 10 minutes, then save evidence with \`pnpm dogfood:finish:save -- --date ${date}\`.`,
+              "Закрой перечисленные строки аудита перед повторным финальным gate.",
+              `Для измерения закрытия дня: нажми \`Начать закрытие дня\`, скопируй финальный отчёт за 10 минут или меньше, затем сохрани evidence через \`pnpm dogfood:finish:save -- --date ${date}\`.`,
             ]
           : []),
       ].join("\n")

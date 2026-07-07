@@ -17,6 +17,7 @@ import {
   isBulkAcceptableReviewAction,
   isDayClosureReadyForFinalReport,
   isFinalDayClosureReport,
+  shouldCompactAcceptAsIsReviewItems,
   shouldSummarizeReadyReviewItems,
   type DayClosureStage,
 } from '../utils/dayClosure'
@@ -1502,6 +1503,7 @@ function DayReviewPanel({
   const acceptReviews = reviews.filter((item) => isBulkAcceptableReviewAction(item.action))
   const readyItems = items.filter((item) => item.level === 'ok')
   const bulkAcceptReviewActions = getBulkAcceptableReviewActions(items) as DayReviewAction[]
+  const compactAcceptReviews = shouldCompactAcceptAsIsReviewItems(items)
   const summarizedReadyItems = shouldSummarizeReadyReviewItems({
     blockerCount: blockers.length,
     reviewCount: reviews.length,
@@ -1540,7 +1542,7 @@ function DayReviewPanel({
               закрытие {formatDuration(closureElapsedSeconds)}
             </span>
           )}
-          {bulkAcceptReviewActions.length > 0 && onAction && (
+          {bulkAcceptReviewActions.length > 0 && !compactAcceptReviews && onAction && (
             <button
               type="button"
               onClick={() => {
@@ -1578,7 +1580,10 @@ function DayReviewPanel({
       {actionReviews.length > 0 && (
         <DayReviewGroup title="Дописать или исправить" items={actionReviews} onAction={onAction} />
       )}
-      {acceptReviews.length > 0 && (
+      {acceptReviews.length > 0 && compactAcceptReviews && (
+        <CompactAcceptReviewGroup items={acceptReviews} onAcceptAll={acceptAllReviews} canAccept={Boolean(onAction)} />
+      )}
+      {acceptReviews.length > 0 && !compactAcceptReviews && (
         <DayReviewGroup title="Осознанно проверить" items={acceptReviews} onAction={onAction} />
       )}
       {summarizedReadyItems && (
@@ -1589,6 +1594,42 @@ function DayReviewPanel({
       {!summarizedReadyItems && readyItems.length > 0 && blockers.length === 0 && reviews.length === 0 && (
         <DayReviewGroup title="Готово" items={readyItems} onAction={onAction} />
       )}
+    </div>
+  )
+}
+
+function CompactAcceptReviewGroup({
+  items,
+  onAcceptAll,
+  canAccept,
+}: {
+  items: DayReviewItem[]
+  onAcceptAll: () => Promise<void>
+  canAccept: boolean
+}) {
+  const labels = items.map((item) => formatDayReviewItem(item).title)
+
+  return (
+    <div className="rounded border border-amber-900/60 bg-amber-950/10 px-2 py-1 text-[11px] text-amber-100">
+      <div className="flex items-center justify-between gap-2">
+        <span>
+          <span className="font-medium">Осознанно проверить:</span>{' '}
+          осталось {items.length} {pluralRu(items.length, 'пункт', 'пункта', 'пунктов')}. Если данные уже честные, закрой их одним действием.
+        </span>
+        <button
+          type="button"
+          onClick={() => {
+            void onAcceptAll()
+          }}
+          disabled={!canAccept}
+          className="shrink-0 rounded border border-amber-800 px-1.5 py-0.5 text-[11px] font-medium text-amber-100 hover:border-amber-500 disabled:cursor-not-allowed disabled:border-gray-800 disabled:text-gray-500"
+        >
+          Всё проверено
+        </button>
+      </div>
+      <div className="mt-1 truncate text-gray-500">
+        Пункты: {labels.join(' · ')}
+      </div>
     </div>
   )
 }

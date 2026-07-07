@@ -17,35 +17,35 @@ pnpm dogfood:start:clean:preview
 pnpm dogfood:start:clean
 ```
 
-During the day:
+В течение дня:
 
-- start a block by typing a Work Item title and pressing `Enter`;
-- switch by typing the next title into `Переключиться на...` and pressing `Enter`;
-- capture incoming distractions in `Зафиксировать отвлечение...` without stopping the current block;
-- add day-level review notes in `Добавить событие дня...` when the observation is about the day, a gap, a buffer, or recovery rather than one Work Item;
-- stop with optional note by pressing `Enter` in the stop-note field;
-- watch the short `12m Focus` counter in the macOS menu bar while a block is running;
-- hide/show the app from the menu bar item, the registered global shortcut
-  (`Ctrl+Shift+Space`, запасной `Ctrl+Option+Space` или `Cmd+Option+Space`),
-  or `Esc` when no dialog is open.
+- начни блок: введи название дела и нажми `Enter`;
+- переключись: введи следующее дело в `Переключиться на...` и нажми `Enter`;
+- фиксируй входящие отвлечения в `Зафиксировать отвлечение...`, не останавливая текущий блок;
+- добавляй заметки уровня дня в `Добавить событие дня...`, если наблюдение относится ко дню, разрыву, буферу или восстановлению, а не к одному конкретному делу;
+- останавливай блок с короткой заметкой через `Enter` в поле stop-note;
+- смотри короткий счётчик `12m Focus` в строке меню macOS, пока блок идёт;
+- скрывай и показывай приложение через значок в строке меню, global shortcut
+  (`Ctrl+Shift+Space`, запасной `Ctrl+Option+Space` или `Cmd+Option+Space`)
+  или `Esc`, если не открыт диалог.
 
-End of day:
+В конце дня:
 
-- start the evening closure from `Проверка перед отчётом` by clicking `Начать закрытие дня`;
-- use the panel hint as the source of truth for the next step: close red blockers, then either handle or accept yellow checks, then copy the final report;
-- clear hard blockers first: stop active focus, clear stuck active Work Items, and resolve required review actions;
-- use `Объяснить` on gap review items when the right action is to add a Day Event explanation;
-- consciously mark optional review items that are intentionally left as-is: `Зоны верны`, `Инбокс проверен`, `Пути проверены`, `Окно проверено`, `Бейджи верны`, `Трекинг верен`, or `Оставить открытыми`;
-- use `Всё проверено` only when all remaining yellow checks are intentionally accepted as-is; Timeskein shows this shortcut only for purely optional review items;
-- click `Копировать отчёт` in Today and paste the dogfood report into the day note;
-- if the button says `Копировать черновик`, stop the active focus block or clear the active Work Item before treating the report as final; draft copy can start the closure timer, but only a final report completes it;
-- if the button says `Копировать с проверками`, finish or consciously accept the remaining review items before treating the report as closed;
-- use `Копировать день` when only the raw day picture is needed;
-- if clipboard access is unavailable, copy the selected Markdown from the reserve text box;
-- if you want saved Markdown evidence, run `pnpm dogfood:finish:save`; it writes both the day report and the RC check;
-- if UI copy fails, run `pnpm dogfood:finish > timeskein-dogfood-report.md`;
-- if only the raw day picture is needed, run `pnpm export:focus-day > timeskein-day.md`.
-- if Timeskein itself felt awkward, run `pnpm dogfood:metrics` and `pnpm export:app-events` to inspect the local app-event telemetry.
+- начни вечернее закрытие из `Проверка перед отчётом`, нажав `Начать закрытие дня`;
+- считай подсказку панели источником правды для следующего шага: сначала красные блокеры, затем жёлтые проверки, затем финальный отчёт;
+- сначала закрой жёсткие блокеры: останови активный фокус, сними зависший активный статус с дела и выполни обязательные review-действия;
+- используй `Объяснить` на пунктах про разрывы, если нужно добавить объясняющее событие дня;
+- осознанно принимай optional-проверки, которые намеренно остаются как есть: `Зоны верны`, `Инбокс проверен`, `Пути проверены`, `Окно проверено`, `Бейджи верны`, `Трекинг верен` или `Оставить открытыми`;
+- используй `Всё проверено` только когда все оставшиеся жёлтые пункты действительно можно принять как есть; Timeskein показывает этот shortcut только для безопасных optional-проверок;
+- нажми `Копировать отчёт` в Today и вставь dogfood-отчёт в дневную заметку;
+- если кнопка говорит `Копировать черновик`, сначала останови активный фокус-блок или сними активный статус с дела; черновик может начать замер закрытия, но завершает его только финальный отчёт;
+- если кнопка говорит `Копировать с проверками`, обработай или осознанно прими оставшиеся review-пункты;
+- используй `Копировать день`, когда нужна только сырая картина дня;
+- если clipboard недоступен, скопируй выделенный Markdown из резервного поля;
+- если нужен сохранённый Markdown-след, выполни `pnpm dogfood:finish:save`; команда сохранит дневной отчёт и RC-check;
+- если UI copy не сработал, выполни `pnpm dogfood:finish > timeskein-dogfood-report.md`;
+- если нужна только сырая картина дня, выполни `pnpm export:focus-day > timeskein-day.md`;
+- если Timeskein сам создавал трение, выполни `pnpm dogfood:metrics` и `pnpm export:app-events`, чтобы посмотреть локальную техническую телеметрию.
 
 The active daily-control goal requires the measured closure duration to be at most
 10 minutes. `Копировать отчёт`, `pnpm dogfood:finish:save`, `pnpm dogfood:rc-check`,
@@ -57,14 +57,14 @@ Saved dogfood reports and RC checks can contain personal or internal work contex
 
 Timeskein is ready for regular use when it can capture a workday without side tracking:
 
-- what focus blocks happened;
-- which Work Item each block belonged to;
-- which Work Item descriptions were relevant to the day;
-- which timestamped day-level observations were recorded;
-- which timestamped Work Item observations were recorded during the day;
-- how long each block lasted;
-- where the meaningful gaps were;
-- how much active focus time the day contained.
+- какие фокус-блоки были в течение дня;
+- к каким делам они относились;
+- какие описания дел были важны для дневного контекста;
+- какие timestamped-события дня были записаны;
+- какие timestamped-события дел были записаны;
+- сколько длился каждый блок;
+- где были значимые разрывы;
+- сколько активного фокус-времени было в дне.
 
 ## Before the Day
 
@@ -226,7 +226,7 @@ Current status: the macOS dogfood release baseline was accepted on 2026-07-03. T
 | Post-factum correction | `cargo test -p timeskein-agent`, `pnpm smoke:corrections-api`, and `pnpm smoke:macos-app` verify missed-block creation, update, split, reassignment, Work Item edit, and corrected day-list data | Wrong or missing Work Item intervals can be fixed before copying the final report |
 | Significant gaps | UI and Markdown show gap ranges of 20+ minutes | Long breaks and lost intervals are visible enough |
 | Capture Inbox | `pnpm smoke:capture-api`, `pnpm smoke:mock-api`, and `pnpm smoke:macos-app` verify capture create/list/update/delete/resolve/convert/append-event without interrupting focus | Incoming events can be remembered and cleaned up without switching away from the current block |
-| Markdown export | `Копировать отчёт` exports timeline, `По Work Item`, zone totals, `События дня`, `События Work Item`, gaps, interruption history, open captures, review checklist, app telemetry, and review prompts; `Копировать день` exports the raw day picture; failed clipboard writes show selected Markdown; `pnpm smoke:export-focus-day` and `pnpm smoke:dogfood-report` verify SQLite fallbacks | Copied note is enough for evening analysis |
+| Markdown export | `Копировать отчёт` exports timeline, `По делам`, zone totals, `События дня`, `События дел`, gaps, interruption history, open captures, review checklist, app telemetry, and review prompts; `Копировать день` exports the raw day picture; failed clipboard writes show selected Markdown; `pnpm smoke:export-focus-day` and `pnpm smoke:dogfood-report` verify SQLite fallbacks | Copied note is enough for evening analysis |
 | App friction telemetry | `app_events` stores local technical events, `pnpm smoke:app-events` verifies metrics/export, and `pnpm dogfood:report` includes `Телеметрия приложения` with both window show and hide request counts | Start/switch/stop/copy/API/window friction is visible without relying only on memory |
 | Evening closure duration | `day_closure_started` and `day_closure_completed` telemetry is included in UI/CLI reports, RC check, and final goal check | Closing the day takes at most 10 minutes and does not require Codex to interpret the review panel |
 | macOS app with embedded agent and SQLite | `pnpm smoke:macos-app` verifies app launch, SQLite health, focus flow, stale lock/port recovery, and active focus restore after app restart | The real app survives normal workday use |
@@ -327,7 +327,7 @@ Expected behavior:
 - `Править` cleans up the text while it is still open;
 - `Удалить` removes an open capture that is just noise;
 - `В дело` converts it into a Work Item for later handling;
-- `В событие` saves it as a timestamped Work Item event when it is context for the current or selected Work Item.
+- `В событие` сохраняет его как timestamped-событие дела, если это контекст текущего или выбранного дела.
 
 Stop a focus block when the contact with the work stops:
 
@@ -341,8 +341,8 @@ Use stop notes for facts, not narration:
 - `lost context after meeting`;
 - `done enough for today`.
 
-Do not use Work Item state as a separate timer. In the current model, `active` means "this item is being timed now".
-Creating a Work Item from the `+` dialog does not start a timer unless `Active` is explicitly selected.
+Не используй статус дела как отдельный таймер. В текущей модели `active` означает: "по этому делу прямо сейчас идёт таймер".
+Создание дела через диалог `+` не запускает таймер, если явно не выбран `Active`.
 
 ## Evening Review
 
@@ -359,9 +359,9 @@ If Today or the report shows `Открытый разрыв`, there was a signif
 If the report shows `Открытые отвлечения`, edit, delete, resolve, convert, or explicitly leave them open before considering the day fully reviewed.
 If Today or the report shows `Проверка перед отчётом`, use it as the minimal evening queue: active-state blockers under `Сначала закрыть` must be cleared, `Дописать или исправить` items should produce a small artifact, and `Осознанно проверить` items can be accepted when the data is already honest enough.
 Use `Ближайшее действие` as the current step. It appears in the panel, copied Markdown, and CLI dogfood report, so a draft report can still guide the next action without reconstructing the whole checklist from memory.
-The checklist also flags weak day evidence, such as all blocks landing in one Activity Zone, zero non-work tracked time, no Work Item notes/events for context, or no focus correction evidence. If the timeline is already accurate, use `Трекинг верен` on the tracking-accuracy review item so the report records that the correction pass was consciously done. If the day lacks context notes, use `Добавить контекст` to stage a short Day Event instead of reconstructing the whole day by memory later.
-When every remaining yellow item is an optional accept-as-is check, Timeskein shows `Всё проверено`. Use it only after a quick conscious pass; it never appears for gap items that need `Объяснить`, context items that need `Добавить контекст`, or review items without a safe automatic action.
-If a focus block is still active, a Work Item is still marked active, or review checks remain open, the UI labels the report as a draft or `Копировать с проверками`, and the Markdown status says `черновик`. Stop the active block, clear the active Work Item, or finish/accept the remaining review checks before using the report as the final day artifact.
+Проверка также подсвечивает слабые доказательства дня: все блоки попали в одну Activity Zone, нет non-work времени, нет заметок/событий дел для контекста или нет следа проверки коррекций. Если таймлайн уже точный, используй `Трекинг верен`, чтобы в отчёте осталось доказательство осознанной проверки. Если дню не хватает контекста, используй `Добавить контекст`, чтобы подготовить короткое событие дня вместо поздней реконструкции по памяти.
+Когда все оставшиеся жёлтые пункты — optional accept-as-is проверки, Timeskein показывает `Всё проверено`. Используй это только после короткой осознанной проверки; shortcut не появляется для разрывов, где нужно `Объяснить`, контекстных пунктов, где нужно `Добавить контекст`, или проверок без безопасного автоматического действия.
+Если фокус-блок ещё идёт, у дела всё ещё стоит `active`, или review-проверки не закрыты, UI покажет `Копировать черновик` или `Копировать с проверками`, а Markdown-статус будет `черновик`. Останови активный блок, сними активный статус с дела или обработай/прими оставшиеся проверки перед тем, как считать отчёт финальным артефактом дня.
 If clipboard access is denied, Timeskein shows a selected text box with the Markdown. Copy it manually from there.
 
 If the UI copy path is unavailable, export the same raw day picture from SQLite:
@@ -384,8 +384,8 @@ pnpm dogfood:finish > timeskein-dogfood-report.md
 ```
 
 `dogfood:finish` refuses to produce a final report while a focus block or Work Item is still active, or when there are no focus blocks for the selected date.
-The focus-day report includes a `Заметки Work Item` section for touched Work Items that have a non-empty note. This is for current Work Item context. Use timestamped Work Item Events for observations tied to a concrete moment in the day; those appear separately in `События Work Item`. If a timestamped event was written with a typo or in the wrong form, edit or delete it from the Work Item Events panel before copying the final report.
-Use `Добавить событие дня...` for observations that explain the day but do not belong to one Work Item: buffer before a heavy meeting, recovery debt, tracking correction reminders, or why a gap happened. Choose a zone explicitly when the observation is really about `coordination`, `recovery`, `idle`, or `personal`; otherwise Timeskein uses the current focus or selected Work Item context. Significant gaps and the current open gap have a `Записать` shortcut that prepares a Day Event with the gap range, duration, and `Восстановление` as the initial zone. These notes appear in `События дня` and can be edited, re-zoned, or deleted before copying the final report.
+Дневной отчёт включает раздел `Заметки дел` для затронутых дел с непустой заметкой. Это текущий контекст дела. Для наблюдений, привязанных к конкретному моменту дня, используй timestamped-события дел; они попадают в отдельный раздел `События дел`. Если событие записано с ошибкой или не в той форме, исправь или удали его в панели `События дел` перед копированием финального отчёта.
+Используй `Добавить событие дня...` для наблюдений, которые объясняют день, но не принадлежат одному делу: буфер перед тяжёлой встречей, recovery debt, напоминание о коррекции трекинга или причина разрыва. Выбирай зону явно, если наблюдение относится к `coordination`, `recovery`, `idle` или `personal`; иначе Timeskein использует контекст текущего фокуса или выбранного дела. У значимых разрывов и текущего открытого разрыва есть shortcut `Записать`, который готовит событие дня с интервалом, длительностью и `Восстановление` как начальной зоной. Эти заметки попадают в `События дня`, их можно редактировать, менять им зону или удалять перед копированием финального отчёта.
 The dogfood report also includes `История отвлечений` for every capture created during the selected day, including captures that were already resolved or converted. `Открытые отвлечения` remains a separate action list for unresolved inbox entries.
 For the release-candidate verdict, inspect whether `История отвлечений` rows were created during a real focus block. A capture made after stopping all work proves the inbox can store text, but it does not prove interruption handling during focus.
 
@@ -438,7 +438,7 @@ pnpm dogfood:goal-check -- --date 2026-06-30
 The dogfood report includes the focus-day export and prompts for:
 
 - Is every real focus block represented?
-- Does `По Work Item` match where the day actually went?
+- Does `По делам` match where the day actually went?
 - Are the Work Item titles understandable the next day?
 - Are there duplicate Work Items that should have been reused?
 - Are long gaps visible and plausible?

@@ -7,6 +7,7 @@ import {
   isBulkAcceptableReviewAction,
   isDayClosureReadyForFinalReport,
   isFinalDayClosureReport,
+  shouldCompactAcceptAsIsReviewItems,
   shouldSummarizeReadyReviewItems,
 } from '../apps/desktop/src/utils/dayClosure'
 
@@ -138,4 +139,35 @@ test('bulk accept is only available for purely optional review checks', () => {
   assert.equal(isBulkAcceptableReviewAction('accept_activity_zones'), true)
   assert.equal(isBulkAcceptableReviewAction('stage_significant_gap'), false)
   assert.equal(isBulkAcceptableReviewAction('stage_day_context'), false)
+})
+
+test('pure accept-as-is review groups can be collapsed into one calm action', () => {
+  assert.equal(
+    shouldCompactAcceptAsIsReviewItems([
+      { level: 'review', action: 'accept_activity_zones' },
+      { level: 'review', action: 'accept_entry_paths' },
+    ]),
+    true
+  )
+  assert.equal(
+    shouldCompactAcceptAsIsReviewItems([
+      { level: 'review', action: 'accept_activity_zones' },
+      { level: 'review', action: 'stage_significant_gap' },
+    ]),
+    false
+  )
+  assert.equal(
+    shouldCompactAcceptAsIsReviewItems([
+      { level: 'blocker' },
+      { level: 'review', action: 'accept_activity_zones' },
+      { level: 'review', action: 'accept_entry_paths' },
+    ]),
+    false
+  )
+  assert.equal(
+    shouldCompactAcceptAsIsReviewItems([
+      { level: 'review', action: 'accept_activity_zones' },
+    ]),
+    false
+  )
 })

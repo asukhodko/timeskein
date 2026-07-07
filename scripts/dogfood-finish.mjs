@@ -59,12 +59,13 @@ if (outputPath) {
   if (options.save) {
     await saveRcCheck(dateArg, dbPath);
   }
+  const reportState = findReportState(stdout);
   const closureStatus = findAuditRowStatus(stdout, ["Длительность закрытия измерена", "Day closure duration measured"]);
   const pendingAuditRows = findPendingAuditRows(stdout);
   if (closureStatus && !isPassingAuditStatus(closureStatus)) {
-    process.stdout.write(buildMeasuredClosureWarning(dateArg));
-  } else if (pendingAuditRows.length > 0) {
-    process.stdout.write(buildPendingReviewWarning(dateArg, pendingAuditRows));
+    process.stdout.write(buildMeasuredClosureWarning(dateArg, reportState));
+  } else if (pendingAuditRows.length > 0 || (reportState && !isFinalReportState(reportState))) {
+    process.stdout.write(buildPendingReviewWarning(dateArg, pendingAuditRows, reportState));
   } else if (options.save && process.exitCode == null) {
     process.stdout.write(buildGoalCheckNextStep(dateArg));
   }
@@ -236,19 +237,20 @@ function buildNotReadyReport(date, path, items) {
   return `${lines.join("\n")}\n`;
 }
 
-function buildMeasuredClosureWarning(date) {
+function buildMeasuredClosureWarning(date, reportState) {
   return [
     "",
     "## Внимание",
     "",
     "- Отчёт сохранён, но цель закрытия дня ещё не доказана: длительность закрытия не измерена или больше 10 минут.",
+    ...formatReportStateWarning(reportState),
     "- Начни закрытие в Timeskein кнопкой `Начать закрытие дня`, дойди до финального `Копировать отчёт` за 10 минут или меньше.",
     `- Затем повтори: \`pnpm dogfood:finish:save -- --date ${date}\`.`,
     "",
   ].join("\n");
 }
 
-function buildPendingReviewWarning(date, rows) {
+function buildPendingReviewWarning(date, rows, reportState) {
   const visibleRows = rows.slice(0, 5).map((row) => `- ${row.requirement}: ${row.status}`);
   if (rows.length > visibleRows.length) {
     visibleRows.push(`- Ещё строк: ${rows.length - visibleRows.length}`);
@@ -259,11 +261,20 @@ function buildPendingReviewWarning(date, rows) {
     "## Внимание",
     "",
     "- Отчёт сохранён, но аудит закрытия дня ещё не весь в статусе `ок`.",
+    ...formatReportStateWarning(reportState),
     ...visibleRows,
     "- Вернись к `Проверка перед отчётом`: сначала закрой «Дописать или исправить», затем осознанно прими спорные проверки.",
     `- Затем повтори: \`pnpm dogfood:finish:save -- --date ${date}\`.`,
     "",
   ].join("\n");
+}
+
+function formatReportStateWarning(reportState) {
+  if (!reportState || isFinalReportState(reportState)) {
+    return [];
+  }
+
+  return [`- Статус сохранённого отчёта: \`${reportState}\`.`];
 }
 
 function buildGoalCheckNextStep(date) {
@@ -330,8 +341,21 @@ function extractSection(text, headings) {
   return undefined;
 }
 
+function findReportState(text) {
+  for (const line of text.split("\n")) {
+    const match = line.match(/^Статус отчёта:\s*(.+)$/);
+    if (match) return match[1].trim();
+  }
+
+  return undefined;
+}
+
 function isPassingAuditStatus(status) {
   return status === "pass" || status === "ок";
+}
+
+function isFinalReportState(state) {
+  return state.toLowerCase().startsWith("финальный");
 }
 
 function startOfLocalDay(date) {

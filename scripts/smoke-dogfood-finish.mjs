@@ -92,8 +92,10 @@ try {
     cleanSavedDefault.stdout.includes("## Внимание") &&
       cleanSavedDefault.stdout.includes("цель закрытия дня ещё не доказана") &&
       cleanSavedDefault.stdout.includes("длительность закрытия не измерена или больше 10 минут") &&
+      cleanSavedDefault.stdout.includes("Статус сохранённого отчёта:") &&
+      cleanSavedDefault.stdout.includes("черновик") &&
       cleanSavedDefault.stdout.includes("pnpm dogfood:finish:save -- --date 2026-06-30"),
-    "finish --save did not warn about missing measured closure"
+    "finish --save did not warn about missing measured closure and saved draft report state"
   );
   const defaultReportMarkdown = await readFile(defaultReportPath, "utf8");
   const defaultRcMarkdown = await readFile(defaultRcPath, "utf8");
@@ -116,8 +118,10 @@ try {
   assert(measuredPendingDefault.code === 0, "measured day with pending review should save default report and RC check");
   assert(
     measuredPendingDefault.stdout.includes("аудит закрытия дня ещё не весь в статусе `ок`") &&
+      measuredPendingDefault.stdout.includes("Статус сохранённого отчёта:") &&
+      measuredPendingDefault.stdout.includes("черновик") &&
       measuredPendingDefault.stdout.includes("pnpm dogfood:finish:save -- --date 2026-06-30"),
-    "finish --save did not warn about pending daily-control audit rows"
+    "finish --save did not warn about pending daily-control audit rows and saved draft report state"
   );
   assert(
     !measuredPendingDefault.stdout.includes("pnpm dogfood:goal-check"),
@@ -164,6 +168,10 @@ try {
   assert(
     !measuredSavedDefault.stdout.includes("цель закрытия дня ещё не доказана"),
     "finish --save should not warn about missing measured closure after closure telemetry exists"
+  );
+  assert(
+    !measuredSavedDefault.stdout.includes("Статус сохранённого отчёта:"),
+    "finish --save should not print draft report status after final measured closure"
   );
 
   const activeDb = join(tempDir, "active.db");

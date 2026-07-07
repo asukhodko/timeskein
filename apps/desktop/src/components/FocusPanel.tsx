@@ -1140,7 +1140,7 @@ async function buildDogfoodReportMarkdown(
   return `${lines.join('\n')}\n`
 }
 
-function formatFocusMarkdownForReport(markdown: string) {
+export function formatFocusMarkdownForReport(markdown: string) {
   return markdown
     .replace(/^# Timeskein focus day - (.+)$/m, '# Фокус-день Timeskein — $1')
     .replace(/^Total tracked:/gm, 'Всего учтено:')
@@ -1164,7 +1164,7 @@ function formatFocusMarkdownForReport(markdown: string) {
     .replace(/ since last stopped block$/gm, ' после последнего остановленного блока')
 }
 
-function formatTelemetryForReport(markdown: string) {
+export function formatTelemetryForReport(markdown: string) {
   return markdown
     .replace(/^## App Telemetry$/m, '## Телеметрия приложения')
     .replace(/^Total events:/gm, 'Всего событий:')
@@ -1205,7 +1205,7 @@ type Gap = {
   seconds: number
 }
 
-type DayReviewItem = {
+export type DayReviewItem = {
   level: 'blocker' | 'review' | 'ok'
   title: string
   detail?: string
@@ -1617,7 +1617,7 @@ function reviewItemDotClass(level: DayReviewItem['level']) {
   return `mt-1.5 h-1.5 w-1.5 rounded-full ${color}`
 }
 
-function formatDayReviewItem(item: DayReviewItem) {
+export function formatDayReviewItem(item: DayReviewItem) {
   return {
     title: REVIEW_TITLE_LABELS[item.title] ?? item.title,
     detail: item.detail,
@@ -1673,7 +1673,7 @@ function pluralRu(value: number, one: string, few: string, many: string) {
   return many
 }
 
-function formatReviewChecklistMarkdown(items: DayReviewItem[]) {
+export function formatReviewChecklistMarkdown(items: DayReviewItem[]) {
   const lines = ['## Проверка перед отчётом', '']
   for (const item of items) {
     const marker = item.level === 'ok' ? '[x]' : '[ ]'

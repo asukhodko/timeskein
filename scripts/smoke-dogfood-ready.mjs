@@ -52,6 +52,11 @@ try {
     "ready output did not include measured day-closure reminder"
   );
   assert(
+    ready.stdout.includes("заполни только `Короткое закрытие`") &&
+      ready.stdout.includes("строку про 10 минут Timeskein заполнит сам"),
+    "ready output did not keep short closure lightweight"
+  );
+  assert(
     ready.stdout.includes("если аудит ещё не чистый") &&
       ready.stdout.includes("Ближайшее действие") &&
       ready.stdout.includes("Проверка перед отчётом"),
@@ -59,6 +64,7 @@ try {
   );
   assert(
     ready.stdout.includes("pnpm dogfood:goal-check -- --date YYYY-MM-DD") &&
+      ready.stdout.includes("Короткое закрытие: Закрытие уложилось в 10 минут: да") &&
       ready.stdout.includes("напечатанному следующему шагу"),
     "ready output did not explain the printed goal-check next step"
   );

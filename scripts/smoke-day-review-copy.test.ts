@@ -4,6 +4,7 @@ import test from 'node:test'
 import {
   formatDayReviewItem,
   formatDayReviewNextStep,
+  formatDayClosurePrompt,
   formatDogfoodReportState,
   formatGapDayEventDraft,
   formatFocusMarkdownForReport,
@@ -278,6 +279,13 @@ test('report button starts the closure ritual before it offers copying', () => {
     }),
     'Скопировано'
   )
+})
+
+test('day closure start prompt stays small and calm', () => {
+  const prompt = formatDayClosurePrompt('not_started', { blockers: 0, reviews: 0 })
+
+  assert.equal(prompt, 'Когда рабочий день закончен, начни закрытие дня: Timeskein измерит, сколько заняло короткое закрытие.')
+  assert(!prompt.includes('вечерний разбор'), 'start prompt should not frame closure as another review task')
 })
 
 test('gap review helpers keep repeated Explain actions on the next unresolved gap', () => {

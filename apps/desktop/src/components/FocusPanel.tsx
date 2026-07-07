@@ -1735,7 +1735,7 @@ function CompactAcceptReviewGroup({
   )
 }
 
-function formatDayClosurePrompt(
+export function formatDayClosurePrompt(
   stage: DayClosureStage,
   {
     blockers,
@@ -1752,7 +1752,7 @@ function formatDayClosurePrompt(
   }
 
   if (stage === 'not_started') {
-    return 'Когда рабочий день закончен, начни закрытие дня: Timeskein измерит, сколько занял вечерний разбор.'
+    return 'Когда рабочий день закончен, начни закрытие дня: Timeskein измерит, сколько заняло короткое закрытие.'
   }
 
   if (stage === 'blocked') {

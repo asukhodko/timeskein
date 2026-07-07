@@ -140,6 +140,7 @@ async function checkSavedEvidence(date) {
   const reportRequirements = [
     ["# Timeskein dogfood report"],
     ["## Данные фокуса", "## Focus Data"],
+    ["## Проверка перед отчётом", "## Review before report"],
     ["## Аудит закрытия дня", "## Daily Control Goal Audit"],
     ["## Телеметрия приложения", "## App Telemetry"],
   ];
@@ -180,6 +181,11 @@ async function checkSavedEvidence(date) {
     if (!includesAny(report, aliases)) {
       weak.push(`В ${reportPath} нет раздела «${aliases[0]}»`);
     }
+  }
+  if (!hasGroupedReviewChecklist(report)) {
+    weak.push(
+      `В ${reportPath} раздел «Проверка перед отчётом» должен быть сохранён с группами «Сначала закрыть», «Дописать или исправить», «Осознанно проверить» или «Готово»`
+    );
   }
   for (const aliases of rcRequirements) {
     if (!includesAny(rcCheck, aliases)) {
@@ -248,6 +254,19 @@ function findAuditRowStatus(text, aliases) {
 
 function isPassingAuditStatus(status) {
   return status === "pass" || status === "ок";
+}
+
+function hasGroupedReviewChecklist(text) {
+  if (!includesAny(text, ["## Проверка перед отчётом", "## Review before report"])) {
+    return false;
+  }
+
+  return includesAny(text, [
+    "### Сначала закрыть",
+    "### Дописать или исправить",
+    "### Осознанно проверить",
+    "### Готово",
+  ]);
 }
 
 async function readEvidenceFile(path, missing) {

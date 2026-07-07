@@ -141,6 +141,20 @@ try {
     ...rcAuditRows,
     "",
   ].join("\n");
+  const groupedReviewMarkdown = [
+    "## Проверка перед отчётом",
+    "",
+    "### Готово",
+    "",
+    "- [x] Можно копировать финальный отчёт - Автоматических замечаний нет",
+    "",
+  ].join("\n");
+  const flatReviewMarkdown = [
+    "## Проверка перед отчётом",
+    "",
+    "- [x] Можно копировать финальный отчёт - Автоматических замечаний нет",
+    "",
+  ].join("\n");
 
   const failingClosureReportRows = reportAuditRows.map((row) =>
     row.replace("| Day closure duration measured | pass |", "| Day closure duration measured | review |")
@@ -153,6 +167,7 @@ try {
     [
       "# Timeskein dogfood report - 2026-06-30",
       "## Focus Data",
+      groupedReviewMarkdown,
       "## Daily Control Goal Audit",
       "",
       "| Requirement | Status | Evidence |",
@@ -194,6 +209,35 @@ try {
     [
       "# Timeskein dogfood report - 2026-06-30",
       "## Focus Data",
+      flatReviewMarkdown,
+      reportAuditMarkdown,
+      "## App Telemetry",
+      "",
+    ].join("\n")
+  );
+  await writeFile(
+    join(tempDir, "timeskein-dogfood-rc-check-2026-06-30.md"),
+    [
+      "# RC-аудит dogfood-дня Timeskein - 2026-06-30",
+      "## Сводка доказательств",
+      rcAuditMarkdown,
+      "",
+    ].join("\n")
+  );
+
+  const flatReviewEvidence = await runGoalCheck(["--check-saved-evidence-only", "--date", "2026-06-30"], tempDir);
+  assert(flatReviewEvidence.code !== 0, "saved evidence with a flat review checklist should fail");
+  assert(
+    `${flatReviewEvidence.stdout}${flatReviewEvidence.stderr}`.includes("раздел «Проверка перед отчётом» должен быть сохранён с группами"),
+    "flat saved review evidence error did not mention grouped checklist"
+  );
+
+  await writeFile(
+    join(tempDir, "timeskein-dogfood-report-2026-06-30.md"),
+    [
+      "# Timeskein dogfood report - 2026-06-30",
+      "## Focus Data",
+      groupedReviewMarkdown,
       reportAuditMarkdown,
       "## App Telemetry",
       "",

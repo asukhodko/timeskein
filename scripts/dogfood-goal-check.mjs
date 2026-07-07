@@ -117,7 +117,7 @@ function parseArgs(args) {
     } else if (arg === "--min-focus-minutes") {
       result.minFocusMinutes = Number(args[++index]);
       if (!Number.isFinite(result.minFocusMinutes) || result.minFocusMinutes < 0) {
-        throw new Error("--min-focus-minutes must be a non-negative number");
+        throw new Error("--min-focus-minutes должен быть неотрицательным числом");
       }
     } else if (arg === "--save") {
       result.save = true;
@@ -137,16 +137,16 @@ function parseArgs(args) {
       printHelp();
       process.exit(0);
     } else {
-      throw new Error(`Unknown argument: ${arg}`);
+      throw new Error(`Неизвестный аргумент: ${arg}`);
     }
   }
 
   if (result.date && !/^\d{4}-\d{2}-\d{2}$/.test(result.date)) {
-    throw new Error(`Invalid --date value, expected YYYY-MM-DD: ${result.date}`);
+    throw new Error(`Некорректное значение --date, ожидается YYYY-MM-DD: ${result.date}`);
   }
 
   if (result.save && result.out) {
-    throw new Error("Use either --save or --out, not both");
+    throw new Error("Используй либо --save, либо --out, но не оба сразу");
   }
 
   return result;

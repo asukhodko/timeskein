@@ -96,7 +96,7 @@ function parseArgs(args) {
       printHelp();
       process.exit(0);
     } else {
-      throw new Error(`Unknown argument: ${arg}`);
+      throw new Error(`Неизвестный аргумент: ${arg}`);
     }
   }
 
@@ -157,7 +157,7 @@ async function saveRcCheck(date, path) {
 
 function parseLocalDate(value) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    throw new Error(`Invalid --date value, expected YYYY-MM-DD: ${value}`);
+    throw new Error(`Некорректное значение --date, ожидается YYYY-MM-DD: ${value}`);
   }
 
   const [year, month, day] = value.split("-").map(Number);

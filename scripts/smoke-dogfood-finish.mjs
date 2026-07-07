@@ -44,6 +44,22 @@ try {
   );
   assert(!help.stdout.includes("Usage:"), "finish help leaked old English usage heading");
 
+  const badDate = await runFinish(emptyDb, ["--date", "not-a-date"]);
+  assert(badDate.code !== 0, "finish should reject invalid date");
+  assert(
+    `${badDate.stdout}${badDate.stderr}`.includes("Некорректное значение --date") &&
+      !`${badDate.stdout}${badDate.stderr}`.includes("Invalid --date"),
+    "finish invalid-date error is not localized"
+  );
+
+  const badArg = await runFinish(emptyDb, ["--wat"]);
+  assert(badArg.code !== 0, "finish should reject unknown argument");
+  assert(
+    `${badArg.stdout}${badArg.stderr}`.includes("Неизвестный аргумент: --wat") &&
+      !`${badArg.stdout}${badArg.stderr}`.includes("Unknown argument"),
+    "finish unknown-argument error is not localized"
+  );
+
   const cleanDb = join(tempDir, "clean.db");
   await migrate(cleanDb);
   await runSql(cleanDb, `

@@ -56,6 +56,22 @@ try {
   assert(helpStdout.includes("dogfood:goal-check:status"), "goal-check help did not mention the status command");
   assert(!helpStdout.includes("Usage:"), "goal-check help leaked old English usage");
 
+  const badDate = await runGoalCheck(["--date", "not-a-date"], tempDir);
+  assert(badDate.code !== 0, "goal-check should reject invalid date");
+  assert(
+    `${badDate.stdout}${badDate.stderr}`.includes("Некорректное значение --date") &&
+      !`${badDate.stdout}${badDate.stderr}`.includes("Invalid --date"),
+    "goal-check invalid-date error is not localized"
+  );
+
+  const badArg = await runGoalCheck(["--wat"], tempDir);
+  assert(badArg.code !== 0, "goal-check should reject unknown argument");
+  assert(
+    `${badArg.stdout}${badArg.stderr}`.includes("Неизвестный аргумент: --wat") &&
+      !`${badArg.stdout}${badArg.stderr}`.includes("Unknown argument"),
+    "goal-check unknown-argument error is not localized"
+  );
+
   const { stdout: packageStatusStdout } = await execFileAsync(
     "pnpm",
     ["dogfood:goal-check:status", "--", "--date", "2099-01-01"],

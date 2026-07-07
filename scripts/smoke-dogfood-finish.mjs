@@ -99,6 +99,46 @@ try {
       ('ae_closure_start', '2026-06-30T08:00:00Z', 'ui', 'day_closure_started', '{"action_id":"closure-1","control":"review_panel"}'),
       ('ae_closure_done', '2026-06-30T08:07:00Z', 'ui', 'day_closure_completed', '{"action_id":"closure-1","control":"copy_report"}');
   `);
+  const measuredPendingDefault = await runFinish(cleanDb, ["--save"], tempDir);
+  assert(measuredPendingDefault.code === 0, "measured day with pending review should save default report and RC check");
+  assert(
+    measuredPendingDefault.stdout.includes("аудит закрытия дня ещё не весь в статусе `ок`") &&
+      measuredPendingDefault.stdout.includes("pnpm dogfood:finish:save -- --date 2026-06-30"),
+    "finish --save did not warn about pending daily-control audit rows"
+  );
+  assert(
+    !measuredPendingDefault.stdout.includes("pnpm dogfood:goal-check"),
+    "finish --save should not suggest goal-check while daily-control audit rows are pending"
+  );
+
+  await runSql(cleanDb, `
+    UPDATE work_items
+    SET note = 'Context preserved for day closure.'
+    WHERE id = 'w1';
+
+    UPDATE work_items
+    SET activity_zone = 'coordination'
+    WHERE id = 'w2';
+
+    UPDATE focus_sessions
+    SET activity_zone = 'coordination'
+    WHERE id = 's0';
+
+    INSERT INTO day_events (id, ts, kind, text, focus_session_id, activity_zone, updated_at)
+    VALUES ('de_gap', '2026-06-30T00:20:00Z', 'note_added', 'Разрыв 00:10-06:00 объяснён тестом закрытия дня.', 's0', 'recovery', '2026-06-30T00:20:00Z');
+
+    INSERT INTO app_events (id, ts, source, kind, payload)
+    VALUES
+      ('ae_badges', '2026-06-30T08:08:00Z', 'ui', 'work_item_time_badges_reviewed', '{"control":"review_panel"}'),
+      ('ae_capture_usage', '2026-06-30T08:08:01Z', 'ui', 'capture_usage_reviewed', '{"control":"review_panel"}'),
+      ('ae_entry_typed', '2026-06-30T08:08:02Z', 'ui', 'focus_start_requested', '{"action_id":"typed-1","control":"typed"}'),
+      ('ae_entry_selected', '2026-06-30T08:08:03Z', 'ui', 'focus_start_requested', '{"action_id":"selected-1","control":"selected_item"}'),
+      ('ae_stop_request', '2026-06-30T08:08:04Z', 'ui', 'focus_stop_requested', '{"action_id":"stop-1","control":"stop_button_or_enter"}'),
+      ('ae_window_show', '2026-06-30T08:08:05Z', 'ui', 'window_show_requested', '{"control":"menubar"}'),
+      ('ae_window_hide', '2026-06-30T08:08:06Z', 'ui', 'window_hide_requested', '{"control":"escape"}'),
+      ('ae_correction_review', '2026-06-30T08:08:07Z', 'ui', 'focus_correction_reviewed', '{"control":"review_panel"}');
+  `);
+
   const measuredSavedDefault = await runFinish(cleanDb, ["--save"], tempDir);
   assert(measuredSavedDefault.code === 0, "measured day should save default report and RC check");
   assert(
@@ -167,7 +207,10 @@ async function migrate(path) {
   await runSqlFile(path, join(repoRoot, "apps/agent/migrations/001_initial.sql"));
   await runSqlFile(path, join(repoRoot, "apps/agent/migrations/002_focus_sessions.sql"));
   await runSqlFile(path, join(repoRoot, "apps/agent/migrations/003_app_events.sql"));
+  await runSqlFile(path, join(repoRoot, "apps/agent/migrations/004_captures.sql"));
   await runSqlFile(path, join(repoRoot, "apps/agent/migrations/005_activity_zones.sql"));
+  await runSqlFile(path, join(repoRoot, "apps/agent/migrations/006_work_item_note_events.sql"));
+  await runSqlFile(path, join(repoRoot, "apps/agent/migrations/008_day_events.sql"));
 }
 
 async function runFinish(path, extraArgs = [], cwd = repoRoot) {

@@ -60,8 +60,11 @@ if (outputPath) {
     await saveRcCheck(dateArg, dbPath);
   }
   const closureStatus = findAuditRowStatus(stdout, ["Длительность закрытия измерена", "Day closure duration measured"]);
+  const pendingAuditRows = findPendingAuditRows(stdout);
   if (closureStatus && !isPassingAuditStatus(closureStatus)) {
     process.stdout.write(buildMeasuredClosureWarning(dateArg));
+  } else if (pendingAuditRows.length > 0) {
+    process.stdout.write(buildPendingReviewWarning(dateArg, pendingAuditRows));
   } else if (options.save && process.exitCode == null) {
     process.stdout.write(buildGoalCheckNextStep(dateArg));
   }
@@ -245,6 +248,24 @@ function buildMeasuredClosureWarning(date) {
   ].join("\n");
 }
 
+function buildPendingReviewWarning(date, rows) {
+  const visibleRows = rows.slice(0, 5).map((row) => `- ${row.requirement}: ${row.status}`);
+  if (rows.length > visibleRows.length) {
+    visibleRows.push(`- Ещё строк: ${rows.length - visibleRows.length}`);
+  }
+
+  return [
+    "",
+    "## Внимание",
+    "",
+    "- Отчёт сохранён, но аудит закрытия дня ещё не весь в статусе `ок`.",
+    ...visibleRows,
+    "- Вернись к `Проверка перед отчётом`: сначала закрой «Дописать или исправить», затем осознанно прими спорные проверки.",
+    `- Затем повтори: \`pnpm dogfood:finish:save -- --date ${date}\`.`,
+    "",
+  ].join("\n");
+}
+
 function buildGoalCheckNextStep(date) {
   return [
     "",
@@ -265,6 +286,45 @@ function findAuditRowStatus(text, aliases) {
     if (cells.length >= 2 && aliases.some((needle) => cells[0] === needle)) {
       return cells[1];
     }
+  }
+
+  return undefined;
+}
+
+function findPendingAuditRows(text) {
+  const section = extractSection(text, ["## Аудит закрытия дня", "## Daily Control Goal Audit"]);
+  if (!section) {
+    return [];
+  }
+
+  const rows = [];
+  for (const line of section.split("\n")) {
+    const cells = line
+      .split("|")
+      .slice(1, -1)
+      .map((cell) => cell.trim());
+    if (cells.length < 3 || cells[0] === "Проверка" || cells[0] === "Requirement" || /^-+$/.test(cells[0])) {
+      continue;
+    }
+
+    const [requirement, status] = cells;
+    if (requirement && status && !isPassingAuditStatus(status)) {
+      rows.push({ requirement, status });
+    }
+  }
+
+  return rows;
+}
+
+function extractSection(text, headings) {
+  for (const heading of headings) {
+    const start = text.indexOf(heading);
+    if (start === -1) {
+      continue;
+    }
+
+    const next = text.indexOf("\n## ", start + heading.length);
+    return next === -1 ? text.slice(start) : text.slice(start, next);
   }
 
   return undefined;

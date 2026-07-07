@@ -153,6 +153,16 @@ try {
   const groupedReviewMarkdown = [
     "## Проверка перед отчётом",
     "",
+    "Ближайшее действие: копировать финальный отчёт.",
+    "",
+    "### Готово",
+    "",
+    "- [x] Можно копировать финальный отчёт - Автоматических замечаний нет",
+    "",
+  ].join("\n");
+  const groupedReviewWithoutNextActionMarkdown = [
+    "## Проверка перед отчётом",
+    "",
     "### Готово",
     "",
     "- [x] Можно копировать финальный отчёт - Автоматических замечаний нет",
@@ -160,6 +170,8 @@ try {
   ].join("\n");
   const flatReviewMarkdown = [
     "## Проверка перед отчётом",
+    "",
+    "Ближайшее действие: копировать финальный отчёт.",
     "",
     "- [x] Можно копировать финальный отчёт - Автоматических замечаний нет",
     "",
@@ -246,6 +258,31 @@ try {
   assert(
     `${flatReviewEvidence.stdout}${flatReviewEvidence.stderr}`.includes("раздел «Проверка перед отчётом» должен быть сохранён с группами"),
     "flat saved review evidence error did not mention grouped checklist"
+  );
+
+  await writeFile(
+    join(tempDir, "timeskein-dogfood-report-2026-06-30.md"),
+    [
+      "# Dogfood-отчёт Timeskein - 2026-06-30",
+      "Статус отчёта: финальный — нет активных фокус-блоков, активных Work Item и незакрытых проверок",
+      "## Focus Data",
+      groupedReviewWithoutNextActionMarkdown,
+      reportAuditMarkdown,
+      "## App Telemetry",
+      "",
+    ].join("\n")
+  );
+
+  const missingNextActionEvidence = await runGoalCheck(
+    ["--check-saved-evidence-only", "--date", "2026-06-30"],
+    tempDir
+  );
+  assert(missingNextActionEvidence.code !== 0, "saved evidence without a review next action should fail");
+  assert(
+    `${missingNextActionEvidence.stdout}${missingNextActionEvidence.stderr}`.includes(
+      "раздел «Проверка перед отчётом» должен содержать строку «Ближайшее действие»"
+    ),
+    "saved review evidence without next action did not mention the missing next action"
   );
 
   await writeFile(

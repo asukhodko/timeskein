@@ -191,6 +191,9 @@ async function checkSavedEvidence(date) {
       `В ${reportPath} раздел «Проверка перед отчётом» должен быть сохранён с группами «Сначала закрыть», «Дописать или исправить», «Осознанно проверить» или «Готово»`
     );
   }
+  if (!hasReviewNextAction(report)) {
+    weak.push(`В ${reportPath} раздел «Проверка перед отчётом» должен содержать строку «Ближайшее действие»`);
+  }
   for (const aliases of rcRequirements) {
     if (!includesAny(rcCheck, aliases)) {
       weak.push(`В ${rcPath} нет раздела «${aliases[0]}»`);
@@ -296,16 +299,34 @@ function isPassingAuditStatus(status) {
 }
 
 function hasGroupedReviewChecklist(text) {
-  if (!includesAny(text, ["## Проверка перед отчётом", "## Review before report"])) {
+  const section = extractMarkdownSection(text, ["## Проверка перед отчётом", "## Review before report"]);
+  if (!section) {
     return false;
   }
 
-  return includesAny(text, [
+  return includesAny(section, [
     "### Сначала закрыть",
     "### Дописать или исправить",
     "### Осознанно проверить",
     "### Готово",
   ]);
+}
+
+function hasReviewNextAction(text) {
+  const section = extractMarkdownSection(text, ["## Проверка перед отчётом", "## Review before report"]);
+  return Boolean(section && /^Ближайшее действие:\s*\S/m.test(section));
+}
+
+function extractMarkdownSection(text, headings) {
+  const lines = text.split("\n");
+  const startIndex = lines.findIndex((line) => headings.includes(line.trim()));
+  if (startIndex === -1) {
+    return "";
+  }
+
+  const bodyStart = startIndex + 1;
+  const endIndex = lines.findIndex((line, index) => index > startIndex && /^##\s+/.test(line));
+  return lines.slice(bodyStart, endIndex === -1 ? lines.length : endIndex).join("\n");
 }
 
 async function readEvidenceFile(path, missing) {

@@ -30,8 +30,9 @@ RC-check evidence file, so the evening package is collected in one step.
 For final goal closure, `pnpm dogfood:finish:save` points to
 `pnpm dogfood:goal-check` only after measured closure is present and the saved
 `Аудит закрытия дня` has no pending rows. The goal check first requires the
-saved dogfood report and RC evidence for the real local database, then runs
-`pnpm test`, `pnpm dogfood:preflight`, and strict RC evidence on the same code.
+saved dogfood report and RC evidence for the real local database, verifies the
+grouped review checklist plus `Ближайшее действие`, then runs `pnpm test`,
+`pnpm dogfood:preflight`, and strict RC evidence on the same code.
 The current saved 2026-07-06 evidence is intentionally not enough for closure
 because it lacks `day_closure_started` / `day_closure_completed` telemetry.
 

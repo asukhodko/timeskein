@@ -203,8 +203,12 @@ try {
   const splitBrain = await runFinish(splitBrainDb);
   assert(splitBrain.code !== 0, "split-brain active work item should not finish");
   assert(
-    splitBrain.stdout.includes("У Work Item всё ещё активный статус"),
+    splitBrain.stdout.includes("У дела всё ещё активный статус"),
     "split-brain day did not explain active work item"
+  );
+  assert(
+    !splitBrain.stdout.includes("У Work Item всё ещё активный статус"),
+    "split-brain day leaked model-side Work Item wording"
   );
   assert(
     !splitBrain.stdout.includes("Active Work Item is still marked active"),

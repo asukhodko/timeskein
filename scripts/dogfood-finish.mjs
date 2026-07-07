@@ -32,7 +32,7 @@ if (!existsSync(dbPath)) {
 
   if (summary.activeWorkItems.length > 0) {
     for (const item of summary.activeWorkItems) {
-      blockers.push(`У Work Item всё ещё активный статус: ${item.title}`);
+      blockers.push(`У дела всё ещё активный статус: ${item.title}`);
     }
   }
 
@@ -230,7 +230,7 @@ function buildNotReadyReport(date, path, items) {
     "## Что сделать дальше",
     "",
     "- Если идёт активный фокус-блок, останови его в Timeskein.",
-    "- Если застрял только активный статус Work Item, сначала выполни `pnpm dogfood:stop-active` и примени план, если он выглядит правильно.",
+    "- Если застрял только активный статус дела, сначала выполни `pnpm dogfood:stop-active` и примени план, если он выглядит правильно.",
     "- Если закрываешь другой день, повтори команду с `--date YYYY-MM-DD`.",
     "- Если выбрана не та база, повтори команду с `--db path/to/timeskein.db`."
   );

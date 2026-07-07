@@ -93,28 +93,28 @@ try {
   assert(stdout.includes("3 входа, 1:05:00 учтено"), "report daily-control audit evidence did not localize focus blocks");
   assert(stdout.includes("| Итоги по делам есть | ок |"), "report daily-control audit did not pass work item totals");
   assert(
-    stdout.includes("Раздел «По делам» есть, проверок времени в UI: 1"),
+    stdout.includes("раздел «По делам» есть; 1 проверка времени по карточкам"),
     "report daily-control audit evidence did not localize Work Item totals"
   );
   assert(stdout.includes("| Зоны активности разделены | ок |"), "report daily-control audit did not pass zones");
   assert(
-    stdout.includes("35:00 рабочий фокус, 30:00 вне работы, проверок зон: 0"),
+    stdout.includes("35:00 работа, 30:00 вне работы; зоны подтверждены отчётом"),
     "report daily-control audit evidence did not localize zone totals"
   );
   assert(stdout.includes("| Окно и строка меню проверены | ок |"), "report daily-control audit did not pass window evidence");
   assert(
-    stdout.includes("окно показано/скрыто"),
+    stdout.includes("окно показывалось") && stdout.includes("запрос на показ"),
     "report daily-control audit evidence did not localize window evidence"
   );
   assert(stdout.includes("| Старт и продолжение проверены | ок |"), "report daily-control audit did not pass entry-path evidence");
   assert(
-    stdout.includes("входов вводом/из списка: 1/1"),
+    stdout.includes("1 старт вводом; 1 старт из списка; 1 остановка; пути входа покрыты телеметрией"),
     "report daily-control audit evidence did not localize entry evidence"
   );
   assert(stdout.includes("| Коррекция трекинга проверена | ок |"), "report daily-control audit did not pass correction evidence");
   assert(stdout.includes("| Длительность закрытия измерена | ок |"), "report daily-control audit did not pass closure duration");
   assert(
-    stdout.includes("1/1 начато/завершено, последняя длительность: 7:00"),
+    stdout.includes("закрытие начато 1 раз, завершено 1 раз; длительность 7:00"),
     "report daily-control audit evidence did not localize closure duration"
   );
   assert(

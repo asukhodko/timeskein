@@ -2056,8 +2056,6 @@ function formatDailyControlGoalAuditMarkdown({
   const startStopFailures = extractLineValue(appTelemetryMarkdown, 'Start/stop failures') ?? 'n/a'
   const entryPathEvidence = extractLineValue(appTelemetryMarkdown, 'Typed/selected entry requests') ?? 'n/a'
   const entryTelemetry = parseEntryTelemetryMarkdown(appTelemetryMarkdown)
-  const correctionEvidence =
-    extractLineValue(appTelemetryMarkdown, 'Corrections requested/applied/reviewed/failed') ?? 'n/a'
   const captureFollowupReviews = parseLeadingNumber(extractLineValue(appTelemetryMarkdown, 'Capture follow-up reviews'))
   const workItemTimeBadgeReviews = parseLeadingNumber(extractLineValue(appTelemetryMarkdown, 'Work Item time badge reviews'))
   const activityZoneReviews = parseLeadingNumber(extractLineValue(appTelemetryMarkdown, 'Activity Zone reviews'))
@@ -2072,6 +2070,61 @@ function formatDailyControlGoalAuditMarkdown({
     entryTelemetry.typedEntryRequests > 0 &&
     entryTelemetry.selectedEntryRequests > 0 &&
     entryTelemetry.stopRequests > 0
+  const windowRequestPair = parseCountPair(windowRequestEvidence)
+  const windowRequestsCovered = Boolean(windowRequestPair && windowRequestPair.left > 0 && windowRequestPair.right > 0)
+  const correctionTelemetry = parseCorrectionTelemetryMarkdown(appTelemetryMarkdown)
+  const workItemTimeReviewEvidence = workItemTimeBadgeReviews > 0
+    ? formatCount(workItemTimeBadgeReviews, 'проверка времени по карточкам', 'проверки времени по карточкам', 'проверок времени по карточкам')
+    : hasReview('Confirm Work Item today/total badges')
+      ? 'проверка времени по карточкам не отмечена'
+      : 'время по делам есть в отчёте'
+  const activityZoneReviewEvidence = activityZoneReviews > 0
+    ? formatCount(activityZoneReviews, 'проверка зон', 'проверки зон', 'проверок зон')
+    : hasReview('Review Activity Zone coverage') || hasReview('Confirm non-work tracked time')
+      ? 'проверка зон не отмечена'
+      : 'зоны подтверждены отчётом'
+  const entryPathReviewEvidence = entryPathReviews > 0
+    ? formatCount(entryPathReviews, 'проверка пути входа', 'проверки путей входа', 'проверок путей входа')
+    : entryPathsCovered
+      ? 'пути входа покрыты телеметрией'
+      : 'пути входа не проверены'
+  const windowEntrypointReviewEvidence = windowEntrypointReviews > 0
+    ? formatCount(windowEntrypointReviews, 'проверка окна', 'проверки окна', 'проверок окна')
+    : windowRequestsCovered
+      ? 'входы через окно покрыты телеметрией'
+      : 'входы через окно не проверены'
+  const workItemTotalsEvidence = todayMarkdown.includes('## By Work Item')
+    ? `раздел «По делам» есть; ${workItemTimeReviewEvidence}`
+    : 'раздела «По делам» нет'
+  const activityZoneEvidence = `${workFocus} работа, ${nonWorkTracked} вне работы; ${activityZoneReviewEvidence}`
+  const gapsAndCapturesEvidence = [
+    todayMarkdown.includes('## Gaps >=') ? 'раздел разрывов есть' : 'больших разрывов нет',
+    openCaptures.length > 0
+      ? formatCount(openCaptures.length, 'открытое отвлечение', 'открытых отвлечения', 'открытых отвлечений')
+      : 'открытых отвлечений нет',
+    captureActivity.length > 0
+      ? formatCount(captureActivity.length, 'отвлечение за день', 'отвлечения за день', 'отвлечений за день')
+      : 'отвлечений за день нет',
+    formatReviewEvidence(captureFollowupReviews, 'открытые отвлечения не проверены', 'проверка открытых отвлечений', 'проверки открытых отвлечений', 'проверок открытых отвлечений'),
+    formatReviewEvidence(captureUsageReviews, 'инбокс не проверен', 'проверка инбокса', 'проверки инбокса', 'проверок инбокса'),
+  ].join('; ')
+  const windowEvidenceText = [
+    formatWindowVisibilityEvidence(windowEvidence),
+    formatWindowRequestEvidence(windowRequestEvidence),
+    windowEntrypointReviewEvidence,
+    apiErrors > 0 ? formatCount(apiErrors, 'ошибка API', 'ошибки API', 'ошибок API') : 'ошибок API нет',
+    formatStartStopFailureEvidence(startStopFailures),
+  ].join('; ')
+  const entryPathEvidenceText = entryTelemetry
+    ? [
+        formatCount(entryTelemetry.typedEntryRequests, 'старт вводом', 'старта вводом', 'стартов вводом'),
+        formatCount(entryTelemetry.selectedEntryRequests, 'старт из списка', 'старта из списка', 'стартов из списка'),
+        formatCount(entryTelemetry.stopRequests, 'остановка', 'остановки', 'остановок'),
+        entryPathReviewEvidence,
+      ].join('; ')
+    : 'пути входа: нет телеметрии'
+  const correctionEvidenceText = formatCorrectionEvidence(correctionTelemetry)
+  const closureEvidenceText = formatClosureEvidence(closureCounts, lastClosureDuration)
   const rows = [
     {
       requirement: 'Final state clean',
@@ -2086,9 +2139,7 @@ function formatDailyControlGoalAuditMarkdown({
     {
       requirement: 'Work Item totals available',
       status: todayMarkdown.includes('## By Work Item') && !hasReview('Confirm Work Item today/total badges') ? 'pass' : 'review',
-      evidence: todayMarkdown.includes('## By Work Item')
-        ? `Раздел «По делам» есть, проверок времени в UI: ${workItemTimeBadgeReviews}`
-        : 'Раздела «По делам» нет',
+      evidence: workItemTotalsEvidence,
     },
     {
       requirement: 'Activity Zones separated',
@@ -2098,7 +2149,7 @@ function formatDailyControlGoalAuditMarkdown({
           activityZoneReviews > 0)
           ? 'pass'
           : 'review',
-      evidence: `${workFocus} рабочий фокус, ${nonWorkTracked} вне работы, проверок зон: ${activityZoneReviews}`,
+      evidence: activityZoneEvidence,
     },
     {
       requirement: 'Day and Work Item context present',
@@ -2118,7 +2169,7 @@ function formatDailyControlGoalAuditMarkdown({
         hasReview('Resolve, convert, or accept open captures')
           ? 'review'
           : 'pass',
-      evidence: `${todayMarkdown.includes('## Gaps >=') ? 'раздел разрывов есть' : 'больших разрывов нет'}, открытых отвлечений: ${openCaptures.length}, проверок открытых отвлечений: ${captureFollowupReviews}, проверок инбокса: ${captureUsageReviews}, отвлечений за день: ${captureActivity.length}`,
+      evidence: gapsAndCapturesEvidence,
     },
     {
       requirement: 'Window and menubar friction evidenced',
@@ -2130,7 +2181,7 @@ function formatDailyControlGoalAuditMarkdown({
         (hasReview('Test window entrypoints') && windowEntrypointReviews === 0)
           ? 'review'
           : 'pass',
-      evidence: `окно показано/скрыто: ${windowEvidence}, запросы показать/скрыть: ${windowRequestEvidence}, проверок окна: ${windowEntrypointReviews}, ошибок API: ${apiErrors}, ошибок старт/стоп: ${startStopFailures}`,
+      evidence: windowEvidenceText,
     },
     {
       requirement: 'Start and continue paths evidenced',
@@ -2141,7 +2192,7 @@ function formatDailyControlGoalAuditMarkdown({
         entryPathEvidence === 'n/a'
           ? 'review'
           : 'pass',
-      evidence: `входов вводом/из списка: ${entryPathEvidence}, запросов остановки: ${entryTelemetry?.stopRequests ?? 'нет данных'}, проверок входа: ${entryPathReviews}`,
+      evidence: entryPathEvidenceText,
     },
     {
       requirement: 'Tracking correction or review evidenced',
@@ -2150,7 +2201,7 @@ function formatDailyControlGoalAuditMarkdown({
         hasReview('Review failed focus corrections')
           ? 'review'
           : 'pass',
-      evidence: correctionEvidence,
+      evidence: correctionEvidenceText,
     },
     {
       requirement: 'Day closure duration measured',
@@ -2158,7 +2209,7 @@ function formatDailyControlGoalAuditMarkdown({
         closureCounts?.right && lastClosureDuration != null && lastClosureDuration <= 10 * 60
           ? 'pass'
           : 'review',
-      evidence: `${closureCounts ? `${closureCounts.left}/${closureCounts.right}` : 'нет данных'} начато/завершено, последняя длительность: ${lastClosureDuration == null ? 'нет данных' : formatDuration(lastClosureDuration)}`,
+      evidence: closureEvidenceText,
     },
     {
       requirement: 'Hard blockers absent',
@@ -2219,6 +2270,76 @@ function parseCountPair(value?: string) {
     left: Number(match[1]),
     right: Number(match[2]),
   }
+}
+
+function formatReviewEvidence(value: number, emptyText: string, one: string, few: string, many: string) {
+  return value > 0 ? formatCount(value, one, few, many) : emptyText
+}
+
+function formatWindowVisibilityEvidence(value: string) {
+  const pair = parseCountPair(value)
+  if (!pair) return 'окно: нет телеметрии'
+
+  return `окно показывалось ${pair.left} раз, скрывалось ${pair.right} раз`
+}
+
+function formatWindowRequestEvidence(value: string) {
+  const pair = parseCountPair(value)
+  if (!pair) return 'запросов показать или скрыть окно: нет данных'
+
+  return `${formatCount(pair.left, 'запрос на показ', 'запроса на показ', 'запросов на показ')}, ${formatCount(pair.right, 'запрос на скрытие', 'запроса на скрытие', 'запросов на скрытие')}`
+}
+
+function formatStartStopFailureEvidence(value: string) {
+  const pair = parseCountPair(value)
+  if (!pair) return 'ошибок старта и остановки: нет данных'
+  if (pair.left + pair.right === 0) return 'ошибок старта и остановки нет'
+
+  return `${formatCount(pair.left, 'ошибка старта', 'ошибки старта', 'ошибок старта')}, ${formatCount(pair.right, 'ошибка остановки', 'ошибки остановки', 'ошибок остановки')}`
+}
+
+function parseCorrectionTelemetryMarkdown(markdown: string) {
+  const match = markdown.match(/Corrections requested\/applied\/reviewed\/failed:\s*(\d+)\/(\d+)\/(\d+)\/(\d+)/)
+  if (!match) return undefined
+
+  return {
+    requested: Number(match[1]),
+    applied: Number(match[2]),
+    reviewed: Number(match[3]),
+    failures: Number(match[4]),
+  }
+}
+
+function formatCorrectionEvidence(
+  telemetry?: { requested: number; applied: number; reviewed: number; failures: number }
+) {
+  if (!telemetry) return 'коррекции трекинга: нет телеметрии'
+  const parts = [
+    telemetry.requested > 0
+      ? formatCount(telemetry.requested, 'запрос коррекции', 'запроса коррекции', 'запросов коррекции')
+      : 'запросов коррекции не было',
+    telemetry.applied > 0
+      ? formatCount(telemetry.applied, 'применённая коррекция', 'применённые коррекции', 'применённых коррекций')
+      : 'коррекций не было',
+    formatReviewEvidence(telemetry.reviewed, 'проверка трекинга не отмечена', 'проверка трекинга', 'проверки трекинга', 'проверок трекинга'),
+    telemetry.failures > 0
+      ? formatCount(telemetry.failures, 'ошибка коррекции', 'ошибки коррекции', 'ошибок коррекции')
+      : 'ошибок коррекции нет',
+  ]
+
+  return parts.join('; ')
+}
+
+function formatClosureEvidence(
+  closureCounts: { left: number; right: number } | undefined,
+  lastClosureDuration?: number
+) {
+  if (!closureCounts || (closureCounts.left === 0 && closureCounts.right === 0)) {
+    return 'закрытие дня ещё не измерялось'
+  }
+
+  const durationText = lastClosureDuration == null ? 'длительность пока не зафиксирована' : `длительность ${formatDuration(lastClosureDuration)}`
+  return `закрытие начато ${closureCounts.left} раз, завершено ${closureCounts.right} раз; ${durationText}`
 }
 
 function parseDurationSeconds(value?: string) {

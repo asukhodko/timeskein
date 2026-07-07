@@ -71,6 +71,12 @@ try {
       cleanSavedDefault.stdout.includes("timeskein-dogfood-rc-check-2026-06-30.md"),
     "finish --save did not report saved RC check"
   );
+  assert(
+    cleanSavedDefault.stdout.includes("## Внимание") &&
+      cleanSavedDefault.stdout.includes("длительность закрытия дня не измерена") &&
+      cleanSavedDefault.stdout.includes("pnpm dogfood:finish:save -- --date 2026-06-30"),
+    "finish --save did not warn about missing measured closure"
+  );
   const defaultReportMarkdown = await readFile(defaultReportPath, "utf8");
   const defaultRcMarkdown = await readFile(defaultRcPath, "utf8");
   assert(

@@ -59,6 +59,10 @@ if (outputPath) {
   if (options.save) {
     await saveRcCheck(dateArg, dbPath);
   }
+  const closureStatus = findAuditRowStatus(stdout, ["Длительность закрытия измерена", "Day closure duration measured"]);
+  if (closureStatus && !isPassingAuditStatus(closureStatus)) {
+    process.stdout.write(buildMeasuredClosureWarning(dateArg));
+  }
 } else {
   process.stdout.write(stdout);
 }
@@ -225,6 +229,36 @@ function buildNotReadyReport(date, path, items) {
   );
 
   return `${lines.join("\n")}\n`;
+}
+
+function buildMeasuredClosureWarning(date) {
+  return [
+    "",
+    "## Внимание",
+    "",
+    "- Отчёт сохранён, но он ещё не закрывает daily-control goal: длительность закрытия дня не измерена или не прошла.",
+    "- Начни закрытие в Timeskein кнопкой `Начать закрытие дня`, дойди до финального `Копировать отчёт` за 10 минут или меньше.",
+    `- Затем повтори: \`pnpm dogfood:finish:save -- --date ${date}\`.`,
+    "",
+  ].join("\n");
+}
+
+function findAuditRowStatus(text, aliases) {
+  for (const line of text.split("\n")) {
+    const cells = line
+      .split("|")
+      .slice(1, -1)
+      .map((cell) => cell.trim());
+    if (cells.length >= 2 && aliases.some((needle) => cells[0] === needle)) {
+      return cells[1];
+    }
+  }
+
+  return undefined;
+}
+
+function isPassingAuditStatus(status) {
+  return status === "pass" || status === "ок";
 }
 
 function startOfLocalDay(date) {

@@ -21,6 +21,7 @@ import {
 import { CAPTURE_INBOX_LABELS } from '../apps/desktop/src/components/CaptureInbox'
 import { FOCUS_CORRECTION_LABELS } from '../apps/desktop/src/components/FocusCorrectionDialog'
 import { MISSED_FOCUS_BLOCK_LABELS } from '../apps/desktop/src/components/MissedFocusBlockDialog'
+import { APP_UI_LABELS } from '../apps/desktop/src/utils/appUiLabels'
 import { ITEM_UI_LABELS, formatCreateItemError } from '../apps/desktop/src/utils/itemUiLabels'
 
 test('capture inbox controls keep interruption handling in Russian', () => {
@@ -44,6 +45,15 @@ test('item dialogs keep user-facing wording in Russian', () => {
   const labels = Object.values(ITEM_UI_LABELS).join('\n')
   assert(!labels.includes('Work Item'), 'user-facing item dialog labels should not expose the model-side term')
   assert(!labels.includes('work item'), 'user-facing item dialog labels should not expose the model-side term')
+})
+
+test('agent unavailable message stays useful during dogfood', () => {
+  assert.equal(APP_UI_LABELS.agentUnavailableTitle, 'Агент недоступен')
+  assert.equal(APP_UI_LABELS.agentUnavailableHint, 'Перезапусти Timeskein или проверь локальный агент')
+
+  const labels = Object.values(APP_UI_LABELS).join('\n')
+  assert(!labels.includes('mock server'), 'runtime UI should not send dogfood users into dev-server wording')
+  assert(!labels.includes('mock'), 'runtime UI should not expose mock-only wording')
 })
 
 test('focus correction labels keep evening fixes calm', () => {

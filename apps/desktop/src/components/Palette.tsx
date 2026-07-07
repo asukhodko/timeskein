@@ -34,6 +34,7 @@ import {
 } from '../utils/inventoryModes'
 import { formatWorkItemStateLabel } from '../utils/workItemLabels'
 import { ITEM_UI_LABELS } from '../utils/itemUiLabels'
+import { APP_UI_LABELS } from '../utils/appUiLabels'
 
 const todayListHeightStorageKey = 'timeskein.todayListHeightPx'
 const defaultTodayListHeightPx = 288
@@ -433,8 +434,8 @@ export default function Palette() {
           </div>
         ) : error ? (
           <div className="flex flex-col items-center justify-center h-32 text-gray-500">
-            <div className="text-red-400">Агент недоступен</div>
-            <div className="text-xs mt-1">Запусти агент или mock server</div>
+            <div className="text-red-400">{APP_UI_LABELS.agentUnavailableTitle}</div>
+            <div className="text-xs mt-1">{APP_UI_LABELS.agentUnavailableHint}</div>
           </div>
         ) : items.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-32 text-gray-500">

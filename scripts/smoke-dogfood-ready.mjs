@@ -74,9 +74,10 @@ try {
     "ready output did not explain the printed goal-check next step"
   );
   assert(
-    ready.stdout.includes("Если запустишь `pnpm dogfood:goal-check` слишком рано") &&
-      ready.stdout.includes("Ближайшее действие` из сохранённого отчёта"),
-    "ready output did not explain early goal-check next-action guidance"
+    ready.stdout.includes("pnpm dogfood:goal-check:status -- --date YYYY-MM-DD") &&
+      ready.stdout.includes("не закрывает цель") &&
+      ready.stdout.includes("не запускает дорогие проверки"),
+    "ready output did not explain the soft goal-check status route"
   );
   assert(!ready.stdout.includes("pnpm dogfood:macos"), "ready output still suggests bypassing dogfood gates");
 

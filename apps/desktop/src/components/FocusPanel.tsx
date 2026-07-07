@@ -1050,7 +1050,7 @@ async function buildDogfoodReportMarkdown(
   })
 
   const lines = [
-    `# Dogfood-отчёт Timeskein - ${formatLocalDate(now)}`,
+    `# Отчёт закрытия дня Timeskein - ${formatLocalDate(now)}`,
     '',
     `Статус отчёта: ${reportState}`,
     '',

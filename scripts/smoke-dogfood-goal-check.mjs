@@ -102,7 +102,7 @@ try {
   await writeFile(
     join(tempDir, "timeskein-dogfood-report-2026-06-30.md"),
     [
-      "# Dogfood-отчёт Timeskein - 2026-06-30",
+      "# Отчёт закрытия дня Timeskein - 2026-06-30",
       "Статус отчёта: черновик — осталось 1 проверка перед финальным отчётом",
       "## Focus Data",
       "## Daily Control Goal Audit",
@@ -224,7 +224,7 @@ try {
   await writeFile(
     join(tempDir, "timeskein-dogfood-report-2026-06-30.md"),
     [
-      "# Dogfood-отчёт Timeskein - 2026-06-30",
+      "# Отчёт закрытия дня Timeskein - 2026-06-30",
       "Статус отчёта: финальный — нет активных фокус-блоков, активных дел и незакрытых проверок",
       "## Focus Data",
       shortClosureMarkdown,
@@ -277,7 +277,7 @@ try {
   await writeFile(
     join(tempDir, "timeskein-dogfood-report-2026-06-30.md"),
     [
-      "# Dogfood-отчёт Timeskein - 2026-06-30",
+      "# Отчёт закрытия дня Timeskein - 2026-06-30",
       "Статус отчёта: финальный — нет активных фокус-блоков, активных дел и незакрытых проверок",
       "## Focus Data",
       shortClosureMarkdown,
@@ -307,7 +307,7 @@ try {
   await writeFile(
     join(tempDir, "timeskein-dogfood-report-2026-06-30.md"),
     [
-      "# Dogfood-отчёт Timeskein - 2026-06-30",
+      "# Отчёт закрытия дня Timeskein - 2026-06-30",
       "Статус отчёта: финальный — нет активных фокус-блоков, активных дел и незакрытых проверок",
       "## Focus Data",
       shortClosureMarkdown,
@@ -333,7 +333,7 @@ try {
   await writeFile(
     join(tempDir, "timeskein-dogfood-report-2026-06-30.md"),
     [
-      "# Dogfood-отчёт Timeskein - 2026-06-30",
+      "# Отчёт закрытия дня Timeskein - 2026-06-30",
       "Статус отчёта: черновик — осталось 1 проверка перед финальным отчётом",
       "## Focus Data",
       shortClosureMarkdown,
@@ -365,7 +365,7 @@ try {
   await writeFile(
     join(tempDir, "timeskein-dogfood-report-2026-06-30.md"),
     [
-      "# Dogfood-отчёт Timeskein - 2026-06-30",
+      "# Отчёт закрытия дня Timeskein - 2026-06-30",
       "Статус отчёта: финальный — нет активных фокус-блоков, активных дел и незакрытых проверок",
       "## Focus Data",
       groupedReviewMarkdown,
@@ -385,7 +385,7 @@ try {
   await writeFile(
     join(tempDir, "timeskein-dogfood-report-2026-06-30.md"),
     [
-      "# Dogfood-отчёт Timeskein - 2026-06-30",
+      "# Отчёт закрытия дня Timeskein - 2026-06-30",
       "Статус отчёта: финальный — нет активных фокус-блоков, активных дел и незакрытых проверок",
       "## Focus Data",
       incompleteShortClosureMarkdown,
@@ -406,7 +406,7 @@ try {
   await writeFile(
     join(tempDir, "timeskein-dogfood-report-2026-06-30.md"),
     [
-      "# Dogfood-отчёт Timeskein - 2026-06-30",
+      "# Отчёт закрытия дня Timeskein - 2026-06-30",
       "Статус отчёта: финальный — нет активных фокус-блоков, активных дел и незакрытых проверок",
       "## Focus Data",
       shortClosureMarkdown,

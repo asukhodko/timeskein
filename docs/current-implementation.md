@@ -166,7 +166,7 @@ Dogfood launch helper:
 - `pnpm dogfood:metrics` prints Russian dogfood telemetry aggregates from the local SQLite app-event journal, including start/stop failure counts and accepted open-capture reviews; `--raw` keeps the older technical labels for scripts that parse the output
 - `pnpm export:app-events` prints a Russian Markdown table of local technical app events for inspecting product friction after a dogfood day
 - `pnpm export:app-events` prints a Markdown event table for deeper inspection of show/hide/start/switch/stop/copy/API behavior
-- `pnpm dogfood:report` prints a Markdown dogfood report with Russian focus data, a Russian review checklist, a Russian daily-closure audit, Day Events, interruption history, open captures, human-readable app telemetry, and evening review prompts, marked as a draft if a focus block, Work Item, or review check still needs attention
+- `pnpm dogfood:report` prints a Markdown day-closure report titled `Отчёт закрытия дня Timeskein`, with Russian focus data, a Russian review checklist, a Russian daily-closure audit, Day Events, interruption history, open captures, human-readable app telemetry, and evening review prompts, marked as a draft if a focus block, Work Item, or review check still needs attention
 
 Runtime smoke in browser/mock mode:
 

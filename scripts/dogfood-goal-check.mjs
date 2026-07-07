@@ -160,7 +160,7 @@ async function checkSavedEvidence(date) {
   const weak = [];
   const notPassing = [];
   const reportRequirements = [
-    ["# Dogfood-отчёт Timeskein", "# Timeskein dogfood report"],
+    ["# Отчёт закрытия дня Timeskein", "# Dogfood-отчёт Timeskein", "# Timeskein dogfood report"],
     ["## Данные фокуса", "## Focus Data"],
     ["## Короткое закрытие"],
     ["Закрытие уложилось в 10 минут"],

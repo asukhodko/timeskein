@@ -67,7 +67,7 @@ try {
     { cwd: repoRoot }
   );
 
-  assert(stdout.includes("# Dogfood-отчёт Timeskein - 2026-06-30"), "report title is missing");
+  assert(stdout.includes("# Отчёт закрытия дня Timeskein - 2026-06-30"), "report title is missing");
   assert(
     stdout.includes("Статус отчёта: черновик — осталось") &&
       stdout.includes("перед финальным отчётом"),

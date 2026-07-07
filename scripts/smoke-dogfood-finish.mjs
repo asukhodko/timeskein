@@ -52,7 +52,7 @@ try {
   `);
   const clean = await runFinish(cleanDb);
   assert(clean.code === 0, "stopped day should finish");
-  assert(clean.stdout.includes("# Dogfood-отчёт Timeskein - 2026-06-30"), "finish did not output dogfood report");
+  assert(clean.stdout.includes("# Отчёт закрытия дня Timeskein - 2026-06-30"), "finish did not output dogfood report");
   assert(clean.stdout.includes("started before day"), "finish did not include overlapping focus session");
   assert(clean.stdout.includes("## Блоки на границе дня"), "finish did not flag day-boundary blocks");
   assert(clean.stdout.includes("finished block"), "finish did not include focus session note");
@@ -61,11 +61,11 @@ try {
   const cleanReportPath = join(tempDir, "clean-report.md");
   const cleanSaved = await runFinish(cleanDb, ["--out", cleanReportPath]);
   assert(cleanSaved.code === 0, "stopped day should save a report");
-  assert(cleanSaved.stdout.includes(`Сохранён dogfood-отчёт Timeskein: ${cleanReportPath}`), "finish did not report saved file path");
+  assert(cleanSaved.stdout.includes(`Сохранён отчёт закрытия дня Timeskein: ${cleanReportPath}`), "finish did not report saved file path");
   assert(!cleanSaved.stdout.includes("Saved Timeskein dogfood report:"), "finish leaked old English saved-report message");
   const cleanSavedMarkdown = await readFile(cleanReportPath, "utf8");
   assert(
-    cleanSavedMarkdown.includes("# Dogfood-отчёт Timeskein - 2026-06-30"),
+    cleanSavedMarkdown.includes("# Отчёт закрытия дня Timeskein - 2026-06-30"),
     "saved report did not include dogfood report title"
   );
   assert(cleanSavedMarkdown.includes("### Цена входа"), "saved report did not include review prompts");
@@ -75,7 +75,7 @@ try {
   const defaultReportPath = join(tempDir, "timeskein-dogfood-report-2026-06-30.md");
   const defaultRcPath = join(tempDir, "timeskein-dogfood-rc-check-2026-06-30.md");
   assert(
-    cleanSavedDefault.stdout.includes("Сохранён dogfood-отчёт Timeskein:") &&
+    cleanSavedDefault.stdout.includes("Сохранён отчёт закрытия дня Timeskein:") &&
       cleanSavedDefault.stdout.includes("timeskein-dogfood-report-2026-06-30.md"),
     "finish --save did not report saved dogfood report"
   );

@@ -356,7 +356,7 @@ function buildDogfoodReport(
   });
 
   const lines = [
-    `# Dogfood-отчёт Timeskein - ${date}`,
+    `# Отчёт закрытия дня Timeskein - ${date}`,
     "",
     `Статус отчёта: ${reportState}`,
     "",

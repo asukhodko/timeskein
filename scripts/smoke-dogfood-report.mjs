@@ -213,12 +213,16 @@ try {
   );
   assert(stdout.includes("## Дополнительный разбор"), "report did not include optional deep-review section");
   assert(
-    stdout.includes("Этот раздел не обязателен для закрытия дня"),
+    stdout.includes("Не нужен для закрытия дня. Оставь пустым"),
     "report did not make the deep-review section optional"
   );
   assert(!stdout.includes("## Вечерний разбор"), "report should not make the deep-review section sound mandatory");
-  assert(stdout.includes("### Цена входа"), "report did not include entry cost prompts");
-  assert(stdout.includes("Данных достаточно для разговора о дне: да/нет"), "report did not include verdict prompts");
+  assert(stdout.includes("Наблюдение про вход, возврат или восстановление"), "report did not leave a small optional reflection hook");
+  assert(!stdout.includes("### Цена входа"), "optional deep-review section should not look like a large evening questionnaire");
+  assert(
+    !stdout.includes("Данных достаточно для разговора о дне: да/нет"),
+    "optional deep-review section should not add another verdict checklist"
+  );
 
   await runSql(`
     DELETE FROM work_item_events;

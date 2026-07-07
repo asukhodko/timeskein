@@ -7,6 +7,7 @@ import {
   formatDayClosurePrompt,
   formatDogfoodReportState,
   formatGapDayEventDraft,
+  formatAdditionalReviewMarkdown,
   buildTrayStatusTitle,
   formatFocusMarkdownForReport,
   formatReportButtonLabel,
@@ -479,4 +480,17 @@ test('copied report keeps key focus and telemetry sections localized', () => {
 
   const missingClosure = formatShortClosureMarkdown('## App Telemetry\n\nTotal events: 0')
   assert(missingClosure.includes('Закрытие уложилось в 10 минут: нет данных (закрытие не измерено)'))
+})
+
+test('additional review stays optional and small', () => {
+  const markdown = formatAdditionalReviewMarkdown()
+
+  assert(markdown.includes('## Дополнительный разбор'))
+  assert(markdown.includes('Не нужен для закрытия дня'))
+  assert(markdown.includes('Оставь пустым'))
+  assert(markdown.includes('- Что разобрать позже:'))
+  assert(markdown.includes('- Наблюдение про вход, возврат или восстановление:'))
+  assert(markdown.includes('- Трение Timeskein:'))
+  assert(!markdown.includes('### Цена входа'), 'optional deep review should not look like a large evening questionnaire')
+  assert(!markdown.includes('Данных достаточно для разговора о дне: да/нет'), 'verdict prompts belong to reflection, not cheap closure')
 })

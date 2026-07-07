@@ -3210,12 +3210,12 @@ export function buildTrayStatusTitle(session: FocusSessionView | undefined, now:
 function formatTrayDuration(totalSeconds: number) {
   const minutes = Math.max(Math.floor(totalSeconds / 60), 0)
   if (minutes < 60) {
-    return `${minutes}m`
+    return `${minutes} мин`
   }
 
   const hours = Math.floor(minutes / 60)
   const rest = minutes % 60
-  return rest === 0 ? `${hours}h` : `${hours}h${rest}m`
+  return rest === 0 ? `${hours} ч` : `${hours} ч ${rest} мин`
 }
 
 function ActiveFocusSession({

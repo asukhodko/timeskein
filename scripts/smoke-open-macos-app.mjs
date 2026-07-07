@@ -177,8 +177,11 @@ async function assertMacosWindowPolicy() {
     "Tauri tray menu must keep user-facing labels in Russian"
   );
   assert(
-    mainSource.includes("{active} в фокусе") && mainSource.includes("{} сегодня"),
-    "Tauri tray status must keep focus/day labels in Russian"
+    mainSource.includes("{active} в фокусе") &&
+      mainSource.includes("{} сегодня") &&
+      mainSource.includes("{minutes} мин") &&
+      mainSource.includes("{hours} ч"),
+    "Tauri tray status must keep focus/day labels and duration units in Russian"
   );
   assert(
     !mainSource.includes('"Show/Hide Timeskein"') &&

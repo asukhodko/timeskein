@@ -68,7 +68,7 @@ test('clock time stays 24-hour and Russian-facing', () => {
 
 test('tray status labels stay Russian-facing', () => {
   const now = new Date('2026-07-07T10:30:00+03:00')
-  assert.equal(buildTrayStatusTitle(undefined, now, 65 * 60), '1h5m сегодня')
+  assert.equal(buildTrayStatusTitle(undefined, now, 65 * 60), '1 ч 5 мин сегодня')
   assert.equal(
     buildTrayStatusTitle(
       {
@@ -87,7 +87,7 @@ test('tray status labels stay Russian-facing', () => {
       },
       now
     ),
-    '20m в фокусе +5m'
+    '20 мин в фокусе +5 мин'
   )
 })
 

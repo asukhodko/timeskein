@@ -270,7 +270,7 @@ Third real dogfood day and release baseline:
 - Delete with confirmation
 - Global shortcut registration with fallback candidates
 - Tray/menu bar entry point on macOS with Show/Hide and Quit actions
-- Tray/menu bar title shows a short active focus counter such as `12m Focus`, and today's total when no block is active
+- Tray/menu bar title shows a short Russian active focus counter such as `12 мин в фокусе`, and today's total when no block is active
 - The native shell refreshes the tray/menu bar title through the local API even when the webview window is hidden
 - Borderless window can be moved by dragging the header
 - The macOS window is not configured as always-on-top and is not skipped from normal app switching

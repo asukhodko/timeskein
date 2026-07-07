@@ -248,15 +248,15 @@ async fn send_local_api_request(port: u16, body: &str) -> anyhow::Result<String>
 fn format_tray_duration(total_seconds: i64) -> String {
     let minutes = (total_seconds.max(0) / 60).max(0);
     if minutes < 60 {
-        return format!("{minutes}m");
+        return format!("{minutes} мин");
     }
 
     let hours = minutes / 60;
     let rest = minutes % 60;
     if rest == 0 {
-        format!("{hours}h")
+        format!("{hours} ч")
     } else {
-        format!("{hours}h{rest}m")
+        format!("{hours} ч {rest} мин")
     }
 }
 

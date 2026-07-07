@@ -1035,12 +1035,13 @@ async function buildDogfoodReportMarkdown(
   workItems: WorkItemView[] = [],
   now = new Date()
 ) {
+  const pendingReviewItemCount = countPendingReviewItems(reviewItems)
   const hasActiveWorkItems = activeWorkItems.length > 0
-  const reportState = activeFocus
-    ? 'черновик — фокус-блок ещё активен'
-    : hasActiveWorkItems
-      ? 'черновик — у Work Item ещё стоит активный статус'
-      : 'финальный — нет активных фокус-блоков и активных Work Item'
+  const reportState = formatDogfoodReportState({
+    activeFocus: Boolean(activeFocus),
+    activeWorkItemCount: activeWorkItems.length,
+    pendingReviewItemCount,
+  })
 
   const lines = [
     `# Dogfood-отчёт Timeskein - ${formatLocalDate(now)}`,
@@ -1745,6 +1746,23 @@ function pluralRu(value: number, one: string, few: string, many: string) {
   if (mod10 === 1 && mod100 !== 11) return one
   if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return few
   return many
+}
+
+export function formatDogfoodReportState({
+  activeFocus,
+  activeWorkItemCount,
+  pendingReviewItemCount,
+}: {
+  activeFocus: boolean
+  activeWorkItemCount: number
+  pendingReviewItemCount: number
+}) {
+  if (activeFocus) return 'черновик — фокус-блок ещё активен'
+  if (activeWorkItemCount > 0) return 'черновик — у Work Item ещё стоит активный статус'
+  if (pendingReviewItemCount > 0) {
+    return `черновик — осталось ${pendingReviewItemCount} ${pluralRu(pendingReviewItemCount, 'проверка', 'проверки', 'проверок')} перед финальным отчётом`
+  }
+  return 'финальный — нет активных фокус-блоков, активных Work Item и незакрытых проверок'
 }
 
 export function formatReviewChecklistMarkdown(items: DayReviewItem[]) {

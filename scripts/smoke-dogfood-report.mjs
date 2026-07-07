@@ -69,8 +69,9 @@ try {
 
   assert(stdout.includes("# Dogfood-отчёт Timeskein - 2026-06-30"), "report title is missing");
   assert(
-    stdout.includes("Статус отчёта: финальный — нет активных фокус-блоков и активных Work Item"),
-    "final report state is missing"
+    stdout.includes("Статус отчёта: черновик — осталось") &&
+      stdout.includes("перед финальным отчётом"),
+    "report with pending review items should not look final"
   );
   assert(stdout.includes("## Данные фокуса"), "report did not include focus data section");
   assert(stdout.includes("## Телеметрия приложения"), "report did not include app telemetry section");
@@ -81,7 +82,7 @@ try {
   assert(stdout.includes("| Фокус-блоки видны | ок |"), "report daily-control audit did not pass focus blocks");
   assert(
     stdout.includes("0 активных фокус-блоков, 0 Work Item с активным статусом") &&
-      stdout.includes("Статус отчёта: финальный — нет активных фокус-блоков и активных Work Item"),
+      stdout.includes("Статус отчёта: черновик — осталось"),
     "report daily-control audit evidence did not localize final-state blockers"
   );
   assert(stdout.includes("3 входов, 1:05:00 учтено"), "report daily-control audit evidence did not localize focus blocks");

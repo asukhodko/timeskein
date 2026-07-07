@@ -273,11 +273,20 @@ function buildDogfoodReport(
   const hasActiveWorkItems = activeWorkItems.length > 0;
   const humanFocusMarkdown = formatFocusMarkdownForReport(dayMarkdown);
   const humanTelemetryMarkdown = formatTelemetryForReport(telemetryMarkdown);
-  const reportState = activeFocus
-    ? "черновик — фокус-блок ещё активен"
-    : hasActiveWorkItems
-      ? "черновик — у Work Item ещё стоит активный статус"
-      : "финальный — нет активных фокус-блоков и активных Work Item";
+  const reviewItems = buildReviewChecklistItems({
+    activeFocus,
+    activeWorkItems,
+    openCaptures,
+    captureActivity,
+    focusMarkdown,
+    telemetryMarkdown,
+  });
+  const pendingReviewItemCount = countPendingReviewItems(reviewItems);
+  const reportState = formatDogfoodReportState({
+    activeFocus: Boolean(activeFocus),
+    activeWorkItemCount: activeWorkItems.length,
+    pendingReviewItemCount,
+  });
 
   const lines = [
     `# Dogfood-отчёт Timeskein - ${date}`,
@@ -321,15 +330,6 @@ function buildDogfoodReport(
   if (captureActivity.length > 0) {
     lines.push(formatCaptureActivityMarkdown(captureActivity).trim(), "");
   }
-
-  const reviewItems = buildReviewChecklistItems({
-    activeFocus,
-    activeWorkItems,
-    openCaptures,
-    captureActivity,
-    focusMarkdown,
-    telemetryMarkdown,
-  });
 
   lines.push(formatReviewChecklistMarkdown(reviewItems).trim(), "");
   lines.push(formatDailyControlGoalAuditMarkdown({
@@ -927,6 +927,29 @@ function appendReviewChecklistGroup(lines, title, items) {
 
 function isAcceptAsIsReviewItem(item) {
   return item.level === "review" && ACCEPT_AS_IS_REVIEW_TITLES.has(item.title);
+}
+
+function countPendingReviewItems(items) {
+  return items.filter((item) => item.level !== "ok").length;
+}
+
+function formatDogfoodReportState({ activeFocus, activeWorkItemCount, pendingReviewItemCount }) {
+  if (activeFocus) return "черновик — фокус-блок ещё активен";
+  if (activeWorkItemCount > 0) return "черновик — у Work Item ещё стоит активный статус";
+  if (pendingReviewItemCount > 0) {
+    return `черновик — осталось ${pendingReviewItemCount} ${pluralRu(pendingReviewItemCount, "проверка", "проверки", "проверок")} перед финальным отчётом`;
+  }
+  return "финальный — нет активных фокус-блоков, активных Work Item и незакрытых проверок";
+}
+
+function pluralRu(value, one, few, many) {
+  const abs = Math.abs(value);
+  const mod10 = abs % 10;
+  const mod100 = abs % 100;
+
+  if (mod10 === 1 && mod100 !== 11) return one;
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return few;
+  return many;
 }
 
 function formatCaptureActivityMarkdown(captures) {

@@ -3,6 +3,7 @@ import test from 'node:test'
 
 import {
   formatDayReviewItem,
+  formatDogfoodReportState,
   formatGapDayEventDraft,
   formatFocusMarkdownForReport,
   formatReviewChecklistMarkdown,
@@ -77,6 +78,25 @@ test('day review action buttons explain what will happen', () => {
     assert.equal(formatReviewActionLabel(action), label)
     assert.notEqual(label, 'Принять')
   }
+})
+
+test('dogfood report state stays draft until review items are clear', () => {
+  assert.equal(
+    formatDogfoodReportState({ activeFocus: true, activeWorkItemCount: 0, pendingReviewItemCount: 0 }),
+    'черновик — фокус-блок ещё активен'
+  )
+  assert.equal(
+    formatDogfoodReportState({ activeFocus: false, activeWorkItemCount: 1, pendingReviewItemCount: 0 }),
+    'черновик — у Work Item ещё стоит активный статус'
+  )
+  assert.equal(
+    formatDogfoodReportState({ activeFocus: false, activeWorkItemCount: 0, pendingReviewItemCount: 2 }),
+    'черновик — осталось 2 проверки перед финальным отчётом'
+  )
+  assert.equal(
+    formatDogfoodReportState({ activeFocus: false, activeWorkItemCount: 0, pendingReviewItemCount: 0 }),
+    'финальный — нет активных фокус-блоков, активных Work Item и незакрытых проверок'
+  )
 })
 
 test('gap review helpers keep repeated Explain actions on the next unresolved gap', () => {

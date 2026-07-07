@@ -160,6 +160,14 @@ try {
     "- [x] Можно копировать финальный отчёт - Автоматических замечаний нет",
     "",
   ].join("\n");
+  const shortClosureMarkdown = [
+    "## Короткое закрытие",
+    "",
+    "- Данным можно доверять: да",
+    "- Главное наблюдение дня: закрытие дня стало коротким.",
+    "- Следующий шаг после закрытия: запустить goal-check.",
+    "",
+  ].join("\n");
   const groupedReviewWithoutNextActionMarkdown = [
     "## Проверка перед отчётом",
     "",
@@ -189,6 +197,7 @@ try {
       "# Dogfood-отчёт Timeskein - 2026-06-30",
       "Статус отчёта: финальный — нет активных фокус-блоков, активных дел и незакрытых проверок",
       "## Focus Data",
+      shortClosureMarkdown,
       groupedReviewMarkdown,
       "## Daily Control Goal Audit",
       "",
@@ -241,6 +250,7 @@ try {
       "# Dogfood-отчёт Timeskein - 2026-06-30",
       "Статус отчёта: финальный — нет активных фокус-блоков, активных дел и незакрытых проверок",
       "## Focus Data",
+      shortClosureMarkdown,
       flatReviewMarkdown,
       reportAuditMarkdown,
       "## App Telemetry",
@@ -270,6 +280,7 @@ try {
       "# Dogfood-отчёт Timeskein - 2026-06-30",
       "Статус отчёта: финальный — нет активных фокус-блоков, активных дел и незакрытых проверок",
       "## Focus Data",
+      shortClosureMarkdown,
       groupedReviewWithoutNextActionMarkdown,
       reportAuditMarkdown,
       "## App Telemetry",
@@ -295,6 +306,7 @@ try {
       "# Dogfood-отчёт Timeskein - 2026-06-30",
       "Статус отчёта: черновик — осталось 1 проверка перед финальным отчётом",
       "## Focus Data",
+      shortClosureMarkdown,
       groupedReviewMarkdown,
       reportAuditMarkdown,
       "## App Telemetry",
@@ -326,6 +338,27 @@ try {
       "# Dogfood-отчёт Timeskein - 2026-06-30",
       "Статус отчёта: финальный — нет активных фокус-блоков, активных дел и незакрытых проверок",
       "## Focus Data",
+      groupedReviewMarkdown,
+      reportAuditMarkdown,
+      "## App Telemetry",
+      "",
+    ].join("\n")
+  );
+
+  const missingShortClosureEvidence = await runGoalCheck(["--check-saved-evidence-only", "--date", "2026-06-30"], tempDir);
+  assert(missingShortClosureEvidence.code !== 0, "saved evidence without short closure should fail");
+  assert(
+    `${missingShortClosureEvidence.stdout}${missingShortClosureEvidence.stderr}`.includes("нет раздела «## Короткое закрытие»"),
+    "saved evidence without short closure did not mention the missing short closure section"
+  );
+
+  await writeFile(
+    join(tempDir, "timeskein-dogfood-report-2026-06-30.md"),
+    [
+      "# Dogfood-отчёт Timeskein - 2026-06-30",
+      "Статус отчёта: финальный — нет активных фокус-блоков, активных дел и незакрытых проверок",
+      "## Focus Data",
+      shortClosureMarkdown,
       groupedReviewMarkdown,
       reportAuditMarkdown,
       "## App Telemetry",

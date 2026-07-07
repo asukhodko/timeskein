@@ -5,7 +5,9 @@ import {
   formatDayReviewItem,
   formatFocusMarkdownForReport,
   formatReviewChecklistMarkdown,
+  formatReviewActionLabel,
   formatTelemetryForReport,
+  type DayReviewAction,
   type DayReviewItem,
 } from '../apps/desktop/src/components/FocusPanel'
 import { CAPTURE_INBOX_LABELS } from '../apps/desktop/src/components/CaptureInbox'
@@ -39,6 +41,25 @@ test('day review checklist keeps the evening ritual in Russian', () => {
   assert(markdown.includes('Можно копировать финальный отчёт'), 'ready label should be localized')
   assert(!markdown.includes('Review before report'), 'old English heading should not leak into the report')
   assert(!markdown.includes('Stop the active focus block'), 'old English blocker should not leak into the report')
+})
+
+test('day review action buttons explain what will happen', () => {
+  const labels: Record<DayReviewAction, string> = {
+    stage_significant_gap: 'Объяснить',
+    stage_open_gap: 'Объяснить',
+    accept_open_captures: 'Оставить открытыми',
+    accept_work_item_time_badges: 'Бейджи верны',
+    accept_activity_zones: 'Зоны верны',
+    accept_capture_usage: 'Инбокс проверен',
+    accept_entry_paths: 'Пути проверены',
+    accept_window_entrypoints: 'Окно проверено',
+    accept_tracking_accuracy: 'Трекинг верен',
+  }
+
+  for (const [action, label] of Object.entries(labels) as [DayReviewAction, string][]) {
+    assert.equal(formatReviewActionLabel(action), label)
+    assert.notEqual(label, 'Принять')
+  }
 })
 
 test('copied report keeps key focus and telemetry sections localized', () => {

@@ -455,7 +455,7 @@ function assessEvidence(evidence, minFocusSeconds) {
   }
 
   if (evidence.openCaptures.length > 0 && evidence.telemetry.captureFollowupReviews === 0) {
-    reviewItems.push(`${evidence.openCaptures.length} открытых отвлечений осталось. Закрой, преврати в Work Item или явно прими как follow-up.`);
+    reviewItems.push(`${evidence.openCaptures.length} открытых отвлечений осталось. Закрой, преврати в Work Item или явно оставь открытыми.`);
   }
 
   if (evidence.capturesCreatedToday.length === 0 && evidence.telemetry.captureUsageReviews === 0) {
@@ -677,7 +677,7 @@ function buildRcReport(date, path, evidence, assessment, minFocusSeconds, strict
     "## Ручной RC-вердикт",
     "",
     "- Timeskein был основным трекером всего дня: да/нет",
-    "- Зоны активности достаточно отделили работу от coordination/recovery/idle/personal: да/нет",
+    "- Зоны активности достаточно отделили работу от координации, восстановления, простоя и личных дел: да/нет",
     "- Day Events, Work Item Events или заметки снизили восстановление дня по памяти: да/нет",
     "- Ошибки трекинга можно было исправить перед финальным отчётом: да/нет",
     "- Capture Inbox удерживал фокус, а не стал ещё одной кучей: да/нет",

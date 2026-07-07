@@ -1068,7 +1068,7 @@ async function buildDogfoodReportMarkdown(
       '## Открытые отвлечения',
       '',
       ...openCaptures.map((capture) => `- ${formatClockTime(capture.created_at)} ${formatMarkdownListText(capture.text)}`),
-      '- Разбери их: закрыть, превратить в Work Item, добавить событием или явно принять как follow-up.',
+      '- Разбери их: закрыть, превратить в Work Item, добавить событием или явно оставить открытыми.',
       ''
     )
   }
@@ -1212,7 +1212,7 @@ export type DayReviewItem = {
   action?: DayReviewAction
 }
 
-type DayReviewAction =
+export type DayReviewAction =
   | 'accept_tracking_accuracy'
   | 'accept_open_captures'
   | 'accept_work_item_time_badges'
@@ -1487,9 +1487,9 @@ function DayReviewPanel({
                 void acceptAllReviews()
               }}
               className="rounded border border-amber-800 px-1.5 py-0.5 text-[11px] font-medium text-amber-100 hover:border-amber-500"
-              title="Принять все оставшиеся жёлтые проверки, если они уже осознанно проверены"
+              title="Отметить все оставшиеся жёлтые проверки как осознанно проверенные"
             >
-              Принять всё
+              Всё проверено
             </button>
           )}
           {onStartClosure && (
@@ -1552,7 +1552,7 @@ function formatDayClosurePrompt(
   }
 
   if (stage === 'review') {
-    return `Осталось ${reviews} ${pluralRu(reviews, 'проверка', 'проверки', 'проверок')}: запиши контекст или нажми «Принять», если данные уже достаточно честные.`
+    return `Осталось ${reviews} ${pluralRu(reviews, 'проверка', 'проверки', 'проверок')}: запиши недостающий контекст или отметь пункт как проверенный, если данные уже достаточно честные.`
   }
 
   const elapsedText = closureElapsedSeconds == null ? '' : ` Закрытие идёт ${formatDuration(closureElapsedSeconds)}.`
@@ -1599,12 +1599,26 @@ function DayReviewGroup({
   )
 }
 
-function formatReviewActionLabel(action: DayReviewAction) {
-  if (action === 'stage_significant_gap' || action === 'stage_open_gap') {
-    return 'Записать'
+export function formatReviewActionLabel(action: DayReviewAction) {
+  switch (action) {
+    case 'stage_significant_gap':
+    case 'stage_open_gap':
+      return 'Объяснить'
+    case 'accept_open_captures':
+      return 'Оставить открытыми'
+    case 'accept_work_item_time_badges':
+      return 'Бейджи верны'
+    case 'accept_activity_zones':
+      return 'Зоны верны'
+    case 'accept_capture_usage':
+      return 'Инбокс проверен'
+    case 'accept_entry_paths':
+      return 'Пути проверены'
+    case 'accept_window_entrypoints':
+      return 'Окно проверено'
+    case 'accept_tracking_accuracy':
+      return 'Трекинг верен'
   }
-
-  return 'Принять'
 }
 
 function reviewItemDotClass(level: DayReviewItem['level']) {

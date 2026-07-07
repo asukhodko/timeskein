@@ -302,7 +302,7 @@ function buildDogfoodReport(
       "## Открытые отвлечения",
       "",
       ...openCaptures.map((capture) => `- ${formatClockTime(capture.created_at)} ${formatMarkdownListText(capture.text)}`),
-      "- Разбери их: закрыть, превратить в Work Item, добавить событием или явно принять как follow-up.",
+      "- Разбери их: закрыть, превратить в Work Item, добавить событием или явно оставить открытыми.",
       ""
     );
   }

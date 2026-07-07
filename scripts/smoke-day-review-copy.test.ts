@@ -215,7 +215,7 @@ test('report button starts the closure ritual before it offers copying', () => {
       reportIsDraft: false,
       reportHasPendingReview: true,
     }),
-    'Копировать с проверками'
+    'Копировать черновик'
   )
   assert.equal(
     formatReportButtonLabel({

@@ -38,8 +38,7 @@ pnpm dogfood:start:clean
 - осознанно принимай optional-проверки, которые намеренно остаются как есть: `Зоны верны`, `Инбокс проверен`, `Пути проверены`, `Окно проверено`, `Время верно`, `Трекинг верен` или `Оставить открытыми`;
 - используй `Всё проверено` только когда все оставшиеся жёлтые пункты действительно можно принять как есть; Timeskein показывает этот shortcut только для безопасных optional-проверок;
 - нажми `Копировать отчёт` в Today и вставь dogfood-отчёт в дневную заметку;
-- если кнопка говорит `Копировать черновик`, сначала останови активный фокус-блок или сними активный статус с дела; черновик может начать замер закрытия, но завершает его только финальный отчёт;
-- если кнопка говорит `Копировать с проверками`, обработай или осознанно прими оставшиеся review-пункты;
+- если кнопка говорит `Копировать черновик`, сначала останови активный фокус-блок, сними активный статус с дела или обработай/прими оставшиеся review-пункты; черновик может начать замер закрытия, но завершает его только финальный отчёт;
 - используй `Копировать день`, когда нужна только сырая картина дня;
 - если clipboard недоступен, скопируй выделенный Markdown из резервного поля;
 - если нужен сохранённый Markdown-след, выполни `pnpm dogfood:finish:save`; команда сохранит дневной отчёт и RC-check;
@@ -359,12 +358,12 @@ Use `Копировать день` only when the raw day picture is enough.
 If Today or the report shows `Открытый разрыв`, there was a significant interval after the last stopped block with no active focus block. Treat it as either a real break or a lost-tracking interval during review.
 If the report shows `Открытые отвлечения`, edit, delete, resolve, convert, or explicitly leave them open before considering the day fully reviewed.
 If Today shows `Проверка перед отчётом` during the day, it stays compact until `Начать закрытие дня`: this is a reminder that the evening ritual exists, not a running list of accusations.
-The Today report button follows the same flow: before closure starts it says `Начать закрытие` and only opens the ritual; after that it offers `Копировать черновик`, `Копировать с проверками`, or `Копировать отчёт` according to the current state.
+The Today report button follows the same flow: before closure starts it says `Начать закрытие` and only opens the ritual; after that it offers either `Копировать черновик` while blockers or review checks remain, or `Копировать отчёт` when the report is final.
 If Today or the report shows the full `Проверка перед отчётом`, use it as the minimal evening queue: active-state blockers under `Сначала закрыть` must be cleared, `Дописать или исправить` items should produce a small artifact, and `Осознанно проверить` items can be accepted when the data is already honest enough.
 Use `Ближайшее действие` as the current step. It appears in the panel, copied Markdown, and CLI dogfood report, so a draft report can still guide the next action without reconstructing the whole checklist from memory. For blockers and single review items, the line also names the exact button or gesture, for example `Стоп`, `Объяснить`, or `Время верно`.
 Проверка также подсвечивает слабые доказательства дня: все блоки попали в одну Activity Zone, нет non-work времени, нет заметок/событий дел для контекста или нет следа проверки коррекций. Если таймлайн уже точный, используй `Трекинг верен`, чтобы в отчёте осталось доказательство осознанной проверки. Если дню не хватает контекста, используй `Добавить контекст`, чтобы подготовить короткое событие дня вместо поздней реконструкции по памяти.
 Когда все оставшиеся жёлтые пункты — optional accept-as-is проверки, Timeskein показывает `Всё проверено`. Используй это только после короткой осознанной проверки; shortcut не появляется для разрывов, где нужно `Объяснить`, контекстных пунктов, где нужно `Добавить контекст`, или проверок без безопасного автоматического действия.
-Если фокус-блок ещё идёт, у дела всё ещё стоит `active`, или review-проверки не закрыты, UI покажет `Копировать черновик` или `Копировать с проверками`, а Markdown-статус будет `черновик`. Останови активный блок, сними активный статус с дела или обработай/прими оставшиеся проверки перед тем, как считать отчёт финальным артефактом дня.
+Если фокус-блок ещё идёт, у дела всё ещё стоит `active`, или review-проверки не закрыты, UI покажет `Копировать черновик`, а Markdown-статус будет `черновик`. Останови активный блок, сними активный статус с дела или обработай/прими оставшиеся проверки перед тем, как считать отчёт финальным артефактом дня.
 If clipboard access is denied, Timeskein shows a selected text box with the Markdown. Copy it manually from there.
 
 If the UI copy path is unavailable, export the same raw day picture from SQLite:

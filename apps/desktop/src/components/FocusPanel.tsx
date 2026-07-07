@@ -1860,8 +1860,7 @@ export function formatReportButtonLabel({
   if (copyState === 'copied') return 'Скопировано'
   if (copyState === 'failed') return 'Ошибка'
   if (!closureStarted) return 'Начать закрытие'
-  if (reportIsDraft) return 'Копировать черновик'
-  if (reportHasPendingReview) return 'Копировать с проверками'
+  if (reportIsDraft || reportHasPendingReview) return 'Копировать черновик'
   return 'Копировать отчёт'
 }
 

@@ -1240,7 +1240,7 @@ export function formatTelemetryForReport(markdown: string) {
     .replace(/^Manual copy fallbacks:/gm, 'Ручных fallback-копирований:')
     .replace(/^Capture created\/resolved\/converted:/gm, 'Отвлечений создано/закрыто/превращено:')
     .replace(/^Capture follow-up reviews:/gm, 'Проверок открытых отвлечений:')
-    .replace(/^Work Item time badge reviews:/gm, 'Проверок бейджей времени дел:')
+    .replace(/^Work Item time badge reviews:/gm, 'Проверок времени по делам:')
     .replace(/^Activity Zone reviews:/gm, 'Проверок зон активности:')
     .replace(/^Capture usage reviews:/gm, 'Проверок использования инбокса:')
     .replace(/^Entry path reviews:/gm, 'Проверок путей входа:')
@@ -1731,7 +1731,7 @@ export function formatReviewActionLabel(action: DayReviewAction) {
     case 'accept_open_captures':
       return 'Оставить открытыми'
     case 'accept_work_item_time_badges':
-      return 'Бейджи верны'
+      return 'Время верно'
     case 'accept_activity_zones':
       return 'Зоны верны'
     case 'accept_capture_usage':
@@ -1788,7 +1788,7 @@ const REVIEW_TITLE_LABELS: Record<string, string> = {
   'Explain current open gap': 'Объяснить текущий открытый разрыв',
   'Review Activity Zone coverage': 'Проверить зоны активности',
   'Confirm non-work tracked time': 'Проверить нерабочее время',
-  'Confirm Work Item today/total badges': 'Проверить today/total у дел',
+  'Confirm Work Item today/total badges': 'Проверить время по делам',
   'Capture Inbox untested today': 'Инбокс отвлечений сегодня не проверен',
   'Captures were not linked to active focus': 'Отвлечения не были связаны с активным фокусом',
   'No day or Work Item notes/events': 'Нет событий дня или дел',
@@ -1992,7 +1992,7 @@ function formatDailyControlGoalAuditMarkdown({
       requirement: 'Work Item totals available',
       status: todayMarkdown.includes('## By Work Item') && !hasReview('Confirm Work Item today/total badges') ? 'pass' : 'review',
       evidence: todayMarkdown.includes('## By Work Item')
-        ? `Раздел «По делам» есть, проверок бейджей в UI: ${workItemTimeBadgeReviews}`
+        ? `Раздел «По делам» есть, проверок времени в UI: ${workItemTimeBadgeReviews}`
         : 'Раздела «По делам» нет',
     },
     {

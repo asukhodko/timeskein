@@ -41,7 +41,7 @@ try {
     "ready output did not include concrete global shortcut candidates"
   );
   assert(
-    ready.stdout.includes("проверь бейджи `today` и `total`"),
+    ready.stdout.includes("проверь в списке дел время за день и всего"),
     "ready output did not include item time-total UI reminder"
   );
   assert(

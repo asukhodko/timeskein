@@ -64,7 +64,7 @@ These were accepted limitations for the dogfood baseline, not blockers:
   limitations; both have been fixed in code after acceptance. The next dogfood
   day should confirm them in real use, and both show and hide request telemetry should
   prove that window entrypoints were exercised.
-- The Work Item list shows today/total time spent per item when available.
+- The Work Item list shows day/total time spent per item when available.
 - The Work Item list now has `Recent`, `Today`, `Pinned`, and `All` modes; the
   next dogfood day should verify that the accumulated multi-day inventory stays
   cheap to navigate.
@@ -82,7 +82,7 @@ Post-dogfood correction and first review enrichment are now partly implemented:
   protection;
 - copied reports use the corrected focus-session rows.
 - Work Items carry Activity Zones, focus blocks keep zone snapshots, the list
-  shows today/total spent time, and copied reports include Activity Zone totals.
+  shows day/total spent time, and copied reports include Activity Zone totals.
 - Timestamped Work Item Events can be appended from the note editor and appear
   in UI/CLI day reports.
 - Timestamped Day Events can be appended from the focus panel and appear in
@@ -99,7 +99,7 @@ Post-dogfood correction and first review enrichment are now partly implemented:
   next dogfood day can distinguish real window entrypoint tests from passive
   visibility changes.
 - The Review Checklist can record explicit `work_item_time_badges_reviewed`
-  evidence after touched Work Item cards are checked for today/total time.
+  evidence after touched Work Item cards are checked for day/total time.
 - Work Items can be viewed through `Recent`, `Today`, `Pinned`, and `All` modes,
   while search remains the path to older matching items.
 - The Today/Work Item split can be resized and reset locally.

@@ -156,7 +156,7 @@ function buildTelemetryMarkdown(events, { raw = false } = {}) {
         `Ручных fallback-копирований: ${summary.manualCopyFallbacks}`,
         `Отвлечений создано/закрыто/превращено: ${summary.captureCreated}/${summary.captureResolved}/${summary.captureConverted}`,
         `Проверок открытых отвлечений: ${summary.captureFollowupReviews}`,
-        `Проверок бейджей времени дел: ${summary.workItemTimeBadgeReviews}`,
+        `Проверок времени по делам: ${summary.workItemTimeBadgeReviews}`,
         `Проверок зон активности: ${summary.activityZoneReviews}`,
         `Проверок использования инбокса: ${summary.captureUsageReviews}`,
         `Проверок путей входа: ${summary.entryPathReviews}`,

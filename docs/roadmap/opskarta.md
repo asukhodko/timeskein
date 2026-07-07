@@ -7,7 +7,7 @@ This is the current machine-checkable roadmap for Timeskein. The source files li
 The macOS dogfood release baseline was accepted on 2026-07-03 after three real
 tracked workdays. The 2026-07-06 post-baseline daily-control day produced a
 strong real workday trace with focus blocks, Activity Zones, Day Events, Work
-Item Events, Capture Inbox evidence, and Work Item today/total evidence. The
+Item Events, Capture Inbox evidence, and Work Item day/total time evidence. The
 remaining daily-control proof is narrower: one evening closure must be measured
 from `Начать закрытие дня` to final `Копировать отчёт`, take at most 10 minutes,
 and then pass strict `pnpm dogfood:goal-check`.
@@ -16,7 +16,7 @@ The completed `Аудит закрытия дня` in the UI/CLI dogfood report 
 `pnpm dogfood:rc-check` checked whether a real day had enough evidence for focus
 blocks, Work Item totals, Activity Zones, notes/events, captures, gaps,
 corrections, and app-friction review. Work Item totals required an explicit UI
-checklist acceptance that touched Work Item cards showed today/total time, not
+checklist acceptance that touched Work Item cards showed day/total time, not
 only the presence of `By Work Item` rows in the Markdown report. Window friction
 evidence included both show and hide request counts, so window entrypoints were
 exercised rather than inferred from passive visibility events. Entry evidence

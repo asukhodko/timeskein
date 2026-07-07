@@ -446,7 +446,7 @@ nodes:
     effort: 2
     deps:
       - id: ts.focus_core.dogfood_gate
-    notes: Fixed typing C/С opening Create, creating a new active Work Item, ambiguous last-seen timestamps, and added the first Capture Inbox baseline. Post-baseline work added Work Item title/basic-field editing, focus-block correction including add-missed-block, per-block Activity Zone snapshots/overrides, Work Item today/total time, Work Item list modes for accumulated multi-day inventories, a resizable Today/Work Item split, timestamped Day Events with explicit zones and gap/open-gap Explain shortcuts, timestamped Work Item Events, capture-to-event promotion, capture edit/delete for open items, Command+Tab/Dock restore, non-always-on-top window policy, native menu-bar status refresh, show/hide request telemetry, guarded dogfood:continue for reopening an existing day, and separate Total tracked / Work focus / Non-work tracked report totals. Remaining friction is mostly richer correction/review UI.
+    notes: Fixed typing C/С opening Create, creating a new active Work Item, ambiguous last-seen timestamps, and added the first Capture Inbox baseline. Post-baseline work added Work Item title/basic-field editing, focus-block correction including add-missed-block, per-block Activity Zone snapshots/overrides, Work Item day/total time, Work Item list modes for accumulated multi-day inventories, a resizable Today/Work Item split, timestamped Day Events with explicit zones and gap/open-gap Explain shortcuts, timestamped Work Item Events, capture-to-event promotion, capture edit/delete for open items, Command+Tab/Dock restore, non-always-on-top window policy, native menu-bar status refresh, show/hide request telemetry, guarded dogfood:continue for reopening an existing day, and separate Total tracked / Work focus / Non-work tracked report totals. Remaining friction is mostly richer correction/review UI.
     x:
       ops:
         attention_class: current
@@ -482,7 +482,7 @@ nodes:
     deps:
       - id: ts.hardening.package_app
       - id: ts.hardening.backup_reset
-    notes: "Dogfood Release Candidate doc defines the pass/fail gate. Dogfood Release Baseline records the accepted 2026-07-03 verdict and known limitations. Since acceptance, post-factum focus correction including add-missed-block, per-block Activity Zone correction, Work Item title/type/Activity Zone editing, separate Total tracked / Work focus / Non-work tracked report totals, Activity Zone report totals, today/total Work Item time, timestamped Day Events, timestamped Work Item Events with user-authored event edit/delete, capture-to-event promotion, capture edit/delete for open items, window restore, native menu bar counter refresh, and show/hide request telemetry are implemented. Remaining limitations include richer correction/review UI."
+    notes: "Dogfood Release Candidate doc defines the pass/fail gate. Dogfood Release Baseline records the accepted 2026-07-03 verdict and known limitations. Since acceptance, post-factum focus correction including add-missed-block, per-block Activity Zone correction, Work Item title/type/Activity Zone editing, separate Total tracked / Work focus / Non-work tracked report totals, Activity Zone report totals, day/total Work Item time, timestamped Day Events, timestamped Work Item Events with user-authored event edit/delete, capture-to-event promotion, capture edit/delete for open items, window restore, native menu bar counter refresh, and show/hide request telemetry are implemented. Remaining limitations include richer correction/review UI."
     x:
       ops:
         attention_class: current
@@ -504,7 +504,7 @@ nodes:
     kind: phase
     parent: ts
     status: in_progress
-    notes: The 2026-07-06 post-baseline day produced focus blocks, Activity Zones, Day Events, Work Item Events, Capture Activity, Work Item today/total evidence, and strong strict evidence. Current strict goal-check still requires a measured evening closure duration from day_closure_started/day_closure_completed.
+    notes: The 2026-07-06 post-baseline day produced focus blocks, Activity Zones, Day Events, Work Item Events, Capture Activity, Work Item day/total time evidence, and strong strict evidence. Current strict goal-check still requires a measured evening closure duration from day_closure_started/day_closure_completed.
     x:
       ops:
         attention_class: current

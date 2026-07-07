@@ -72,7 +72,7 @@ test('day review checklist keeps the evening ritual in Russian', () => {
   assert.equal(formatDayReviewItem(items[1]).title, 'Снять активный статус с дела')
   assert.equal(formatDayReviewItem(items[1]).detail, '1 дело с активным статусом')
   assert.equal(formatDayReviewItem(items[2]).title, 'Объяснить большие разрывы')
-  assert.equal(formatDayReviewItem(items[3]).title, 'Проверить today/total у дел')
+  assert.equal(formatDayReviewItem(items[3]).title, 'Проверить время по делам')
   assert.equal(formatDayReviewItem(items[3]).detail, '2 дела были в работе сегодня')
   assert.equal(formatDayReviewItem(items[4]).title, 'Проверить зоны активности')
   assert.equal(formatDayReviewItem(items[5]).title, 'Можно копировать финальный отчёт')
@@ -90,7 +90,7 @@ test('day review checklist keeps the evening ritual in Russian', () => {
   assert(markdown.includes('Остановить активный фокус-блок'), 'blocker label should be localized')
   assert(markdown.includes('Снять активный статус с дела'), 'active Work Item blocker should be user-facing')
   assert(markdown.includes('Объяснить большие разрывы'), 'review label should be localized')
-  assert(markdown.includes('Проверить today/total у дел'), 'Work Item badge review should be user-facing')
+  assert(markdown.includes('Проверить время по делам'), 'Work Item time review should be user-facing')
   assert(markdown.includes('Проверить зоны активности'), 'optional review label should be localized')
   assert(markdown.includes('Можно копировать финальный отчёт'), 'ready label should be localized')
   assert(!markdown.includes('Review before report'), 'old English heading should not leak into the report')
@@ -134,7 +134,7 @@ test('day review action buttons explain what will happen', () => {
     stage_significant_gap: 'Объяснить',
     stage_open_gap: 'Объяснить',
     accept_open_captures: 'Оставить открытыми',
-    accept_work_item_time_badges: 'Бейджи верны',
+    accept_work_item_time_badges: 'Время верно',
     accept_activity_zones: 'Зоны верны',
     accept_capture_usage: 'Инбокс проверен',
     accept_entry_paths: 'Пути проверены',

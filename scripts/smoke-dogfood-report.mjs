@@ -89,7 +89,7 @@ try {
   assert(stdout.includes("3 входов, 1:05:00 учтено"), "report daily-control audit evidence did not localize focus blocks");
   assert(stdout.includes("| Итоги по делам есть | ок |"), "report daily-control audit did not pass work item totals");
   assert(
-    stdout.includes("Раздел «По делам» есть, проверок бейджей в UI: 1"),
+    stdout.includes("Раздел «По делам» есть, проверок времени в UI: 1"),
     "report daily-control audit evidence did not localize Work Item totals"
   );
   assert(stdout.includes("| Зоны активности разделены | ок |"), "report daily-control audit did not pass zones");
@@ -156,7 +156,7 @@ try {
     "report review checklist should not flag correction coverage when a correction was applied"
   );
   assert(
-    stdout.includes("Проверить today/total у дел") === false,
+    stdout.includes("Проверить время по делам") === false,
     "report review checklist should not flag Work Item badge coverage when explicitly reviewed"
   );
   assert(stdout.includes("## Открытые отвлечения"), "report did not include open captures section");
@@ -223,7 +223,7 @@ try {
     "report review checklist did not flag missing day/Work Item context"
   );
   assert(
-    thinEvidenceStdout.includes("Проверить today/total у дел"),
+    thinEvidenceStdout.includes("Проверить время по делам"),
     "report review checklist did not flag missing Work Item badge review"
   );
   assert(

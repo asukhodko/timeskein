@@ -108,7 +108,7 @@ pnpm dogfood:goal-check -- --date YYYY-MM-DD
 Both saved files can contain personal or internal work context and are ignored by git.
 The RC evidence summary also checks the post-baseline review data: work focus vs
 non-work tracked time, Activity Zone coverage, Work Item notes/events, Work Item
-today/total badge review acceptance, Capture Inbox coverage, typed entry and
+day/total time review acceptance, Capture Inbox coverage, typed entry and
 selected/list continuation evidence, focus correction/review telemetry, measured
 day-closure duration, and
 window/show-hide telemetry, including both show and hide request counts from
@@ -123,7 +123,7 @@ The final evidence must include:
 - focus blocks for the real workday;
 - total tracked time, work focus, and non-work tracked time;
 - Work Item totals;
-- accepted review that touched Work Item cards showed today/total time;
+- accepted review that touched Work Item cards showed day/total time;
 - Day Events for review context that is not owned by one Work Item;
 - Work Item notes for touched items;
 - Activity Zone totals;

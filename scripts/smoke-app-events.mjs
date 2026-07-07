@@ -64,7 +64,7 @@ try {
   assert(metricsStdout.includes("Запросов показать/скрыть окно: 1/1"), "metrics did not count window requests");
   assert(metricsStdout.includes("Отвлечений создано/закрыто/превращено: 1/1/0"), "metrics did not count capture outcomes");
   assert(metricsStdout.includes("Проверок открытых отвлечений: 1"), "metrics did not count capture follow-up reviews");
-  assert(metricsStdout.includes("Проверок бейджей времени дел: 1"), "metrics did not count Work Item time badge reviews");
+  assert(metricsStdout.includes("Проверок времени по делам: 1"), "metrics did not count Work Item time badge reviews");
   assert(metricsStdout.includes("Проверок зон активности: 1"), "metrics did not count Activity Zone reviews");
   assert(metricsStdout.includes("Проверок использования инбокса: 1"), "metrics did not count capture usage reviews");
   assert(metricsStdout.includes("Проверок путей входа: 1"), "metrics did not count entry path reviews");

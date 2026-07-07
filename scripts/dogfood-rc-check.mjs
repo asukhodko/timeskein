@@ -443,7 +443,7 @@ function assessEvidence(evidence, minFocusSeconds) {
   }
 
   if (evidence.sessions.length > 0 && evidence.workItemTotals.length > 0 && evidence.telemetry.workItemTimeBadgeReviews === 0) {
-    reviewItems.push("Нет подтверждения проверки бейджей today/total у дел. Посмотри карточки затронутых дел и прими эту проверку перед закрытием цели.");
+    reviewItems.push("Нет подтверждения проверки времени по затронутым делам. Посмотри карточки дел за день и прими эту проверку перед закрытием цели.");
   }
 
   if (evidence.dayEvents.length > 0 && evidence.dayEventsWithZone === 0) {
@@ -580,7 +580,7 @@ function buildRcReport(date, path, evidence, assessment, minFocusSeconds, strict
     `- Нерабочее учтено: ${formatDuration(evidence.nonWorkSeconds)}`,
     `- Входов: ${evidence.sessions.length}`,
     `- Дел в отчёте: ${evidence.workItemTotals.length}`,
-    `- Проверок бейджей времени дел: ${evidence.telemetry.workItemTimeBadgeReviews}`,
+    `- Проверок времени по делам: ${evidence.telemetry.workItemTimeBadgeReviews}`,
     `- Заметок дел в отчёте: ${evidence.workItemNoteCount}`,
     `- Событий дня: ${evidence.dayEvents.length}`,
     `- Событий дня с зоной активности: ${evidence.dayEventsWithZone}`,
@@ -759,7 +759,7 @@ function formatGoalAuditMarkdown(evidence, assessment, minFocusSeconds) {
         : evidence.telemetry.workItemTimeBadgeReviews > 0
           ? "pass"
           : "review",
-      evidence: `${evidence.workItemTotals.length} строк итогов дел, ${evidence.telemetry.workItemTimeBadgeReviews} проверок бейджей UI`,
+      evidence: `${evidence.workItemTotals.length} строк итогов дел, ${evidence.telemetry.workItemTimeBadgeReviews} проверок времени в UI`,
     },
     {
       requirement: "Activity Zones separated",

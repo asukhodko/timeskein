@@ -72,7 +72,7 @@ try {
   assert(good.stdout.includes("Всего учтено: 3:30:00"), "good day total tracked is missing");
   assert(good.stdout.includes("Рабочий фокус: 2:00:00"), "good day work focus is missing");
   assert(good.stdout.includes("Нерабочее учтено: 1:30:00"), "good day non-work tracked is missing");
-  assert(good.stdout.includes("Проверок бейджей времени дел: 1"), "good day item badge review count is missing");
+  assert(good.stdout.includes("Проверок времени по делам: 1"), "good day item badge review count is missing");
   assert(good.stdout.includes("Зон активности в отчёте: 2"), "good day zone count is missing");
   assert(good.stdout.includes("Больших разрывов: 1"), "good day significant gap count is missing");
   assert(good.stdout.includes("Больших разрывов объяснено: 1/1"), "good day explained gap count is missing");
@@ -244,7 +244,7 @@ try {
   const noBadgeReviewStrict = await runRcCheck(noBadgeReviewDb, ["--strict"]);
   assert(noBadgeReviewStrict.code !== 0, "strict RC check should fail without item badge review evidence");
   assert(
-    noBadgeReviewStrict.stdout.includes("Нет подтверждения проверки бейджей today/total"),
+    noBadgeReviewStrict.stdout.includes("Нет подтверждения проверки времени по затронутым делам"),
     "strict RC check should explain missing item badge review evidence"
   );
   assert(

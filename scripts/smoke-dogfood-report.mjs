@@ -90,7 +90,7 @@ try {
       stdout.includes("Статус отчёта: черновик — осталось"),
     "report daily-control audit evidence did not localize final-state blockers"
   );
-  assert(stdout.includes("3 входов, 1:05:00 учтено"), "report daily-control audit evidence did not localize focus blocks");
+  assert(stdout.includes("3 входа, 1:05:00 учтено"), "report daily-control audit evidence did not localize focus blocks");
   assert(stdout.includes("| Итоги по делам есть | ок |"), "report daily-control audit did not pass work item totals");
   assert(
     stdout.includes("Раздел «По делам» есть, проверок времени в UI: 1"),

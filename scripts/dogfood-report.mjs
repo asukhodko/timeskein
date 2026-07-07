@@ -743,12 +743,12 @@ function formatDailyControlGoalAuditMarkdown({
     {
       requirement: "Final state clean",
       status: activeFocus || activeWorkItems.length > 0 ? "block" : "pass",
-      evidence: `${activeFocus ? 1 : 0} активных фокус-блоков, ${activeWorkItems.length} ${pluralRu(activeWorkItems.length, "дело", "дела", "дел")} с активным статусом`,
+      evidence: `${formatCount(activeFocus ? 1 : 0, "активный фокус-блок", "активных фокус-блока", "активных фокус-блоков")}, ${formatCount(activeWorkItems.length, "дело", "дела", "дел")} с активным статусом`,
     },
     {
       requirement: "Focus blocks visible",
       status: hasFocusBlocks ? "pass" : "block",
-      evidence: `${entrances} входов, ${totalTracked} учтено`,
+      evidence: `${formatCount(Number(entrances), "вход", "входа", "входов")}, ${totalTracked} учтено`,
     },
     {
       requirement: "Work Item totals available",
@@ -827,7 +827,7 @@ function formatDailyControlGoalAuditMarkdown({
     {
       requirement: "Hard blockers absent",
       status: activeFocus || activeWorkItems.length > 0 ? "block" : "pass",
-      evidence: reviewItems.filter((item) => item.level === "blocker").length + " блокеров",
+      evidence: formatCount(reviewItems.filter((item) => item.level === "blocker").length, "блокер", "блокера", "блокеров"),
     },
   ];
 

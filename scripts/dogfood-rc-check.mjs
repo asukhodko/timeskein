@@ -741,7 +741,7 @@ function formatGoalAuditMarkdown(evidence, assessment, minFocusSeconds) {
     {
       requirement: "Final state clean",
       status: evidence.activeSessions.length === 0 && evidence.activeWorkItems.length === 0 ? "pass" : "block",
-      evidence: `${evidence.activeSessions.length} активных фокус-сессий, ${evidence.activeWorkItems.length} ${pluralRu(evidence.activeWorkItems.length, "дело", "дела", "дел")} со статусом active`,
+      evidence: `${formatCount(evidence.activeSessions.length, "активная фокус-сессия", "активные фокус-сессии", "активных фокус-сессий")}, ${formatCount(evidence.activeWorkItems.length, "дело", "дела", "дел")} со статусом active`,
     },
     {
       requirement: "Focus blocks visible",
@@ -750,7 +750,7 @@ function formatGoalAuditMarkdown(evidence, assessment, minFocusSeconds) {
         : evidence.totalFocusSeconds >= minFocusSeconds
           ? "pass"
           : "review",
-      evidence: `${evidence.sessions.length} входов, ${formatDuration(evidence.totalFocusSeconds)} учтено`,
+      evidence: `${formatCount(evidence.sessions.length, "вход", "входа", "входов")}, ${formatDuration(evidence.totalFocusSeconds)} учтено`,
     },
     {
       requirement: "Work Item totals available",
@@ -759,7 +759,7 @@ function formatGoalAuditMarkdown(evidence, assessment, minFocusSeconds) {
         : evidence.telemetry.workItemTimeBadgeReviews > 0
           ? "pass"
           : "review",
-      evidence: `${evidence.workItemTotals.length} строк итогов дел, ${evidence.telemetry.workItemTimeBadgeReviews} проверок времени в UI`,
+      evidence: `${formatCount(evidence.workItemTotals.length, "строка итогов дел", "строки итогов дел", "строк итогов дел")}, ${formatCount(evidence.telemetry.workItemTimeBadgeReviews, "проверка времени в UI", "проверки времени в UI", "проверок времени в UI")}`,
     },
     {
       requirement: "Activity Zones separated",
@@ -768,7 +768,7 @@ function formatGoalAuditMarkdown(evidence, assessment, minFocusSeconds) {
         : (evidence.activityZoneTotals.length > 1 && evidence.nonWorkSeconds > 0) || evidence.telemetry.activityZoneReviews > 0
           ? "pass"
           : "review",
-      evidence: `${evidence.activityZoneTotals.length} зон, ${formatDuration(evidence.workFocusSeconds)} работа, ${formatDuration(evidence.nonWorkSeconds)} вне работы, ${evidence.telemetry.activityZoneReviews} проверок`,
+      evidence: `${formatCount(evidence.activityZoneTotals.length, "зона", "зоны", "зон")}, ${formatDuration(evidence.workFocusSeconds)} работа, ${formatDuration(evidence.nonWorkSeconds)} вне работы, ${formatCount(evidence.telemetry.activityZoneReviews, "проверка", "проверки", "проверок")}`,
     },
     {
       requirement: "Day and Work Item context present",
@@ -823,7 +823,7 @@ function formatGoalAuditMarkdown(evidence, assessment, minFocusSeconds) {
     {
       requirement: "Hard blockers absent",
       status: assessment.hardBlockers.length === 0 ? "pass" : "block",
-      evidence: `${assessment.hardBlockers.length} жёстких блокеров`,
+      evidence: formatCount(assessment.hardBlockers.length, "жёсткий блокер", "жёстких блокера", "жёстких блокеров"),
     },
     {
       requirement: "Local gates",
@@ -1165,6 +1165,10 @@ function pluralRu(value, one, few, many) {
   if (mod10 === 1 && mod100 !== 11) return one;
   if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return few;
   return many;
+}
+
+function formatCount(value, one, few, many) {
+  return `${value} ${pluralRu(value, one, few, many)}`;
 }
 
 function formatClockTime(value) {

@@ -55,6 +55,17 @@ const DAILY_CONTROL_STATUS_LABELS = {
   review: "проверить",
   manual: "вручную",
 };
+const ACCEPT_AS_IS_REVIEW_TITLES = new Set([
+  "Resolve, convert, or accept open captures",
+  "Review Activity Zone coverage",
+  "Confirm non-work tracked time",
+  "Confirm Work Item today/total badges",
+  "Capture Inbox untested today",
+  "Captures were not linked to active focus",
+  "Exercise start and continue paths",
+  "Test window entrypoints",
+  "Confirm tracking accuracy or test correction",
+]);
 
 if (options.date) {
   exportArgs.push("--date", options.date);
@@ -841,14 +852,38 @@ function extractMarkdownSection(markdown, title) {
 
 function formatReviewChecklistMarkdown(items) {
   const lines = ["## Проверка перед отчётом", ""];
+  const blockers = items.filter((item) => item.level === "blocker");
+  const reviews = items.filter((item) => item.level === "review");
+  const fixups = reviews.filter((item) => !isAcceptAsIsReviewItem(item));
+  const accepts = reviews.filter((item) => isAcceptAsIsReviewItem(item));
+  const ready = items.filter((item) => item.level === "ok");
+
+  appendReviewChecklistGroup(lines, "Сначала закрыть", blockers);
+  appendReviewChecklistGroup(lines, "Дописать или исправить", fixups);
+  appendReviewChecklistGroup(lines, "Осознанно проверить", accepts);
+  appendReviewChecklistGroup(lines, "Готово", ready);
+
+  return `${lines.join("\n")}\n`;
+}
+
+function appendReviewChecklistGroup(lines, title, items) {
+  if (items.length === 0) return;
+  if (lines.length > 2 && lines[lines.length - 1] !== "") {
+    lines.push("");
+  }
+
+  lines.push(`### ${title}`, "");
+
   for (const item of items) {
     const marker = item.level === "ok" ? "[x]" : "[ ]";
     const title = REVIEW_TITLE_LABELS[item.title] ?? item.title;
     const suffix = item.detail ? ` - ${formatMarkdownListText(item.detail)}` : "";
     lines.push(`- ${marker} ${formatMarkdownListText(title)}${suffix}`);
   }
+}
 
-  return `${lines.join("\n")}\n`;
+function isAcceptAsIsReviewItem(item) {
+  return item.level === "review" && ACCEPT_AS_IS_REVIEW_TITLES.has(item.title);
 }
 
 function formatCaptureActivityMarkdown(captures) {

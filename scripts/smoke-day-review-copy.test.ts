@@ -27,17 +27,29 @@ test('day review checklist keeps the evening ritual in Russian', () => {
   const items: DayReviewItem[] = [
     { level: 'blocker', title: 'Stop the active focus block', detail: 'Вход в день' },
     { level: 'review', title: 'Classify significant gaps', detail: '1/2 больших разрывов без события дня' },
+    {
+      level: 'review',
+      title: 'Review Activity Zone coverage',
+      detail: 'В отчёте видна только одна зона',
+      action: 'accept_activity_zones',
+    },
     { level: 'ok', title: 'Ready to copy final report', detail: 'Автоматических замечаний нет' },
   ]
 
   assert.equal(formatDayReviewItem(items[0]).title, 'Остановить активный фокус-блок')
   assert.equal(formatDayReviewItem(items[1]).title, 'Объяснить большие разрывы')
-  assert.equal(formatDayReviewItem(items[2]).title, 'Можно копировать финальный отчёт')
+  assert.equal(formatDayReviewItem(items[2]).title, 'Проверить зоны активности')
+  assert.equal(formatDayReviewItem(items[3]).title, 'Можно копировать финальный отчёт')
 
   const markdown = formatReviewChecklistMarkdown(items)
   assert(markdown.includes('## Проверка перед отчётом'), 'review checklist heading should be localized')
+  assert(markdown.includes('### Сначала закрыть'), 'blocker group should be explicit')
+  assert(markdown.includes('### Дописать или исправить'), 'fix-up group should be explicit')
+  assert(markdown.includes('### Осознанно проверить'), 'accept-as-is group should be explicit')
+  assert(markdown.includes('### Готово'), 'ready group should be explicit')
   assert(markdown.includes('Остановить активный фокус-блок'), 'blocker label should be localized')
   assert(markdown.includes('Объяснить большие разрывы'), 'review label should be localized')
+  assert(markdown.includes('Проверить зоны активности'), 'optional review label should be localized')
   assert(markdown.includes('Можно копировать финальный отчёт'), 'ready label should be localized')
   assert(!markdown.includes('Review before report'), 'old English heading should not leak into the report')
   assert(!markdown.includes('Stop the active focus block'), 'old English blocker should not leak into the report')

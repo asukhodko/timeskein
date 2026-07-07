@@ -1705,14 +1705,34 @@ function pluralRu(value: number, one: string, few: string, many: string) {
 
 export function formatReviewChecklistMarkdown(items: DayReviewItem[]) {
   const lines = ['## Проверка перед отчётом', '']
+  const blockers = items.filter((item) => item.level === 'blocker')
+  const reviews = items.filter((item) => item.level === 'review')
+  const fixups = reviews.filter((item) => !isBulkAcceptableReviewAction(item.action))
+  const accepts = reviews.filter((item) => isBulkAcceptableReviewAction(item.action))
+  const ready = items.filter((item) => item.level === 'ok')
+
+  appendReviewChecklistGroup(lines, 'Сначала закрыть', blockers)
+  appendReviewChecklistGroup(lines, 'Дописать или исправить', fixups)
+  appendReviewChecklistGroup(lines, 'Осознанно проверить', accepts)
+  appendReviewChecklistGroup(lines, 'Готово', ready)
+
+  return `${lines.join('\n')}\n`
+}
+
+function appendReviewChecklistGroup(lines: string[], title: string, items: DayReviewItem[]) {
+  if (items.length === 0) return
+  if (lines.length > 2 && lines[lines.length - 1] !== '') {
+    lines.push('')
+  }
+
+  lines.push(`### ${title}`, '')
+
   for (const item of items) {
     const marker = item.level === 'ok' ? '[x]' : '[ ]'
     const label = formatDayReviewItem(item)
     const suffix = label.detail ? ` - ${formatMarkdownListText(label.detail)}` : ''
     lines.push(`- ${marker} ${formatMarkdownListText(label.title)}${suffix}`)
   }
-
-  return `${lines.join('\n')}\n`
 }
 
 function formatDailyControlGoalAuditMarkdown({

@@ -321,7 +321,7 @@ function buildGoalCheckNextStep(date, shortClosureVerdict) {
     "",
     "## Следующий шаг",
     "",
-    "- Отчёт финальный, закрытие измерено, аудит чистый.",
+    "- Отчёт финальный, закрытие измерено, проверка закрытия чистая.",
     ...(shortClosureVerdict ? [`- Короткое закрытие: ${shortClosureVerdict}.`] : []),
     "- Если во время закрытия пришлось спрашивать Codex, что делать дальше, не считай этот день доказательством цели: проведи ещё один день Timeskein.",
     `- Запусти финальную проверку цели: \`pnpm dogfood:goal-check -- --date ${date} --no-codex-guidance\`.`,
@@ -344,7 +344,7 @@ function findAuditRowStatus(text, aliases) {
 }
 
 function findPendingAuditRows(text) {
-  const section = extractSection(text, ["## Аудит закрытия дня", "## Daily Control Goal Audit"]);
+  const section = extractSection(text, ["## Проверка закрытия дня", "## Аудит закрытия дня", "## Daily Control Goal Audit"]);
   if (!section) {
     return [];
   }

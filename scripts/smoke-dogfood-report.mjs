@@ -83,7 +83,7 @@ try {
   );
   assert(stdout.includes("### Дописать или исправить"), "report review checklist did not group fix-up items");
   assert(stdout.includes("### Осознанно проверить"), "report review checklist did not group accept-as-is items");
-  assert(stdout.includes("## Аудит закрытия дня"), "report did not include daily-control audit section");
+  assert(stdout.includes("## Проверка закрытия дня"), "report did not include daily-control check section");
   assert(stdout.includes("| Фокус-блоки видны | ок |"), "report daily-control audit did not pass focus blocks");
   assert(
     stdout.includes("0 активных фокус-блоков, 0 дел с активным статусом") &&

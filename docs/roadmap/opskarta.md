@@ -13,7 +13,7 @@ from `Начать закрытие дня` to final `Копировать от�
 not require Codex to explain the next closure step, and then pass strict
 `pnpm dogfood:goal-check -- --no-codex-guidance`.
 
-The completed `Аудит закрытия дня` in the UI/CLI dogfood report and in
+The completed `Проверка закрытия дня` in the UI/CLI dogfood report and in
 `pnpm dogfood:rc-check` checked whether a real day had enough closure evidence for focus
 blocks, Work Item totals, Activity Zones, notes/events, captures, gaps,
 corrections, and app-friction review. Work Item totals required an explicit UI
@@ -30,7 +30,7 @@ as the normal start path.
 closure-check evidence file, so the evening package is collected in one step.
 For final goal closure, `pnpm dogfood:finish:save` points to
 `pnpm dogfood:goal-check -- --date YYYY-MM-DD --no-codex-guidance` only after measured closure is present and the saved
-`Аудит закрытия дня` has no pending rows. The goal check first requires the
+`Проверка закрытия дня` has no pending rows. The goal check first requires the
 saved dogfood report and closure evidence for the real local database, verifies the
 grouped review checklist plus `Ближайшее действие`, then runs `pnpm test`,
 `pnpm dogfood:preflight`, and strict closure evidence on the same code.

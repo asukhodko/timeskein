@@ -108,12 +108,12 @@ try {
   const defaultReportMarkdown = await readFile(defaultReportPath, "utf8");
   const defaultRcMarkdown = await readFile(defaultRcPath, "utf8");
   assert(
-    defaultReportMarkdown.includes("## Аудит закрытия дня"),
-    "saved default report did not include daily control audit"
+    defaultReportMarkdown.includes("## Проверка закрытия дня"),
+    "saved default report did not include daily control check"
   );
   assert(
-    defaultRcMarkdown.includes("## Аудит закрытия дня"),
-    "saved RC check did not include daily control audit"
+    defaultRcMarkdown.includes("## Проверка закрытия дня"),
+    "saved closure check did not include daily control check"
   );
 
   await runSql(cleanDb, `

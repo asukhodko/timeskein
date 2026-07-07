@@ -62,7 +62,7 @@ try {
     "ready output did not make the no-Codex closure proof rule explicit"
   );
   assert(
-    ready.stdout.includes("если аудит ещё не чистый") &&
+    ready.stdout.includes("если проверка закрытия ещё не чистая") &&
       ready.stdout.includes("Ближайшее действие") &&
       ready.stdout.includes("Проверка перед отчётом"),
     "ready output did not explain pending audit finish flow"

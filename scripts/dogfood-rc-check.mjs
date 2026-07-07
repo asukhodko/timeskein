@@ -81,8 +81,8 @@ function parseArgs(args) {
 function printHelp() {
   console.log(`Использование: pnpm dogfood:rc-check [--date YYYY-MM-DD] [--db path/to/timeskein.db] [--min-focus-minutes N] [--strict] [--save | --out path.md]
 
-Проверяет, достаточно ли данных Timeskein для строгого аудита закрытия дня.
-Команда завершается с кодом 1 при жёстких блокерах: активное состояние, дубли названий дел или пустой день.
+Проверяет, достаточно ли данных Timeskein для строгой проверки закрытия дня.
+Команда завершается с кодом 1 при красных пунктах: активное состояние, дубли названий дел или пустой день.
 Пункты проверки печатаются, но без --strict оставляют код 0, потому что финальное решение всё ещё требует человеческого взгляда.
 С --strict пункты проверки тоже дают код 1. Используй это перед закрытием цели про дешёвое вечернее закрытие дня.`);
 }
@@ -467,7 +467,7 @@ function assessEvidence(evidence, minFocusSeconds) {
   }
 
   if (evidence.telemetry.total === 0) {
-    reviewItems.push("За эту дату нет событий App Telemetry.");
+    reviewItems.push("За эту дату нет событий телеметрии приложения.");
   }
 
   if (
@@ -475,11 +475,11 @@ function assessEvidence(evidence, minFocusSeconds) {
     evidence.telemetry.startRequests + evidence.telemetry.switchRequests === 0 &&
     evidence.telemetry.entryPathReviews === 0
   ) {
-    reviewItems.push("Нет telemetry-запросов старта/переключения фокуса. Цена входа за этот день не доказана.");
+    reviewItems.push("Нет событий телеметрии о старте или переключении фокуса. Цена входа за этот день не доказана.");
   }
 
   if (evidence.sessions.length > 0 && evidence.telemetry.typedEntryRequests === 0 && evidence.telemetry.entryPathReviews === 0) {
-    reviewItems.push("Нет входа через ввод названия. Перед закрытием цели стартуй новое дело typed-вводом или явно прими эту проверку.");
+    reviewItems.push("Нет входа через ввод названия. Перед закрытием цели стартуй новое дело вводом названия или явно прими эту проверку.");
   }
 
   if (evidence.sessions.length > 0 && evidence.telemetry.selectedEntryRequests === 0 && evidence.telemetry.entryPathReviews === 0) {
@@ -487,7 +487,7 @@ function assessEvidence(evidence, minFocusSeconds) {
   }
 
   if (evidence.sessions.length > 0 && evidence.telemetry.stopRequests === 0 && evidence.telemetry.entryPathReviews === 0) {
-    reviewItems.push("Нет telemetry-запросов остановки фокуса. Стоимость stop-flow за этот день не доказана.");
+    reviewItems.push("Нет событий телеметрии об остановке фокуса. Сценарий остановки за этот день не доказан.");
   }
 
   if (
@@ -495,15 +495,15 @@ function assessEvidence(evidence, minFocusSeconds) {
     evidence.telemetry.windowShown + evidence.telemetry.windowHidden === 0 &&
     evidence.telemetry.windowEntrypointReviews === 0
   ) {
-    reviewItems.push("Нет telemetry показа/скрытия окна. Трение входа через окно за этот день не доказано.");
+    reviewItems.push("Нет событий телеметрии о показе или скрытии окна. Трение входа через окно за этот день не доказано.");
   }
 
   if (evidence.telemetry.total > 0 && evidence.telemetry.windowShowRequested === 0 && evidence.telemetry.windowEntrypointReviews === 0) {
-    reviewItems.push("Нет telemetry-запроса показать окно. Проверь tray/menu/shortcut/reopen вход или явно прими эту проверку перед закрытием цели.");
+    reviewItems.push("Нет события телеметрии о запросе показать окно. Проверь вход через меню, горячую клавишу или повторное открытие приложения либо явно прими эту проверку перед закрытием цели.");
   }
 
   if (evidence.telemetry.total > 0 && evidence.telemetry.windowHideRequested === 0 && evidence.telemetry.windowEntrypointReviews === 0) {
-    reviewItems.push("Нет telemetry-запроса скрыть окно. Проверь Esc/close/menu hide или явно прими эту проверку перед закрытием цели.");
+    reviewItems.push("Нет события телеметрии о запросе скрыть окно. Проверь скрытие через Esc, закрытие окна или меню либо явно прими эту проверку перед закрытием цели.");
   }
 
   if (evidence.telemetry.apiErrors > 0) {
@@ -542,7 +542,7 @@ function assessEvidence(evidence, minFocusSeconds) {
 
   if (evidence.unexplainedGapCount > 0) {
     reviewItems.push(
-      `${evidence.unexplainedGapCount} из ${evidence.gaps.length} больших разрывов без объяснения Day Event. Используй Explain или добавь событие дня перед закрытием цели.`
+      `${evidence.unexplainedGapCount} из ${evidence.gaps.length} больших разрывов без события дня. Используй «Объяснить» или добавь событие дня перед закрытием цели.`
     );
   }
 
@@ -575,7 +575,7 @@ function buildRcReport(date, path, evidence, assessment, minFocusSeconds, strict
     "",
     "## Сводка доказательств",
     "",
-    `- Всего учтено: ${formatDuration(evidence.totalFocusSeconds)} (порог review: ${formatDuration(minFocusSeconds)})`,
+    `- Всего учтено: ${formatDuration(evidence.totalFocusSeconds)} (порог проверки: ${formatDuration(minFocusSeconds)})`,
     `- Рабочий фокус: ${formatDuration(evidence.workFocusSeconds)}`,
     `- Нерабочее учтено: ${formatDuration(evidence.nonWorkSeconds)}`,
     `- Входов: ${evidence.sessions.length}`,
@@ -598,16 +598,16 @@ function buildRcReport(date, path, evidence, assessment, minFocusSeconds, strict
     `- Проверок использования инбокса: ${evidence.telemetry.captureUsageReviews}`,
     `- Проверок путей входа: ${evidence.telemetry.entryPathReviews}`,
     `- Проверок входа через окно: ${evidence.telemetry.windowEntrypointReviews}`,
-    `- Событий App Telemetry: ${evidence.telemetry.total}`,
+    `- Событий телеметрии приложения: ${evidence.telemetry.total}`,
     `- Запросов старт/переключение/остановка: ${evidence.telemetry.startRequests}/${evidence.telemetry.switchRequests}/${evidence.telemetry.stopRequests}`,
-    `- Входов typed/selected: ${evidence.telemetry.typedEntryRequests}/${evidence.telemetry.selectedEntryRequests}`,
+    `- Входов вводом/из списка: ${evidence.telemetry.typedEntryRequests}/${evidence.telemetry.selectedEntryRequests}`,
     `- API-ошибок: ${evidence.telemetry.apiErrors}`,
-    `- Ошибок копирования/manual fallback: ${evidence.telemetry.copyFailures}/${evidence.telemetry.manualCopyFallbacks}`,
+    `- Ошибок копирования/ручного копирования: ${evidence.telemetry.copyFailures}/${evidence.telemetry.manualCopyFallbacks}`,
     `- Ошибок старта/остановки: ${evidence.telemetry.startFailures}/${evidence.telemetry.stopFailures}`,
     `- Ошибок инбокса отвлечений: ${evidence.telemetry.captureFailures}`,
     `- Коррекций запрошено/применено/проверено/ошибок: ${evidence.telemetry.correctionRequests}/${evidence.telemetry.corrections}/${evidence.telemetry.correctionReviews}/${evidence.telemetry.correctionFailures}`,
     `- Закрытий дня начато/завершено: ${evidence.telemetry.dayClosureStarts}/${evidence.telemetry.dayClosureCompletions}`,
-    `- Последняя длительность закрытия дня: ${evidence.telemetry.lastDayClosureDurationSeconds == null ? "n/a" : formatDuration(evidence.telemetry.lastDayClosureDurationSeconds)}`,
+    `- Последняя длительность закрытия дня: ${evidence.telemetry.lastDayClosureDurationSeconds == null ? "нет данных" : formatDuration(evidence.telemetry.lastDayClosureDurationSeconds)}`,
     `- Окно показано/скрыто: ${evidence.telemetry.windowShown}/${evidence.telemetry.windowHidden}`,
     `- Запросы показать/скрыть окно: ${evidence.telemetry.windowShowRequested}/${evidence.telemetry.windowHideRequested}`,
     `- Начатых перетаскиваний окна: ${evidence.telemetry.windowDragStarted}`,
@@ -683,13 +683,13 @@ function buildRcReport(date, path, evidence, assessment, minFocusSeconds, strict
     "- Capture Inbox удерживал фокус, а не стал ещё одной кучей: да/нет",
     "- Отчёта достаточно без реконструкции по памяти: да/нет",
     "- Оставшиеся ограничения приемлемы для ежедневного использования: да/нет",
-    "- Финальное решение: pass/fail",
+    "- Финальное решение: годится/не годится",
     "",
     "## Что дальше",
     "",
-    "- Если есть блокеры, исправь только перечисленные блокеры и проведи ещё один день Timeskein.",
-    "- Если остались пункты проверки, заполни ручной вердикт перед закрытием milestone.",
-    "- Если вердикт pass, обнови docs/opskarta и закоммить baseline пробной эксплуатации.",
+    "- Если есть красные пункты, исправь только их и проведи ещё один день Timeskein.",
+    "- Если остались пункты проверки, заполни ручной вердикт перед закрытием текущей цели.",
+    "- Если вердикт «годится», обнови docs/opskarta и закоммить рабочую точку пробной эксплуатации.",
     ""
   );
 
@@ -888,7 +888,7 @@ function formatGoalAuditMarkdown(evidence, assessment, minFocusSeconds) {
   ];
 
   return [
-    "## Аудит закрытия дня",
+    "## Проверка закрытия дня",
     "",
     "| Проверка | Статус | Доказательство |",
     "| --- | --- | --- |",

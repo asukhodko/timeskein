@@ -81,13 +81,15 @@ try {
   assert(good.stdout.includes("Событий дня во время активного фокуса: 1"), "good day active-focus Day Events count is missing");
   assert(good.stdout.includes("Событий дел: 1"), "good day item events count is missing");
   assert(good.stdout.includes("Запросов старт/переключение/остановка: 2/0/1"), "good day entry request count is missing");
-  assert(good.stdout.includes("Входов typed/selected: 1/1"), "good day entry control count is missing");
+  assert(good.stdout.includes("Входов вводом/из списка: 1/1"), "good day entry control count is missing");
   assert(good.stdout.includes("Коррекций запрошено/применено/проверено/ошибок: 1/1/0/0"), "good day correction telemetry is missing");
   assert(good.stdout.includes("Закрытий дня начато/завершено: 1/1"), "good day closure telemetry is missing");
   assert(good.stdout.includes("Последняя длительность закрытия дня: 7:00"), "good day closure duration is missing");
   assert(good.stdout.includes("Окно показано/скрыто: 1/1"), "good day window telemetry is missing");
   assert(good.stdout.includes("Запросы показать/скрыть окно: 1/1"), "good day window request telemetry is missing");
-  assert(good.stdout.includes("## Аудит закрытия дня"), "good day goal audit section is missing");
+  assert(good.stdout.includes("## Проверка закрытия дня"), "good day goal check section is missing");
+  assert(!good.stdout.includes("Входов typed/selected"), "closure check leaked raw typed/selected wording");
+  assert(!good.stdout.includes("n/a"), "closure check leaked raw unavailable marker");
   assert(good.stdout.includes("| Фокус-блоки видны | ок |"), "good day focus-block audit row is missing");
   assert(good.stdout.includes("| Итоги по делам есть | ок |"), "good day item totals audit row is missing");
   assert(good.stdout.includes("| Зоны активности разделены | ок |"), "good day activity-zone audit row is missing");
@@ -150,7 +152,7 @@ try {
     "unexplained gaps should mark gap/capture audit for review"
   );
   assert(
-    unexplainedGapStrict.stdout.includes("больших разрывов без объяснения Day Event"),
+    unexplainedGapStrict.stdout.includes("больших разрывов без события дня"),
     "strict RC check should explain missing gap explanation"
   );
 
@@ -186,11 +188,11 @@ try {
   const noWindowRequestStrict = await runRcCheck(noWindowRequestDb, ["--strict"]);
   assert(noWindowRequestStrict.code !== 0, "strict RC check should fail without window request evidence");
   assert(
-    noWindowRequestStrict.stdout.includes("Нет telemetry-запроса показать окно"),
+    noWindowRequestStrict.stdout.includes("Нет события телеметрии о запросе показать окно"),
     "strict RC check should explain missing window show request evidence"
   );
   assert(
-    noWindowRequestStrict.stdout.includes("Нет telemetry-запроса скрыть окно"),
+    noWindowRequestStrict.stdout.includes("Нет события телеметрии о запросе скрыть окно"),
     "strict RC check should explain missing window hide request evidence"
   );
   const acceptedNoWindowRequestDb = join(tempDir, "accepted-no-window-request.db");
@@ -216,7 +218,7 @@ try {
   const showOnlyWindowRequestStrict = await runRcCheck(showOnlyWindowRequestDb, ["--strict"]);
   assert(showOnlyWindowRequestStrict.code !== 0, "strict RC check should fail without hide request evidence");
   assert(
-    showOnlyWindowRequestStrict.stdout.includes("Нет telemetry-запроса скрыть окно"),
+    showOnlyWindowRequestStrict.stdout.includes("Нет события телеметрии о запросе скрыть окно"),
     "strict RC check should explain missing window hide request evidence when show exists"
   );
   assert(
@@ -230,7 +232,7 @@ try {
   const hideOnlyWindowRequestStrict = await runRcCheck(hideOnlyWindowRequestDb, ["--strict"]);
   assert(hideOnlyWindowRequestStrict.code !== 0, "strict RC check should fail without show request evidence");
   assert(
-    hideOnlyWindowRequestStrict.stdout.includes("Нет telemetry-запроса показать окно"),
+    hideOnlyWindowRequestStrict.stdout.includes("Нет события телеметрии о запросе показать окно"),
     "strict RC check should explain missing window show request evidence when hide exists"
   );
   assert(
@@ -322,7 +324,7 @@ try {
   const legacy = await runRcCheck(legacyDb, ["--min-focus-minutes", "60"]);
   assert(legacy.code === 0, "legacy schema should not crash the RC check");
   assert(legacy.stdout.includes("Всего учтено: 2:00:00"), "legacy schema total tracked is missing");
-  assert(legacy.stdout.includes("## Аудит закрытия дня"), "legacy schema goal audit section is missing");
+  assert(legacy.stdout.includes("## Проверка закрытия дня"), "legacy schema goal check section is missing");
   assert(legacy.stdout.includes("| 2:00:00 | 1 | Работа |"), "legacy schema should fall back to localized Work zone");
 
   const openCaptureDb = join(tempDir, "open-capture.db");

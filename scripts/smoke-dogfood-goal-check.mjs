@@ -158,7 +158,7 @@ try {
     [
       "# Проверка закрытия дня Timeskein - 2026-06-30",
       "## Сводка доказательств",
-      "## Аудит закрытия дня",
+      "## Проверка закрытия дня",
       "",
     ].join("\n")
   );
@@ -166,8 +166,8 @@ try {
   const weakEvidence = await runGoalCheck(["--check-saved-evidence-only", "--date", "2026-06-30"], tempDir);
   assert(weakEvidence.code !== 0, "saved evidence without audit rows should fail");
   assert(
-    `${weakEvidence.stdout}${weakEvidence.stderr}`.includes("нет строки аудита «Финальное состояние чистое»"),
-    "weak saved evidence error did not mention missing audit rows"
+    `${weakEvidence.stdout}${weakEvidence.stderr}`.includes("нет строки проверки «Финальное состояние чистое»"),
+    "weak saved evidence error did not mention missing check rows"
   );
 
   const reportAuditRows = [
@@ -206,7 +206,7 @@ try {
     "",
   ].join("\n");
   const rcAuditMarkdown = [
-    "## Аудит закрытия дня",
+    "## Проверка закрытия дня",
     "",
     "| Проверка | Статус | Доказательство |",
     "| --- | --- | --- |",
@@ -287,7 +287,7 @@ try {
     [
       "# Проверка закрытия дня Timeskein - 2026-06-30",
       "## Сводка доказательств",
-      "## Аудит закрытия дня",
+      "## Проверка закрытия дня",
       "",
       "| Проверка | Статус | Доказательство |",
       "| --- | --- | --- |",
@@ -304,7 +304,7 @@ try {
     "review saved evidence error did not use the calm not-ready wrapper"
   );
   assert(
-    `${reviewEvidence.stdout}${reviewEvidence.stderr}`.includes("строка аудита «Длительность закрытия измерена» ещё не подтверждена"),
+    `${reviewEvidence.stdout}${reviewEvidence.stderr}`.includes("строка проверки «Длительность закрытия измерена» ещё не подтверждена"),
     "review saved evidence error did not mention the non-passing closure-duration row"
   );
   assert(

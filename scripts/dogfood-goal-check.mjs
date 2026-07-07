@@ -215,13 +215,13 @@ async function checkSavedEvidence(date) {
     ["## Короткое закрытие"],
     ["Закрытие уложилось в 10 минут"],
     ["## Проверка перед отчётом", "## Review before report"],
-    ["## Аудит закрытия дня", "## Daily Control Goal Audit"],
+    ["## Проверка закрытия дня", "## Аудит закрытия дня", "## Daily Control Goal Audit"],
     ["## Телеметрия приложения", "## App Telemetry"],
   ];
   const rcRequirements = [
     ["# Проверка закрытия дня Timeskein", "# RC-аудит закрытия дня Timeskein", "# RC-аудит dogfood-дня Timeskein", "# Timeskein dogfood RC check"],
     ["## Сводка доказательств", "## Evidence Summary"],
-    ["## Аудит закрытия дня", "## Daily Control Goal Audit"],
+    ["## Проверка закрытия дня", "## Аудит закрытия дня", "## Daily Control Goal Audit"],
   ];
   const reportDailyControlRows = [
     ["Финальное состояние чистое", "Final state clean"],
@@ -284,21 +284,21 @@ async function checkSavedEvidence(date) {
   }
   for (const aliases of reportDailyControlRows) {
     if (!includesAny(report, aliases)) {
-      weak.push(`В ${reportPath} нет строки аудита «${aliases[0]}»`);
+      weak.push(`В ${reportPath} нет строки проверки «${aliases[0]}»`);
     } else if (!isPassingAuditStatus(findAuditRowStatus(report, aliases))) {
-      notPassing.push(`В ${reportPath} строка аудита «${aliases[0]}» ещё не подтверждена`);
+      notPassing.push(`В ${reportPath} строка проверки «${aliases[0]}» ещё не подтверждена`);
     }
   }
   for (const aliases of rcDailyControlRows) {
     if (!includesAny(rcCheck, aliases)) {
-      weak.push(`В ${rcPath} нет строки аудита «${aliases[0]}»`);
+      weak.push(`В ${rcPath} нет строки проверки «${aliases[0]}»`);
     } else if (!isPassingAuditStatus(findAuditRowStatus(rcCheck, aliases))) {
-      notPassing.push(`В ${rcPath} строка аудита «${aliases[0]}» ещё не подтверждена`);
+      notPassing.push(`В ${rcPath} строка проверки «${aliases[0]}» ещё не подтверждена`);
     }
   }
   for (const aliases of rcOnlyDailyControlRows) {
     if (!includesAny(rcCheck, aliases)) {
-      weak.push(`В ${rcPath} нет строки аудита «${aliases[0]}»`);
+      weak.push(`В ${rcPath} нет строки проверки «${aliases[0]}»`);
     }
     if (includesAny(report, aliases)) {
       weak.push(`В ${reportPath} строка «${aliases[0]}» должна оставаться на уровне RC/goal-check, а не в дневном отчёте`);
@@ -347,7 +347,7 @@ function buildIncompleteEvidenceMessage(date, weak, notPassing, reviewNextAction
     ...formatReviewNextActionHint(reviewNextAction),
     ...(notPassing.length > 0
       ? [
-          "- Вернись к `Проверка перед отчётом`, закрой оставшиеся строки аудита и снова сохрани отчёт.",
+          "- Вернись к `Проверка перед отчётом`, закрой оставшиеся строки проверки и снова сохрани отчёт.",
           `- Для измерения закрытия дня нажми \`Начать закрытие дня\`, скопируй финальный отчёт за 10 минут или меньше, затем повтори \`pnpm dogfood:finish:save -- --date ${date}\`.`,
         ]
       : []),

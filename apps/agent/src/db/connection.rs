@@ -179,7 +179,7 @@ impl Database {
 
         if table_sql
             .as_deref()
-            .is_some_and(|sql| sql.contains("day_closure_completed"))
+            .is_some_and(|sql| sql.contains("activity_zone_glanced"))
         {
             return Ok(());
         }

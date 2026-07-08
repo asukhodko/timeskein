@@ -240,6 +240,7 @@ fn build_summary(events: Vec<AppEvent>) -> serde_json::Value {
         "capture_followup_reviews": count(&by_kind, "capture_followup_reviewed"),
         "day_context_reviews": count(&by_kind, "day_context_reviewed"),
         "work_item_time_badge_reviews": count(&by_kind, "work_item_time_badges_reviewed"),
+        "activity_zone_glances": count(&by_kind, "activity_zone_glanced"),
         "activity_zone_reviews": count(&by_kind, "activity_zone_reviewed"),
         "capture_usage_reviews": count(&by_kind, "capture_usage_reviewed"),
         "entry_path_reviews": count(&by_kind, "entry_paths_reviewed"),

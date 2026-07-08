@@ -46,6 +46,7 @@ try {
       ('e25', '2026-06-30T07:14:00Z', 'ui', 'work_item_time_badges_reviewed', NULL, NULL, '{"action_id":"b1","control":"review_checklist","touched_work_item_count":2}'),
       ('e26', '2026-06-30T07:15:00Z', 'ui', 'day_closure_started', NULL, NULL, '{"action_id":"d1","control":"review_panel"}'),
       ('e27', '2026-06-30T07:22:30Z', 'ui', 'day_closure_completed', NULL, NULL, '{"action_id":"d1","control":"copy_report"}'),
+      ('e27_zone_glance', '2026-06-30T07:22:45Z', 'ui', 'activity_zone_glanced', NULL, NULL, '{"control":"zone_dashboard","zone_count":2}'),
       ('e28', '2026-06-30T07:23:00Z', 'ui', 'activity_zone_reviewed', NULL, NULL, '{"action_id":"z1","control":"review_checklist","zone_count":1}'),
       ('e29', '2026-06-30T07:24:00Z', 'ui', 'capture_usage_reviewed', NULL, NULL, '{"action_id":"u1","control":"review_checklist","capture_count":0}'),
       ('e30', '2026-06-30T07:25:00Z', 'ui', 'entry_paths_reviewed', NULL, NULL, '{"action_id":"p1","control":"review_checklist"}'),
@@ -58,7 +59,7 @@ try {
     { cwd: repoRoot }
   );
   assert(metricsStdout.includes("## Телеметрия приложения"), "metrics did not include localized telemetry header");
-  assert(metricsStdout.includes("Всего событий: 32"), "metrics did not count events");
+  assert(metricsStdout.includes("Всего событий: 33"), "metrics did not count events");
   assert(metricsStdout.includes("Запросов старта: 2"), "metrics did not count start requests");
   assert(metricsStdout.includes("Входов вводом/из списка/через диспетчеризацию: 1/0/1"), "metrics did not count entry request controls");
   assert(metricsStdout.includes("Ручных копирований вместо буфера: 1"), "metrics did not count manual copy fallbacks");
@@ -66,6 +67,7 @@ try {
   assert(metricsStdout.includes("Отвлечений создано/закрыто/превращено: 1/1/0"), "metrics did not count capture outcomes");
   assert(metricsStdout.includes("Проверок открытых отвлечений: 1"), "metrics did not count capture follow-up reviews");
   assert(metricsStdout.includes("Проверок времени по делам: 1"), "metrics did not count Work Item time badge reviews");
+  assert(metricsStdout.includes("Просмотров зон активности: 1"), "metrics did not count Activity Zone glances");
   assert(metricsStdout.includes("Проверок зон активности: 1"), "metrics did not count Activity Zone reviews");
   assert(metricsStdout.includes("Проверок использования инбокса: 1"), "metrics did not count capture usage reviews");
   assert(metricsStdout.includes("Проверок путей входа: 1"), "metrics did not count entry path reviews");
@@ -88,6 +90,7 @@ try {
   );
   assert(rawMetricsStdout.includes("## App Telemetry"), "raw metrics did not include compatibility telemetry header");
   assert(rawMetricsStdout.includes("Work Item time badge reviews: 1"), "raw metrics did not keep compatibility labels");
+  assert(rawMetricsStdout.includes("Activity Zone glances: 1"), "raw metrics did not keep Activity Zone glance label");
 
   const { stdout: exportStdout } = await execFileAsync(
     "node",
@@ -95,7 +98,7 @@ try {
     { cwd: repoRoot }
   );
   assert(exportStdout.includes("# События приложения Timeskein"), "event export did not include localized title");
-  assert(exportStdout.includes("Всего событий: 32"), "event export did not include localized count");
+  assert(exportStdout.includes("Всего событий: 33"), "event export did not include localized count");
   assert(exportStdout.includes("| Время | Источник | Тип | Дело | Фокус-блок | Тех. payload |"), "event export did not include localized table header");
   assert(!exportStdout.includes("# Timeskein app events"), "event export leaked old English title");
   assert(exportStdout.includes("focus_start_requested"), "event export did not include start request");
@@ -104,6 +107,7 @@ try {
   assert(exportStdout.includes("capture_created"), "event export did not include capture event");
   assert(exportStdout.includes("capture_followup_reviewed"), "event export did not include capture follow-up review");
   assert(exportStdout.includes("work_item_time_badges_reviewed"), "event export did not include Work Item time badge review");
+  assert(exportStdout.includes("activity_zone_glanced"), "event export did not include Activity Zone glance");
   assert(exportStdout.includes("activity_zone_reviewed"), "event export did not include Activity Zone review");
   assert(exportStdout.includes("capture_usage_reviewed"), "event export did not include capture usage review");
   assert(exportStdout.includes("entry_paths_reviewed"), "event export did not include entry path review");

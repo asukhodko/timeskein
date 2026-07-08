@@ -91,6 +91,8 @@ try {
       ('e14', '2026-06-30T08:30:01Z', 'ui', 'focus_started', '{"action_id":"a2","control":"selected_item"}'),
       ('e15', '2026-06-30T10:00:00Z', 'ui', 'focus_stop_requested', '{"action_id":"a3","control":"stop_button_or_enter"}'),
       ('e20', '2026-06-30T10:06:00Z', 'ui', 'work_item_time_badges_reviewed', '{"action_id":"b1","control":"review_checklist","touched_work_item_count":2}'),
+      ('e20_zone_glance_1', '2026-06-30T10:06:10Z', 'ui', 'activity_zone_glanced', '{"control":"zone_dashboard","zone_count":2}'),
+      ('e20_zone_glance_2', '2026-06-30T10:06:20Z', 'ui', 'activity_zone_glanced', '{"control":"zone_dashboard","zone_count":2}'),
       ('e21', '2026-06-30T10:07:00Z', 'ui', 'day_closure_started', '{"action_id":"d1","control":"review_panel"}'),
       ('e22', '2026-06-30T10:14:00Z', 'ui', 'day_closure_completed', '{"action_id":"d1","control":"copy_report"}');
   `);
@@ -105,6 +107,7 @@ try {
   assert(good.stdout.includes("Нерабочее учтено: 1:30:00"), "good day non-work tracked is missing");
   assert(good.stdout.includes("Проверок времени по делам: 1"), "good day item badge review count is missing");
   assert(good.stdout.includes("Зон активности в отчёте: 2"), "good day zone count is missing");
+  assert(good.stdout.includes("Дневных просмотров зон активности: 2"), "good day zone glance count is missing");
   assert(good.stdout.includes("Больших разрывов: 1"), "good day significant gap count is missing");
   assert(good.stdout.includes("Больших разрывов объяснено: 1/1"), "good day explained gap count is missing");
   assert(good.stdout.includes("Событий дня: 1"), "good day Day Events count is missing");

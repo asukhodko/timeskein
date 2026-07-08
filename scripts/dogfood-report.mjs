@@ -26,6 +26,7 @@ const REVIEW_TITLE_LABELS = {
   "Explain current open gap": "Объяснить текущий открытый разрыв",
   "Review Activity Zone coverage": "Проверить зоны активности",
   "Confirm non-work tracked time": "Проверить нерабочее время",
+  "Check zones during the day": "Отметить просмотр зон",
   "Confirm Work Item today/total badges": "Проверить время по делам",
   "Capture Inbox untested today": "Инбокс отвлечений сегодня не проверен",
   "Captures were not linked to active focus": "Отвлечения не были связаны с активным фокусом",
@@ -59,6 +60,7 @@ const ACCEPT_AS_IS_REVIEW_TITLES = new Set([
   "Resolve, convert, or accept open captures",
   "Review Activity Zone coverage",
   "Confirm non-work tracked time",
+  "Check zones during the day",
   "Confirm Work Item today/total badges",
   "Capture Inbox untested today",
   "Captures were not linked to active focus",
@@ -77,6 +79,7 @@ const REVIEW_ACTION_LABELS_BY_TITLE = {
   "Explain current open gap": "Объяснить",
   "Review Activity Zone coverage": "Зоны верны",
   "Confirm non-work tracked time": "Зоны верны",
+  "Check zones during the day": "Зоны верны",
   "Confirm Work Item today/total badges": "Время верно",
   "Capture Inbox untested today": "Инбокс проверен",
   "Captures were not linked to active focus": "Инбокс проверен",
@@ -130,6 +133,7 @@ const APP_EVENT_KIND_LABELS = {
   day_context_reviewed: "контекст дня проверен",
   capture_usage_reviewed: "инбокс отвлечений проверен",
   work_item_time_badges_reviewed: "время по делам проверено",
+  activity_zone_glanced: "зоны активности учтены",
   activity_zone_reviewed: "зоны активности проверены",
   entry_paths_reviewed: "пути входа проверены",
   day_closure_started: "закрытие дня начато",
@@ -585,6 +589,7 @@ function formatTelemetryForReport(markdown) {
     .replace(/^Capture follow-up reviews:/gm, "Проверок открытых отвлечений:")
     .replace(/^Day context reviews:/gm, "Проверок контекста дня:")
     .replace(/^Work Item time badge reviews:/gm, "Проверок времени по делам:")
+    .replace(/^Activity Zone glances:/gm, "Просмотров зон активности:")
     .replace(/^Activity Zone reviews:/gm, "Проверок зон активности:")
     .replace(/^Capture usage reviews:/gm, "Проверок использования инбокса:")
     .replace(/^Entry path reviews:/gm, "Проверок путей входа:")
@@ -660,6 +665,7 @@ function buildReviewChecklistItems({
   }
 
   const activityZoneReviews = parseLeadingNumber(extractLineValue(telemetryMarkdown, "Activity Zone reviews"));
+  const activityZoneGlances = parseLeadingNumber(extractLineValue(telemetryMarkdown, "Activity Zone glances"));
   if (focusMarkdown.includes("| Time | Duration | Zone | Work Item | Note |") && countActivityZoneRows(focusMarkdown) <= 1 && activityZoneReviews === 0) {
     items.push({
       level: "review",
@@ -673,6 +679,14 @@ function buildReviewChecklistItems({
       level: "review",
       title: "Confirm non-work tracked time",
       detail: "Перерывы, восстановление, простой или личные дела могли потеряться",
+    });
+  }
+
+  if (focusMarkdown.includes("| Time | Duration | Zone | Work Item | Note |") && activityZoneGlances < 2 && activityZoneReviews === 0) {
+    items.push({
+      level: "review",
+      title: "Check zones during the day",
+      detail: `${activityZoneGlances}/2 отметок «Учёл зоны»`,
     });
   }
 
@@ -807,6 +821,7 @@ function formatDailyControlGoalAuditMarkdown({
   const captureFollowupReviews = parseLeadingNumber(extractLineValue(telemetryMarkdown, "Capture follow-up reviews"));
   const dayContextReviews = parseLeadingNumber(extractLineValue(telemetryMarkdown, "Day context reviews"));
   const workItemTimeBadgeReviews = parseLeadingNumber(extractLineValue(telemetryMarkdown, "Work Item time badge reviews"));
+  const activityZoneGlances = parseLeadingNumber(extractLineValue(telemetryMarkdown, "Activity Zone glances"));
   const activityZoneReviews = parseLeadingNumber(extractLineValue(telemetryMarkdown, "Activity Zone reviews"));
   const captureUsageReviews = parseLeadingNumber(extractLineValue(telemetryMarkdown, "Capture usage reviews"));
   const entryPathReviews = parseLeadingNumber(extractLineValue(telemetryMarkdown, "Entry path reviews"));
@@ -830,9 +845,14 @@ function formatDailyControlGoalAuditMarkdown({
       : "время по делам есть в отчёте";
   const activityZoneReviewEvidence = activityZoneReviews > 0
     ? formatCount(activityZoneReviews, "проверка зон", "проверки зон", "проверок зон")
-    : hasReview("Review Activity Zone coverage") || hasReview("Confirm non-work tracked time")
+    : hasReview("Review Activity Zone coverage") || hasReview("Confirm non-work tracked time") || hasReview("Check zones during the day")
       ? "проверка зон не отмечена"
       : "зоны подтверждены отчётом";
+  const activityZoneGlanceEvidence = activityZoneGlances > 0
+    ? formatCount(activityZoneGlances, "дневной просмотр зон", "дневных просмотра зон", "дневных просмотров зон")
+    : hasReview("Check zones during the day")
+      ? "дневные просмотры зон не отмечены"
+      : "дневные просмотры зон не требовались";
   const entryPathReviewEvidence = entryPathReviews > 0
     ? formatCount(entryPathReviews, "проверка пути входа", "проверки путей входа", "проверок путей входа")
     : entryPathsCovered
@@ -846,7 +866,7 @@ function formatDailyControlGoalAuditMarkdown({
   const workItemTotalsEvidence = focusMarkdown.includes("## By Work Item")
     ? `раздел «По делам» есть; ${workItemTimeReviewEvidence}`
     : "раздела «По делам» нет";
-  const activityZoneEvidence = `${workingOccupancy} рабочая занятость, ${workFocus} исполнение, ${nonWorkTracked} вне работы; ${activityZoneReviewEvidence}`;
+  const activityZoneEvidence = `${workingOccupancy} рабочая занятость, ${workFocus} исполнение, ${nonWorkTracked} вне работы; ${activityZoneGlanceEvidence}; ${activityZoneReviewEvidence}`;
   const gapsAndCapturesEvidence = [
     focusMarkdown.includes("## Gaps >=") ? "раздел разрывов есть" : "больших разрывов нет",
     openCaptures.length > 0
@@ -896,7 +916,9 @@ function formatDailyControlGoalAuditMarkdown({
     {
       requirement: "Activity Zones separated",
       status:
-        hasFocusBlocks && ((!hasReview("Review Activity Zone coverage") && !hasReview("Confirm non-work tracked time")) || activityZoneReviews > 0)
+        hasFocusBlocks &&
+        ((!hasReview("Review Activity Zone coverage") && !hasReview("Confirm non-work tracked time") && !hasReview("Check zones during the day")) ||
+          activityZoneReviews > 0)
           ? "pass"
           : "review",
       evidence: activityZoneEvidence,
@@ -1329,14 +1351,22 @@ function formatDayReviewDetail(detail) {
     return `${formatCount(count, "дело было", "дела были", "дел было")} в работе сегодня`;
   }
 
-  const entryPathMatch = detail.match(/^(\d+) вводом, (\d+) из списка, (\d+) остановок$/);
+  const activityZoneGlanceMatch = detail.match(/^(\d+)\/2 отметок «Учёл зоны»$/);
+  if (activityZoneGlanceMatch) {
+    const count = Number(activityZoneGlanceMatch[1]);
+    return `${count}/2 дневных просмотров зон активности`;
+  }
+
+  const entryPathMatch = detail.match(/^(\d+) вводом, (\d+) из списка, (?:(\d+) через диспетчеризацию, )?(\d+) остановок$/);
   if (entryPathMatch) {
     const typed = Number(entryPathMatch[1]);
     const selected = Number(entryPathMatch[2]);
-    const stops = Number(entryPathMatch[3]);
+    const dispatch = Number(entryPathMatch[3] ?? 0);
+    const stops = Number(entryPathMatch[4]);
     return [
       formatCount(typed, "старт вводом", "старта вводом", "стартов вводом"),
       formatCount(selected, "старт из списка", "старта из списка", "стартов из списка"),
+      formatCount(dispatch, "старт через диспетчеризацию", "старта через диспетчеризацию", "стартов через диспетчеризацию"),
       formatCount(stops, "остановка", "остановки", "остановок"),
     ].join(", ");
   }

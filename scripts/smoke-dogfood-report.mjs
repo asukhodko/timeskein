@@ -63,6 +63,8 @@ try {
       ('ae3', '2026-06-30T07:51:00Z', 'ui', 'window_show_requested', NULL, '{"control":"tray_click"}'),
       ('ae4', '2026-06-30T07:52:00Z', 'ui', 'window_hide_requested', NULL, '{"control":"global_shortcut"}'),
       ('ae5', '2026-06-30T07:53:00Z', 'ui', 'work_item_time_badges_reviewed', NULL, '{"action_id":"b1","control":"review_checklist","touched_work_item_count":2}'),
+      ('ae5_zone_glance_1', '2026-06-30T07:53:10Z', 'ui', 'activity_zone_glanced', NULL, '{"control":"zone_dashboard","zone_count":2}'),
+      ('ae5_zone_glance_2', '2026-06-30T07:53:20Z', 'ui', 'activity_zone_glanced', NULL, '{"control":"zone_dashboard","zone_count":2}'),
       ('ae6', '2026-06-30T07:54:00Z', 'ui', 'day_closure_started', NULL, '{"action_id":"d1","control":"review_panel"}'),
       ('ae7', '2026-06-30T08:01:00Z', 'ui', 'day_closure_completed', NULL, '{"action_id":"d1","control":"copy_report"}');
 
@@ -110,7 +112,7 @@ try {
   );
   assert(stdout.includes("| Зоны активности разделены | ок |"), "report daily-control audit did not pass zones");
   assert(
-    stdout.includes("35:00 рабочая занятость, 35:00 исполнение, 30:00 вне работы; зоны подтверждены отчётом"),
+    stdout.includes("35:00 рабочая занятость, 35:00 исполнение, 30:00 вне работы; 2 дневных просмотра зон; зоны подтверждены отчётом"),
     "report daily-control audit evidence did not localize zone totals"
   );
   assert(stdout.includes("| Окно и строка меню проверены | ок |"), "report daily-control audit did not pass window evidence");

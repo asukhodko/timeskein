@@ -539,7 +539,7 @@ nodes:
     kind: phase
     parent: ts
     status: in_progress
-    notes: "Current product layer after the 2026-07-08 closure gate. Turn Timeskein from a timer plus evening report into a day-structuring tool. Dogfood days 2026-07-07 and 2026-07-08 showed that work becomes easier after one focus is selected, while the expensive part is rebuilding manageability after breaks and choosing one legitimate next action without external pressure. The first slices added live Activity Zone totals, separated working occupancy from executive work, added a cheap active-focus journal, classified explained gaps by exact interval, added a compact day-entry/post-break dispatch ritual, and made dispatch-ritual starts visible in dogfood telemetry and closure checks. The remaining layer should prove a day without a parallel Codex note and decide whether Work Item stages are still necessary."
+    notes: "Current product layer after the 2026-07-08 closure gate. Turn Timeskein from a timer plus evening report into a day-structuring tool. Dogfood days 2026-07-07 and 2026-07-08 showed that work becomes easier after one focus is selected, while the expensive part is rebuilding manageability after breaks and choosing one legitimate next action without external pressure. The first slices added live Activity Zone totals with explicit in-day glance evidence, separated working occupancy from executive work, added a cheap active-focus journal, classified explained gaps by exact interval, added a compact day-entry/post-break dispatch ritual, and made dispatch-ritual starts visible in dogfood telemetry and closure checks. The remaining layer should prove a day without a parallel Codex note and decide whether Work Item stages are still necessary."
     x:
       ops:
         attention_class: current
@@ -588,7 +588,7 @@ nodes:
     effort: 2
     deps:
       - id: ts.daily_control.goal_check
-    notes: "Done on 2026-07-08 as the first in-day-structure slice. The Today panel now shows live zone totals with working occupancy (`Work + Coordination`), executive work (`Work`), non-work tracked time, and chips for the visible Activity Zones. UI and CLI reports use the same totals, so coordination is treated as work-shaped load without inflating executive work."
+    notes: "Done as the first in-day-structure slice. The Today panel shows live zone totals with working occupancy (`Work + Coordination`), executive work (`Work`), non-work tracked time, and chips for the visible Activity Zones. The `Учёл зоны` action records `activity_zone_glanced`, and dogfood reports/RC checks now expect two in-day glances or an explicit evening `Зоны верны` acceptance. UI and CLI reports use the same totals, so coordination is treated as work-shaped load without inflating executive work."
     x:
       ops:
         attention_class: done
@@ -641,12 +641,11 @@ nodes:
     deps:
       - id: ts.in_day_structure.active_work_journal
       - id: ts.in_day_structure.day_observation_log
-      - id: ts.in_day_structure.work_item_stages
       - id: ts.in_day_structure.zone_dashboard
       - id: ts.in_day_structure.dispatch_mode
       - id: ts.in_day_structure.entry_protocol
       - id: ts.in_day_structure.gap_recovery_classification
-    notes: One real workday should prove that Timeskein can hold the user's thoughts, dogfood-day observations, stages, zone distribution, dispatching choices, and gap explanations without needing a parallel Codex note for "Timeskein, day N" observations.
+    notes: One real workday should prove that Timeskein can hold the user's thoughts, dogfood-day observations, zone distribution, dispatching choices, and gap explanations without needing a parallel Codex note for "Timeskein, day N" observations. Work Item stages remain a planned future slice unless the dogfood day proves they are necessary for the current goal.
     x:
       ops:
         attention_class: current

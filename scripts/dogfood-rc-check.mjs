@@ -441,6 +441,10 @@ function assessEvidence(evidence, minFocusSeconds) {
     reviewItems.push("Нерабочее время равно нулю. Проверь, что перерывы, восстановление, простой и личные дела не были случайно сложены в рабочую занятость.");
   }
 
+  if (evidence.sessions.length > 0 && evidence.telemetry.activityZoneGlances < 2 && evidence.telemetry.activityZoneReviews === 0) {
+    reviewItems.push("Нет двух дневных просмотров зон активности. В течение dogfood-дня нажми «Учёл зоны» хотя бы утром и после значимого переключения, либо явно прими проверку зон вечером.");
+  }
+
   if (
     evidence.dayEvents.length === 0 &&
     evidence.workItemEvents.length === 0 &&
@@ -613,6 +617,7 @@ function buildRcReport(date, path, evidence, assessment, minFocusSeconds, strict
     `- Отвлечений во время активного фокуса: ${evidence.capturesDuringActiveFocus}`,
     `- Открытых отвлечений: ${evidence.openCaptures.length}`,
     `- Проверок открытых отвлечений: ${evidence.telemetry.captureFollowupReviews}`,
+    `- Дневных просмотров зон активности: ${evidence.telemetry.activityZoneGlances}`,
     `- Проверок зон активности: ${evidence.telemetry.activityZoneReviews}`,
     `- Проверок использования инбокса: ${evidence.telemetry.captureUsageReviews}`,
     `- Проверок путей входа: ${evidence.telemetry.entryPathReviews}`,
@@ -801,6 +806,11 @@ function formatGoalAuditMarkdown(evidence, assessment, minFocusSeconds) {
     : evidence.activityZoneTotals.length > 1 && evidence.nonWorkSeconds > 0
       ? "зоны подтверждены отчётом"
       : "проверка зон не отмечена";
+  const activityZoneGlanceEvidence = evidence.telemetry.activityZoneGlances > 0
+    ? formatCount(evidence.telemetry.activityZoneGlances, "дневной просмотр зон", "дневных просмотра зон", "дневных просмотров зон")
+    : evidence.telemetry.activityZoneReviews > 0
+      ? "дневные просмотры закрыты вечерней проверкой"
+      : "дневные просмотры зон не отмечены";
   const entryPathReviewEvidence = evidence.telemetry.entryPathReviews > 0
     ? formatCount(evidence.telemetry.entryPathReviews, "проверка пути входа", "проверки путей входа", "проверок путей входа")
     : entryPathsCovered
@@ -812,7 +822,7 @@ function formatGoalAuditMarkdown(evidence, assessment, minFocusSeconds) {
       ? "входы через окно покрыты телеметрией"
       : "входы через окно не проверены";
   const workItemTotalsEvidence = `${formatCount(evidence.workItemTotals.length, "строка итогов дел", "строки итогов дел", "строк итогов дел")}; ${workItemTimeReviewEvidence}`;
-  const activityZoneEvidence = `${formatCount(evidence.activityZoneTotals.length, "зона", "зоны", "зон")}; ${formatDuration(evidence.workingOccupancySeconds)} рабочая занятость, ${formatDuration(evidence.workFocusSeconds)} исполнение, ${formatDuration(evidence.nonWorkSeconds)} вне работы; ${activityZoneReviewEvidence}`;
+  const activityZoneEvidence = `${formatCount(evidence.activityZoneTotals.length, "зона", "зоны", "зон")}; ${formatDuration(evidence.workingOccupancySeconds)} рабочая занятость, ${formatDuration(evidence.workFocusSeconds)} исполнение, ${formatDuration(evidence.nonWorkSeconds)} вне работы; ${activityZoneGlanceEvidence}; ${activityZoneReviewEvidence}`;
   const dayContextEvidence = [
     formatCount(evidence.dayEvents.length, "событие дня", "события дня", "событий дня"),
     formatCount(evidence.workItemEvents.length, "событие дела", "события дел", "событий дел"),
@@ -884,7 +894,9 @@ function formatGoalAuditMarkdown(evidence, assessment, minFocusSeconds) {
       requirement: "Activity Zones separated",
       status: evidence.sessions.length === 0
         ? "block"
-        : (evidence.activityZoneTotals.length > 1 && evidence.nonWorkSeconds > 0) || evidence.telemetry.activityZoneReviews > 0
+        : ((evidence.activityZoneTotals.length > 1 && evidence.nonWorkSeconds > 0) &&
+            (evidence.telemetry.activityZoneGlances >= 2 || evidence.telemetry.activityZoneReviews > 0)) ||
+          evidence.telemetry.activityZoneReviews > 0
           ? "pass"
           : "review",
       evidence: activityZoneEvidence,
@@ -1187,6 +1199,7 @@ function summarizeEvents(events) {
     captureFollowupReviews: count("capture_followup_reviewed"),
     dayContextReviews: count("day_context_reviewed"),
     workItemTimeBadgeReviews: count("work_item_time_badges_reviewed"),
+    activityZoneGlances: count("activity_zone_glanced"),
     activityZoneReviews: count("activity_zone_reviewed"),
     captureUsageReviews: count("capture_usage_reviewed"),
     entryPathReviews: count("entry_paths_reviewed"),

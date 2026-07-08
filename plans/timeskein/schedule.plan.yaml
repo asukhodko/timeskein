@@ -104,6 +104,7 @@ schedule:
     ts.in_day_structure.work_item_stages:
       duration: 3d
     ts.in_day_structure.zone_dashboard:
+      start: "2026-07-08"
       duration: 1d
     ts.in_day_structure.dispatch_mode:
       start: "2026-07-08"

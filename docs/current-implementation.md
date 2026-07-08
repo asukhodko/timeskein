@@ -2,7 +2,7 @@
 
 ## Status
 
-Last updated: 2026-07-08.
+Last updated: 2026-07-09.
 
 This document describes what the repository actually runs today. Target architecture and future plans remain in RFCs and roadmap documents.
 
@@ -133,8 +133,8 @@ Runtime smoke on macOS:
 - `pnpm smoke:macos-app` also verifies Day Event add/update/delete/list against the packaged SQLite-backed app while ensuring day notes do not interrupt the active focus session
 - `pnpm smoke:macos-app` also verifies startup normalization of legacy active Work Items, orphan active focus sessions, stale `agent.lock` / `agent.port` recovery, and migration of older `app_events` kind constraints
 - `pnpm smoke:export-focus-day` verifies the Russian fallback Markdown export, the raw `--internal` format used by scripts, Day Events, Work Item notes, timestamped Work Item Events for touched items, and legacy focus-session schemas without Activity Zone columns, against temporary SQLite databases
-- `pnpm smoke:app-events` verifies the local app-event migration, metrics summary, and Markdown export against a temporary SQLite database
-- `pnpm smoke:dogfood-report` verifies the evening dogfood report wrapper, Russian focus-data labels, Russian review checklist, Russian daily-closure check, Activity Zone evidence warnings, entry-path evidence prompts, Work Item time review prompts, correction evidence prompts, accepted correction review, accepted open-capture review, Day Events, Work Item notes, Work Item Events, interruption history, open captures, analysis prompts, and human-readable app telemetry section, including typed, selected/list, dispatch-ritual entry, and both window show and hide request evidence
+- `pnpm smoke:app-events` verifies the local app-event migration, metrics summary, and Markdown export against a temporary SQLite database, including in-day Activity Zone glance telemetry
+- `pnpm smoke:dogfood-report` verifies the evening dogfood report wrapper, Russian focus-data labels, Russian review checklist, Russian daily-closure check, Activity Zone evidence warnings and in-day glance evidence, entry-path evidence prompts, Work Item time review prompts, correction evidence prompts, accepted correction review, accepted open-capture review, Day Events, Work Item notes, Work Item Events, interruption history, open captures, analysis prompts, and human-readable app telemetry section, including typed, selected/list, dispatch-ritual entry, and both window show and hide request evidence
 - `pnpm smoke:dogfood-finish` verifies the end-of-day gate: no active focus session, no active Work Item, at least one focus block, and `--save` writing both the day report and closure check
 - `pnpm smoke:dogfood-status` verifies the embedded-agent status checker against healthy and unhealthy temporary HTTP agents
 - `pnpm smoke:dogfood-ready` verifies the real-database readiness checker against clean and contaminated temporary SQLite databases, including running-process visibility and the actionable next commands
@@ -165,7 +165,7 @@ Dogfood launch helper:
 - `pnpm dogfood:macos` rebuilds and opens the packaged app as a low-level development/manual-debugging helper; normal dogfood days should use `dogfood:start` or `dogfood:continue` because those commands inspect the real day state before opening the app
 - `pnpm open:macos-app` refuses by default when `timeskein-desktop` is already running, so a dogfood start does not silently activate an old process; `--check-only` validates bundle plus guard without opening the app, and `--check-running-only` runs only the process guard before preflight has built the app
 - `pnpm export:focus-day` prints a Russian Markdown day report from the local SQLite database as a fallback to UI copy; `--internal` keeps the raw labels for scripts such as `dogfood:report`
-- `pnpm dogfood:metrics` prints Russian dogfood telemetry aggregates from the local SQLite app-event journal, including start/stop failure counts and accepted open-capture reviews; `--raw` keeps the older technical labels for scripts that parse the output
+- `pnpm dogfood:metrics` prints Russian dogfood telemetry aggregates from the local SQLite app-event journal, including start/stop failure counts, accepted open-capture reviews, and in-day Activity Zone glance counts; `--raw` keeps the older technical labels for scripts that parse the output
 - `pnpm export:app-events` prints a Russian Markdown table of local technical app events for inspecting product friction after a dogfood day
 - `pnpm export:app-events` prints a Markdown event table for deeper inspection of show/hide/start/switch/stop/copy/API behavior
 - `pnpm dogfood:report` prints a Markdown day-closure report titled `Отчёт закрытия дня Timeskein`, with Russian focus data, a Russian review checklist, a Russian daily-closure check, Day Events, interruption history, open captures, human-readable app telemetry, and evening review prompts, marked as a draft if a focus block, Work Item, or review check still needs attention
@@ -282,7 +282,7 @@ Third real dogfood day and release baseline:
 - Destructive confirmation dialogs focus `Cancel` by default and do not confirm on `Enter`
 - Focus input is refocused when the window becomes visible and no block is active
 - SQLite storage through the embedded Rust agent
-- Local app-event telemetry for dogfood analysis: app start, agent start/reuse/recovery, window show/hide/drag, window show/hide requests, focus start/switch/stop, dispatch-ritual starts, Capture Inbox create/update/delete/resolve/convert, accepted review decisions, report copy, manual copy fallback, and API errors
+- Local app-event telemetry for dogfood analysis: app start, agent start/reuse/recovery, window show/hide/drag, window show/hide requests, focus start/switch/stop, dispatch-ritual starts, in-day Activity Zone glances, Capture Inbox create/update/delete/resolve/convert, accepted review decisions, report copy, manual copy fallback, and API errors
 - Mock server for browser development
 
 ## Focus Session Data
@@ -398,7 +398,7 @@ pnpm dogfood:finish:save
 pnpm dogfood:goal-check -- --no-codex-guidance
 ```
 
-The report telemetry section includes action counts, typed entry, selected/list continuation, dispatch-ritual start evidence, start/switch/stop failures, Capture Inbox action counts and failures, accepted review decisions, day-closure start/completion counts, last measured day-closure duration, API errors, window show/hide counts, both show and hide request counts, copy fallback counts, average start latency, likely show-to-start friction gaps, attempts to start the already active Work Item, and stale runtime recovery events. `app_event.summary` also exposes the latest open day-closure action when `day_closure_started` exists without a matching `day_closure_completed`, so the focus panel can restore the evening-closure timer after a frontend or app restart instead of starting a second measurement. The user-facing Markdown localizes unavailable values and event kind rows as `нет данных`, `фокус начат`, `окно показано`, and `запрошен старт фокуса`; raw English labels remain available only through `pnpm dogfood:metrics -- --raw` for scripts.
+The report telemetry section includes action counts, typed entry, selected/list continuation, dispatch-ritual start evidence, start/switch/stop failures, Capture Inbox action counts and failures, in-day Activity Zone glance counts, accepted review decisions, day-closure start/completion counts, last measured day-closure duration, API errors, window show/hide counts, both show and hide request counts, copy fallback counts, average start latency, likely show-to-start friction gaps, attempts to start the already active Work Item, and stale runtime recovery events. `app_event.summary` also exposes the latest open day-closure action when `day_closure_started` exists without a matching `day_closure_completed`, so the focus panel can restore the evening-closure timer after a frontend or app restart instead of starting a second measurement. The user-facing Markdown localizes unavailable values and event kind rows as `нет данных`, `фокус начат`, `окно показано`, and `запрошен старт фокуса`; raw English labels remain available only through `pnpm dogfood:metrics -- --raw` for scripts.
 
 ## Global Shortcut and Tray
 
@@ -435,7 +435,7 @@ On multi-monitor macOS setups, the tray/status item is controlled by the system 
 
 ## Next Engineering Steps
 
-1. Continue the in-day structure gate. The first slices are done: live Activity Zone totals now separate working occupancy, executive work, and non-work tracked time; the active focus panel can capture thoughts, decisions, questions, next steps, milestones, and interruption notes into Work Item or Day Events without stopping the timer; explained gaps show a typed label in Today and Markdown; day-entry/post-break dispatch decisions can be recorded and started from the focus panel with telemetry evidence. Next slices should prove this in a real dogfood day without a parallel external note and then decide whether explicit Work Item stages are still needed.
+1. Continue the in-day structure gate. The first slices are done: live Activity Zone totals now separate working occupancy, executive work, and non-work tracked time and can be explicitly marked with `Учёл зоны`; the active focus panel can capture thoughts, decisions, questions, next steps, milestones, and interruption notes into Work Item or Day Events without stopping the timer; explained gaps show a typed label in Today and Markdown; day-entry/post-break dispatch decisions can be recorded and started from the focus panel with telemetry evidence. Next slices should prove this in a real dogfood day without a parallel external note and then decide whether explicit Work Item stages are still needed.
 2. Strengthen gap explanations beyond the first classification slice. Closed gaps now match exact intervals and show typed labels, but future work can promote them from Day Event conventions into a dedicated gap model if period reports need richer filtering.
 3. Strengthen the day-observation flow: the new active-focus journal is the first slice, but the product still needs a proved day without a parallel "Timeskein, day N" note and probably a calmer way to review many observations.
 4. Keep arbitrary-period reports as the next meaning layer after in-day structure. The first period-report slice should use existing manual data to choose the next protected focus points before adding passive evidence collection.

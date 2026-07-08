@@ -32,13 +32,15 @@ saved dogfood report and closure evidence for the real local database, verifies 
 grouped review checklist plus `Ближайшее действие`, then runs `pnpm test`,
 `pnpm dogfood:preflight`, and strict closure evidence on the same code.
 The current product layer is in-day structure. Its first slice is implemented:
-Today now shows live Activity Zone totals, and reports separate working
-occupancy (`Work + Coordination`), executive work (`Work`), and non-work tracked
-time. The remaining work should move the user's "Timeskein, day N" observations
-from Codex into Timeskein itself, support active-work thoughts, day-level
-observations, Work Item stages, day-entry/post-break dispatching, and explicit
-recovery-versus-lost-control gap labels. It is the active path now that the
-closure goal has real evidence.
+Today now shows live Activity Zone totals with an explicit `Учёл зоны` action,
+and reports separate working occupancy (`Work + Coordination`), executive work
+(`Work`), and non-work tracked time. The remaining work should move the user's
+"Timeskein, day N" observations from Codex into Timeskein itself, prove
+active-work thoughts and day-level observations in a real dogfood day, verify
+day-entry/post-break dispatching, and keep explicit recovery-versus-lost-control
+gap labels. Work Item stages stay a future slice unless dogfood proves they are
+needed for the current goal. It is the active path now that the closure goal has
+real evidence.
 
 After in-day structure, the next broad meaning layer is periodic reflection:
 reports for a week, sprint, month, quarter, year, or arbitrary date range. The
@@ -81,7 +83,7 @@ flowchart LR
     class dogfood_hardening exec_done
     daily_control_gate["Daily<br/>Control Gate<br/>100%<br/>веха 2026-07-08"]
     class daily_control_gate exec_done
-    in_day_structure["In-day<br/>Structure<br/>60%<br/>веха 2026-07-13"]
+    in_day_structure["In-day<br/>Structure<br/>60%<br/>веха 2026-07-09"]
     class in_day_structure exec_mgmt_yellow
     style in_day_structure stroke:#111827,stroke-width:3px
     periodic_reflection["Periodic<br/>Reflection<br/>~0%"]
@@ -162,11 +164,11 @@ gantt
     ✅ Stream thoughts inside active work  :done, ts_in_day_structure_active_work_journal,    2026-07-08, 1d
     🔄 Keep dogfood day observations inside Timeskein  :active, ts_in_day_structure_day_observation_log,    2026-07-09, 1d
     Track stages inside a Work Item  :ts_in_day_structure_work_item_stages,    2026-07-09, 3d
-    ✅ Show Activity Zone totals during the day  :done, ts_in_day_structure_zone_dashboard,    2026-07-09, 1d
+    ✅ Show Activity Zone totals during the day  :done, ts_in_day_structure_zone_dashboard,    2026-07-08, 1d
     🔄 Support day entry and dispatching mode  :active, ts_in_day_structure_dispatch_mode,    2026-07-08, 2d
     🔄 Define the day-entry and post-break protocol  :active, ts_in_day_structure_entry_protocol,    2026-07-08, 1d
     ✅ Classify gaps as recovery or lost control  :done, ts_in_day_structure_gap_recovery_classification,    2026-07-08, 1d
-    In-day structure dogfood gate  :milestone, ts_in_day_structure_dogfood_gate,    2026-07-13, 0d
+    In-day structure dogfood gate  :milestone, ts_in_day_structure_dogfood_gate,    2026-07-09, 0d
 ```
 
 ## Current work list

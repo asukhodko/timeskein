@@ -453,10 +453,6 @@ function assessEvidence(evidence, minFocusSeconds) {
     reviewItems.push("События дня есть, но ни у одного нет зоны активности. Перед финальным вердиктом выбери зону: буфер, восстановление, простой, координация или личное; либо подтверди, что это не нужно.");
   }
 
-  if (evidence.workItemEvents.length === 0 && evidence.sessions.length > 0) {
-    reviewItems.push("Нет timestamped-событий дел. Если важны детали конкретной задачи, добавь событие или подними отвлечение в событие, не полагаясь на память.");
-  }
-
   if (evidence.openCaptures.length > 0 && evidence.telemetry.captureFollowupReviews === 0) {
     reviewItems.push(`${evidence.openCaptures.length} открытых отвлечений осталось. Закрой, преврати в дело или явно оставь открытыми.`);
   }

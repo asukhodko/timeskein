@@ -149,6 +149,23 @@ try {
   assert(goodStrict.code === 0, "good day should pass strict RC check");
   assert(goodStrict.stdout.includes("Строгий режим: да"), "strict RC check marker is missing");
 
+  const dayContextOnlyDb = join(tempDir, "day-context-only.db");
+  await copyDb(goodDb, dayContextOnlyDb);
+  await runSql(dayContextOnlyDb, "DELETE FROM work_item_events;");
+  const dayContextOnlyStrict = await runRcCheck(dayContextOnlyDb, ["--strict"]);
+  assert(
+    dayContextOnlyStrict.code === 0,
+    "strict RC check should pass when Day Events and Work Item notes preserve enough context"
+  );
+  assert(
+    dayContextOnlyStrict.stdout.includes("Событий дел: 0"),
+    "day-context-only strict check should expose the missing Work Item Event count"
+  );
+  assert(
+    !dayContextOnlyStrict.stdout.includes("Нет timestamped-событий дел"),
+    "day-context-only strict check should not block on optional Work Item Events"
+  );
+
   const singleZoneDb = join(tempDir, "single-zone.db");
   await copyDb(goodDb, singleZoneDb);
   await runSql(singleZoneDb, `

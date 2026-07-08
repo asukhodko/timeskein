@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type RefObject } from 'react'
 import type { ActivityZone, AppEventKind, AppEventSummary, CaptureView, DayEventView, FocusSessionView, WorkItemEventView, WorkItemView } from '@timeskein/contracts'
 import {
   useCurrentFocusSession,
@@ -6,7 +6,7 @@ import {
   useStopFocusSession,
   useTodayFocusSessions,
 } from '../hooks/useFocusSessions'
-import { useDeleteWorkItemEvent, useInventory, useSetWorkItemState, useUpdateWorkItemEvent, useWorkItemEvents } from '../hooks/useInventory'
+import { useAddWorkItemEvent, useDeleteWorkItemEvent, useInventory, useSetWorkItemState, useUpdateWorkItemEvent, useWorkItemEvents } from '../hooks/useInventory'
 import { useCaptureActivity, useOpenCaptures } from '../hooks/useCaptures'
 import { useAddDayEvent, useDayEvents, useDeleteDayEvent, useUpdateDayEvent } from '../hooks/useDayEvents'
 import { appEventApi, logAppEvent, shellApi } from '../api/client'
@@ -16,6 +16,18 @@ import {
   summarizeActivityZones,
   type ActivityZoneTotal,
 } from '../utils/activityZones'
+import {
+  ACTIVE_FOCUS_JOURNAL_KIND_LABELS,
+  ACTIVE_FOCUS_JOURNAL_TARGET_LABELS,
+  DEFAULT_ACTIVE_FOCUS_JOURNAL_KIND,
+  DEFAULT_ACTIVE_FOCUS_JOURNAL_TARGET,
+  activeFocusJournalDraftStorageKey,
+  decodeActiveFocusJournalDraft,
+  encodeActiveFocusJournalDraft,
+  formatActiveFocusJournalText,
+  type ActiveFocusJournalKind,
+  type ActiveFocusJournalTarget,
+} from '../utils/activeFocusJournal'
 import {
   getBulkAcceptableReviewActions,
   getDayClosureStage,
@@ -54,15 +66,20 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
   const [addingMissedBlock, setAddingMissedBlock] = useState(false)
   const [dayEventText, setDayEventText] = useState('')
   const [dayEventZone, setDayEventZone] = useState<ActivityZone | ''>('')
+  const [activeJournalText, setActiveJournalText] = useState('')
+  const [activeJournalKind, setActiveJournalKind] = useState<ActiveFocusJournalKind>(DEFAULT_ACTIVE_FOCUS_JOURNAL_KIND)
+  const [activeJournalTarget, setActiveJournalTarget] = useState<ActiveFocusJournalTarget>(DEFAULT_ACTIVE_FOCUS_JOURNAL_TARGET)
   const [appEventSummary, setAppEventSummary] = useState<AppEventSummary | null>(null)
   const [dayClosureStartedAt, setDayClosureStartedAt] = useState<Date | null>(null)
   const titleInputRef = useRef<HTMLInputElement>(null)
   const dayEventInputRef = useRef<HTMLInputElement>(null)
+  const activeJournalInputRef = useRef<HTMLInputElement>(null)
   const manualCopyRef = useRef<HTMLTextAreaElement>(null)
   const dayClosureActionIdRef = useRef<string | null>(null)
   const dayClosureStartedAtRef = useRef<Date | null>(null)
   const dayClosureCompletedRef = useRef(false)
   const dayEventDraftLoadedKeyRef = useRef<string | null>(null)
+  const activeJournalDraftLoadedKeyRef = useRef<string | null>(null)
   const localDayKey = formatLocalDate(now)
   const dayWindow = useMemo(() => {
     const dayStart = startOfLocalDay(now)
@@ -83,10 +100,15 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
   const startMutation = useStartFocusSession()
   const stopMutation = useStopFocusSession()
   const addDayEventMutation = useAddDayEvent()
+  const addWorkItemEventMutation = useAddWorkItemEvent()
   const setWorkItemStateMutation = useSetWorkItemState()
 
   const current = currentQuery.data?.session
   const currentId = current?.id
+  const activeJournalDraftKey = useMemo(
+    () => current ? activeFocusJournalDraftStorageKey(current.work_item_id ?? current.id, now) : null,
+    [current?.id, current?.work_item_id, localDayKey]
+  )
   const sessions = todayQuery.data?.sessions ?? []
   const inventoryItems = useMemo(() => inventoryQuery.data?.items ?? [], [inventoryQuery.data?.items])
   const activeWorkItems = useMemo(
@@ -203,6 +225,32 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
       zone: dayEventZone,
     })
   }, [dayEventText, dayEventZone, localDayKey])
+
+  useEffect(() => {
+    if (!activeJournalDraftKey || !current) {
+      activeJournalDraftLoadedKeyRef.current = null
+      setActiveJournalText('')
+      setActiveJournalKind(DEFAULT_ACTIVE_FOCUS_JOURNAL_KIND)
+      setActiveJournalTarget(DEFAULT_ACTIVE_FOCUS_JOURNAL_TARGET)
+      return
+    }
+
+    const draft = readActiveFocusJournalDraft(activeJournalDraftKey)
+    activeJournalDraftLoadedKeyRef.current = activeJournalDraftKey
+    setActiveJournalText(draft.text)
+    setActiveJournalKind(draft.kind)
+    setActiveJournalTarget(current.work_item_id ? draft.target : 'day')
+  }, [activeJournalDraftKey, current?.work_item_id])
+
+  useEffect(() => {
+    if (!activeJournalDraftKey || activeJournalDraftLoadedKeyRef.current !== activeJournalDraftKey) return
+
+    writeActiveFocusJournalDraft(activeJournalDraftKey, {
+      text: activeJournalText,
+      kind: activeJournalKind,
+      target: current?.work_item_id ? activeJournalTarget : 'day',
+    })
+  }, [activeJournalDraftKey, activeJournalText, activeJournalKind, activeJournalTarget, current?.work_item_id])
 
   useEffect(() => {
     const handleWindowFocus = () => {
@@ -634,6 +682,41 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
     )
   }
 
+  const addActiveJournalEvent = () => {
+    if (!current) return
+
+    const text = formatActiveFocusJournalText(activeJournalKind, activeJournalText)
+    if (!text || addWorkItemEventMutation.isPending || addDayEventMutation.isPending) return
+
+    const target = current.work_item_id && activeJournalTarget === 'work_item' ? 'work_item' : 'day'
+    const clearDraft = () => {
+      if (activeJournalDraftKey) clearActiveFocusJournalDraft(activeJournalDraftKey)
+      setActiveJournalText('')
+      window.requestAnimationFrame(() => activeJournalInputRef.current?.focus())
+    }
+
+    if (target === 'work_item' && current.work_item_id) {
+      addWorkItemEventMutation.mutate(
+        {
+          id: current.work_item_id,
+          text,
+          focus_session_id: current.id,
+        },
+        { onSuccess: clearDraft }
+      )
+      return
+    }
+
+    addDayEventMutation.mutate(
+      {
+        text,
+        focus_session_id: current.id,
+        activity_zone: current.activity_zone,
+      },
+      { onSuccess: clearDraft }
+    )
+  }
+
   const stageDayEvent = (text: string, activityZone: ActivityZone | '' = '') => {
     setDayEventText(text)
     setDayEventZone(activityZone)
@@ -719,13 +802,28 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
     setAppEventSummary(summary)
   }
 
-  const mutationError = startMutation.error || stopMutation.error || addDayEventMutation.error
+  const mutationError = startMutation.error || stopMutation.error || addDayEventMutation.error || addWorkItemEventMutation.error
 
   return (
     <section className="border-b border-gray-700 bg-gray-950/45">
       <div className="grid gap-3 px-4 py-3">
         {current && (
           <ActiveFocusSession session={current} note={note} setNote={setNote} onStop={stopCurrentSession} stopping={stopMutation.isPending} />
+        )}
+
+        {current && (
+          <ActiveFocusJournal
+            inputRef={activeJournalInputRef}
+            text={activeJournalText}
+            kind={activeJournalKind}
+            target={current.work_item_id ? activeJournalTarget : 'day'}
+            hasWorkItem={Boolean(current.work_item_id)}
+            pending={addWorkItemEventMutation.isPending || addDayEventMutation.isPending}
+            onTextChange={setActiveJournalText}
+            onKindChange={setActiveJournalKind}
+            onTargetChange={setActiveJournalTarget}
+            onSubmit={addActiveJournalEvent}
+          />
         )}
 
         <div className="grid gap-2">
@@ -1087,6 +1185,40 @@ function writeDayEventDraft(localDayKey: string, draft: DayEventDraft) {
 
 function clearDayEventDraft(localDayKey: string) {
   getLocalStorage()?.removeItem(dayEventDraftStorageKey(localDayKey))
+}
+
+function readActiveFocusJournalDraft(key: string) {
+  const storage = getLocalStorage()
+  if (!storage) {
+    return {
+      text: '',
+      kind: DEFAULT_ACTIVE_FOCUS_JOURNAL_KIND,
+      target: DEFAULT_ACTIVE_FOCUS_JOURNAL_TARGET,
+    }
+  }
+
+  return decodeActiveFocusJournalDraft(storage.getItem(key))
+}
+
+function writeActiveFocusJournalDraft(key: string, draft: {
+  text: string
+  kind: ActiveFocusJournalKind
+  target: ActiveFocusJournalTarget
+}) {
+  const storage = getLocalStorage()
+  if (!storage) return
+
+  const encoded = encodeActiveFocusJournalDraft(draft)
+  if (!encoded) {
+    storage.removeItem(key)
+    return
+  }
+
+  storage.setItem(key, encoded)
+}
+
+function clearActiveFocusJournalDraft(key: string) {
+  getLocalStorage()?.removeItem(key)
 }
 
 function getLocalStorage() {
@@ -3700,6 +3832,81 @@ function formatTrayDuration(totalSeconds: number) {
   const hours = Math.floor(minutes / 60)
   const rest = minutes % 60
   return rest === 0 ? `${hours} ч` : `${hours} ч ${rest} мин`
+}
+
+function ActiveFocusJournal({
+  inputRef,
+  text,
+  kind,
+  target,
+  hasWorkItem,
+  pending,
+  onTextChange,
+  onKindChange,
+  onTargetChange,
+  onSubmit,
+}: {
+  inputRef: RefObject<HTMLInputElement>
+  text: string
+  kind: ActiveFocusJournalKind
+  target: ActiveFocusJournalTarget
+  hasWorkItem: boolean
+  pending: boolean
+  onTextChange: (value: string) => void
+  onKindChange: (value: ActiveFocusJournalKind) => void
+  onTargetChange: (value: ActiveFocusJournalTarget) => void
+  onSubmit: () => void
+}) {
+  return (
+    <div className="flex items-center gap-2 rounded-md border border-emerald-900/70 bg-emerald-950/20 px-3 py-2">
+      <input
+        ref={inputRef}
+        value={text}
+        onChange={(event) => onTextChange(event.target.value)}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter') {
+            event.preventDefault()
+            onSubmit()
+          }
+        }}
+        placeholder="Мысль, решение, вопрос или следующий шаг..."
+        className="min-w-0 flex-1 rounded border border-emerald-900/70 bg-gray-950 px-2 py-1.5 text-xs text-gray-100 placeholder-gray-600 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+      />
+      <select
+        value={kind}
+        onChange={(event) => onKindChange(event.target.value as ActiveFocusJournalKind)}
+        className="w-32 rounded border border-emerald-900/70 bg-gray-950 px-2 py-1.5 text-xs text-gray-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+        title="Тип записи"
+      >
+        {Object.entries(ACTIVE_FOCUS_JOURNAL_KIND_LABELS).map(([value, label]) => (
+          <option key={value} value={value}>
+            {label}
+          </option>
+        ))}
+      </select>
+      <select
+        value={target}
+        onChange={(event) => onTargetChange(event.target.value as ActiveFocusJournalTarget)}
+        disabled={!hasWorkItem}
+        className="w-24 rounded border border-emerald-900/70 bg-gray-950 px-2 py-1.5 text-xs text-gray-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 disabled:cursor-not-allowed disabled:border-gray-800 disabled:text-gray-600"
+        title="Куда сохранить"
+      >
+        {Object.entries(ACTIVE_FOCUS_JOURNAL_TARGET_LABELS).map(([value, label]) => (
+          <option key={value} value={value}>
+            {label}
+          </option>
+        ))}
+      </select>
+      <button
+        type="button"
+        onClick={onSubmit}
+        disabled={!text.trim() || pending}
+        className="rounded border border-emerald-700 px-2 py-1.5 text-xs font-medium text-emerald-200 hover:border-emerald-400 hover:text-emerald-100 disabled:cursor-not-allowed disabled:border-gray-800 disabled:text-gray-600"
+      >
+        Записать
+      </button>
+    </div>
+  )
 }
 
 function ActiveFocusSession({

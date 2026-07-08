@@ -346,7 +346,9 @@ The current API surface is:
 - `work_item.delete_event` to delete user-authored `note_added` events;
 - `work_item.events` to list events by Work Item and/or time window.
 
-The note editor can append a timestamped event without replacing the Work Item description. Its entry rule is intentionally conservative: typed event text is cleared only after a successful append, and it stays in the field after an API failure. The draft is stored locally per day and Work Item, so closing or reloading the editor does not silently drop a note intended for review, and yesterday's draft does not appear as today's context. Capture Inbox can also append a capture as a Work Item Event, preserving the capture text and focus-session link. The focus panel shows item events for the day and lets user-authored note events be edited or deleted before the final report. UI/CLI dogfood reports include a `События дел` section.
+The active focus panel has a cheap journal row for thoughts, decisions, questions, next steps, milestones, and interruption notes. By default it appends the note to the current Work Item and links it to the active focus session; the user can switch the target to day-level context without stopping or switching the timer. The saved event text keeps the selected kind as a Russian prefix, for example `Решение: ...`, so the existing report can show meaning before a deeper typed-event schema exists.
+
+The note editor can append a timestamped event without replacing the Work Item description. Its entry rule is intentionally conservative: typed event text is cleared only after a successful append, and it stays in the field after an API failure. The draft is stored locally per day and Work Item, while active-focus journal drafts are stored locally per day and active Work Item/focus anchor. Closing, reloading, or losing an API request must not silently drop a note intended for review, and yesterday's draft does not appear as today's context. Capture Inbox can also append a capture as a Work Item Event, preserving the capture text and focus-session link. The focus panel shows item events for the day and lets user-authored note events be edited or deleted before the final report. UI/CLI dogfood reports include a `События дел` section.
 
 ## Day Events
 
@@ -432,7 +434,7 @@ On multi-monitor macOS setups, the tray/status item is controlled by the system 
 
 ## Next Engineering Steps
 
-1. Continue the in-day structure gate. The first slice is done: live Activity Zone totals now separate working occupancy, executive work, and non-work tracked time. Next slices should make Timeskein hold active-work thoughts, day-level observations, day-entry/post-break dispatch decisions, and clearer recovery/lost-control gap classification.
+1. Continue the in-day structure gate. The first slices are done: live Activity Zone totals now separate working occupancy, executive work, and non-work tracked time, and the active focus panel can capture thoughts, decisions, questions, next steps, milestones, and interruption notes into Work Item or Day Events without stopping the timer. Next slices should make day-entry/post-break dispatch decisions and clearer recovery/lost-control gap classification first-class enough for a dogfood day without a parallel external note.
 2. Turn gap explanations into structured evidence. A gap should be visibly explained as recovery, lost control, meeting buffer, food/rest, external interruption, or accepted untracked time, not only as nearby free text.
-3. Add a cheap active-work journal: thoughts, decisions, questions, and next steps should be timestamped inside the current Work Item or day without switching tools.
+3. Strengthen the day-observation flow: the new active-focus journal is the first slice, but the product still needs a proved day without a parallel "Timeskein, day N" note and probably a calmer way to review many observations.
 4. Keep arbitrary-period reports as the next meaning layer after in-day structure. The first period-report slice should use existing manual data to choose the next protected focus points before adding passive evidence collection.

@@ -96,8 +96,10 @@ schedule:
       duration: 1d
 
     ts.in_day_structure.active_work_journal:
-      duration: 2d
+      start: "2026-07-08"
+      duration: 1d
     ts.in_day_structure.day_observation_log:
+      start: "2026-07-09"
       duration: 1d
     ts.in_day_structure.work_item_stages:
       duration: 3d

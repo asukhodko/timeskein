@@ -539,7 +539,7 @@ nodes:
     kind: phase
     parent: ts
     status: in_progress
-    notes: "Current product layer after the 2026-07-08 closure gate. Turn Timeskein from a timer plus evening report into a day-structuring tool. Dogfood days 2026-07-07 and 2026-07-08 showed that work becomes easier after one focus is selected, while the expensive part is rebuilding manageability after breaks and choosing one legitimate next action without external pressure. The first slice added live Activity Zone totals and separated working occupancy from executive work. The remaining layer should capture thoughts inside active work, keep the user's Timeskein-day observations inside the app instead of Codex, make Work Item stages visible, support the day-entry and post-break dispatching ritual, and distinguish deliberate recovery from loss of control."
+    notes: "Current product layer after the 2026-07-08 closure gate. Turn Timeskein from a timer plus evening report into a day-structuring tool. Dogfood days 2026-07-07 and 2026-07-08 showed that work becomes easier after one focus is selected, while the expensive part is rebuilding manageability after breaks and choosing one legitimate next action without external pressure. The first slices added live Activity Zone totals, separated working occupancy from executive work, and added a cheap active-focus journal for thoughts, decisions, questions, next steps, milestones, and interruption notes. The remaining layer should prove a day without a parallel Codex note, make Work Item stages visible, support the day-entry and post-break dispatching ritual, and distinguish deliberate recovery from loss of control."
     x:
       ops:
         attention_class: current
@@ -547,24 +547,24 @@ nodes:
     title: Stream thoughts inside active work
     kind: task
     parent: ts.in_day_structure
-    status: planned
+    status: done
     effort: 3
     deps:
       - id: ts.daily_control.goal_check
-    notes: "Add a cheap way to append timestamped thoughts to the active Work Item without leaving focus. The first slice should add an active-focus event input, default to the current Work Item, allow day-level thoughts when the observation is not really about the current Work Item, preserve typed text on API failure, and show events in day and period reports. Event types can be thought, decision, question, next step, milestone, or interruption note. This is the product path for moving the user's Timeskein day notes from Codex/chat into Timeskein itself, including observations about entry cost, recovery, and product friction."
+    notes: "Done as a first slice on 2026-07-08. The active focus panel now has a journal input with event kind selector and target selector. It defaults to the current Work Item, can write day-level context, preserves a local draft until successful save, and appends into existing Work Item Events or Day Events without stopping the timer. Event kind is currently stored as a Russian text prefix (`Мысль:`, `Решение:`, `Вопрос:`, etc.); a deeper typed-event schema remains future work if period reports need filtering by kind."
     x:
       ops:
-        attention_class: current
+        attention_class: done
   ts.in_day_structure.day_observation_log:
     title: Keep dogfood day observations inside Timeskein
     kind: task
     parent: ts.in_day_structure
-    status: planned
+    status: in_progress
     effort: 2
     deps:
       - id: ts.in_day_structure.active_work_journal
       - id: ts.day_review.day_events
-    notes: "Make it unnecessary to maintain a parallel 'Timeskein, day N' note in Codex. The first slice should let the user record product observations, working thoughts, recovery notes, and self-coordination comments either as Work Item Events or Day Events, then show them in the evening report. The dogfood protocol should explicitly ask whether any day observations still had to be kept outside Timeskein."
+    notes: "In progress. The active-focus journal and existing Day Events now provide the mechanics for recording product observations, working thoughts, recovery notes, and self-coordination comments inside Timeskein. The remaining proof is dogfood: one day should run without a parallel 'Timeskein, day N' note in Codex, and the evening report should contain enough observations to reconstruct the day."
     x:
       ops:
         attention_class: current

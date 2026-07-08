@@ -310,6 +310,7 @@ If macOS rejects all three, use the macOS menu bar item or normal app switching.
 |---------|--------|
 | Поле «На чём сейчас фокус?» + `Старт` | Найти или создать дело по названию и начать фокус |
 | Поле «Переключиться на...» + `Переключить` | Остановить текущий блок и начать следующий по названию |
+| Строка «Мысль, решение, вопрос или следующий шаг...» | Записать событие активного дела или дня, не останавливая таймер |
 | Поле «Зафиксировать отвлечение...» + `Записать` | Сохранить входящее событие, не останавливая и не переключая фокус |
 | Пустое поле фокуса + `Space` | Начать или переключить фокус на выбранное дело |
 | `Начать` / `Переключиться` на выбранном деле | Продолжить фокус на выбранном деле |
@@ -334,6 +335,7 @@ If macOS rejects all three, use the macOS menu bar item or normal app switching.
 - Manual focus sessions with 25-minute target and overflow tracking
 - Post-factum correction for stopped focus blocks: add a missed block, edit time/note/Work Item/Activity Zone, or split a block
 - Capture Inbox for incoming events that should be handled later without interrupting the current focus block
+- Active focus journal for quick thoughts, decisions, questions, next steps, milestones, and interruption notes during the running block; entries can target the current Work Item or the day and keep a local draft until they are saved
 - Timestamped Work Item Events for observations during the day, with edit/delete cleanup for user-authored notes
 - The Work Item event input keeps a local per-day, per-item draft until the event is successfully added
 - Timestamped Day Events for review context that belongs to the day rather than to one Work Item

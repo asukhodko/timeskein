@@ -81,7 +81,7 @@ flowchart LR
     class dogfood_hardening exec_done
     daily_control_gate["Daily<br/>Control Gate<br/>100%<br/>веха 2026-07-08"]
     class daily_control_gate exec_done
-    in_day_structure["In-day<br/>Structure<br/>~10%<br/>веха 2026-07-15"]
+    in_day_structure["In-day<br/>Structure<br/>~30%<br/>веха 2026-07-13"]
     class in_day_structure exec_mgmt_yellow
     style in_day_structure stroke:#111827,stroke-width:3px
     periodic_reflection["Periodic<br/>Reflection<br/>~0%"]
@@ -159,14 +159,14 @@ gantt
     ✅ Run post-baseline daily-control dogfood day  :done, ts_daily_control_real_day,    2026-07-06, 1d
     ✅ Close daily-control goal with strict evidence  :milestone, done, ts_daily_control_goal_check,    2026-07-08, 0d
     section In-day structure
-    Stream thoughts inside active work  :ts_in_day_structure_active_work_journal,    2026-07-09, 2d
-    Keep dogfood day observations inside Timeskein  :ts_in_day_structure_day_observation_log,    2026-07-13, 1d
-    Track stages inside a Work Item  :ts_in_day_structure_work_item_stages,    2026-07-13, 3d
+    ✅ Stream thoughts inside active work  :done, ts_in_day_structure_active_work_journal,    2026-07-08, 1d
+    🔄 Keep dogfood day observations inside Timeskein  :active, ts_in_day_structure_day_observation_log,    2026-07-09, 1d
+    Track stages inside a Work Item  :ts_in_day_structure_work_item_stages,    2026-07-09, 3d
     ✅ Show Activity Zone totals during the day  :done, ts_in_day_structure_zone_dashboard,    2026-07-09, 1d
-    Support day entry and dispatching mode  :ts_in_day_structure_dispatch_mode,    2026-07-14, 2d
-    Define the day-entry and post-break protocol  :ts_in_day_structure_entry_protocol,    2026-07-13, 1d
+    Support day entry and dispatching mode  :ts_in_day_structure_dispatch_mode,    2026-07-10, 2d
+    Define the day-entry and post-break protocol  :ts_in_day_structure_entry_protocol,    2026-07-10, 1d
     Classify gaps as recovery or lost control  :ts_in_day_structure_gap_recovery_classification,    2026-07-09, 2d
-    In-day structure dogfood gate  :milestone, ts_in_day_structure_dogfood_gate,    2026-07-15, 0d
+    In-day structure dogfood gate  :milestone, ts_in_day_structure_dogfood_gate,    2026-07-13, 0d
 ```
 
 ## Current work list
@@ -177,9 +177,8 @@ gantt
 /usr/bin/env PYTHONPATH=../../tools/opskarta python3 -m specs.v3.tools.cli render list ../../plans/timeskein/main.plan.yaml ../../plans/timeskein/nodes.plan.yaml ../../plans/timeskein/schedule.plan.yaml ../../plans/timeskein/execution.plan.yaml ../../plans/timeskein/views.plan.yaml --view current
 -->
 <!-- GENERATED:START -->
-- In-day structure and self-coordination [in_progress] (20 focus-blocks) {15% cov:65%}
-- Stream thoughts inside active work [planned] (3 focus-blocks) {0%}
-- Keep dogfood day observations inside Timeskein [planned] (2 focus-blocks) {0%}
+- In-day structure and self-coordination [in_progress] (20 focus-blocks) {44% cov:65%}
+- Keep dogfood day observations inside Timeskein [in_progress] (2 focus-blocks) {35%}
 - Support day entry and dispatching mode [planned] (3 focus-blocks) {0%}
 - Define the day-entry and post-break protocol [planned] (2 focus-blocks)
 - Classify gaps as recovery or lost control [planned] (3 focus-blocks) {0%}

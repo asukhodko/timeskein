@@ -106,8 +106,10 @@ schedule:
     ts.in_day_structure.zone_dashboard:
       duration: 1d
     ts.in_day_structure.dispatch_mode:
+      start: "2026-07-08"
       duration: 2d
     ts.in_day_structure.entry_protocol:
+      start: "2026-07-08"
       duration: 1d
     ts.in_day_structure.gap_recovery_classification:
       start: "2026-07-08"

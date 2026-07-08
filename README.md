@@ -15,6 +15,7 @@ A desktop application for quickly tracking focus sessions and work items with re
 | Work Item List | Working baseline | `Recent`, `Today`, `Pinned`, and `All` modes keep a multi-day inventory navigable |
 | Work Item Events | Working baseline | Timestamped notes linked to Work Items and optionally to focus blocks |
 | Day Events | Working baseline | Timestamped day-level notes for buffers, recovery, tracking corrections, and review context |
+| Dispatch Ritual | First slice | Day-entry and post-break panel records active set, next focus, parked work, and reason as a coordination Day Event |
 | Dogfood Telemetry | Working baseline | Local app-event journal and CLI metrics for tracking UX friction |
 | Mock Server | Working | Full API implementation for development |
 | Rust Agent | Working | SQLite-backed Local API, embedded in macOS app |
@@ -22,7 +23,7 @@ A desktop application for quickly tracking focus sessions and work items with re
 
 **What works now:** Focus Session tracking, Capture Inbox, and Work Item inventory in browser mock mode and in the macOS `.app` with an embedded Rust agent.
 
-**Current focus:** The daily-control goal is closed. The 2026-07-08 dogfood day produced final saved evidence, measured evening closure took `2:32`, and `pnpm dogfood:goal-check -- --date 2026-07-08 --no-codex-guidance` passed after the full test, preflight, and strict evidence path. The next product focus is in-day structure: Timeskein should hold working thoughts, day observations, live zone balance, dispatch decisions, and recovery/lost-control gap meaning while the day is happening. Windows packaging is deferred.
+**Current focus:** The daily-control goal is closed. The 2026-07-08 dogfood day produced final saved evidence, measured evening closure took `2:32`, and `pnpm dogfood:goal-check -- --date 2026-07-08 --no-codex-guidance` passed after the full test, preflight, and strict evidence path. The next product focus is in-day structure: Timeskein should hold working thoughts, day observations, live zone balance, dispatch decisions, and recovery/lost-control gap meaning while the day is happening. A first `Диспетчеризация` panel is now available when no focus block is active. Windows packaging is deferred.
 
 See [Current Implementation](docs/current-implementation.md) for the exact state of what runs today.
 Use [Dogfood Day Protocol](docs/dogfood-day.md) when testing Timeskein as a Session replacement for a real workday.

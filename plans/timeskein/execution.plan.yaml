@@ -274,7 +274,7 @@ execution:
       actual_start: "2026-07-08"
       updated_at: "2026-07-08T23:25:00+03:00"
       confidence: 0.8
-      note: "Now the active product layer. Dogfood days 2026-07-07 and 2026-07-08 showed the next gap: when a focus is selected, work can feel available, but after a break or completed block the user has to rebuild control from scattered open loops. Coordination is real work, recovery needs explicit meaning, and `Работа` alone is too narrow for working occupancy. The first slices implemented live Activity Zone totals, report semantics for working occupancy vs executive work, a cheap active-focus journal, and interval-based gap classification. Remaining slices should prove a day without external Timeskein notes, then add dispatch decisions and stages."
+      note: "Now the active product layer. Dogfood days 2026-07-07 and 2026-07-08 showed the next gap: when a focus is selected, work can feel available, but after a break or completed block the user has to rebuild control from scattered open loops. Coordination is real work, recovery needs explicit meaning, and `Работа` alone is too narrow for working occupancy. The first slices implemented live Activity Zone totals, report semantics for working occupancy vs executive work, a cheap active-focus journal, interval-based gap classification, and a compact dispatch ritual. Remaining proof is a dogfood day without external Timeskein notes."
     ts.in_day_structure.day_observation_log:
       progress: 0.35
       actual_start: "2026-07-08"
@@ -303,7 +303,19 @@ execution:
       confidence: 0.8
       note: "Implemented first slice. Closed gaps match Day Events by exact displayed interval and show classification labels in Today and Markdown reports: recovery, loss of manageability, idle, or explained. The model intentionally reuses Day Events for now; a dedicated gap table remains a possible period-report refinement."
     ts.in_day_structure.dispatch_mode:
-      progress: 0.0
-      updated_at: "2026-07-08T21:45:00+03:00"
+      progress: 0.45
+      actual_start: "2026-07-08"
+      updated_at: "2026-07-08T23:45:00+03:00"
       confidence: 0.75
-      note: "Follow-up after the journal and live-zone slices. The value is a bounded day-entry/post-break ritual that helps choose one good-enough focus and explicitly park the rest."
+      note: "Implemented first UI slice. When no focus is active, `Диспетчеризация` records active set, one first focus, parked work, and why this is important enough now. Saving creates a Coordination Day Event; starting first saves that event and then starts the chosen focus. Dogfood must still prove that this lowers day-entry and post-break friction."
+    ts.in_day_structure.entry_protocol:
+      progress: 0.45
+      actual_start: "2026-07-08"
+      updated_at: "2026-07-08T23:45:00+03:00"
+      confidence: 0.75
+      note: "The protocol is represented by the first dispatch UI slice: active set, first focus, parked work, and why-now. If choosing fails, the current route is to record recovery/lost-control through Day Events or gap classification. Dogfood should decide whether the wording is enough."
+    ts.in_day_structure.work_item_stages:
+      progress: 0.0
+      updated_at: "2026-07-08T23:45:00+03:00"
+      confidence: 0.7
+      note: "Not implemented. Kept as planned/future for the in-day layer; the next dogfood day should decide whether current Work Item Events are enough for long multi-stage work or whether explicit stages are still worth building."

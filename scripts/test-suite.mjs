@@ -10,6 +10,7 @@ const steps = [
   ["pnpm", ["smoke:inventory-modes"]],
   ["pnpm", ["smoke:timestamped-event-entry"]],
   ["pnpm", ["smoke:active-focus-journal"]],
+  ["pnpm", ["smoke:dispatch-ritual"]],
   ["pnpm", ["smoke:day-closure"]],
   ["pnpm", ["smoke:day-review-copy"]],
   ["pnpm", ["smoke:mock-api"]],

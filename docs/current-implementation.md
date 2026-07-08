@@ -245,6 +245,7 @@ Third real dogfood day and release baseline:
 - Dogfood reports include a `Заметки дел` section for touched Work Items that have non-empty notes
 - Dogfood reports include a `События дня` section for timestamped notes that belong to the day rather than one Work Item
 - Dogfood reports include a `События дел` section for timestamped Work Item observations created during the selected day
+- When no focus block is active, the focus panel shows a compact `Диспетчеризация` ritual. It records the current active set, one good-enough next focus, parked work, and the reason this focus is important enough now. `Сохранить выбор` stores this as a Day Event in the `Координация` zone; `Начать выбранное` stores the same coordination event and starts the chosen focus title. The draft is stored per local day in `localStorage` and is cleared after a successful start. This is the first UI slice for `Вход в день` and `Возврат после перерыва`.
 - The UI and CLI label the report as a draft while a focus block or Work Item is still active, or while review checks remain open. Active-state red items still add an explicit warning section to the Markdown
 - Capture Inbox for incoming events that should not interrupt the current focus block
 - Captures link to the active focus session when one exists

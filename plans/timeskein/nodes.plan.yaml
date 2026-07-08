@@ -539,7 +539,7 @@ nodes:
     kind: phase
     parent: ts
     status: in_progress
-    notes: "Current product layer after the 2026-07-08 closure gate. Turn Timeskein from a timer plus evening report into a day-structuring tool. Dogfood days 2026-07-07 and 2026-07-08 showed that work becomes easier after one focus is selected, while the expensive part is rebuilding manageability after breaks and choosing one legitimate next action without external pressure. The first slices added live Activity Zone totals, separated working occupancy from executive work, added a cheap active-focus journal, and classified explained gaps by exact interval. The remaining layer should prove a day without a parallel Codex note, make Work Item stages visible, and support the day-entry and post-break dispatching ritual."
+    notes: "Current product layer after the 2026-07-08 closure gate. Turn Timeskein from a timer plus evening report into a day-structuring tool. Dogfood days 2026-07-07 and 2026-07-08 showed that work becomes easier after one focus is selected, while the expensive part is rebuilding manageability after breaks and choosing one legitimate next action without external pressure. The first slices added live Activity Zone totals, separated working occupancy from executive work, added a cheap active-focus journal, classified explained gaps by exact interval, and added a compact day-entry/post-break dispatch ritual. The remaining layer should prove a day without a parallel Codex note and decide whether Work Item stages are still necessary."
     x:
       ops:
         attention_class: current
@@ -572,7 +572,7 @@ nodes:
     title: Track stages inside a Work Item
     kind: task
     parent: ts.in_day_structure
-    status: done
+    status: planned
     effort: 5
     deps:
       - id: ts.in_day_structure.active_work_journal
@@ -596,13 +596,13 @@ nodes:
     title: Support day entry and dispatching mode
     kind: task
     parent: ts.in_day_structure
-    status: planned
+    status: in_progress
     effort: 3
     deps:
       - id: ts.in_day_structure.day_observation_log
       - id: ts.in_day_structure.active_work_journal
       - id: ts.in_day_structure.zone_dashboard
-    notes: "Treat 'Вход в день' and post-break reorientation as real coordination work. Provide a bounded ritual: collect incoming signals, name candidate work, choose one 'good enough' next focus, state why it is important enough now, and start it. The product goal is to reduce the expensive jump from many open loops to one legitimate next action, especially when no manager, meeting, or incident is currently supplying external direction."
+    notes: "First UI slice added on 2026-07-08. When no focus block is active, the focus panel shows `Диспетчеризация`: active set, one first focus, parked work, and why this is important enough now. Saving writes a Coordination Day Event; starting writes the event and starts the chosen focus. Remaining proof is dogfood: whether this actually makes day entry and post-break return cheaper."
     x:
       ops:
         attention_class: current
@@ -610,12 +610,12 @@ nodes:
     title: Define the day-entry and post-break protocol
     kind: task
     parent: ts.in_day_structure
-    status: planned
+    status: in_progress
     effort: 2
     deps:
       - id: ts.in_day_structure.active_work_journal
       - id: ts.in_day_structure.zone_dashboard
-    notes: "Turn the observed self-coordination pattern into a small protocol: 15 minutes to collect signals, 5 minutes to choose one good-enough focus, then 25 minutes of protected action. If the choice fails, record the reason as recovery, meeting buffer, loss of manageability, low energy, or obligation conflict. The protocol should support the self-authorization move: 'I choose this for the next 25 minutes because it is important enough now.' The goal is to train internal direction without relying on a manager, meeting, incident, or chat request to supply priority from outside. This protocol is the acceptance lens for dispatch mode rather than a heavy planner."
+    notes: "Protocol is now represented in the UI as a compact dispatch ritual, not a heavy planner: name the active set, choose one good-enough focus, park the rest, state why it is important enough now, and start. If the choice fails, record recovery/loss of manageability through Day Events or gap classification. The remaining work is dogfood validation and possible tightening of the wording."
     x:
       ops:
         attention_class: current
@@ -623,7 +623,7 @@ nodes:
     title: Classify gaps as recovery or lost control
     kind: task
     parent: ts.in_day_structure
-    status: planned
+    status: done
     effort: 3
     deps:
       - id: ts.day_review.day_events

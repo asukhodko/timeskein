@@ -37,6 +37,7 @@
     "smoke:inventory-modes": "tsx --test scripts/smoke-inventory-modes.test.ts",
     "smoke:timestamped-event-entry": "tsx --test scripts/smoke-timestamped-event-entry.test.ts",
     "smoke:active-focus-journal": "tsx --test scripts/smoke-active-focus-journal.test.ts",
+    "smoke:dispatch-ritual": "tsx --test scripts/smoke-dispatch-ritual.test.ts",
     "smoke:day-closure": "tsx --test scripts/smoke-day-closure.test.ts",
     "smoke:day-review-copy": "tsx --test scripts/smoke-day-review-copy.test.ts",
     "smoke:corrections-api": "node scripts/smoke-corrections-api.mjs",

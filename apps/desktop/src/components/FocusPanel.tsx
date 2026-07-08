@@ -29,6 +29,17 @@ import {
   type ActiveFocusJournalTarget,
 } from '../utils/activeFocusJournal'
 import {
+  DEFAULT_DISPATCH_RITUAL_MODE,
+  DISPATCH_RITUAL_MODE_LABELS,
+  dispatchRitualDraftStorageKey,
+  decodeDispatchRitualDraft,
+  encodeDispatchRitualDraft,
+  formatDispatchRitualEvent,
+  isDispatchRitualStartReady,
+  type DispatchRitualDraft,
+  type DispatchRitualMode,
+} from '../utils/dispatchRitual'
+import {
   getBulkAcceptableReviewActions,
   getDayClosureStage,
   isBulkAcceptableReviewAction,
@@ -54,6 +65,13 @@ const ACTIVITY_ZONES: ActivityZone[] = ['work', 'coordination', 'recovery', 'idl
 const DAY_EVENT_DRAFT_STORAGE_PREFIX = 'timeskein.day-event-draft.v1.'
 export const MANUAL_COPY_HINT =
   'Буфер обмена не принял текст. Поле уже выделено: нажми Command+C и вставь отчёт куда нужно.'
+const EMPTY_DISPATCH_RITUAL_DRAFT: DispatchRitualDraft = {
+  mode: DEFAULT_DISPATCH_RITUAL_MODE,
+  activeSet: '',
+  firstFocus: '',
+  parked: '',
+  reason: '',
+}
 
 export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }: FocusPanelProps) {
   const [title, setTitle] = useState('')
@@ -69,6 +87,7 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
   const [activeJournalText, setActiveJournalText] = useState('')
   const [activeJournalKind, setActiveJournalKind] = useState<ActiveFocusJournalKind>(DEFAULT_ACTIVE_FOCUS_JOURNAL_KIND)
   const [activeJournalTarget, setActiveJournalTarget] = useState<ActiveFocusJournalTarget>(DEFAULT_ACTIVE_FOCUS_JOURNAL_TARGET)
+  const [dispatchDraft, setDispatchDraft] = useState<DispatchRitualDraft>(EMPTY_DISPATCH_RITUAL_DRAFT)
   const [appEventSummary, setAppEventSummary] = useState<AppEventSummary | null>(null)
   const [dayClosureStartedAt, setDayClosureStartedAt] = useState<Date | null>(null)
   const titleInputRef = useRef<HTMLInputElement>(null)
@@ -80,6 +99,7 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
   const dayClosureCompletedRef = useRef(false)
   const dayEventDraftLoadedKeyRef = useRef<string | null>(null)
   const activeJournalDraftLoadedKeyRef = useRef<string | null>(null)
+  const dispatchDraftLoadedKeyRef = useRef<string | null>(null)
   const localDayKey = formatLocalDate(now)
   const dayWindow = useMemo(() => {
     const dayStart = startOfLocalDay(now)
@@ -105,6 +125,7 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
 
   const current = currentQuery.data?.session
   const currentId = current?.id
+  const dispatchDraftKey = useMemo(() => dispatchRitualDraftStorageKey(now), [localDayKey])
   const activeJournalDraftKey = useMemo(
     () => current ? activeFocusJournalDraftStorageKey(current.work_item_id ?? current.id, now) : null,
     [current?.id, current?.work_item_id, localDayKey]
@@ -227,6 +248,18 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
   }, [dayEventText, dayEventZone, localDayKey])
 
   useEffect(() => {
+    const draft = readDispatchRitualDraft(dispatchDraftKey)
+    dispatchDraftLoadedKeyRef.current = dispatchDraftKey
+    setDispatchDraft(draft)
+  }, [dispatchDraftKey])
+
+  useEffect(() => {
+    if (dispatchDraftLoadedKeyRef.current !== dispatchDraftKey) return
+
+    writeDispatchRitualDraft(dispatchDraftKey, dispatchDraft)
+  }, [dispatchDraftKey, dispatchDraft])
+
+  useEffect(() => {
     if (!activeJournalDraftKey || !current) {
       activeJournalDraftLoadedKeyRef.current = null
       setActiveJournalText('')
@@ -333,8 +366,8 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
     }
   }, [dayWindow])
 
-  const startTypedSession = () => {
-    const trimmed = title.trim()
+  const startSessionByTitle = (rawTitle: string, control: string, onSuccess?: () => void) => {
+    const trimmed = rawTitle.trim()
     if (!trimmed || startMutation.isPending) return
 
     const actionId = createTelemetryActionId()
@@ -344,7 +377,7 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
       kind: wasSwitch ? 'focus_switch_requested' : 'focus_start_requested',
       payload: {
         action_id: actionId,
-        control: 'typed',
+        control,
       },
     })
 
@@ -354,6 +387,7 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
         onSuccess: (session) => {
           setTitle('')
           setNote('')
+          onSuccess?.()
           void logAppEvent({
             source: 'ui',
             kind: wasSwitch ? 'focus_switched' : 'focus_started',
@@ -361,7 +395,7 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
             focus_session_id: session.id,
             payload: {
               action_id: actionId,
-              control: 'typed',
+              control,
               already_active: session.id === current?.id,
             },
           })
@@ -372,13 +406,54 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
             kind: 'focus_start_failed',
             payload: {
               action_id: actionId,
-              control: 'typed',
+              control,
               error_code: error instanceof Error && 'code' in error ? String(error.code) : 'unknown',
             },
           })
         },
       }
     )
+  }
+
+  const startTypedSession = () => {
+    startSessionByTitle(title, 'typed')
+  }
+
+  const saveDispatchEvent = async () => {
+    const text = formatDispatchRitualEvent(dispatchDraft)
+    if (!text || addDayEventMutation.isPending) return false
+
+    await addDayEventMutation.mutateAsync({
+      text,
+      activity_zone: 'coordination',
+    })
+    return true
+  }
+
+  const saveDispatchOnly = async () => {
+    try {
+      await saveDispatchEvent()
+    } catch {
+      // The mutation error is shown by the shared error block.
+    }
+  }
+
+  const startDispatchFocus = async () => {
+    if (!isDispatchRitualStartReady(dispatchDraft) || startMutation.isPending || addDayEventMutation.isPending) return
+
+    let eventSaved = false
+    try {
+      eventSaved = await saveDispatchEvent()
+    } catch {
+      // Keep the draft if the coordination event failed to save.
+      return
+    }
+    if (!eventSaved) return
+
+    startSessionByTitle(dispatchDraft.firstFocus, 'dispatch_ritual', () => {
+      clearDispatchRitualDraft(dispatchDraftKey)
+      setDispatchDraft(EMPTY_DISPATCH_RITUAL_DRAFT)
+    })
   }
 
   const startSelectedSession = () => {
@@ -873,6 +948,20 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
           )}
         </div>
 
+        {!current && (
+          <DispatchRitualPanel
+            draft={dispatchDraft}
+            pending={addDayEventMutation.isPending || startMutation.isPending}
+            onChange={setDispatchDraft}
+            onSave={() => {
+              void saveDispatchOnly()
+            }}
+            onStart={() => {
+              void startDispatchFocus()
+            }}
+          />
+        )}
+
         <CaptureInbox focusSessionId={current?.id} targetWorkItemId={current?.work_item_id ?? selectedItem?.id} />
 
         <div className="flex items-center gap-2 rounded-md border border-gray-800 bg-gray-900/40 px-3 py-2">
@@ -1192,6 +1281,30 @@ function writeDayEventDraft(localDayKey: string, draft: DayEventDraft) {
 
 function clearDayEventDraft(localDayKey: string) {
   getLocalStorage()?.removeItem(dayEventDraftStorageKey(localDayKey))
+}
+
+function readDispatchRitualDraft(key: string) {
+  const storage = getLocalStorage()
+  if (!storage) return EMPTY_DISPATCH_RITUAL_DRAFT
+
+  return decodeDispatchRitualDraft(storage.getItem(key))
+}
+
+function writeDispatchRitualDraft(key: string, draft: DispatchRitualDraft) {
+  const storage = getLocalStorage()
+  if (!storage) return
+
+  const encoded = encodeDispatchRitualDraft(draft)
+  if (!encoded) {
+    storage.removeItem(key)
+    return
+  }
+
+  storage.setItem(key, encoded)
+}
+
+function clearDispatchRitualDraft(key: string) {
+  getLocalStorage()?.removeItem(key)
 }
 
 function readActiveFocusJournalDraft(key: string) {
@@ -3908,6 +4021,126 @@ function formatTrayDuration(totalSeconds: number) {
   const hours = Math.floor(minutes / 60)
   const rest = minutes % 60
   return rest === 0 ? `${hours} ч` : `${hours} ч ${rest} мин`
+}
+
+function DispatchRitualPanel({
+  draft,
+  pending,
+  onChange,
+  onSave,
+  onStart,
+}: {
+  draft: DispatchRitualDraft
+  pending: boolean
+  onChange: (draft: DispatchRitualDraft) => void
+  onSave: () => void
+  onStart: () => void
+}) {
+  const updateDraft = (patch: Partial<DispatchRitualDraft>) => onChange({ ...draft, ...patch })
+  const canSave = Boolean(formatDispatchRitualEvent(draft))
+  const canStart = isDispatchRitualStartReady(draft)
+
+  return (
+    <div className="grid gap-2 rounded-md border border-cyan-900/60 bg-cyan-950/15 px-3 py-2 text-xs">
+      <div className="flex items-center justify-between gap-2">
+        <div className="min-w-0">
+          <div className="font-medium text-cyan-100">Диспетчеризация</div>
+          <div className="text-[11px] text-cyan-100/60">Собрать контуры, выбрать первое дело, припарковать остальное.</div>
+        </div>
+        <select
+          value={draft.mode}
+          onChange={(event) => updateDraft({ mode: event.target.value as DispatchRitualMode })}
+          className="w-40 rounded border border-cyan-900/70 bg-gray-950 px-2 py-1.5 text-xs text-gray-200 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+          title="Режим диспетчеризации"
+        >
+          {Object.entries(DISPATCH_RITUAL_MODE_LABELS).map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="grid gap-2 md:grid-cols-2">
+        <DispatchRitualInput
+          label="Active set"
+          placeholder="Что сегодня/сейчас реально в игре..."
+          value={draft.activeSet}
+          onChange={(value) => updateDraft({ activeSet: value })}
+        />
+        <DispatchRitualInput
+          label="Первое дело"
+          placeholder="Одно достаточно хорошее следующее дело..."
+          value={draft.firstFocus}
+          onChange={(value) => updateDraft({ firstFocus: value })}
+          onEnter={onStart}
+        />
+        <DispatchRitualInput
+          label="Припарковать"
+          placeholder="Что сейчас не делаю и отпускаю..."
+          value={draft.parked}
+          onChange={(value) => updateDraft({ parked: value })}
+        />
+        <DispatchRitualInput
+          label="Почему сейчас"
+          placeholder="Почему выбранного достаточно на ближайшие 25 минут..."
+          value={draft.reason}
+          onChange={(value) => updateDraft({ reason: value })}
+        />
+      </div>
+
+      <div className="flex items-center justify-end gap-2">
+        <button
+          type="button"
+          onClick={onSave}
+          disabled={!canSave || pending}
+          className="rounded border border-cyan-800 px-2 py-1 text-[11px] font-medium text-cyan-200 hover:border-cyan-500 hover:text-cyan-100 disabled:cursor-not-allowed disabled:border-gray-800 disabled:text-gray-600"
+        >
+          Сохранить выбор
+        </button>
+        <button
+          type="button"
+          onClick={onStart}
+          disabled={!canStart || pending}
+          className="rounded bg-cyan-700 px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-cyan-600 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-500"
+        >
+          Начать выбранное
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function DispatchRitualInput({
+  label,
+  placeholder,
+  value,
+  onChange,
+  onEnter,
+}: {
+  label: string
+  placeholder: string
+  value: string
+  onChange: (value: string) => void
+  onEnter?: () => void
+}) {
+  return (
+    <label className="grid gap-1">
+      <span className="text-[10px] uppercase tracking-wide text-cyan-100/55">{label}</span>
+      <input
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' && onEnter) {
+            event.preventDefault()
+            onEnter()
+          }
+        }}
+        placeholder={placeholder}
+        className="min-w-0 rounded border border-cyan-950 bg-gray-950 px-2 py-1.5 text-xs text-gray-100 placeholder-gray-600 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+      />
+    </label>
+  )
 }
 
 function ActiveFocusJournal({

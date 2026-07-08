@@ -11,6 +11,7 @@ const execFileAsync = promisify(execFile);
 const SIGNIFICANT_GAP_SECONDS = 20 * 60;
 const DEFAULT_MIN_FOCUS_MINUTES = 180;
 const WORK_ACTIVITY_ZONE = "work";
+const COORDINATION_ACTIVITY_ZONE = "coordination";
 
 const options = parseArgs(process.argv.slice(2));
 const date = options.date ? parseLocalDate(options.date) : new Date();
@@ -129,7 +130,9 @@ async function loadEvidence(path, from, to, now) {
   const workItemTotals = aggregateWorkItemTotals(sessions);
   const activityZoneTotals = aggregateActivityZoneTotals(sessions);
   const workFocusSeconds = getZoneActiveSeconds(activityZoneTotals, WORK_ACTIVITY_ZONE);
-  const nonWorkSeconds = Math.max(totalFocusSeconds - workFocusSeconds, 0);
+  const coordinationSeconds = getZoneActiveSeconds(activityZoneTotals, COORDINATION_ACTIVITY_ZONE);
+  const workingOccupancySeconds = workFocusSeconds + coordinationSeconds;
+  const nonWorkSeconds = Math.max(totalFocusSeconds - workingOccupancySeconds, 0);
   const gaps = gapsBetweenSessions(sessions).filter((gap) => gap.seconds >= SIGNIFICANT_GAP_SECONDS);
   const gapExplanationEvents = dayEvents.filter((event) => isGapExplanationText(event.text)).length;
   const unexplainedGapCount = Math.max(gaps.length - gapExplanationEvents, 0);
@@ -155,7 +158,9 @@ async function loadEvidence(path, from, to, now) {
     dayEventsWithZone,
     events,
     totalFocusSeconds,
+    workingOccupancySeconds,
     workFocusSeconds,
+    coordinationSeconds,
     nonWorkSeconds,
     workItemTotals,
     workItemNoteCount,
@@ -433,7 +438,7 @@ function assessEvidence(evidence, minFocusSeconds) {
   }
 
   if (evidence.nonWorkSeconds === 0 && evidence.sessions.length > 0 && evidence.telemetry.activityZoneReviews === 0) {
-    reviewItems.push("Нерабочее время равно нулю. Проверь, что перерывы, восстановление, координация и личные дела не были случайно сложены в рабочий фокус.");
+    reviewItems.push("Нерабочее время равно нулю. Проверь, что перерывы, восстановление, простой и личные дела не были случайно сложены в рабочую занятость.");
   }
 
   if (
@@ -585,7 +590,8 @@ function buildRcReport(date, path, evidence, assessment, minFocusSeconds, strict
     "## Сводка доказательств",
     "",
     `- Всего учтено: ${formatDuration(evidence.totalFocusSeconds)} (порог проверки: ${formatDuration(minFocusSeconds)})`,
-    `- Рабочий фокус: ${formatDuration(evidence.workFocusSeconds)}`,
+    `- Рабочая занятость: ${formatDuration(evidence.workingOccupancySeconds)}`,
+    `- Исполнительная работа: ${formatDuration(evidence.workFocusSeconds)}`,
     `- Нерабочее учтено: ${formatDuration(evidence.nonWorkSeconds)}`,
     `- Входов: ${evidence.sessions.length}`,
     `- Дел в отчёте: ${evidence.workItemTotals.length}`,
@@ -801,7 +807,7 @@ function formatGoalAuditMarkdown(evidence, assessment, minFocusSeconds) {
       ? "входы через окно покрыты телеметрией"
       : "входы через окно не проверены";
   const workItemTotalsEvidence = `${formatCount(evidence.workItemTotals.length, "строка итогов дел", "строки итогов дел", "строк итогов дел")}; ${workItemTimeReviewEvidence}`;
-  const activityZoneEvidence = `${formatCount(evidence.activityZoneTotals.length, "зона", "зоны", "зон")}; ${formatDuration(evidence.workFocusSeconds)} работа, ${formatDuration(evidence.nonWorkSeconds)} вне работы; ${activityZoneReviewEvidence}`;
+  const activityZoneEvidence = `${formatCount(evidence.activityZoneTotals.length, "зона", "зоны", "зон")}; ${formatDuration(evidence.workingOccupancySeconds)} рабочая занятость, ${formatDuration(evidence.workFocusSeconds)} исполнение, ${formatDuration(evidence.nonWorkSeconds)} вне работы; ${activityZoneReviewEvidence}`;
   const dayContextEvidence = [
     formatCount(evidence.dayEvents.length, "событие дня", "события дня", "событий дня"),
     formatCount(evidence.workItemEvents.length, "событие дела", "события дел", "событий дел"),

@@ -59,7 +59,8 @@ These were accepted limitations for the dogfood baseline, not red items:
   Events. A fuller capture history screen is not implemented yet.
 - Activity zones are copied from Work Items into focus blocks. Stopped blocks
   can be corrected independently, and reports separate `Total tracked`,
-  `Work focus`, non-work tracked time, and per-zone totals.
+  working occupancy (`Work + Coordination`), executive work (`Work`), non-work
+  tracked time, and per-zone totals.
 - macOS window restore and menu bar status refresh were known baseline
   limitations; both have been fixed in code after acceptance and dogfood days
   after 2026-07-03 produced show/hide request telemetry. Further polish is

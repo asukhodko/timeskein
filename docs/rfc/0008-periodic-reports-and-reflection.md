@@ -767,7 +767,7 @@ LLM Pack должен поддерживать режимы приватност
 
 ### Производственный процесс
 
-- Period activity: 14 focus blocks, 7h 40m work focus.
+- Period activity: 14 focus blocks, 7h 40m working occupancy, 6h 10m executive work.
 - Notable events:
   - 2026-07-02: зафиксированы варианты внедрения классов обслуживания.
   - 2026-07-06: обработаны входящие запросы по SRE-дежурствам.

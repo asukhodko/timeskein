@@ -452,7 +452,9 @@ function formatFocusMarkdownForReport(markdown) {
   return localizeActivityZoneCells(markdown)
     .replace(/^# Timeskein focus day - (.+)$/m, "# Фокус-день Timeskein — $1")
     .replace(/^Total tracked:/gm, "Всего учтено:")
-    .replace(/^Work focus:/gm, "Рабочий фокус:")
+    .replace(/^Working occupancy:/gm, "Рабочая занятость:")
+    .replace(/^Executive work:/gm, "Исполнительная работа:")
+    .replace(/^Work focus:/gm, "Исполнительная работа:")
     .replace(/^Non-work tracked:/gm, "Нерабочее учтено:")
     .replace(/^Entrances:/gm, "Входов:")
     .replace(/^\| Time \| Duration \| Zone \| Work Item \| Note \|$/gm, "| Время | Длительность | Зона | Дело | Заметка |")
@@ -669,7 +671,7 @@ function buildReviewChecklistItems({
     items.push({
       level: "review",
       title: "Confirm non-work tracked time",
-      detail: "Перерывы, восстановление, координация или личные дела могли потеряться",
+      detail: "Перерывы, восстановление, простой или личные дела могли потеряться",
     });
   }
 
@@ -788,7 +790,8 @@ function formatDailyControlGoalAuditMarkdown({
   const hasReview = (title) => reviewItems.some((item) => item.title === title);
   const hasFocusBlocks = focusMarkdown.includes("| Time | Duration | Zone | Work Item | Note |");
   const totalTracked = extractLineValue(focusMarkdown, "Total tracked") ?? "n/a";
-  const workFocus = extractLineValue(focusMarkdown, "Work focus") ?? "n/a";
+  const workingOccupancy = extractLineValue(focusMarkdown, "Working occupancy") ?? extractLineValue(focusMarkdown, "Work focus") ?? "n/a";
+  const workFocus = extractLineValue(focusMarkdown, "Executive work") ?? extractLineValue(focusMarkdown, "Work focus") ?? "n/a";
   const nonWorkTracked = extractLineValue(focusMarkdown, "Non-work tracked") ?? "n/a";
   const entrances = extractLineValue(focusMarkdown, "Entrances") ?? "0";
   const windowEvidence = extractLineValue(telemetryMarkdown, "Window shown/hidden") ?? "n/a";
@@ -839,7 +842,7 @@ function formatDailyControlGoalAuditMarkdown({
   const workItemTotalsEvidence = focusMarkdown.includes("## By Work Item")
     ? `раздел «По делам» есть; ${workItemTimeReviewEvidence}`
     : "раздела «По делам» нет";
-  const activityZoneEvidence = `${workFocus} работа, ${nonWorkTracked} вне работы; ${activityZoneReviewEvidence}`;
+  const activityZoneEvidence = `${workingOccupancy} рабочая занятость, ${workFocus} исполнение, ${nonWorkTracked} вне работы; ${activityZoneReviewEvidence}`;
   const gapsAndCapturesEvidence = [
     focusMarkdown.includes("## Gaps >=") ? "раздел разрывов есть" : "больших разрывов нет",
     openCaptures.length > 0

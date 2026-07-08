@@ -220,7 +220,8 @@ try {
       ('ae_stop_request', '2026-06-30T08:08:04Z', 'ui', 'focus_stop_requested', '{"action_id":"stop-1","control":"stop_button_or_enter"}'),
       ('ae_window_show', '2026-06-30T08:08:05Z', 'ui', 'window_show_requested', '{"control":"menubar"}'),
       ('ae_window_hide', '2026-06-30T08:08:06Z', 'ui', 'window_hide_requested', '{"control":"escape"}'),
-      ('ae_correction_review', '2026-06-30T08:08:07Z', 'ui', 'focus_correction_reviewed', '{"control":"review_panel"}');
+      ('ae_correction_review', '2026-06-30T08:08:07Z', 'ui', 'focus_correction_reviewed', '{"control":"review_panel"}'),
+      ('ae_activity_zone_review', '2026-06-30T08:08:08Z', 'ui', 'activity_zone_reviewed', '{"control":"review_panel"}');
   `);
 
   const measuredSavedDefault = await runFinish(cleanDb, ["--save"], tempDir);

@@ -12,6 +12,11 @@ import { useAddDayEvent, useDayEvents, useDeleteDayEvent, useUpdateDayEvent } fr
 import { appEventApi, logAppEvent, shellApi } from '../api/client'
 import { formatClockTime, formatDuration, truncate } from '../utils/formatTime'
 import {
+  aggregateActivityZoneTotals,
+  summarizeActivityZones,
+  type ActivityZoneTotal,
+} from '../utils/activityZones'
+import {
   getBulkAcceptableReviewActions,
   getDayClosureStage,
   isBulkAcceptableReviewAction,
@@ -90,7 +95,11 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
   )
   const activeSecondsTotal = todayQuery.data?.active_seconds_total ?? 0
   const activityZoneTotals = useMemo(() => aggregateActivityZoneTotals(sessions), [sessions])
-  const workFocusSeconds = getZoneActiveSeconds(activityZoneTotals, 'work')
+  const activityZoneSummary = useMemo(
+    () => summarizeActivityZones(activityZoneTotals, activeSecondsTotal),
+    [activityZoneTotals, activeSecondsTotal]
+  )
+  const workFocusSeconds = activityZoneSummary.executiveWorkSeconds
   const openCaptures = capturesQuery.data?.captures ?? []
   const captureActivity = useMemo(
     () => capturesForLocalDay(captureActivityQuery.data?.captures ?? [], now),
@@ -817,6 +826,13 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
           }}
         />
 
+        {sessions.length > 0 && (
+          <ActivityZoneDashboard
+            summary={activityZoneSummary}
+            zoneTotals={activityZoneTotals}
+          />
+        )}
+
         {dayEvents.length > 0 && (
           <DayEventsPanel events={dayEvents} sessions={sessions} />
         )}
@@ -881,7 +897,7 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
             </div>
           </div>
           <span className="shrink-0 text-gray-400">
-            {formatDuration(workFocusSeconds)} рабочего фокуса · {formatDuration(activeSecondsTotal)} всего · {sessions.length} входов
+            {formatDuration(activityZoneSummary.workingOccupancySeconds)} рабочей занятости · {formatDuration(workFocusSeconds)} исполнения · {sessions.length} входов
           </span>
         </div>
 
@@ -1102,15 +1118,15 @@ function buildTodayMarkdown(
     day: '2-digit',
   })
   const zoneTotals = aggregateActivityZoneTotals(sessionsOldestFirst)
-  const workFocusSeconds = getZoneActiveSeconds(zoneTotals, 'work')
-  const nonWorkSeconds = Math.max(activeSecondsTotal - workFocusSeconds, 0)
+  const zoneSummary = summarizeActivityZones(zoneTotals, activeSecondsTotal)
 
   const lines = [
     `# Timeskein focus day - ${dateTitle}`,
     '',
     `Total tracked: ${formatDuration(activeSecondsTotal)}`,
-    `Work focus: ${formatDuration(workFocusSeconds)}`,
-    `Non-work tracked: ${formatDuration(nonWorkSeconds)}`,
+    `Working occupancy: ${formatDuration(zoneSummary.workingOccupancySeconds)}`,
+    `Executive work: ${formatDuration(zoneSummary.executiveWorkSeconds)}`,
+    `Non-work tracked: ${formatDuration(zoneSummary.nonWorkTrackedSeconds)}`,
     `Entrances: ${sessionsOldestFirst.length}`,
     '',
     '| Time | Duration | Zone | Work Item | Note |',
@@ -1309,7 +1325,9 @@ export function formatFocusMarkdownForReport(markdown: string) {
   return localizeActivityZoneCells(markdown)
     .replace(/^# Timeskein focus day - (.+)$/m, '# Фокус-день Timeskein — $1')
     .replace(/^Total tracked:/gm, 'Всего учтено:')
-    .replace(/^Work focus:/gm, 'Рабочий фокус:')
+    .replace(/^Working occupancy:/gm, 'Рабочая занятость:')
+    .replace(/^Executive work:/gm, 'Исполнительная работа:')
+    .replace(/^Work focus:/gm, 'Исполнительная работа:')
     .replace(/^Non-work tracked:/gm, 'Нерабочее учтено:')
     .replace(/^Entrances:/gm, 'Входов:')
     .replace(/^\| Time \| Duration \| Zone \| Work Item \| Note \|$/gm, '| Время | Длительность | Зона | Дело | Заметка |')
@@ -1586,6 +1604,68 @@ function isAcceptReviewAction(action?: DayReviewAction) {
   return Boolean(action?.startsWith('accept_'))
 }
 
+function ActivityZoneDashboard({
+  summary,
+  zoneTotals,
+}: {
+  summary: ReturnType<typeof summarizeActivityZones>
+  zoneTotals: ActivityZoneTotal[]
+}) {
+  const visibleZones = zoneTotals.filter((item) => item.activeSeconds > 0)
+
+  return (
+    <div className="grid gap-2 rounded-md border border-gray-800 bg-gray-900/45 px-3 py-2 text-xs">
+      <div className="flex items-center justify-between gap-2">
+        <span className="font-medium text-gray-300">Зоны сегодня</span>
+        <span className="text-[11px] text-gray-500">
+          всего {formatDuration(summary.totalTrackedSeconds)}
+        </span>
+      </div>
+      <div className="grid grid-cols-3 gap-2">
+        <ActivityZoneMetric label="Рабочая занятость" value={summary.workingOccupancySeconds} tone="cyan" />
+        <ActivityZoneMetric label="Исполнение" value={summary.executiveWorkSeconds} tone="blue" />
+        <ActivityZoneMetric label="Вне работы" value={summary.nonWorkTrackedSeconds} tone="gray" />
+      </div>
+      {visibleZones.length > 0 && (
+        <div className="flex flex-wrap gap-1">
+          {visibleZones.map((zone) => (
+            <span
+              key={zone.zone}
+              className="rounded border border-gray-800 bg-gray-950/40 px-1.5 py-0.5 text-[11px] text-gray-300"
+              title={`${formatActivityZoneLabel(zone.zone)}: ${zone.entrances} ${pluralRu(zone.entrances, 'вход', 'входа', 'входов')}`}
+            >
+              {formatActivityZoneLabel(zone.zone)} {formatDuration(zone.activeSeconds)}
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function ActivityZoneMetric({
+  label,
+  value,
+  tone,
+}: {
+  label: string
+  value: number
+  tone: 'blue' | 'cyan' | 'gray'
+}) {
+  const toneClass = tone === 'blue'
+    ? 'border-blue-900/60 bg-blue-950/20 text-blue-200'
+    : tone === 'cyan'
+      ? 'border-cyan-900/60 bg-cyan-950/20 text-cyan-200'
+      : 'border-gray-800 bg-gray-950/30 text-gray-300'
+
+  return (
+    <div className={`rounded border px-2 py-1 ${toneClass}`}>
+      <div className="truncate text-[11px] text-gray-500">{label}</div>
+      <div className="font-mono text-sm tabular-nums">{formatDuration(value)}</div>
+    </div>
+  )
+}
+
 function buildDayReviewItems({
   sessions,
   activeFocus,
@@ -1613,7 +1693,7 @@ function buildDayReviewItems({
   const gaps = gapsBetweenSessions(sessions).filter((gap) => gap.seconds >= SIGNIFICANT_GAP_SECONDS)
   const zoneTotals = aggregateActivityZoneTotals(sessions)
   const activeSecondsTotal = sessions.reduce((sum, session) => sum + session.active_seconds, 0)
-  const nonWorkSeconds = Math.max(activeSecondsTotal - getZoneActiveSeconds(zoneTotals, 'work'), 0)
+  const nonWorkSeconds = summarizeActivityZones(zoneTotals, activeSecondsTotal).nonWorkTrackedSeconds
   const touchedWorkItemIds = new Set(sessions.map((session) => session.work_item_id).filter(Boolean))
   const touchedWorkItemNoteCount = workItems.filter((item) => touchedWorkItemIds.has(item.id) && item.note?.trim()).length
   const gapExplanationCount = countGapExplanationTexts(dayEvents)
@@ -1685,7 +1765,7 @@ function buildDayReviewItems({
     items.push({
       level: 'review',
       title: 'Confirm non-work tracked time',
-      detail: 'Перерывы, восстановление, координация или личные дела могли потеряться',
+      detail: 'Перерывы, восстановление, простой или личные дела могли потеряться',
       action: 'accept_activity_zones',
     })
   }
@@ -2510,7 +2590,8 @@ function formatDailyControlGoalAuditMarkdown({
   const hasReview = (title: string) => reviewItems.some((item) => item.title === title)
   const hasFocusBlocks = todayMarkdown.includes('| Time | Duration | Zone | Work Item | Note |')
   const totalTracked = extractLineValue(todayMarkdown, 'Total tracked') ?? 'n/a'
-  const workFocus = extractLineValue(todayMarkdown, 'Work focus') ?? 'n/a'
+  const workingOccupancy = extractLineValue(todayMarkdown, 'Working occupancy') ?? extractLineValue(todayMarkdown, 'Work focus') ?? 'n/a'
+  const workFocus = extractLineValue(todayMarkdown, 'Executive work') ?? extractLineValue(todayMarkdown, 'Work focus') ?? 'n/a'
   const nonWorkTracked = extractLineValue(todayMarkdown, 'Non-work tracked') ?? 'n/a'
   const entrances = extractLineValue(todayMarkdown, 'Entrances') ?? '0'
   const windowEvidence = extractLineValue(appTelemetryMarkdown, 'Window shown/hidden') ?? 'n/a'
@@ -2561,7 +2642,7 @@ function formatDailyControlGoalAuditMarkdown({
   const workItemTotalsEvidence = todayMarkdown.includes('## By Work Item')
     ? `раздел «По делам» есть; ${workItemTimeReviewEvidence}`
     : 'раздела «По делам» нет'
-  const activityZoneEvidence = `${workFocus} работа, ${nonWorkTracked} вне работы; ${activityZoneReviewEvidence}`
+  const activityZoneEvidence = `${workingOccupancy} рабочая занятость, ${workFocus} исполнение, ${nonWorkTracked} вне работы; ${activityZoneReviewEvidence}`
   const gapsAndCapturesEvidence = [
     todayMarkdown.includes('## Gaps >=') ? 'раздел разрывов есть' : 'больших разрывов нет',
     openCaptures.length > 0
@@ -3382,37 +3463,6 @@ function aggregateWorkItemTotals(sessions: FocusSessionView[], workItemNotes = n
 
     return left.title.localeCompare(right.title)
   })
-}
-
-function aggregateActivityZoneTotals(sessions: FocusSessionView[]) {
-  const totals = new Map<ActivityZone, { zone: ActivityZone; activeSeconds: number; entrances: number }>()
-
-  for (const session of sessions) {
-    const current = totals.get(session.activity_zone) ?? {
-      zone: session.activity_zone,
-      activeSeconds: 0,
-      entrances: 0,
-    }
-
-    current.activeSeconds += session.active_seconds
-    current.entrances += 1
-    totals.set(session.activity_zone, current)
-  }
-
-  return Array.from(totals.values()).sort((left, right) => {
-    if (right.activeSeconds !== left.activeSeconds) {
-      return right.activeSeconds - left.activeSeconds
-    }
-
-    return left.zone.localeCompare(right.zone)
-  })
-}
-
-function getZoneActiveSeconds(
-  zoneTotals: Array<{ zone: ActivityZone; activeSeconds: number }>,
-  zone: ActivityZone
-) {
-  return zoneTotals.find((item) => item.zone === zone)?.activeSeconds ?? 0
 }
 
 export type GapExplanationPreset = 'lost_control' | 'recovery'

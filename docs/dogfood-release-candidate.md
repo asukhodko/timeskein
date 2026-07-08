@@ -52,7 +52,8 @@ Track every intentional block of contact with work:
 3. Stop the focus block when real contact with the work stops.
 4. Use stop notes for facts that help evening review.
 5. Put breaks into a `recovery` or `idle` Work Item when they are intentionally
-   tracked, so they affect `Total tracked` without inflating `Work focus`.
+   tracked, so they affect `Total tracked` without inflating working occupancy
+   or executive work.
 
 ## End-Of-Day Evidence
 
@@ -107,9 +108,9 @@ pnpm dogfood:goal-check -- --date YYYY-MM-DD
 ```
 
 Both saved files can contain personal or internal work context and are ignored by git.
-The RC evidence summary also checks the post-baseline review data: work focus vs
-non-work tracked time, Activity Zone coverage, Work Item notes/events, Work Item
-day/total time review acceptance, Capture Inbox coverage, typed entry and
+The RC evidence summary also checks the post-baseline review data: working
+occupancy vs executive work vs non-work tracked time, Activity Zone coverage,
+Work Item notes/events, Work Item day/total time review acceptance, Capture Inbox coverage, typed entry and
 selected/list continuation evidence, focus correction/review telemetry, measured
 day-closure duration, and
 window/show-hide telemetry, including both show and hide request counts from
@@ -122,7 +123,7 @@ and CLI dogfood reports before the raw focus data.
 The final evidence must include:
 
 - focus blocks for the real workday;
-- total tracked time, work focus, and non-work tracked time;
+- total tracked time, working occupancy, executive work, and non-work tracked time;
 - Work Item totals;
 - accepted review that touched Work Item cards showed day/total time;
 - Day Events for review context that is not owned by one Work Item;

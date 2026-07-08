@@ -298,8 +298,9 @@ function buildDayMarkdown(sessionsOldestFirst, activeSecondsTotal, day, now, wor
   const dayStart = startOfLocalDay(day);
   const dayEnd = nextLocalDay(dayStart);
   const zoneTotals = aggregateActivityZoneTotals(sessionsOldestFirst);
-  const workFocusSeconds = getZoneActiveSeconds(zoneTotals, "work");
-  const nonWorkSeconds = Math.max(activeSecondsTotal - workFocusSeconds, 0);
+  const executiveWorkSeconds = getZoneActiveSeconds(zoneTotals, "work");
+  const workingOccupancySeconds = executiveWorkSeconds + getZoneActiveSeconds(zoneTotals, "coordination");
+  const nonWorkSeconds = Math.max(activeSecondsTotal - workingOccupancySeconds, 0);
   const dateTitle = day.toLocaleDateString("ru-RU", {
     year: "numeric",
     month: "2-digit",
@@ -310,7 +311,8 @@ function buildDayMarkdown(sessionsOldestFirst, activeSecondsTotal, day, now, wor
     `# Timeskein focus day - ${dateTitle}`,
     "",
     `Total tracked: ${formatDuration(activeSecondsTotal)}`,
-    `Work focus: ${formatDuration(workFocusSeconds)}`,
+    `Working occupancy: ${formatDuration(workingOccupancySeconds)}`,
+    `Executive work: ${formatDuration(executiveWorkSeconds)}`,
     `Non-work tracked: ${formatDuration(nonWorkSeconds)}`,
     `Entrances: ${sessionsOldestFirst.length}`,
     "",
@@ -523,7 +525,9 @@ function localizeDayMarkdown(markdown) {
   return markdown
     .replace(/^# Timeskein focus day - /m, "# Дневной отчёт Timeskein — ")
     .replace(/^Total tracked:/gm, "Всего учтено:")
-    .replace(/^Work focus:/gm, "Рабочий фокус:")
+    .replace(/^Working occupancy:/gm, "Рабочая занятость:")
+    .replace(/^Executive work:/gm, "Исполнительная работа:")
+    .replace(/^Work focus:/gm, "Исполнительная работа:")
     .replace(/^Non-work tracked:/gm, "Вне работы учтено:")
     .replace(/^Entrances:/gm, "Входов:")
     .replace(/^\| Time \| Duration \| Zone \| Work Item \| Note \|$/gm, "| Время | Длительность | Зона | Дело | Заметка |")

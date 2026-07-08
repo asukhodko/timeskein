@@ -65,8 +65,8 @@ try {
       ('ae6', '2026-06-30T07:54:00Z', 'ui', 'day_closure_started', NULL, '{"action_id":"d1","control":"review_panel"}'),
       ('ae7', '2026-06-30T08:01:00Z', 'ui', 'day_closure_completed', NULL, '{"action_id":"d1","control":"copy_report"}');
 
-    UPDATE work_items SET activity_zone = 'coordination' WHERE id = 'w2';
-    UPDATE focus_sessions SET activity_zone = 'coordination' WHERE work_item_id = 'w2';
+    UPDATE work_items SET activity_zone = 'recovery' WHERE id = 'w2';
+    UPDATE focus_sessions SET activity_zone = 'recovery' WHERE work_item_id = 'w2';
   `);
 
   const { stdout } = await execFileAsync(
@@ -109,7 +109,7 @@ try {
   );
   assert(stdout.includes("| Зоны активности разделены | ок |"), "report daily-control audit did not pass zones");
   assert(
-    stdout.includes("35:00 работа, 30:00 вне работы; зоны подтверждены отчётом"),
+    stdout.includes("35:00 рабочая занятость, 35:00 исполнение, 30:00 вне работы; зоны подтверждены отчётом"),
     "report daily-control audit evidence did not localize zone totals"
   );
   assert(stdout.includes("| Окно и строка меню проверены | ок |"), "report daily-control audit did not pass window evidence");
@@ -160,7 +160,7 @@ try {
   );
   assert(
     stdout.includes("Проверить нерабочее время") === false,
-    "report review checklist should not flag non-work time when coordination is present"
+    "report review checklist should not flag non-work time when recovery is present"
   );
   assert(
     stdout.includes("Нет событий дня или дел") === false,
@@ -182,12 +182,13 @@ try {
   assert(stdout.includes("| превращено | Turn into follow-up |"), "report did not include converted capture activity");
   assert(stdout.includes("создано") && stdout.includes("Meetings"), "report did not include converted capture target");
   assert(stdout.includes("Всего учтено: 1:05:00"), "report did not include exported tracked total");
-  assert(stdout.includes("Рабочий фокус: 35:00"), "report did not include exported work focus total");
+  assert(stdout.includes("Рабочая занятость: 35:00"), "report did not include exported working occupancy total");
+  assert(stdout.includes("Исполнительная работа: 35:00"), "report did not include exported executive work total");
   assert(stdout.includes("Нерабочее учтено: 30:00"), "report did not include exported non-work total");
   assert(stdout.includes("## По делам"), "report did not include work item totals");
   assert(stdout.includes("## По зонам активности"), "report did not include activity zone totals");
   assert(stdout.includes("| 35:00 | 2 | Работа |"), "report did not include localized Work zone total");
-  assert(stdout.includes("| 30:00 | 1 | Координация |"), "report did not include localized Coordination zone total");
+  assert(stdout.includes("| 30:00 | 1 | Восстановление |"), "report did not include localized Recovery zone total");
   assert(stdout.includes("## Заметки дел"), "report did not include Work Item Notes section");
   assert(
     stdout.includes("- Deep Work: Keep the implementation context here."),

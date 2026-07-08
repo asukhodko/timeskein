@@ -138,13 +138,13 @@ execution:
       actual_start: "2026-06-30"
       updated_at: "2026-07-03T21:46:00+03:00"
       confidence: 0.9
-      note: UI and Markdown export show total tracked time, work-focus time, non-work tracked time, entrance count, per-Work-Item totals, per-focus-block Activity Zone totals, significant gaps of 20+ minutes between focus blocks, and an Open Gap after the last stopped block when tracking is currently idle. The Work Item list shows day/total tracked time when available. Day-window queries include overlapping blocks and clip their duration to the selected local day.
+      note: UI and Markdown export show total tracked time, working occupancy, executive work, non-work tracked time, entrance count, per-Work-Item totals, per-focus-block Activity Zone totals, significant gaps of 20+ minutes between focus blocks, and an Open Gap after the last stopped block when tracking is currently idle. The Work Item list shows day/total tracked time when available. Day-window queries include overlapping blocks and clip their duration to the selected local day.
     ts.day_review.export:
       progress: 0.98
       actual_start: "2026-06-30"
       updated_at: "2026-07-03T21:46:00+03:00"
       confidence: 0.9
-      note: Today can copy raw Markdown or a dogfood report with evening prompts, and shows selected Markdown when clipboard access fails. The same day data can be exported from SQLite with pnpm export:focus-day; pnpm dogfood:finish checks overlapping day blocks and active focus before printing the report. pnpm dogfood:finish:save now saves both the readable day report and the RC-check evidence file. Reports include Total tracked, Work focus, Non-work tracked, App Telemetry, per-focus-block Activity Zone totals, Day Events, Work Item notes, timestamped Work Item Events, and Capture Activity for created, resolved, and converted captures. Corrected focus-session rows are reflected in the copied report. JSON/CSV export is not implemented.
+      note: Today can copy raw Markdown or a dogfood report with evening prompts, and shows selected Markdown when clipboard access fails. The same day data can be exported from SQLite with pnpm export:focus-day; pnpm dogfood:finish checks overlapping day blocks and active focus before printing the report. pnpm dogfood:finish:save now saves both the readable day report and the RC-check evidence file. Reports include Total tracked, Working occupancy, Executive work, Non-work tracked, App Telemetry, per-focus-block Activity Zone totals, Day Events, Work Item notes, timestamped Work Item Events, and Capture Activity for created, resolved, and converted captures. Corrected focus-session rows are reflected in the copied report. JSON/CSV export is not implemented.
     ts.day_review.work_item_events:
       progress: 1.0
       actual_start: "2026-07-03"
@@ -186,7 +186,7 @@ execution:
       actual_finish: "2026-07-01"
       updated_at: "2026-07-04T00:12:00+03:00"
       confidence: 0.9
-      note: Dogfood reports are enough to discuss focus allocation, switching, gaps, entry cost, product friction, captures, Work Item events, and automatic review items. The UI/CLI dogfood report and RC evidence check also summarize work focus vs non-work tracked time, Activity Zone coverage, Work Item notes/events, Capture Inbox coverage, accepted review decisions, correction/review telemetry, window telemetry with show/hide request counts, product-friction counters, and a Daily Control Goal Audit table. dogfood:goal-check now requires saved evidence and explicit --no-codex-guidance confirmation for the real local database before running pnpm test, dogfood:preflight, and strict RC evidence on the same code for the final closure check. The next real dogfood day should verify that this reduces evening memory reconstruction.
+      note: Dogfood reports are enough to discuss focus allocation, switching, gaps, entry cost, product friction, captures, Work Item events, and automatic review items. The UI/CLI dogfood report and RC evidence check also summarize working occupancy vs executive work vs non-work tracked time, Activity Zone coverage, Work Item notes/events, Capture Inbox coverage, accepted review decisions, correction/review telemetry, window telemetry with show/hide request counts, product-friction counters, and a Daily Control Goal Audit table. dogfood:goal-check now requires saved evidence and explicit --no-codex-guidance confirmation for the real local database before running pnpm test, dogfood:preflight, and strict RC evidence on the same code for the final closure check. The next real dogfood day should verify that this reduces evening memory reconstruction.
     ts.capture.model_api:
       progress: 1.0
       actual_start: "2026-07-01"
@@ -226,7 +226,7 @@ execution:
       actual_start: "2026-07-01"
       confidence: 0.85
       updated_at: "2026-07-03T23:58:00+03:00"
-      note: Fixed C/С shortcut capture while typing, active Work Item creation, visible create errors, ambiguous last-seen labels, Work Item notes in reports, minimal Capture Inbox, Work Item basic editing, post-factum focus-block correction including missed-block creation, per-block Activity Zone snapshots/overrides, Activity Zone totals, Work Item day/total list metrics, Work Item list modes for accumulated multi-day inventories, resizable Today/Work Item split, timestamped Work Item Events with edit/delete cleanup, timestamped Day Events with explicit zones and gap/open-gap Explain shortcuts, capture-to-event promotion, capture edit/delete for open items, Command+Tab/Dock restore, non-always-on-top window policy, native menu-bar status refresh, show/hide request telemetry, guarded dogfood:continue for reopening an existing day, and separate Total tracked / Work focus / Non-work tracked report totals. Remaining friction is mostly richer correction/review UI.
+      note: Fixed C/С shortcut capture while typing, active Work Item creation, visible create errors, ambiguous last-seen labels, Work Item notes in reports, minimal Capture Inbox, Work Item basic editing, post-factum focus-block correction including missed-block creation, per-block Activity Zone snapshots/overrides, Activity Zone totals, Work Item day/total list metrics, Work Item list modes for accumulated multi-day inventories, resizable Today/Work Item split, timestamped Work Item Events with edit/delete cleanup, timestamped Day Events with explicit zones and gap/open-gap Explain shortcuts, capture-to-event promotion, capture edit/delete for open items, Command+Tab/Dock restore, non-always-on-top window policy, native menu-bar status refresh, show/hide request telemetry, guarded dogfood:continue for reopening an existing day, separate Total tracked / Working occupancy / Executive work / Non-work tracked report totals, and live Activity Zone totals. Remaining friction is mostly richer correction/review UI.
     ts.hardening.backup_reset:
       progress: 1.0
       actual_start: "2026-07-03"
@@ -270,11 +270,11 @@ execution:
       confidence: 0.9
       note: "Passed on 2026-07-08 with `pnpm dogfood:goal-check -- --date 2026-07-08 --no-codex-guidance`. The command verified saved final evidence, then ran `pnpm test`, `pnpm dogfood:preflight`, and strict RC evidence against the same code. This closed the cheap evening-closure goal."
     ts.in_day_structure:
-      progress: 0.05
+      progress: 0.15
       actual_start: "2026-07-08"
-      updated_at: "2026-07-08T21:45:00+03:00"
+      updated_at: "2026-07-08T22:40:00+03:00"
       confidence: 0.8
-      note: "Now the active product layer. Dogfood days 2026-07-07 and 2026-07-08 showed the next gap: when a focus is selected, work can feel available, but after a break or completed block the user has to rebuild control from scattered open loops. Coordination is real work, recovery needs explicit meaning, and `Работа` alone is too narrow for working occupancy. The next slice should let Timeskein hold in-work thoughts, day-level product observations, live Activity Zone totals, dispatch decisions, and gap classifications so the user no longer needs a parallel Codex note for Timeskein day observations."
+      note: "Now the active product layer. Dogfood days 2026-07-07 and 2026-07-08 showed the next gap: when a focus is selected, work can feel available, but after a break or completed block the user has to rebuild control from scattered open loops. Coordination is real work, recovery needs explicit meaning, and `Работа` alone is too narrow for working occupancy. The first slice implemented live Activity Zone totals and report semantics for working occupancy vs executive work. Remaining slices should let Timeskein hold in-work thoughts, day-level product observations, dispatch decisions, and gap classifications so the user no longer needs a parallel Codex note for Timeskein day observations."
     ts.in_day_structure.day_observation_log:
       progress: 0.0
       updated_at: "2026-07-08T00:15:00+03:00"
@@ -286,10 +286,12 @@ execution:
       confidence: 0.8
       note: "Next implementation candidate. The useful result is a cheap stream of thoughts, decisions, questions, and next steps while focus is active, without switching tools or losing typed text."
     ts.in_day_structure.zone_dashboard:
-      progress: 0.0
-      updated_at: "2026-07-08T21:45:00+03:00"
-      confidence: 0.8
-      note: "Next implementation candidate. The 2026-07-08 day showed that `Работа` alone undercounts working occupancy because `Координация` is work-like. The live UI should show executive work, coordination, recovery, idle, personal, and a combined working-occupancy total."
+      progress: 1.0
+      actual_start: "2026-07-08"
+      actual_finish: "2026-07-08"
+      updated_at: "2026-07-08T22:40:00+03:00"
+      confidence: 0.85
+      note: "Implemented the first in-day-structure slice. Today now shows a live `Зоны сегодня` panel with total tracked time, working occupancy (`Work + Coordination`), executive work (`Work`), non-work tracked time, and per-zone chips. UI, CLI, and RC evidence reports share the same semantics."
     ts.in_day_structure.gap_recovery_classification:
       progress: 0.0
       updated_at: "2026-07-08T21:45:00+03:00"

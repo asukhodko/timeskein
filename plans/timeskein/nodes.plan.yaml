@@ -279,7 +279,7 @@ nodes:
     effort: 2
     deps:
       - id: ts.day_review.timeline
-    notes: Track total tracked time, work-focus time, non-work tracked time, number of focus entrances, per-Work-Item totals, per-focus-block Activity Zone totals, gaps longer than 20 minutes, open gaps after the last stopped block, and target-reaching ratio.
+    notes: Track total tracked time, working occupancy, executive work, non-work tracked time, number of focus entrances, per-Work-Item totals, per-focus-block Activity Zone totals, gaps longer than 20 minutes, open gaps after the last stopped block, and target-reaching ratio.
     x:
       ops:
         attention_class: done
@@ -291,7 +291,7 @@ nodes:
     effort: 2
     deps:
       - id: ts.day_review.totals_gaps
-    notes: Today can copy the raw day picture or a dogfood report with review prompts, and shows selected Markdown if clipboard access fails. UI and CLI reports are marked as draft when a focus session or Work Item is still active. SQLite fallback export, CLI dogfood report, and dogfood:finish end-of-day gate are implemented; finish refuses active focus sessions, stuck active Work Items, and empty days. dogfood:finish:save now saves both the readable day report and the RC-check evidence file. Reports include Total tracked, Work focus, Non-work tracked, per-focus-block Activity Zone totals, Day Events, Work Item notes, Work Item Events, and Capture Activity for created, resolved, and converted captures. JSON/CSV export remains future work.
+    notes: Today can copy the raw day picture or a dogfood report with review prompts, and shows selected Markdown if clipboard access fails. UI and CLI reports are marked as draft when a focus session or Work Item is still active. SQLite fallback export, CLI dogfood report, and dogfood:finish end-of-day gate are implemented; finish refuses active focus sessions, stuck active Work Items, and empty days. dogfood:finish:save now saves both the readable day report and the RC-check evidence file. Reports include Total tracked, Working occupancy, Executive work, Non-work tracked, per-focus-block Activity Zone totals, Day Events, Work Item notes, Work Item Events, and Capture Activity for created, resolved, and converted captures. JSON/CSV export remains future work.
     x:
       ops:
         attention_class: done
@@ -446,7 +446,7 @@ nodes:
     effort: 2
     deps:
       - id: ts.focus_core.dogfood_gate
-    notes: Fixed typing C/С opening Create, creating a new active Work Item, ambiguous last-seen timestamps, and added the first Capture Inbox baseline. Post-baseline work added Work Item title/basic-field editing, focus-block correction including add-missed-block, per-block Activity Zone snapshots/overrides, Work Item day/total time, Work Item list modes for accumulated multi-day inventories, a resizable Today/Work Item split, timestamped Day Events with explicit zones and gap/open-gap Explain shortcuts, timestamped Work Item Events, capture-to-event promotion, capture edit/delete for open items, Command+Tab/Dock restore, non-always-on-top window policy, native menu-bar status refresh, show/hide request telemetry, guarded dogfood:continue for reopening an existing day, and separate Total tracked / Work focus / Non-work tracked report totals. Remaining friction is mostly richer correction/review UI.
+    notes: Fixed typing C/С opening Create, creating a new active Work Item, ambiguous last-seen timestamps, and added the first Capture Inbox baseline. Post-baseline work added Work Item title/basic-field editing, focus-block correction including add-missed-block, per-block Activity Zone snapshots/overrides, Work Item day/total time, Work Item list modes for accumulated multi-day inventories, a resizable Today/Work Item split, timestamped Day Events with explicit zones and gap/open-gap Explain shortcuts, timestamped Work Item Events, capture-to-event promotion, capture edit/delete for open items, Command+Tab/Dock restore, non-always-on-top window policy, native menu-bar status refresh, show/hide request telemetry, guarded dogfood:continue for reopening an existing day, separate Total tracked / Working occupancy / Executive work / Non-work tracked report totals, and a live Activity Zone dashboard. Remaining friction is mostly richer correction/review UI.
     x:
       ops:
         attention_class: done
@@ -482,7 +482,7 @@ nodes:
     deps:
       - id: ts.hardening.package_app
       - id: ts.hardening.backup_reset
-    notes: "Dogfood Release Candidate doc defines the pass/fail gate. Dogfood Release Baseline records the accepted 2026-07-03 verdict and known limitations. Since acceptance, post-factum focus correction including add-missed-block, per-block Activity Zone correction, Work Item title/type/Activity Zone editing, separate Total tracked / Work focus / Non-work tracked report totals, Activity Zone report totals, day/total Work Item time, timestamped Day Events, timestamped Work Item Events with user-authored event edit/delete, capture-to-event promotion, capture edit/delete for open items, window restore, native menu bar counter refresh, and show/hide request telemetry are implemented. Remaining limitations include richer correction/review UI."
+    notes: "Dogfood Release Candidate doc defines the pass/fail gate. Dogfood Release Baseline records the accepted 2026-07-03 verdict and known limitations. Since acceptance, post-factum focus correction including add-missed-block, per-block Activity Zone correction, Work Item title/type/Activity Zone editing, separate Total tracked / Working occupancy / Executive work / Non-work tracked report totals, live Activity Zone dashboard, Activity Zone report totals, day/total Work Item time, timestamped Day Events, timestamped Work Item Events with user-authored event edit/delete, capture-to-event promotion, capture edit/delete for open items, window restore, native menu bar counter refresh, and show/hide request telemetry are implemented. Remaining limitations include richer correction/review UI."
     x:
       ops:
         attention_class: current
@@ -539,7 +539,7 @@ nodes:
     kind: phase
     parent: ts
     status: in_progress
-    notes: "Current product layer after the 2026-07-08 closure gate. Turn Timeskein from a timer plus evening report into a day-structuring tool. Dogfood days 2026-07-07 and 2026-07-08 showed that work becomes easier after one focus is selected, while the expensive part is rebuilding manageability after breaks and choosing one legitimate next action without external pressure. The layer should capture thoughts inside active work, keep the user's Timeskein-day observations inside the app instead of Codex, make Work Item stages visible, show Activity Zone distribution during the day, support the day-entry and post-break dispatching ritual, and distinguish deliberate recovery from loss of control."
+    notes: "Current product layer after the 2026-07-08 closure gate. Turn Timeskein from a timer plus evening report into a day-structuring tool. Dogfood days 2026-07-07 and 2026-07-08 showed that work becomes easier after one focus is selected, while the expensive part is rebuilding manageability after breaks and choosing one legitimate next action without external pressure. The first slice added live Activity Zone totals and separated working occupancy from executive work. The remaining layer should capture thoughts inside active work, keep the user's Timeskein-day observations inside the app instead of Codex, make Work Item stages visible, support the day-entry and post-break dispatching ritual, and distinguish deliberate recovery from loss of control."
     x:
       ops:
         attention_class: current
@@ -584,14 +584,14 @@ nodes:
     title: Show Activity Zone totals during the day
     kind: task
     parent: ts.in_day_structure
-    status: planned
+    status: done
     effort: 2
     deps:
       - id: ts.daily_control.goal_check
-    notes: "Show today's Work / Coordination / Recovery / Idle / Personal totals in the live UI, not only in copied reports. The goal is quick calibration: whether the day is going into focused work, coordination, personal checks, recovery, or idle drift. The 2026-07-07 dogfood day showed that learning to use zones needs feedback during the day, not only at evening export."
+    notes: "Done on 2026-07-08 as the first in-day-structure slice. The Today panel now shows live zone totals with working occupancy (`Work + Coordination`), executive work (`Work`), non-work tracked time, and chips for the visible Activity Zones. UI and CLI reports use the same totals, so coordination is treated as work-shaped load without inflating executive work."
     x:
       ops:
-        attention_class: current
+        attention_class: done
   ts.in_day_structure.dispatch_mode:
     title: Support day entry and dispatching mode
     kind: task

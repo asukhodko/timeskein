@@ -30,6 +30,7 @@ import { CAPTURE_INBOX_LABELS } from '../apps/desktop/src/components/CaptureInbo
 import { FOCUS_CORRECTION_LABELS } from '../apps/desktop/src/components/FocusCorrectionDialog'
 import { MISSED_FOCUS_BLOCK_LABELS } from '../apps/desktop/src/components/MissedFocusBlockDialog'
 import { APP_UI_LABELS } from '../apps/desktop/src/utils/appUiLabels'
+import { aggregateActivityZoneTotals, summarizeActivityZones } from '../apps/desktop/src/utils/activityZones'
 import { formatClockTime, formatRelativeTime } from '../apps/desktop/src/utils/formatTime'
 import { ITEM_UI_LABELS, formatCreateItemError } from '../apps/desktop/src/utils/itemUiLabels'
 
@@ -638,12 +639,28 @@ test('gap review helpers keep repeated Explain actions on the next unresolved ga
   assert.match(formatGapDayEventDraft(gaps[0], 'Разрыв', 'recovery'), /восстановление\/перерыв/)
 })
 
+test('activity zone summary separates working occupancy from executive work', () => {
+  const zoneTotals = aggregateActivityZoneTotals([
+    { activity_zone: 'work', active_seconds: 30 * 60 },
+    { activity_zone: 'coordination', active_seconds: 20 * 60 },
+    { activity_zone: 'recovery', active_seconds: 10 * 60 },
+  ])
+  const summary = summarizeActivityZones(zoneTotals)
+
+  assert.equal(summary.totalTrackedSeconds, 60 * 60)
+  assert.equal(summary.workingOccupancySeconds, 50 * 60)
+  assert.equal(summary.executiveWorkSeconds, 30 * 60)
+  assert.equal(summary.coordinationSeconds, 20 * 60)
+  assert.equal(summary.nonWorkTrackedSeconds, 10 * 60)
+})
+
 test('copied report keeps key focus and telemetry sections localized', () => {
   const focusMarkdown = [
     '# Timeskein focus day - 02.07.2026',
     '',
     'Total tracked: 1:00:00',
-    'Work focus: 0:50:00',
+    'Working occupancy: 0:50:00',
+    'Executive work: 0:30:00',
     'Non-work tracked: 0:10:00',
     'Entrances: 2',
     '',
@@ -712,6 +729,9 @@ test('copied report keeps key focus and telemetry sections localized', () => {
   const localizedFocus = formatFocusMarkdownForReport(focusMarkdown)
   assert(localizedFocus.includes('# Фокус-день Timeskein — 02.07.2026'))
   assert(localizedFocus.includes('Всего учтено: 1:00:00'))
+  assert(localizedFocus.includes('Рабочая занятость: 0:50:00'))
+  assert(localizedFocus.includes('Исполнительная работа: 0:30:00'))
+  assert(localizedFocus.includes('Нерабочее учтено: 0:10:00'))
   assert(localizedFocus.includes('| 12:00-12:50 | 0:50 | Работа | Проверка |  |'))
   assert(localizedFocus.includes('## По делам'))
   assert(localizedFocus.includes('## События дня'))

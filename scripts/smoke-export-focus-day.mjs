@@ -81,8 +81,9 @@ try {
   assert(!stdout.includes(" PM"), "export should not use 12-hour PM time");
   assert(!stdout.includes("Total tracked:"), "export leaked raw tracked total label");
   assert(!stdout.includes("## By Work Item"), "export leaked raw Work Item section title");
-  assert(stdout.includes("Рабочий фокус: 45:00"), "export did not include expected work focus total");
-  assert(stdout.includes("Вне работы учтено: 30:00"), "export did not include expected non-work total");
+  assert(stdout.includes("Рабочая занятость: 1:15:00"), "export did not include expected working occupancy total");
+  assert(stdout.includes("Исполнительная работа: 45:00"), "export did not include expected executive work total");
+  assert(stdout.includes("Вне работы учтено: 0:00"), "export did not include expected non-work total");
   assert(stdout.includes("Входов: 4"), "export did not include expected entrance count");
   assert(stdout.includes("started before day"), "export did not include overlapping session");
   assert(stdout.includes("## Блоки на границе дня"), "export did not flag day-boundary blocks");
@@ -148,8 +149,9 @@ try {
   );
 
   assert(activeStdout.includes("Всего учтено: 1:30:00"), "active export did not include running total");
-  assert(activeStdout.includes("Рабочий фокус: 1:00:00"), "active export did not include running work focus total");
-  assert(activeStdout.includes("Вне работы учтено: 30:00"), "active export did not include running non-work total");
+  assert(activeStdout.includes("Рабочая занятость: 1:30:00"), "active export did not include running working occupancy total");
+  assert(activeStdout.includes("Исполнительная работа: 1:00:00"), "active export did not include running executive work total");
+  assert(activeStdout.includes("Вне работы учтено: 0:00"), "active export did not include running non-work total");
   assert(activeStdout.includes("Входов: 5"), "active export did not include running entrance count");
   assert(activeStdout.includes("Active Draft Work"), "active export did not include active work item");
   assert(
@@ -195,7 +197,8 @@ try {
     { cwd: repoRoot }
   );
   assert(legacyStdout.includes("Всего учтено: 30:00"), "legacy export did not include expected total");
-  assert(legacyStdout.includes("Рабочий фокус: 30:00"), "legacy export did not fall back to Work focus");
+  assert(legacyStdout.includes("Рабочая занятость: 30:00"), "legacy export did not include fallback working occupancy");
+  assert(legacyStdout.includes("Исполнительная работа: 30:00"), "legacy export did not include fallback executive work");
   assert(legacyStdout.includes("| 30:00 | 1 | Работа |"), "legacy export did not include fallback Work zone total");
 
   await expectCommandFailure(

@@ -55,7 +55,7 @@ try {
       ('w1', 'Deep Work', 'task', 'unknown', 0, '2026-06-30T06:00:00Z', '2026-06-30T08:00:00Z', '2026-06-30T08:00:00Z'),
       ('w2', 'Review', 'task', 'unknown', 0, '2026-06-30T08:30:00Z', '2026-06-30T10:00:00Z', '2026-06-30T10:00:00Z');
     UPDATE work_items
-    SET activity_zone = 'coordination',
+    SET activity_zone = 'recovery',
         note = 'Review context for the evening report'
     WHERE id = 'w2';
 
@@ -63,7 +63,7 @@ try {
     VALUES
       ('s1', 'Deep Work', 'w1', 'stopped', 1500, NULL, '2026-06-30T06:00:00Z', '2026-06-30T08:00:00Z', '2026-06-30T08:00:00Z'),
       ('s2', 'Review', 'w2', 'stopped', 1500, NULL, '2026-06-30T08:30:00Z', '2026-06-30T10:00:00Z', '2026-06-30T10:00:00Z');
-    UPDATE focus_sessions SET activity_zone = 'coordination' WHERE id = 's2';
+    UPDATE focus_sessions SET activity_zone = 'recovery' WHERE id = 's2';
 
     INSERT INTO captures (id, text, state, focus_session_id, created_at, updated_at, resolved_at)
     VALUES ('c1', 'Check incoming request later', 'resolved', 's1', '2026-06-30T07:00:00Z', '2026-06-30T10:10:00Z', '2026-06-30T10:10:00Z');
@@ -99,7 +99,8 @@ try {
   assert(good.stdout.includes("Вердикт: готово к финальной проверке"), "good day verdict is missing");
   assert(good.stdout.includes("Строгий режим: нет"), "good day strict-mode marker is missing");
   assert(good.stdout.includes("Всего учтено: 3:30:00"), "good day total tracked is missing");
-  assert(good.stdout.includes("Рабочий фокус: 2:00:00"), "good day work focus is missing");
+  assert(good.stdout.includes("Рабочая занятость: 2:00:00"), "good day working occupancy is missing");
+  assert(good.stdout.includes("Исполнительная работа: 2:00:00"), "good day executive work is missing");
   assert(good.stdout.includes("Нерабочее учтено: 1:30:00"), "good day non-work tracked is missing");
   assert(good.stdout.includes("Проверок времени по делам: 1"), "good day item badge review count is missing");
   assert(good.stdout.includes("Зон активности в отчёте: 2"), "good day zone count is missing");

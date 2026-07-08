@@ -19,6 +19,10 @@ import {
   formatReviewItemActionHint,
   formatShortClosureMarkdown,
   formatTelemetryForReport,
+  classifyGapExplanation,
+  countClassifiedGaps,
+  findGapExplanation,
+  formatGapClassificationLabel,
   isOpenGapExplanationText,
   MANUAL_COPY_HINT,
   pickNextGapForReview,
@@ -631,8 +635,13 @@ test('gap review helpers keep repeated Explain actions on the next unresolved ga
     pickNextGapForReview(gaps, [{ text: formatGapDayEventDraft(gaps[0]) + 'обед и восстановление' }]),
     gaps[1]
   )
-  assert.equal(pickNextGapForReview(gaps, [{ text: 'Открытый разрыв 12:00-12:30: перерыв' }]), gaps[1])
+  assert.equal(pickNextGapForReview(gaps, [{ text: 'Открытый разрыв 15:00-15:30: перерыв' }]), gaps[0])
   assert.equal(pickNextGapForReview(gaps, [{ text: 'обычная заметка о ходе дня' }]), gaps[0])
+  assert.equal(countClassifiedGaps(gaps, [{ text: formatGapDayEventDraft(gaps[0], 'Разрыв', 'recovery'), activity_zone: 'recovery' }]), 1)
+  assert.equal(findGapExplanation(gaps[0], [{ text: formatGapDayEventDraft(gaps[0], 'Разрыв', 'lost_control'), activity_zone: 'idle' }])?.classification, 'unmanaged')
+  assert.equal(classifyGapExplanation({ text: 'Разрыв 12:00-12:30: обед', activity_zone: 'idle' }), 'idle')
+  assert.equal(formatGapClassificationLabel('recovery'), 'восстановление')
+  assert.equal(formatGapClassificationLabel('unmanaged'), 'потеря управляемости')
   assert.equal(isOpenGapExplanationText('Открытый разрыв 12:00-12:30: ужин'), true)
   assert.equal(isOpenGapExplanationText('open gap 12:00-12:30: dinner'), true)
   assert.match(formatGapDayEventDraft(gaps[0], 'Открытый разрыв', 'lost_control'), /не удалось восстановить управляемость/)

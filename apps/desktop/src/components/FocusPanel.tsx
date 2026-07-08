@@ -1029,12 +1029,19 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
             className="grid gap-1.5 overflow-auto pr-1"
             style={{ maxHeight: `${todayListMaxHeightPx}px` }}
           >
-            {openGap && <OpenGapRow gap={openGap} onExplain={(preset) => stageGapDayEvent(openGap, 'Открытый разрыв', preset)} />}
+            {openGap && (
+              <OpenGapRow
+                gap={openGap}
+                explanation={findOpenGapExplanation(dayEvents)}
+                onExplain={(preset) => stageGapDayEvent(openGap, 'Открытый разрыв', preset)}
+              />
+            )}
             {sessionsWithGaps.map(({ session, gapBefore }) => (
               <FocusSessionRow
                 key={session.id}
                 session={session}
                 gapBefore={gapBefore}
+                gapExplanation={gapBefore ? findGapExplanation(gapBefore, dayEvents) : undefined}
                 onCorrect={() => setCorrectingSession(session)}
                 onExplainGap={gapBefore ? (preset) => stageGapDayEvent(gapBefore, 'Разрыв', preset) : undefined}
               />
@@ -1316,17 +1323,21 @@ function buildTodayMarkdown(
   if (gaps.length > 0) {
     lines.push('', `## Gaps >= ${formatDuration(SIGNIFICANT_GAP_SECONDS)}`)
     for (const gap of gaps) {
+      const explanation = findGapExplanation(gap, dayEvents)
+      const suffix = explanation ? ` — ${formatGapClassificationLabel(explanation.classification)}` : ''
       lines.push(
-        `- ${formatClockTime(gap.from)}-${formatClockTime(gap.to)}: ${formatDuration(gap.seconds)}`
+        `- ${formatClockTime(gap.from)}-${formatClockTime(gap.to)}: ${formatDuration(gap.seconds)}${suffix}`
       )
     }
   }
 
   const openGap = openGapAfterLastSession(sessionsOldestFirst, now, dayStart, dayEnd)
   if (openGap && openGap.seconds >= SIGNIFICANT_GAP_SECONDS) {
+    const explanation = findOpenGapExplanation(dayEvents)
+    const suffix = explanation ? ` — ${formatGapClassificationLabel(explanation.classification)}` : ''
     lines.push('', '## Open Gap')
     lines.push(
-      `- ${formatClockTime(openGap.from)}-${formatClockTime(openGap.to)}: ${formatDuration(openGap.seconds)} since last stopped block`
+      `- ${formatClockTime(openGap.from)}-${formatClockTime(openGap.to)}: ${formatDuration(openGap.seconds)} since last stopped block${suffix}`
     )
   }
 
@@ -1828,7 +1839,7 @@ function buildDayReviewItems({
   const nonWorkSeconds = summarizeActivityZones(zoneTotals, activeSecondsTotal).nonWorkTrackedSeconds
   const touchedWorkItemIds = new Set(sessions.map((session) => session.work_item_id).filter(Boolean))
   const touchedWorkItemNoteCount = workItems.filter((item) => touchedWorkItemIds.has(item.id) && item.note?.trim()).length
-  const gapExplanationCount = countGapExplanationTexts(dayEvents)
+  const gapExplanationCount = countClassifiedGaps(gaps, dayEvents)
   const unexplainedGapCount = Math.max(gaps.length - gapExplanationCount, 0)
   const activityZoneReviewed = (appTelemetry?.by_kind.activity_zone_reviewed ?? 0) > 0
   const dayContextReviewed = (appTelemetry?.by_kind.day_context_reviewed ?? 0) > 0
@@ -1874,7 +1885,7 @@ function buildDayReviewItems({
     })
   }
 
-  if (openGap && openGap.seconds >= SIGNIFICANT_GAP_SECONDS && !dayEvents.some((event) => isOpenGapExplanationText(event.text))) {
+  if (openGap && openGap.seconds >= SIGNIFICANT_GAP_SECONDS && !findOpenGapExplanation(dayEvents)) {
     items.push({
       level: 'review',
       title: 'Explain current open gap',
@@ -3598,12 +3609,18 @@ function aggregateWorkItemTotals(sessions: FocusSessionView[], workItemNotes = n
 }
 
 export type GapExplanationPreset = 'lost_control' | 'recovery'
+export type GapClassification = 'recovery' | 'unmanaged' | 'idle' | 'explained'
+
+export interface GapExplanation {
+  classification: GapClassification
+  text: string
+}
 
 export function formatGapDayEventDraft(gap: Gap, label = 'Разрыв', preset?: GapExplanationPreset) {
   const prefix = `${label} ${formatClockTime(gap.from)}-${formatClockTime(gap.to)} (${formatDuration(gap.seconds)}): `
 
   if (preset === 'lost_control') {
-    return `${prefix}не удалось восстановить управляемость; необходимые дела воспринимались как недоступные.`
+    return `${prefix}потеря управляемости; не удалось восстановить управляемость; необходимые дела воспринимались как недоступные.`
   }
 
   if (preset === 'recovery') {
@@ -3617,9 +3634,64 @@ export function countGapExplanationTexts(dayEvents: Array<{ text?: string }>) {
   return dayEvents.filter((event) => isGapExplanationText(event.text)).length
 }
 
-export function pickNextGapForReview(gaps: Gap[], dayEvents: Array<{ text?: string }>) {
-  const explainedCount = Math.min(countGapExplanationTexts(dayEvents), gaps.length)
-  return gaps[explainedCount]
+export function countClassifiedGaps(gaps: Gap[], dayEvents: Array<{ text?: string; activity_zone?: ActivityZone }>) {
+  return gaps.filter((gap) => Boolean(findGapExplanation(gap, dayEvents))).length
+}
+
+export function pickNextGapForReview(gaps: Gap[], dayEvents: Array<{ text?: string; activity_zone?: ActivityZone }>) {
+  return gaps.find((gap) => !findGapExplanation(gap, dayEvents))
+}
+
+export function findGapExplanation(gap: Gap, dayEvents: Array<{ text?: string; activity_zone?: ActivityZone }>): GapExplanation | undefined {
+  const range = formatGapRange(gap)
+  const event = dayEvents.find((item) => isGapExplanationText(item.text) && item.text?.includes(range))
+  if (!event?.text) return undefined
+
+  return {
+    classification: classifyGapExplanation(event),
+    text: event.text,
+  }
+}
+
+export function findOpenGapExplanation(dayEvents: Array<{ text?: string; activity_zone?: ActivityZone }>): GapExplanation | undefined {
+  const event = [...dayEvents].reverse().find((item) => isOpenGapExplanationText(item.text))
+  if (!event?.text) return undefined
+
+  return {
+    classification: classifyGapExplanation(event),
+    text: event.text,
+  }
+}
+
+export function classifyGapExplanation(event: { text?: string; activity_zone?: ActivityZone }): GapClassification {
+  const text = (event.text ?? '').toLocaleLowerCase('ru-RU')
+
+  if (text.includes('потеря управляемости') || text.includes('не удалось восстановить управляемость')) {
+    return 'unmanaged'
+  }
+
+  if (event.activity_zone === 'recovery' || text.includes('восстанов') || text.includes('recovery')) {
+    return 'recovery'
+  }
+
+  if (event.activity_zone === 'idle' || text.includes('простой') || text.includes('обед') || text.includes('ужин') || text.includes('быт')) {
+    return 'idle'
+  }
+
+  return 'explained'
+}
+
+export function formatGapClassificationLabel(classification: GapClassification) {
+  switch (classification) {
+    case 'recovery':
+      return 'восстановление'
+    case 'unmanaged':
+      return 'потеря управляемости'
+    case 'idle':
+      return 'простой'
+    case 'explained':
+      return 'объяснён'
+  }
 }
 
 function isGapExplanationText(text: string | undefined) {
@@ -3628,6 +3700,10 @@ function isGapExplanationText(text: string | undefined) {
 
 export function isOpenGapExplanationText(text: string | undefined) {
   return /\bopen\s+gap\b|открыт[а-яё]*\s+разрыв/i.test(text ?? '')
+}
+
+function formatGapRange(gap: Gap) {
+  return `${formatClockTime(gap.from)}-${formatClockTime(gap.to)}`
 }
 
 function appendWorkItemNotes(
@@ -3989,6 +4065,7 @@ function ActiveFocusSession({
 function FocusSessionRow({
   session,
   gapBefore,
+  gapExplanation,
   onCorrect,
   onExplainGap,
 }: {
@@ -3998,6 +4075,7 @@ function FocusSessionRow({
     to: string
     seconds: number
   }
+  gapExplanation?: GapExplanation
   onCorrect: () => void
   onExplainGap?: (preset?: GapExplanationPreset) => void
 }) {
@@ -4053,7 +4131,8 @@ function FocusSessionRow({
           <span>
             разрыв до блока: {formatClockTime(gapBefore.from)}-{formatClockTime(gapBefore.to)} · {formatDuration(gapBefore.seconds)}
           </span>
-          {onExplainGap && <GapExplainActions onExplain={onExplainGap} />}
+          {gapExplanation && <GapClassificationBadge classification={gapExplanation.classification} />}
+          {onExplainGap && !gapExplanation && <GapExplainActions onExplain={onExplainGap} />}
         </div>
       )}
     </div>
@@ -4062,6 +4141,7 @@ function FocusSessionRow({
 
 function OpenGapRow({
   gap,
+  explanation,
   onExplain,
 }: {
   gap: {
@@ -4069,6 +4149,7 @@ function OpenGapRow({
     to: string
     seconds: number
   }
+  explanation?: GapExplanation
   onExplain: (preset?: GapExplanationPreset) => void
 }) {
   return (
@@ -4079,9 +4160,21 @@ function OpenGapRow({
         <span className="text-amber-300/80">
           {formatClockTime(gap.from)}-{formatClockTime(gap.to)}
         </span>
-        <GapExplainActions onExplain={onExplain} />
+        {explanation ? (
+          <GapClassificationBadge classification={explanation.classification} />
+        ) : (
+          <GapExplainActions onExplain={onExplain} />
+        )}
       </div>
     </div>
+  )
+}
+
+function GapClassificationBadge({ classification }: { classification: GapClassification }) {
+  return (
+    <span className="rounded border border-amber-700/70 bg-amber-950/30 px-1.5 py-0.5 text-[10px] font-medium text-amber-100">
+      {formatGapClassificationLabel(classification)}
+    </span>
   )
 }
 

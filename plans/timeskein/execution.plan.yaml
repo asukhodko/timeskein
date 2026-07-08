@@ -270,11 +270,11 @@ execution:
       confidence: 0.9
       note: "Passed on 2026-07-08 with `pnpm dogfood:goal-check -- --date 2026-07-08 --no-codex-guidance`. The command verified saved final evidence, then ran `pnpm test`, `pnpm dogfood:preflight`, and strict RC evidence against the same code. This closed the cheap evening-closure goal."
     ts.in_day_structure:
-      progress: 0.3
+      progress: 0.45
       actual_start: "2026-07-08"
-      updated_at: "2026-07-08T23:05:00+03:00"
+      updated_at: "2026-07-08T23:25:00+03:00"
       confidence: 0.8
-      note: "Now the active product layer. Dogfood days 2026-07-07 and 2026-07-08 showed the next gap: when a focus is selected, work can feel available, but after a break or completed block the user has to rebuild control from scattered open loops. Coordination is real work, recovery needs explicit meaning, and `Работа` alone is too narrow for working occupancy. The first slices implemented live Activity Zone totals, report semantics for working occupancy vs executive work, and a cheap active-focus journal. Remaining slices should prove a day without external Timeskein notes, then add dispatch decisions, stages, and gap classifications."
+      note: "Now the active product layer. Dogfood days 2026-07-07 and 2026-07-08 showed the next gap: when a focus is selected, work can feel available, but after a break or completed block the user has to rebuild control from scattered open loops. Coordination is real work, recovery needs explicit meaning, and `Работа` alone is too narrow for working occupancy. The first slices implemented live Activity Zone totals, report semantics for working occupancy vs executive work, a cheap active-focus journal, and interval-based gap classification. Remaining slices should prove a day without external Timeskein notes, then add dispatch decisions and stages."
     ts.in_day_structure.day_observation_log:
       progress: 0.35
       actual_start: "2026-07-08"
@@ -296,10 +296,12 @@ execution:
       confidence: 0.85
       note: "Implemented the first in-day-structure slice. Today now shows a live `Зоны сегодня` panel with total tracked time, working occupancy (`Work + Coordination`), executive work (`Work`), non-work tracked time, and per-zone chips. UI, CLI, and RC evidence reports share the same semantics."
     ts.in_day_structure.gap_recovery_classification:
-      progress: 0.0
-      updated_at: "2026-07-08T21:45:00+03:00"
+      progress: 1.0
+      actual_start: "2026-07-08"
+      actual_finish: "2026-07-08"
+      updated_at: "2026-07-08T23:25:00+03:00"
       confidence: 0.8
-      note: "Next implementation candidate. Gap explanations should become structured gap entities or at least stable typed explanations, so a gap can be marked explained/recovery/lost-control instead of remaining only a text event near a focus block."
+      note: "Implemented first slice. Closed gaps match Day Events by exact displayed interval and show classification labels in Today and Markdown reports: recovery, loss of manageability, idle, or explained. The model intentionally reuses Day Events for now; a dedicated gap table remains a possible period-report refinement."
     ts.in_day_structure.dispatch_mode:
       progress: 0.0
       updated_at: "2026-07-08T21:45:00+03:00"

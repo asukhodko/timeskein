@@ -1101,11 +1101,14 @@ function formatSignificantGapReviewDetail(markdown) {
   const gaps = extractSignificantGapRows(markdown);
   if (gaps.length === 0) return "";
 
-  const explainedCount = Math.min(countGapExplanationEvents(markdown), gaps.length);
+  const classifiedCount = gaps.filter((gap) => gap.classification).length;
+  const explainedCount = classifiedCount > 0
+    ? classifiedCount
+    : Math.min(countGapExplanationEvents(markdown), gaps.length);
   const missing = Math.max(gaps.length - explainedCount, 0);
   if (missing === 0) return "";
 
-  const nextGap = gaps[explainedCount];
+  const nextGap = gaps.find((gap) => !gap.classification) ?? gaps[explainedCount];
   const base = `${missing}/${gaps.length} больших разрывов без события дня`;
   return nextGap ? `${base}; следующий: ${nextGap.range} (${nextGap.duration})` : base;
 }
@@ -1113,9 +1116,9 @@ function formatSignificantGapReviewDetail(markdown) {
 function extractSignificantGapRows(markdown) {
   return extractMarkdownSection(markdown, "## Gaps >=")
     .split("\n")
-    .map((line) => line.match(/^- ([0-9]{1,2}:[0-9]{2}-[0-9]{1,2}:[0-9]{2}): ([0-9:]+)$/))
+    .map((line) => line.match(/^- ([0-9]{1,2}:[0-9]{2}-[0-9]{1,2}:[0-9]{2}): ([0-9:]+)(?: — (.+))?$/))
     .filter(Boolean)
-    .map((match) => ({ range: match[1], duration: match[2] }));
+    .map((match) => ({ range: match[1], duration: match[2], classification: match[3] }));
 }
 
 function countGapExplanationEvents(markdown) {

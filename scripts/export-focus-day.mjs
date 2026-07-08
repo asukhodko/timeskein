@@ -371,17 +371,21 @@ function buildDayMarkdown(sessionsOldestFirst, activeSecondsTotal, day, now, wor
   if (gaps.length > 0) {
     lines.push("", `## Gaps >= ${formatDuration(SIGNIFICANT_GAP_SECONDS)}`);
     for (const gap of gaps) {
+      const explanation = findGapExplanation(gap, dayEvents);
+      const suffix = explanation ? ` — ${formatGapClassificationLabel(explanation.classification)}` : "";
       lines.push(
-        `- ${formatClockTime(gap.from)}-${formatClockTime(gap.to)}: ${formatDuration(gap.seconds)}`
+        `- ${formatClockTime(gap.from)}-${formatClockTime(gap.to)}: ${formatDuration(gap.seconds)}${suffix}`
       );
     }
   }
 
   const openGap = openGapAfterLastSession(sessionsOldestFirst, now, dayStart, dayEnd);
   if (openGap && openGap.seconds >= SIGNIFICANT_GAP_SECONDS) {
+    const explanation = findOpenGapExplanation(dayEvents);
+    const suffix = explanation ? ` — ${formatGapClassificationLabel(explanation.classification)}` : "";
     lines.push("", "## Open Gap");
     lines.push(
-      `- ${formatClockTime(openGap.from)}-${formatClockTime(openGap.to)}: ${formatDuration(openGap.seconds)} since last stopped block`
+      `- ${formatClockTime(openGap.from)}-${formatClockTime(openGap.to)}: ${formatDuration(openGap.seconds)} since last stopped block${suffix}`
     );
   }
 
@@ -595,6 +599,64 @@ function openGapAfterLastSession(sessionsOldestFirst, now, dayStart, dayEnd) {
     to: to.toISOString(),
     seconds,
   };
+}
+
+function findGapExplanation(gap, dayEvents) {
+  const range = `${formatClockTime(gap.from)}-${formatClockTime(gap.to)}`;
+  const event = dayEvents.find((item) => isGapExplanationText(item.text) && item.text?.includes(range));
+  if (!event?.text) return undefined;
+
+  return {
+    classification: classifyGapExplanation(event),
+  };
+}
+
+function findOpenGapExplanation(dayEvents) {
+  const event = [...dayEvents].reverse().find((item) => isOpenGapExplanationText(item.text));
+  if (!event?.text) return undefined;
+
+  return {
+    classification: classifyGapExplanation(event),
+  };
+}
+
+function classifyGapExplanation(event) {
+  const text = (event.text ?? "").toLocaleLowerCase("ru-RU");
+
+  if (text.includes("потеря управляемости") || text.includes("не удалось восстановить управляемость")) {
+    return "unmanaged";
+  }
+
+  if (event.activity_zone === "recovery" || text.includes("восстанов") || text.includes("recovery")) {
+    return "recovery";
+  }
+
+  if (event.activity_zone === "idle" || text.includes("простой") || text.includes("обед") || text.includes("ужин") || text.includes("быт")) {
+    return "idle";
+  }
+
+  return "explained";
+}
+
+function formatGapClassificationLabel(classification) {
+  switch (classification) {
+    case "recovery":
+      return "восстановление";
+    case "unmanaged":
+      return "потеря управляемости";
+    case "idle":
+      return "простой";
+    default:
+      return "объяснён";
+  }
+}
+
+function isGapExplanationText(text) {
+  return /\bopen\s+gap\b|\bgap\b|разрыв|перерыв|буфер|recovery|восстановлен/i.test(text ?? "");
+}
+
+function isOpenGapExplanationText(text) {
+  return /\bopen\s+gap\b|открыт[а-яё]*\s+разрыв/i.test(text ?? "");
 }
 
 function escapeMarkdownTable(value) {

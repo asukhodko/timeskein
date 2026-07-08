@@ -110,5 +110,6 @@ schedule:
     ts.in_day_structure.entry_protocol:
       duration: 1d
     ts.in_day_structure.gap_recovery_classification:
-      duration: 2d
+      start: "2026-07-08"
+      duration: 1d
     ts.in_day_structure.dogfood_gate: {}

@@ -539,7 +539,7 @@ nodes:
     kind: phase
     parent: ts
     status: in_progress
-    notes: "Current product layer after the 2026-07-08 closure gate. Turn Timeskein from a timer plus evening report into a day-structuring tool. Dogfood days 2026-07-07 and 2026-07-08 showed that work becomes easier after one focus is selected, while the expensive part is rebuilding manageability after breaks and choosing one legitimate next action without external pressure. The first slices added live Activity Zone totals, separated working occupancy from executive work, and added a cheap active-focus journal for thoughts, decisions, questions, next steps, milestones, and interruption notes. The remaining layer should prove a day without a parallel Codex note, make Work Item stages visible, support the day-entry and post-break dispatching ritual, and distinguish deliberate recovery from loss of control."
+    notes: "Current product layer after the 2026-07-08 closure gate. Turn Timeskein from a timer plus evening report into a day-structuring tool. Dogfood days 2026-07-07 and 2026-07-08 showed that work becomes easier after one focus is selected, while the expensive part is rebuilding manageability after breaks and choosing one legitimate next action without external pressure. The first slices added live Activity Zone totals, separated working occupancy from executive work, added a cheap active-focus journal, and classified explained gaps by exact interval. The remaining layer should prove a day without a parallel Codex note, make Work Item stages visible, and support the day-entry and post-break dispatching ritual."
     x:
       ops:
         attention_class: current
@@ -572,7 +572,7 @@ nodes:
     title: Track stages inside a Work Item
     kind: task
     parent: ts.in_day_structure
-    status: planned
+    status: done
     effort: 5
     deps:
       - id: ts.in_day_structure.active_work_journal
@@ -628,10 +628,10 @@ nodes:
     deps:
       - id: ts.day_review.day_events
       - id: ts.daily_control.goal_check
-    notes: "Extend gap explanation so a long break can be marked as deliberate recovery, meeting buffer, food/rest, external interruption, or loss of manageability. Reports should separate 'recovery that lowered the next entry cost' from untracked drift where the system failed to reassemble a controllable next action."
+    notes: "Done as a first slice on 2026-07-08. Gap explanation remains stored as a Day Event, but closed gaps now match an exact displayed interval instead of a loose count of gap-like notes. Today and Markdown reports show a classification label next to explained gaps: recovery, loss of manageability, idle, or explained. A dedicated gaps table remains future work if period reports need richer filtering."
     x:
       ops:
-        attention_class: current
+        attention_class: done
   ts.in_day_structure.dogfood_gate:
     title: In-day structure dogfood gate
     kind: milestone

@@ -65,8 +65,9 @@ pnpm dogfood:finish:save
 If you close the day from the app UI first, start the measured closure from
 `Проверка перед отчётом` by clicking `Начать закрытие дня`, then clear red
 items, consciously accept review items, and click `Копировать отчёт`.
-The active daily-control goal expects that measured closure to take at most
-10 minutes and to be understandable without Codex guidance.
+The accepted daily-control gate expects measured closure to take at most
+10 minutes and to be understandable without Codex guidance. This was proven on
+2026-07-08 with a 2:32 closure; future dogfood days should keep this green.
 
 This writes both local evidence files:
 
@@ -89,10 +90,10 @@ pnpm dogfood:rc-check:save
 `dogfood:rc-check` does not replace the human verdict. It catches red items
 and prints review items that must be resolved or consciously accepted before the
 milestone can be marked done.
-Use the final goal gate before marking the daily-control goal complete. Run it
-after `pnpm dogfood:finish:save`; for the real local database it checks that the
-saved dogfood report and RC evidence exist, then runs `pnpm test`,
-`pnpm dogfood:preflight`, and the strict RC check on the same code:
+Use the final goal gate as a regression check after `pnpm dogfood:finish:save`;
+for the real local database it checks that the saved dogfood report and RC
+evidence exist, then runs `pnpm test`, `pnpm dogfood:preflight`, and the strict
+RC check on the same code:
 
 ```bash
 pnpm dogfood:goal-check
@@ -113,8 +114,8 @@ selected/list continuation evidence, focus correction/review telemetry, measured
 day-closure duration, and
 window/show-hide telemetry, including both show and hide request counts from
 window entrypoints.
-The `Проверка закрытия дня` section maps that evidence to the current
-daily-control goal, so the next dogfood day can be judged requirement by
+The `Проверка закрытия дня` section maps that evidence to the accepted
+daily-control gate, so the next dogfood day can be judged requirement by
 requirement instead of by memory. The same audit is included in the normal UI
 and CLI dogfood reports before the raw focus data.
 

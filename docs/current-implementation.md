@@ -301,7 +301,7 @@ Post-factum correction is implemented for stopped focus sessions. `focus.create_
 
 ## Dogfood Findings
 
-The 2026-07-01, 2026-07-02, and 2026-07-03 dogfood days showed that the core timer loop works, and that Capture Inbox can preserve incoming events without switching away from the current focus. The first post-baseline slice added post-factum correction, entry/window fixes, Day Events, Work Item Events, Activity Zones, explicit Work Item time review evidence, and strict report evidence. The 2026-07-06 dogfood day produced a strong daily-control trace in real use: 7:30:36 tracked, 19 entrances, Activity Zones, Day Events, Work Item Events, Capture Inbox conversion, Work Item day/total time evidence, and zero API/copy/start-stop failures. The 2026-07-07 dogfood day produced useful in-day structure evidence: zones, day events, Work Item events, and a clear long post-break loss of manageability. Current strict goal closure still fails correctly because saved evidence has not yet captured a final measured evening closure from `Начать закрытие дня` to final `Копировать отчёт` in 10 minutes or less.
+The 2026-07-01, 2026-07-02, and 2026-07-03 dogfood days showed that the core timer loop works, and that Capture Inbox can preserve incoming events without switching away from the current focus. The first post-baseline slice added post-factum correction, entry/window fixes, Day Events, Work Item Events, Activity Zones, explicit Work Item time review evidence, and strict report evidence. The 2026-07-06 dogfood day produced a strong daily-control trace in real use: 7:30:36 tracked, 19 entrances, Activity Zones, Day Events, Work Item Events, Capture Inbox conversion, Work Item day/total time evidence, and zero API/copy/start-stop failures. The 2026-07-07 dogfood day produced useful in-day structure evidence: zones, day events, Work Item events, and a clear long post-break loss of manageability. The 2026-07-08 dogfood day closed the daily-control goal: final saved evidence was clean, measured evening closure took 2:32, and strict `pnpm dogfood:goal-check -- --date 2026-07-08 --no-codex-guidance` passed after `pnpm test`, `pnpm dogfood:preflight`, and strict RC evidence.
 
 High-signal findings:
 
@@ -432,7 +432,7 @@ On multi-monitor macOS setups, the tray/status item is controlled by the system 
 
 ## Next Engineering Steps
 
-1. Run one more real dogfood day and verify that evening closure takes at most 10 minutes without Codex guidance.
-2. Reduce remaining evening review friction found by that day, especially any review item that still feels like a separate task rather than a quick decision.
-3. After the closure goal is proven, take the next planned product gate: in-day structure and self-coordination. Start with timestamped thoughts inside active work, live Activity Zone totals, day-entry/post-break dispatching, and clearer recovery/lost-control gap classification.
+1. Start the in-day structure gate. First thin slices should make Timeskein hold active-work thoughts, day-level observations, live Activity Zone totals, day-entry/post-break dispatch decisions, and clearer recovery/lost-control gap classification.
+2. Treat `Coordination` as working occupancy in reports and UI: keep `Work` as executive work, but also expose `Work + Coordination` as the honest measure of work-shaped load.
+3. Turn gap explanations into structured evidence. A gap should be visibly explained as recovery, lost control, meeting buffer, food/rest, external interruption, or accepted untracked time, not only as nearby free text.
 4. Keep arbitrary-period reports as the next meaning layer after in-day structure. The first period-report slice should use existing manual data to choose the next protected focus points before adding passive evidence collection.

@@ -5,7 +5,7 @@ nodes:
     title: Timeskein
     kind: product
     status: in_progress
-    notes: Manual-first, local-first work inventory. The post-baseline daily-control loop completed one full real dogfood day; the remaining proof is a measured evening closure in 10 minutes or less.
+    notes: Manual-first, local-first work inventory. The macOS Session replacement baseline and daily-control closure gate are accepted; current work is the in-day structure layer before arbitrary-period reflection reports.
     x:
       ops:
         attention_class: overview
@@ -59,7 +59,7 @@ nodes:
     notes: Make opening, moving, hiding, and using the app feel like a fast time-tracking tool rather than a static palette.
     x:
       ops:
-        attention_class: current
+        attention_class: done
   ts.ux_entry.window_drag:
     title: Make the app window movable
     kind: task
@@ -71,7 +71,7 @@ nodes:
     notes: Header drag uses Tauri startDragging, with buttons excluded from the drag region.
     x:
       ops:
-        attention_class: current
+        attention_class: done
   ts.ux_entry.hide_toggle:
     title: Add clear hide and show behavior
     kind: task
@@ -83,7 +83,7 @@ nodes:
     notes: A shown window must be easy to dismiss without quitting the whole app.
     x:
       ops:
-        attention_class: current
+        attention_class: done
   ts.ux_entry.tray_actions:
     title: Wire tray menu actions
     kind: task
@@ -119,7 +119,7 @@ nodes:
     notes: Focus tracking can start from a free text intention or selected Work Item. First dogfood day exposed shortcut friction while typing, fixed by ignoring palette shortcuts inside editable fields. Guarded dogfood:continue reduces return friction after quitting Timeskein during an already started dogfood day without bypassing readiness checks.
     x:
       ops:
-        attention_class: current
+        attention_class: done
   ts.ux_entry.inventory_modes:
     title: Keep the multi-day Work Item list navigable
     kind: task
@@ -259,7 +259,7 @@ nodes:
     notes: Turn raw sessions and local app telemetry into the working-day picture needed for productivity analysis.
     x:
       ops:
-        attention_class: current
+        attention_class: done
   ts.day_review.timeline:
     title: Show focus blocks on a daily timeline
     kind: task
@@ -270,7 +270,7 @@ nodes:
       - id: ts.focus_core.dogfood_gate
     x:
       ops:
-        attention_class: current
+        attention_class: done
   ts.day_review.totals_gaps:
     title: Compute totals, gaps, and entry count
     kind: task
@@ -282,7 +282,7 @@ nodes:
     notes: Track total tracked time, work-focus time, non-work tracked time, number of focus entrances, per-Work-Item totals, per-focus-block Activity Zone totals, gaps longer than 20 minutes, open gaps after the last stopped block, and target-reaching ratio.
     x:
       ops:
-        attention_class: current
+        attention_class: done
   ts.day_review.export:
     title: Export dogfood day data as Markdown
     kind: task
@@ -294,7 +294,7 @@ nodes:
     notes: Today can copy the raw day picture or a dogfood report with review prompts, and shows selected Markdown if clipboard access fails. UI and CLI reports are marked as draft when a focus session or Work Item is still active. SQLite fallback export, CLI dogfood report, and dogfood:finish end-of-day gate are implemented; finish refuses active focus sessions, stuck active Work Items, and empty days. dogfood:finish:save now saves both the readable day report and the RC-check evidence file. Reports include Total tracked, Work focus, Non-work tracked, per-focus-block Activity Zone totals, Day Events, Work Item notes, Work Item Events, and Capture Activity for created, resolved, and converted captures. JSON/CSV export remains future work.
     x:
       ops:
-        attention_class: current
+        attention_class: done
   ts.day_review.work_item_events:
     title: Timestamped Work Item Events
     kind: task
@@ -425,7 +425,7 @@ nodes:
     notes: Stabilize the first useful product slice without broadening scope to Evidence Mode or sync.
     x:
       ops:
-        attention_class: current
+        attention_class: done
   ts.hardening.smoke:
     title: Add smoke checks for focus-session flows
     kind: task
@@ -437,7 +437,7 @@ nodes:
     notes: "pnpm test now covers contracts build, TypeScript typecheck, Rust agent integration tests with temporary SQLite, mock-store unit tests, Work Item list mode tests, mock API smoke, Day Events API smoke, and key SQLite/report smoke. dogfood:preflight adds script syntax checks, Work Item list mode tests, packaged macOS build, embedded-agent smoke, focus switching, post-factum correction API, Work Item editing, capture API, Day Events API, Capture Inbox telemetry, stale lock/port recovery, app_events constraint migration, restart/restore, and dogfood start/continue/status/ready/rc-check/reset/stop-active/open-app smoke. Export and RC-check smokes now include legacy focus-session schemas without Activity Zone columns. Browser UI smoke is still manual."
     x:
       ops:
-        attention_class: current
+        attention_class: done
   ts.hardening.post_dogfood_friction:
     title: Fix first dogfood friction
     kind: task
@@ -449,7 +449,7 @@ nodes:
     notes: Fixed typing C/С opening Create, creating a new active Work Item, ambiguous last-seen timestamps, and added the first Capture Inbox baseline. Post-baseline work added Work Item title/basic-field editing, focus-block correction including add-missed-block, per-block Activity Zone snapshots/overrides, Work Item day/total time, Work Item list modes for accumulated multi-day inventories, a resizable Today/Work Item split, timestamped Day Events with explicit zones and gap/open-gap Explain shortcuts, timestamped Work Item Events, capture-to-event promotion, capture edit/delete for open items, Command+Tab/Dock restore, non-always-on-top window policy, native menu-bar status refresh, show/hide request telemetry, guarded dogfood:continue for reopening an existing day, and separate Total tracked / Work focus / Non-work tracked report totals. Remaining friction is mostly richer correction/review UI.
     x:
       ops:
-        attention_class: current
+        attention_class: done
   ts.hardening.backup_reset:
     title: Add local data backup and reset path
     kind: task
@@ -503,11 +503,11 @@ nodes:
     title: Daily Control Dogfood Gate
     kind: phase
     parent: ts
-    status: in_progress
-    notes: "The 2026-07-06 and 2026-07-07 post-baseline dogfood days produced useful daily-control data: focus blocks, Activity Zones, Day Events, Work Item Events, Capture Activity, Work Item day/total time evidence, and zero API/copy/start-stop failures. Current strict goal-check still requires a final measured evening closure duration from day_closure_started/day_closure_completed."
+    status: done
+    notes: "Closed on 2026-07-08. The 2026-07-06 and 2026-07-07 post-baseline days proved useful daily-control data. The 2026-07-08 day then proved the missing gate: final measured evening closure took 2:32, saved evidence was final, and strict `pnpm dogfood:goal-check -- --date 2026-07-08 --no-codex-guidance` passed after running the full test/preflight/RC path."
     x:
       ops:
-        attention_class: current
+        attention_class: done
   ts.daily_control.real_day:
     title: Run post-baseline daily-control dogfood day
     kind: task
@@ -516,33 +516,33 @@ nodes:
     effort: 1
     deps:
       - id: ts.hardening.dogfood_release
-    notes: Completed on 2026-07-06 with 7:30:36 tracked, 19 entrances, two Activity Zones, Capture Inbox conversion, Day Events, Work Item Events, Work Item notes, typed and selected/list entry paths, and zero API/copy/start-stop failures. A follow-up 2026-07-07 day added stronger evidence for zones, Day Events, Work Item Events, and the real problem of restoring manageability after a break, but still did not produce a final measured closure.
+    notes: Completed across 2026-07-06, 2026-07-07, and 2026-07-08. The days proved focus blocks, Activity Zones, Day/Work Item Events, Capture Inbox conversion, Work Item time evidence, typed and selected/list entry paths, window-entry telemetry, and useful real-day reports. The final 2026-07-08 day added a measured closure under 10 minutes.
     x:
       ops:
-        attention_class: current
+        attention_class: done
   ts.daily_control.goal_check:
     title: Close daily-control goal with strict evidence
     kind: milestone
     parent: ts.daily_control
-    status: in_progress
+    status: done
     milestone: true
     effort: 1
     deps:
       - id: ts.daily_control.real_day
-    notes: "Saved evidence for 2026-07-06 and 2026-07-07 is intentionally not enough yet. The 2026-07-07 saved report is still a draft: one large gap needs explanation, three safe review checks can be consciously accepted together with `Всё проверено`, and there is still no completed measured closure. The next real dogfood closure must start from `Начать закрытие дня`, finish with final `Копировать отчёт` in 10 minutes or less, and not need Codex to explain the next closure step."
+    notes: "Done on 2026-07-08. The saved report was final, had no active focus or active Work Item, closure duration was 2:32, the user did not need Codex to navigate the panel, and strict `pnpm dogfood:goal-check -- --date 2026-07-08 --no-codex-guidance` passed. This closes the cheap day-closure goal and frees the next product layer: in-day structure and self-coordination."
     x:
       ops:
-        attention_class: current
+        attention_class: done
 
   ts.in_day_structure:
     title: In-day structure and self-coordination
     kind: phase
     parent: ts
-    status: planned
-    notes: "Turn Timeskein from a timer plus evening report into a day-structuring tool. The 2026-07-07 dogfood day showed that work becomes easier after one focus is selected, while the expensive part is rebuilding manageability after breaks and choosing one legitimate next action without external pressure. The next layer should capture thoughts inside active work, keep the user's Timeskein-day observations inside the app instead of Codex, make Work Item stages visible, show Activity Zone distribution during the day, support the day-entry and post-break dispatching ritual, and distinguish deliberate recovery from loss of control. This layer starts only after the current cheap-closure goal is proven; the calendar dates are provisional follow-up slots, not permission to abandon the active goal."
+    status: in_progress
+    notes: "Current product layer after the 2026-07-08 closure gate. Turn Timeskein from a timer plus evening report into a day-structuring tool. Dogfood days 2026-07-07 and 2026-07-08 showed that work becomes easier after one focus is selected, while the expensive part is rebuilding manageability after breaks and choosing one legitimate next action without external pressure. The layer should capture thoughts inside active work, keep the user's Timeskein-day observations inside the app instead of Codex, make Work Item stages visible, show Activity Zone distribution during the day, support the day-entry and post-break dispatching ritual, and distinguish deliberate recovery from loss of control."
     x:
       ops:
-        attention_class: future
+        attention_class: current
   ts.in_day_structure.active_work_journal:
     title: Stream thoughts inside active work
     kind: task
@@ -554,7 +554,7 @@ nodes:
     notes: "Add a cheap way to append timestamped thoughts to the active Work Item without leaving focus. The first slice should add an active-focus event input, default to the current Work Item, allow day-level thoughts when the observation is not really about the current Work Item, preserve typed text on API failure, and show events in day and period reports. Event types can be thought, decision, question, next step, milestone, or interruption note. This is the product path for moving the user's Timeskein day notes from Codex/chat into Timeskein itself, including observations about entry cost, recovery, and product friction."
     x:
       ops:
-        attention_class: future
+        attention_class: current
   ts.in_day_structure.day_observation_log:
     title: Keep dogfood day observations inside Timeskein
     kind: task
@@ -567,7 +567,7 @@ nodes:
     notes: "Make it unnecessary to maintain a parallel 'Timeskein, day N' note in Codex. The first slice should let the user record product observations, working thoughts, recovery notes, and self-coordination comments either as Work Item Events or Day Events, then show them in the evening report. The dogfood protocol should explicitly ask whether any day observations still had to be kept outside Timeskein."
     x:
       ops:
-        attention_class: future
+        attention_class: current
   ts.in_day_structure.work_item_stages:
     title: Track stages inside a Work Item
     kind: task
@@ -591,7 +591,7 @@ nodes:
     notes: "Show today's Work / Coordination / Recovery / Idle / Personal totals in the live UI, not only in copied reports. The goal is quick calibration: whether the day is going into focused work, coordination, personal checks, recovery, or idle drift. The 2026-07-07 dogfood day showed that learning to use zones needs feedback during the day, not only at evening export."
     x:
       ops:
-        attention_class: future
+        attention_class: current
   ts.in_day_structure.dispatch_mode:
     title: Support day entry and dispatching mode
     kind: task
@@ -605,7 +605,7 @@ nodes:
     notes: "Treat 'Вход в день' and post-break reorientation as real coordination work. Provide a bounded ritual: collect incoming signals, name candidate work, choose one 'good enough' next focus, state why it is important enough now, and start it. The product goal is to reduce the expensive jump from many open loops to one legitimate next action, especially when no manager, meeting, or incident is currently supplying external direction."
     x:
       ops:
-        attention_class: future
+        attention_class: current
   ts.in_day_structure.entry_protocol:
     title: Define the day-entry and post-break protocol
     kind: task
@@ -618,7 +618,7 @@ nodes:
     notes: "Turn the observed self-coordination pattern into a small protocol: 15 minutes to collect signals, 5 minutes to choose one good-enough focus, then 25 minutes of protected action. If the choice fails, record the reason as recovery, meeting buffer, loss of manageability, low energy, or obligation conflict. The protocol should support the self-authorization move: 'I choose this for the next 25 minutes because it is important enough now.' The goal is to train internal direction without relying on a manager, meeting, incident, or chat request to supply priority from outside. This protocol is the acceptance lens for dispatch mode rather than a heavy planner."
     x:
       ops:
-        attention_class: future
+        attention_class: current
   ts.in_day_structure.gap_recovery_classification:
     title: Classify gaps as recovery or lost control
     kind: task
@@ -631,7 +631,7 @@ nodes:
     notes: "Extend gap explanation so a long break can be marked as deliberate recovery, meeting buffer, food/rest, external interruption, or loss of manageability. Reports should separate 'recovery that lowered the next entry cost' from untracked drift where the system failed to reassemble a controllable next action."
     x:
       ops:
-        attention_class: future
+        attention_class: current
   ts.in_day_structure.dogfood_gate:
     title: In-day structure dogfood gate
     kind: milestone
@@ -649,7 +649,7 @@ nodes:
     notes: One real workday should prove that Timeskein can hold the user's thoughts, dogfood-day observations, stages, zone distribution, dispatching choices, and gap explanations without needing a parallel Codex note for "Timeskein, day N" observations.
     x:
       ops:
-        attention_class: future
+        attention_class: current
 
   ts.periodic_reflection:
     title: Periodic reflection and meaning reports

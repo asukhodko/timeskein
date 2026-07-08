@@ -10,10 +10,11 @@ The current executable roadmap is [opskarta.md](opskarta.md), generated from
 The near-term plan is intentionally ordered by what the user gets, not by which
 technical subsystem looks tempting next.
 
-1. **Finish the active goal:** prove that evening closure is calm and short:
-   final report, clean review state, measured closure `<= 10` minutes, and
-   strict `dogfood:goal-check -- --no-codex-guidance`.
-2. **Build in-day structure:** keep thoughts, decisions, questions, next steps,
+1. **Keep the accepted daily-control gate green:** the 2026-07-08 day proved
+   calm evening closure with final report, clean review state, measured closure
+   `2:32`, and strict `dogfood:goal-check -- --date 2026-07-08
+   --no-codex-guidance`. Future work must not regress this.
+2. **Build the active goal: in-day structure:** keep thoughts, decisions, questions, next steps,
    Work Item stages, live Activity Zone totals, dispatch choices, and gap
    classifications inside Timeskein. Success means a real workday no longer
    needs a parallel "Timeskein, day N" note in Codex or Obsidian.

@@ -61,15 +61,12 @@ These were accepted limitations for the dogfood baseline, not red items:
   can be corrected independently, and reports separate `Total tracked`,
   `Work focus`, non-work tracked time, and per-zone totals.
 - macOS window restore and menu bar status refresh were known baseline
-  limitations; both have been fixed in code after acceptance. The next dogfood
-  day should confirm them in real use, and both show and hide request telemetry should
-  prove that window entrypoints were exercised.
+  limitations; both have been fixed in code after acceptance and dogfood days
+  after 2026-07-03 produced show/hide request telemetry. Further polish is
+  allowed, but this is no longer a baseline red item.
 - The Work Item list shows day/total time spent per item when available.
-- The Work Item list now has `Recent`, `Today`, `Pinned`, and `All` modes; the
-  next dogfood day should verify that the accumulated multi-day inventory stays
-  cheap to navigate.
-- The Today list height can be resized relative to the Work Item inventory; the
-  next dogfood day should verify whether this is enough for review-heavy days.
+- The Work Item list now has `Recent`, `Today`, `Pinned`, and `All` modes.
+- The Today list height can be resized relative to the Work Item inventory.
 
 ## Next Slice
 
@@ -95,23 +92,21 @@ Post-dogfood correction and first review enrichment are now partly implemented:
 - Today and copied reports include an automatic Review Checklist for active-state
   red items, open captures, significant gaps, open gaps, Activity Zone coverage,
   non-work tracking, capture coverage, and Work Item context coverage.
-- App Telemetry and RC checks include both show and hide request counts, so the
-  next dogfood day can distinguish real window entrypoint tests from passive
-  visibility changes.
+- App Telemetry and RC checks include both show and hide request counts, so real
+  window entrypoint tests can be distinguished from passive visibility changes.
 - The Review Checklist can record explicit `work_item_time_badges_reviewed`
   evidence after touched Work Item cards are checked for day/total time.
 - Work Items can be viewed through `Recent`, `Today`, `Pinned`, and `All` modes,
   while search remains the path to older matching items.
 - The Today/Work Item split can be resized and reset locally.
 
-Remaining entry and review polish:
+Remaining entry and review polish has moved into the in-day structure roadmap:
 
-- verify that the Review Checklist catches the actual evening cleanup during
-  the next dogfood day.
-- verify that Day Events make buffers, recovery debt, gap explanations, and
-  tracking corrections visible without relying on memory.
-- decide whether per-block zone correction is enough, or whether day review
-  needs a faster bulk zone editor.
+- keep working thoughts and product observations inside Timeskein during the day;
+- show live Activity Zone distribution, including work-shaped coordination;
+- make gap explanations more structured than nearby free-text events;
+- decide later whether per-block zone correction is enough, or whether day
+  review needs a faster bulk zone editor.
 
 Activity evidence from apps, browser tabs, messenger channels, screenshots, or
 AI interpretation remains a future opt-in layer. It should not be started until

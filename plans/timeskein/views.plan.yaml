@@ -6,6 +6,10 @@ views:
     where:
       x_ops_attention_class:
         - current
+      status:
+        - in_progress
+        - planned
+        - blocked
     order_by: status
   backlog:
     title: Deferred Timeskein work
@@ -62,7 +66,7 @@ x:
   exec:
     program:
       committed_date: "2026-06-30"
-      note: The Session replacement baseline is accepted; the current proof is cheap evening closure, followed by in-day structure before broad period reports.
+      note: The Session replacement baseline and cheap evening-closure gate are accepted. The current product proof is in-day structure and self-coordination before broad period reports.
     defaults:
       weight_strategy: effort_effective
       status_progress:
@@ -131,20 +135,20 @@ x:
         scope_nodes:
           - ts.daily_control
         target_gate: ts.daily_control.goal_check
-        progress_override: 0.91
+        progress_override: 1.0
         mgmt:
-          health: yellow
+          health: green
           owner: a.sukhodko
-          next_sync_goal: Run one measured evening closure from the review panel, copy a final report in <=10 minutes, save evidence, and pass strict dogfood:goal-check with --no-codex-guidance. The useful 2026-07-07 draft day is not enough because closure remained unfinished.
+          sync_note: Closed on 2026-07-08. Measured closure took 2:32, saved evidence was final, and strict dogfood:goal-check passed with --no-codex-guidance after test, preflight, and strict RC evidence.
       in-day-structure:
         title: In-day Structure
         scope_nodes:
           - ts.in_day_structure
         target_gate: ts.in_day_structure.dogfood_gate
         mgmt:
-          health: neutral
+          health: yellow
           owner: a.sukhodko
-          sync_note: "Next near-term product layer after the closure goal, with provisional dates only: keep active-work thoughts, product observations, stages, live zone balance, day-entry/post-break dispatch decisions, and recovery/lost-control gap labels inside Timeskein instead of a parallel Codex note."
+          next_sync_goal: "Make Timeskein hold the day while it is happening: active-work thoughts, product observations, live zone balance, day-entry/post-break dispatch decisions, and recovery/lost-control gap labels inside the app instead of a parallel Codex note."
       periodic-reflection:
         title: Periodic Reflection
         scope_nodes:
@@ -211,7 +215,7 @@ x:
         show_owner: false
         wrap_title_lines: 2
         reduce_transitive_required_edges: true
-        caption: "Near-term plan should stay narrow: reduce daily-review friction and choose the next measurable gate before reopening sync, Evidence Mode, or platform expansion."
+        caption: "Near-term plan should stay narrow: make Timeskein structure the day in progress before reopening sync, Evidence Mode, or platform expansion."
       exec-active-tracks:
         blocks:
           - app-entry-ux

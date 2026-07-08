@@ -5,13 +5,10 @@ This is the current machine-checkable roadmap for Timeskein. The source files li
 `tools/opskarta`.
 
 The macOS dogfood release baseline was accepted on 2026-07-03 after three real
-tracked workdays. The 2026-07-06 and 2026-07-07 post-baseline dogfood days
-produced useful real workday traces with focus blocks, Activity Zones, Day
-Events, Work Item Events, Capture Inbox evidence, and Work Item day/total time
-evidence. The remaining daily-control proof is narrower: one evening closure
-must be measured from `Начать закрытие дня` to final `Копировать отчёт`, take at
-most 10 minutes, not require Codex to explain the next closure step, and then
-pass strict `pnpm dogfood:goal-check -- --no-codex-guidance`.
+tracked workdays. The daily-control gate was closed on 2026-07-08: the final
+saved report was clean, measured evening closure took `2:32`, and strict
+`pnpm dogfood:goal-check -- --date 2026-07-08 --no-codex-guidance` passed after
+the full test, preflight, and strict RC evidence path.
 
 The completed `Проверка закрытия дня` in the UI/CLI dogfood report and in
 `pnpm dogfood:rc-check` checked whether a real day had enough closure evidence for focus
@@ -28,24 +25,17 @@ it through readiness continue mode and the same process/preflight/app-open guard
 as the normal start path.
 `pnpm dogfood:finish:save` now saves both the readable day report and the
 closure-check evidence file, so the evening package is collected in one step.
-For final goal closure, `pnpm dogfood:finish:save` points to
+For future regression checks, `pnpm dogfood:finish:save` points to
 `pnpm dogfood:goal-check -- --date YYYY-MM-DD --no-codex-guidance` only after measured closure is present and the saved
 `Проверка закрытия дня` has no pending rows. The goal check first requires the
 saved dogfood report and closure evidence for the real local database, verifies the
 grouped review checklist plus `Ближайшее действие`, then runs `pnpm test`,
 `pnpm dogfood:preflight`, and strict closure evidence on the same code.
-The current saved 2026-07-06 and 2026-07-07 evidence is intentionally not enough
-for closure because it still lacks a final measured closure package.
-As of 2026-07-08, the saved 2026-07-07 status is specific: one large gap still
-needs an explanation, three safe review checks can be accepted with `Всё
-проверено` if the visible data is honest, and the measured closure duration is
-still missing.
-
-The next product layer is now written down as in-day structure. It should move
+The current product layer is in-day structure. It should move
 the user's "Timeskein, day N" observations from Codex into Timeskein itself,
 support active-work thoughts, day-level observations, Work Item stages, live
 Activity Zone balance, day-entry/post-break dispatching, and explicit
-recovery-versus-lost-control gap labels. This layer starts only after the current
+recovery-versus-lost-control gap labels. It is the active path now that the
 closure goal has real evidence.
 
 After in-day structure, the next broad meaning layer is periodic reflection:
@@ -87,11 +77,11 @@ flowchart LR
     class capture_inbox exec_done
     dogfood_hardening["Dogfood<br/>hardening<br/>100%<br/>веха 2026-07-06"]
     class dogfood_hardening exec_done
-    daily_control_gate["Daily<br/>Control Gate<br/>90%<br/>веха 2026-07-08"]
-    class daily_control_gate exec_mgmt_yellow
-    style daily_control_gate stroke:#111827,stroke-width:3px
+    daily_control_gate["Daily<br/>Control Gate<br/>100%<br/>веха 2026-07-08"]
+    class daily_control_gate exec_done
     in_day_structure["In-day<br/>Structure<br/>~0%<br/>веха 2026-07-15"]
-    class in_day_structure exec_mgmt_neutral
+    class in_day_structure exec_mgmt_yellow
+    style in_day_structure stroke:#111827,stroke-width:3px
     periodic_reflection["Periodic<br/>Reflection<br/>~0%"]
     class periodic_reflection exec_mgmt_neutral
     future_directions["Future<br/>directions<br/>n/a"]
@@ -108,7 +98,7 @@ flowchart LR
     periodic_reflection -. later .-> future_directions
 ```
 
-Near-term plan should stay narrow: reduce daily-review friction and choose the next measurable gate before reopening sync, Evidence Mode, or platform expansion.
+Near-term plan should stay narrow: make Timeskein structure the day in progress before reopening sync, Evidence Mode, or platform expansion.
 
 ## Current schedule
 
@@ -165,7 +155,7 @@ gantt
     ✅ Session replacement dogfood baseline  :milestone, done, ts_hardening_dogfood_release,    2026-07-06, 0d
     section Daily Control Gate
     ✅ Run post-baseline daily-control dogfood day  :done, ts_daily_control_real_day,    2026-07-06, 1d
-    🔄 Close daily-control goal with strict evidence  :milestone, active, ts_daily_control_goal_check,    2026-07-08, 0d
+    ✅ Close daily-control goal with strict evidence  :milestone, done, ts_daily_control_goal_check,    2026-07-08, 0d
     section In-day structure
     Stream thoughts inside active work  :ts_in_day_structure_active_work_journal,    2026-07-09, 2d
     Keep dogfood day observations inside Timeskein  :ts_in_day_structure_day_observation_log,    2026-07-13, 1d
@@ -185,47 +175,14 @@ gantt
 /usr/bin/env PYTHONPATH=../../tools/opskarta python3 -m specs.v3.tools.cli render list ../../plans/timeskein/main.plan.yaml ../../plans/timeskein/nodes.plan.yaml ../../plans/timeskein/schedule.plan.yaml ../../plans/timeskein/execution.plan.yaml ../../plans/timeskein/views.plan.yaml --view current
 -->
 <!-- GENERATED:START -->
-- Make the app window movable [done] (1 focus-blocks) {100%}
-- Add clear hide and show behavior [done] (1 focus-blocks) {100%}
-- Wire tray menu actions [done] (1 focus-blocks) {100%}
-- Document macOS multi-monitor status item limits [done] (1 focus-blocks) {100%}
-- Keep the multi-day Work Item list navigable [done] (1 focus-blocks) {100%}
-- Resize Today versus Work Item inventory [done] (1 focus-blocks) {100%}
-- Focus Session core [done] (17 focus-blocks) {100%}
-- Add FocusSession persistence [done] (3 focus-blocks) {100%}
-- Add contracts and Local API for focus sessions [done] (3 focus-blocks) {100%}
-- Build focus timer UI with overflow [done] (3 focus-blocks) {100%}
-- Implement manual start and stop lifecycle [done] (3 focus-blocks) {100%}
-- Restore running focus session after app restart [done] (2 focus-blocks) {100%}
-- Bind focus sessions to Work Items or free intentions [done] (2 focus-blocks) {100%}
-- Capture a note at the end of a focus session [done] (1 focus-blocks) {100%}
-- First real Focus Session dogfood [done] {100%}
-- Timestamped Work Item Events [done] (2 focus-blocks) {100%}
-- Timestamped Day Events [done] (1 focus-blocks) {100%}
-- Post-factum focus correction [done] (3 focus-blocks) {100%}
-- Add local app-event telemetry for dogfood analysis [done] (2 focus-blocks) {100%}
-- Show automatic evening review checklist [done] (1 focus-blocks) {100%}
-- End-of-day analysis can use Timeskein data [done] {100%}
-- Capture Inbox [done] (9 focus-blocks) {100%}
-- Add captured-event model and Local API [done] (3 focus-blocks) {100%}
-- Add fast capture control [done] (3 focus-blocks) {100%}
-- Review and promote captured events [done] (3 focus-blocks) {100%}
-- Add local data backup and reset path [done] (2 focus-blocks) {100%}
-- Rebuild macOS app for regular personal use [done] (1 focus-blocks) {100%}
-- Write dogfood release notes and known limitations [done] (1 focus-blocks) {100%}
-- Session replacement dogfood baseline [done] {100%}
-- Run post-baseline daily-control dogfood day [done] (1 focus-blocks) {100%}
-- App entry UX [in_progress] (8 focus-blocks) {98%}
-- Reduce the path from intent to tracked work [in_progress] (2 focus-blocks) {90%}
-- Day review and export [in_progress] (16 focus-blocks) {93%}
-- Show focus blocks on a daily timeline [in_progress] (3 focus-blocks) {65%}
-- Compute totals, gaps, and entry count [in_progress] (2 focus-blocks) {98%}
-- Export dogfood day data as Markdown [in_progress] (2 focus-blocks) {98%}
-- Dogfood hardening [in_progress] (8 focus-blocks) {100%}
-- Add smoke checks for focus-session flows [in_progress] (2 focus-blocks) {99%}
-- Fix first dogfood friction [in_progress] (2 focus-blocks) {100%}
-- Daily Control Dogfood Gate [in_progress] (2 focus-blocks) {91%}
-- Close daily-control goal with strict evidence [in_progress] (1 focus-blocks) {82%}
+- In-day structure and self-coordination [in_progress] (20 focus-blocks) {0% cov:65%}
+- Stream thoughts inside active work [planned] (3 focus-blocks) {0%}
+- Keep dogfood day observations inside Timeskein [planned] (2 focus-blocks) {0%}
+- Show Activity Zone totals during the day [planned] (2 focus-blocks) {0%}
+- Support day entry and dispatching mode [planned] (3 focus-blocks) {0%}
+- Define the day-entry and post-break protocol [planned] (2 focus-blocks)
+- Classify gaps as recovery or lost control [planned] (3 focus-blocks) {0%}
+- In-day structure dogfood gate [planned]
 <!-- GENERATED:END -->
 
 ## Deferred directions
@@ -240,25 +197,17 @@ gantt
 - Add weekly, sprint, track, and performance report profiles [planned] (3 focus-blocks)
 - Android client path [deferred] (8 focus-blocks)
 - Build operational reality panel [planned] (5 focus-blocks)
-- Classify gaps as recovery or lost control [planned] (3 focus-blocks)
 - Complete broader Manual Inventory UX [deferred] (8 focus-blocks)
-- Define the day-entry and post-break protocol [planned] (2 focus-blocks)
 - Evidence Mode [deferred] (20 focus-blocks)
 - Explicit context capture and SourceNodes [deferred] (13 focus-blocks)
 - Export LLM packs with redaction controls [deferred] (5 focus-blocks)
 - Export arbitrary-period reports from existing data [planned] (3 focus-blocks)
 - Future directions [deferred] (83 focus-blocks)
-- In-day structure and self-coordination [planned] (20 focus-blocks) {0% cov:10%}
-- In-day structure dogfood gate [planned]
 - Introduce Tracks, Labels, and historical snapshots [planned] (5 focus-blocks)
-- Keep dogfood day observations inside Timeskein [planned] (2 focus-blocks) {0%}
 - Pause, resume, and cancel focus sessions [deferred] (5 focus-blocks)
 - Periodic reflection and meaning reports [planned] (27 focus-blocks)
 - Preserve external artifacts and user thoughts as report evidence [planned] (3 focus-blocks)
 - Save period conclusions as Reflection Sessions [planned] (3 focus-blocks)
-- Show Activity Zone totals during the day [planned] (2 focus-blocks)
-- Stream thoughts inside active work [planned] (3 focus-blocks)
-- Support day entry and dispatching mode [planned] (3 focus-blocks)
 - Sync and multi-device continuity [deferred] (13 focus-blocks)
 - Track stages inside a Work Item [planned] (5 focus-blocks)
 - Windows packaging and tray behavior [deferred] (8 focus-blocks)

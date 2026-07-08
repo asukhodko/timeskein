@@ -58,8 +58,8 @@ for (const file of checkedFiles) {
   }
   if (
     file === "docs/roadmap/README.md" &&
-    (!text.includes("Finish the active goal") ||
-      !text.includes("Build in-day structure") ||
+    (!text.includes("Keep the accepted daily-control gate green") ||
+      !text.includes("Build the active goal: in-day structure") ||
       !text.includes("Add periodic reflection"))
   ) {
     failures.push(`${file}: roadmap README does not preserve the current product order`);
@@ -75,7 +75,7 @@ for (const file of checkedFiles) {
     file === "docs/roadmap/0004-in-day-structure-roadmap.md" &&
     (!text.includes("без параллельной заметки \"Timeskein, день N\"") ||
       !text.includes("потеря управляемости") ||
-      !text.includes("сначала доказать закрытие дня"))
+      !text.includes("уже закрыто: дешёвое закрытие дня"))
   ) {
     failures.push(`${file}: in-day structure roadmap does not preserve the next-layer acceptance criteria`);
   }

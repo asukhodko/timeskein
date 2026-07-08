@@ -573,6 +573,7 @@ function formatTelemetryForReport(markdown) {
     .replace(/^Start requests:/gm, "Запросов старта:")
     .replace(/^Switch requests:/gm, "Запросов переключения:")
     .replace(/^Stop requests:/gm, "Запросов остановки:")
+    .replace(/^Typed\/selected\/dispatch entry requests:/gm, "Входов вводом/из списка/через диспетчеризацию:")
     .replace(/^Typed\/selected entry requests:/gm, "Входов вводом/из списка:")
     .replace(/^Start\/stop failures:/gm, "Ошибок старта/остановки:")
     .replace(/^Window shown\/hidden:/gm, "Окно показано/скрыто:")
@@ -736,11 +737,11 @@ function buildReviewChecklistItems({
   const entryTelemetry = parseEntryTelemetry(telemetryMarkdown);
   if (focusMarkdown.includes("| Time | Duration | Zone | Work Item | Note |") && entryTelemetry) {
     const entryPathReviews = parseLeadingNumber(extractLineValue(telemetryMarkdown, "Entry path reviews"));
-    if ((entryTelemetry.typedEntryRequests === 0 || entryTelemetry.selectedEntryRequests === 0 || entryTelemetry.stopRequests === 0) && entryPathReviews === 0) {
+    if ((entryTelemetry.typedEntryRequests === 0 || entryTelemetry.selectedEntryRequests === 0 || entryTelemetry.dispatchRitualEntryRequests === 0 || entryTelemetry.stopRequests === 0) && entryPathReviews === 0) {
       items.push({
         level: "review",
         title: "Exercise start and continue paths",
-        detail: `${entryTelemetry.typedEntryRequests} вводом, ${entryTelemetry.selectedEntryRequests} из списка, ${entryTelemetry.stopRequests} остановок`,
+        detail: `${entryTelemetry.typedEntryRequests} вводом, ${entryTelemetry.selectedEntryRequests} из списка, ${entryTelemetry.dispatchRitualEntryRequests} через диспетчеризацию, ${entryTelemetry.stopRequests} остановок`,
       });
     }
   }
@@ -799,7 +800,9 @@ function formatDailyControlGoalAuditMarkdown({
   const apiErrors = parseLeadingNumber(extractLineValue(telemetryMarkdown, "API errors"));
   const copyFailures = parseLeadingNumber(extractLineValue(telemetryMarkdown, "Copy failures"));
   const startStopFailures = extractLineValue(telemetryMarkdown, "Start/stop failures") ?? "n/a";
-  const entryPathEvidence = extractLineValue(telemetryMarkdown, "Typed/selected entry requests") ?? "n/a";
+  const entryPathEvidence = extractLineValue(telemetryMarkdown, "Typed/selected/dispatch entry requests")
+    ?? extractLineValue(telemetryMarkdown, "Typed/selected entry requests")
+    ?? "n/a";
   const entryTelemetry = parseEntryTelemetry(telemetryMarkdown);
   const captureFollowupReviews = parseLeadingNumber(extractLineValue(telemetryMarkdown, "Capture follow-up reviews"));
   const dayContextReviews = parseLeadingNumber(extractLineValue(telemetryMarkdown, "Day context reviews"));
@@ -815,6 +818,7 @@ function formatDailyControlGoalAuditMarkdown({
     entryTelemetry &&
     entryTelemetry.typedEntryRequests > 0 &&
     entryTelemetry.selectedEntryRequests > 0 &&
+    entryTelemetry.dispatchRitualEntryRequests > 0 &&
     entryTelemetry.stopRequests > 0;
   const windowRequestPair = parseCountPair(windowRequestEvidence);
   const windowRequestsCovered = Boolean(windowRequestPair && windowRequestPair.left > 0 && windowRequestPair.right > 0);
@@ -865,6 +869,7 @@ function formatDailyControlGoalAuditMarkdown({
     ? [
         formatCount(entryTelemetry.typedEntryRequests, "старт вводом", "старта вводом", "стартов вводом"),
         formatCount(entryTelemetry.selectedEntryRequests, "старт из списка", "старта из списка", "стартов из списка"),
+        formatCount(entryTelemetry.dispatchRitualEntryRequests, "старт через диспетчеризацию", "старта через диспетчеризацию", "стартов через диспетчеризацию"),
         formatCount(entryTelemetry.stopRequests, "остановка", "остановки", "остановок"),
         entryPathReviewEvidence,
       ].join("; ")
@@ -1008,13 +1013,15 @@ function parseCorrectionTelemetry(markdown) {
 }
 
 function parseEntryTelemetry(markdown) {
-  const entryMatch = markdown.match(/Typed\/selected entry requests:\s*(\d+)\/(\d+)/);
+  const entryMatch = markdown.match(/Typed\/selected\/dispatch entry requests:\s*(\d+)\/(\d+)\/(\d+)/)
+    ?? markdown.match(/Typed\/selected entry requests:\s*(\d+)\/(\d+)/);
   const stopMatch = markdown.match(/Stop requests:\s*(\d+)/);
   if (!entryMatch || !stopMatch) return undefined;
 
   return {
     typedEntryRequests: Number(entryMatch[1]),
     selectedEntryRequests: Number(entryMatch[2]),
+    dispatchRitualEntryRequests: entryMatch[3] == null ? 0 : Number(entryMatch[3]),
     stopRequests: Number(stopMatch[1]),
   };
 }

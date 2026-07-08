@@ -56,6 +56,7 @@ try {
     VALUES
       ('ae0', '2026-06-30T05:59:59Z', 'ui', 'focus_start_requested', NULL, '{"action_id":"a1","control":"typed"}'),
       ('ae00', '2026-06-30T06:00:01Z', 'ui', 'focus_start_requested', NULL, '{"action_id":"a2","control":"selected_item"}'),
+      ('ae00_dispatch', '2026-06-30T06:00:02Z', 'ui', 'focus_start_requested', NULL, '{"action_id":"a_dispatch","control":"dispatch_ritual"}'),
       ('ae000', '2026-06-30T07:45:01Z', 'ui', 'focus_stop_requested', 's3', '{"action_id":"a3","control":"stop_button_or_enter"}'),
       ('ae1', '2026-06-30T07:50:00Z', 'ui', 'focus_correction_requested', 's1', '{"action_id":"k1","control":"edit_block"}'),
       ('ae2', '2026-06-30T07:50:01Z', 'ui', 'focus_corrected', 's1', '{"action_id":"k1","control":"edit_block"}'),
@@ -119,7 +120,7 @@ try {
   );
   assert(stdout.includes("| Старт и продолжение проверены | ок |"), "report daily-control audit did not pass entry-path evidence");
   assert(
-    stdout.includes("1 старт вводом; 1 старт из списка; 1 остановка; пути входа покрыты телеметрией"),
+    stdout.includes("1 старт вводом; 1 старт из списка; 1 старт через диспетчеризацию; 1 остановка; пути входа покрыты телеметрией"),
     "report daily-control audit evidence did not localize entry evidence"
   );
   assert(stdout.includes("| Коррекция трекинга проверена | ок |"), "report daily-control audit did not pass correction evidence");

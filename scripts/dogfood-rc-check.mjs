@@ -490,6 +490,10 @@ function assessEvidence(evidence, minFocusSeconds) {
     reviewItems.push("Нет входа через выбранное дело из списка. Перед закрытием цели продолжи существующее дело из списка или явно прими эту проверку.");
   }
 
+  if (evidence.sessions.length > 0 && evidence.telemetry.dispatchRitualEntryRequests === 0 && evidence.telemetry.entryPathReviews === 0) {
+    reviewItems.push("Нет входа через диспетчеризацию. Перед закрытием цели стартуй первое дело через форму «Диспетчеризация» или явно прими эту проверку.");
+  }
+
   if (evidence.sessions.length > 0 && evidence.telemetry.stopRequests === 0 && evidence.telemetry.entryPathReviews === 0) {
     reviewItems.push("Нет событий телеметрии об остановке фокуса. Сценарий остановки за этот день не доказан.");
   }
@@ -615,7 +619,7 @@ function buildRcReport(date, path, evidence, assessment, minFocusSeconds, strict
     `- Проверок входа через окно: ${evidence.telemetry.windowEntrypointReviews}`,
     `- Событий телеметрии приложения: ${evidence.telemetry.total}`,
     `- Запросов старт/переключение/остановка: ${evidence.telemetry.startRequests}/${evidence.telemetry.switchRequests}/${evidence.telemetry.stopRequests}`,
-    `- Входов вводом/из списка: ${evidence.telemetry.typedEntryRequests}/${evidence.telemetry.selectedEntryRequests}`,
+    `- Входов вводом/из списка/через диспетчеризацию: ${evidence.telemetry.typedEntryRequests}/${evidence.telemetry.selectedEntryRequests}/${evidence.telemetry.dispatchRitualEntryRequests}`,
     `- API-ошибок: ${evidence.telemetry.apiErrors}`,
     `- Ошибок копирования/ручного копирования: ${evidence.telemetry.copyFailures}/${evidence.telemetry.manualCopyFallbacks}`,
     `- Ошибок старта/остановки: ${evidence.telemetry.startFailures}/${evidence.telemetry.stopFailures}`,
@@ -787,6 +791,7 @@ function formatGoalAuditMarkdown(evidence, assessment, minFocusSeconds) {
   const entryPathsCovered =
     evidence.telemetry.typedEntryRequests > 0 &&
     evidence.telemetry.selectedEntryRequests > 0 &&
+    evidence.telemetry.dispatchRitualEntryRequests > 0 &&
     evidence.telemetry.stopRequests > 0;
   const workItemTimeReviewEvidence = evidence.telemetry.workItemTimeBadgeReviews > 0
     ? formatCount(evidence.telemetry.workItemTimeBadgeReviews, "проверка времени по карточкам", "проверки времени по карточкам", "проверок времени по карточкам")
@@ -836,6 +841,7 @@ function formatGoalAuditMarkdown(evidence, assessment, minFocusSeconds) {
   const entryPathEvidence = [
     formatCount(evidence.telemetry.typedEntryRequests, "старт вводом", "старта вводом", "стартов вводом"),
     formatCount(evidence.telemetry.selectedEntryRequests, "старт из списка", "старта из списка", "стартов из списка"),
+    formatCount(evidence.telemetry.dispatchRitualEntryRequests, "старт через диспетчеризацию", "старта через диспетчеризацию", "стартов через диспетчеризацию"),
     formatCount(evidence.telemetry.stopRequests, "остановка", "остановки", "остановок"),
     entryPathReviewEvidence,
   ].join("; ");
@@ -1166,6 +1172,7 @@ function summarizeEvents(events) {
     stopRequests: count("focus_stop_requested"),
     typedEntryRequests: countEntryRequestsByControls(events, ["typed"]),
     selectedEntryRequests: countEntryRequestsByControls(events, ["selected_item", "selected_shortcut", "double_click"]),
+    dispatchRitualEntryRequests: countEntryRequestsByControls(events, ["dispatch_ritual"]),
     copyFailures: count("report_copy_failed"),
     manualCopyFallbacks: count("manual_copy_fallback_shown"),
     startFailures: count("focus_start_failed"),

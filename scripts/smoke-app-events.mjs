@@ -22,6 +22,7 @@ try {
       ('e2', '2026-06-30T06:00:00Z', 'ui', 'window_show_requested', NULL, NULL, '{"control":"tray_click"}'),
       ('e3', '2026-06-30T06:00:05Z', 'ui', 'window_hide_requested', NULL, NULL, '{"control":"global_shortcut"}'),
       ('e4', '2026-06-30T06:00:10Z', 'ui', 'focus_start_requested', 'w1', NULL, '{"action_id":"a1","control":"typed"}'),
+      ('e4_dispatch', '2026-06-30T06:00:15Z', 'ui', 'focus_start_requested', 'w1', NULL, '{"action_id":"a_dispatch","control":"dispatch_ritual"}'),
       ('e5', '2026-06-30T06:00:11Z', 'ui', 'focus_started', 'w1', 's1', '{"action_id":"a1","already_active":false}'),
       ('e6', '2026-06-30T06:20:00Z', 'ui', 'focus_stop_requested', 'w1', 's1', '{"action_id":"a2"}'),
       ('e7', '2026-06-30T06:20:01Z', 'ui', 'focus_stopped', 'w1', 's1', '{"action_id":"a2"}'),
@@ -57,9 +58,9 @@ try {
     { cwd: repoRoot }
   );
   assert(metricsStdout.includes("## Телеметрия приложения"), "metrics did not include localized telemetry header");
-  assert(metricsStdout.includes("Всего событий: 31"), "metrics did not count events");
-  assert(metricsStdout.includes("Запросов старта: 1"), "metrics did not count start requests");
-  assert(metricsStdout.includes("Входов вводом/из списка: 1/0"), "metrics did not count entry request controls");
+  assert(metricsStdout.includes("Всего событий: 32"), "metrics did not count events");
+  assert(metricsStdout.includes("Запросов старта: 2"), "metrics did not count start requests");
+  assert(metricsStdout.includes("Входов вводом/из списка/через диспетчеризацию: 1/0/1"), "metrics did not count entry request controls");
   assert(metricsStdout.includes("Ручных копирований вместо буфера: 1"), "metrics did not count manual copy fallbacks");
   assert(metricsStdout.includes("Запросов показать/скрыть окно: 1/1"), "metrics did not count window requests");
   assert(metricsStdout.includes("Отвлечений создано/закрыто/превращено: 1/1/0"), "metrics did not count capture outcomes");
@@ -94,10 +95,11 @@ try {
     { cwd: repoRoot }
   );
   assert(exportStdout.includes("# События приложения Timeskein"), "event export did not include localized title");
-  assert(exportStdout.includes("Всего событий: 31"), "event export did not include localized count");
+  assert(exportStdout.includes("Всего событий: 32"), "event export did not include localized count");
   assert(exportStdout.includes("| Время | Источник | Тип | Дело | Фокус-блок | Тех. payload |"), "event export did not include localized table header");
   assert(!exportStdout.includes("# Timeskein app events"), "event export leaked old English title");
   assert(exportStdout.includes("focus_start_requested"), "event export did not include start request");
+  assert(exportStdout.includes("dispatch_ritual"), "event export did not include dispatch entry request");
   assert(exportStdout.includes("window_show_requested"), "event export did not include window request");
   assert(exportStdout.includes("capture_created"), "event export did not include capture event");
   assert(exportStdout.includes("capture_followup_reviewed"), "event export did not include capture follow-up review");

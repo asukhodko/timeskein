@@ -432,7 +432,11 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
 
   const saveDispatchOnly = async () => {
     try {
-      await saveDispatchEvent()
+      const eventSaved = await saveDispatchEvent()
+      if (eventSaved) {
+        clearDispatchRitualDraft(dispatchDraftKey)
+        setDispatchDraft(EMPTY_DISPATCH_RITUAL_DRAFT)
+      }
     } catch {
       // The mutation error is shown by the shared error block.
     }
@@ -1712,6 +1716,7 @@ export function formatTelemetryForReport(markdown: string) {
     .replace(/^Start requests:/gm, 'Запросов старта:')
     .replace(/^Switch requests:/gm, 'Запросов переключения:')
     .replace(/^Stop requests:/gm, 'Запросов остановки:')
+    .replace(/^Typed\/selected\/dispatch entry requests:/gm, 'Входов вводом/из списка/через диспетчеризацию:')
     .replace(/^Typed\/selected entry requests:/gm, 'Входов вводом/из списка:')
     .replace(/^Start\/stop failures:/gm, 'Ошибок старта/остановки:')
     .replace(/^Window shown\/hidden:/gm, 'Окно показано/скрыто:')
@@ -2067,13 +2072,14 @@ function buildDayReviewItems({
     if (
       appTelemetry.typed_entry_requests === 0 ||
       appTelemetry.selected_entry_requests === 0 ||
+      appTelemetry.dispatch_ritual_entry_requests === 0 ||
       appTelemetry.stop_requests === 0
     ) {
       if (!entryPathsReviewed) {
         items.push({
       level: 'review',
       title: 'Exercise start and continue paths',
-      detail: `${appTelemetry.typed_entry_requests} вводом, ${appTelemetry.selected_entry_requests} из списка, ${appTelemetry.stop_requests} остановок`,
+      detail: `${appTelemetry.typed_entry_requests} вводом, ${appTelemetry.selected_entry_requests} из списка, ${appTelemetry.dispatch_ritual_entry_requests} через диспетчеризацию, ${appTelemetry.stop_requests} остановок`,
       action: 'accept_entry_paths',
     })
       }
@@ -2855,7 +2861,9 @@ function formatDailyControlGoalAuditMarkdown({
   const apiErrors = parseLeadingNumber(extractLineValue(appTelemetryMarkdown, 'API errors'))
   const copyFailures = parseLeadingNumber(extractLineValue(appTelemetryMarkdown, 'Copy failures'))
   const startStopFailures = extractLineValue(appTelemetryMarkdown, 'Start/stop failures') ?? 'n/a'
-  const entryPathEvidence = extractLineValue(appTelemetryMarkdown, 'Typed/selected entry requests') ?? 'n/a'
+  const entryPathEvidence = extractLineValue(appTelemetryMarkdown, 'Typed/selected/dispatch entry requests')
+    ?? extractLineValue(appTelemetryMarkdown, 'Typed/selected entry requests')
+    ?? 'n/a'
   const entryTelemetry = parseEntryTelemetryMarkdown(appTelemetryMarkdown)
   const captureFollowupReviews = parseLeadingNumber(extractLineValue(appTelemetryMarkdown, 'Capture follow-up reviews'))
   const dayContextReviews = parseLeadingNumber(extractLineValue(appTelemetryMarkdown, 'Day context reviews'))
@@ -2871,6 +2879,7 @@ function formatDailyControlGoalAuditMarkdown({
     entryTelemetry &&
     entryTelemetry.typedEntryRequests > 0 &&
     entryTelemetry.selectedEntryRequests > 0 &&
+    entryTelemetry.dispatchRitualEntryRequests > 0 &&
     entryTelemetry.stopRequests > 0
   const windowRequestPair = parseCountPair(windowRequestEvidence)
   const windowRequestsCovered = Boolean(windowRequestPair && windowRequestPair.left > 0 && windowRequestPair.right > 0)
@@ -2921,6 +2930,7 @@ function formatDailyControlGoalAuditMarkdown({
     ? [
         formatCount(entryTelemetry.typedEntryRequests, 'старт вводом', 'старта вводом', 'стартов вводом'),
         formatCount(entryTelemetry.selectedEntryRequests, 'старт из списка', 'старта из списка', 'стартов из списка'),
+        formatCount(entryTelemetry.dispatchRitualEntryRequests, 'старт через диспетчеризацию', 'старта через диспетчеризацию', 'стартов через диспетчеризацию'),
         formatCount(entryTelemetry.stopRequests, 'остановка', 'остановки', 'остановок'),
         entryPathReviewEvidence,
       ].join('; ')
@@ -3054,13 +3064,15 @@ function parseLeadingNumber(value?: string) {
 }
 
 function parseEntryTelemetryMarkdown(markdown: string) {
-  const entryMatch = markdown.match(/Typed\/selected entry requests:\s*(\d+)\/(\d+)/)
+  const entryMatch = markdown.match(/Typed\/selected\/dispatch entry requests:\s*(\d+)\/(\d+)\/(\d+)/)
+    ?? markdown.match(/Typed\/selected entry requests:\s*(\d+)\/(\d+)/)
   const stopMatch = markdown.match(/Stop requests:\s*(\d+)/)
   if (!entryMatch || !stopMatch) return undefined
 
   return {
     typedEntryRequests: Number(entryMatch[1]),
     selectedEntryRequests: Number(entryMatch[2]),
+    dispatchRitualEntryRequests: entryMatch[3] == null ? 0 : Number(entryMatch[3]),
     stopRequests: Number(stopMatch[1]),
   }
 }
@@ -3654,7 +3666,7 @@ function formatAppTelemetryMarkdown(summary: AppEventSummary) {
     `Start requests: ${summary.start_requests}`,
     `Switch requests: ${summary.switch_requests}`,
     `Stop requests: ${summary.stop_requests}`,
-    `Typed/selected entry requests: ${summary.typed_entry_requests}/${summary.selected_entry_requests}`,
+    `Typed/selected/dispatch entry requests: ${summary.typed_entry_requests}/${summary.selected_entry_requests}/${summary.dispatch_ritual_entry_requests}`,
     `Start/stop failures: ${summary.start_failures}/${summary.stop_failures}`,
     `Window shown/hidden: ${summary.window_shown}/${summary.window_hidden}`,
     `Window show/hide requests: ${summary.window_show_requested}/${summary.window_hide_requested}`,

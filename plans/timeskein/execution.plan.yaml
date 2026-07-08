@@ -270,11 +270,11 @@ execution:
       confidence: 0.9
       note: "Passed on 2026-07-08 with `pnpm dogfood:goal-check -- --date 2026-07-08 --no-codex-guidance`. The command verified saved final evidence, then ran `pnpm test`, `pnpm dogfood:preflight`, and strict RC evidence against the same code. This closed the cheap evening-closure goal."
     ts.in_day_structure:
-      progress: 0.45
+      progress: 0.5
       actual_start: "2026-07-08"
-      updated_at: "2026-07-08T23:25:00+03:00"
+      updated_at: "2026-07-08T23:58:00+03:00"
       confidence: 0.8
-      note: "Now the active product layer. Dogfood days 2026-07-07 and 2026-07-08 showed the next gap: when a focus is selected, work can feel available, but after a break or completed block the user has to rebuild control from scattered open loops. Coordination is real work, recovery needs explicit meaning, and `Работа` alone is too narrow for working occupancy. The first slices implemented live Activity Zone totals, report semantics for working occupancy vs executive work, a cheap active-focus journal, interval-based gap classification, and a compact dispatch ritual. Remaining proof is a dogfood day without external Timeskein notes."
+      note: "Now the active product layer. Dogfood days 2026-07-07 and 2026-07-08 showed the next gap: when a focus is selected, work can feel available, but after a break or completed block the user has to rebuild control from scattered open loops. Coordination is real work, recovery needs explicit meaning, and `Работа` alone is too narrow for working occupancy. The first slices implemented live Activity Zone totals, report semantics for working occupancy vs executive work, a cheap active-focus journal, interval-based gap classification, a compact dispatch ritual, and report/RC telemetry evidence for starts through that ritual. Remaining proof is a dogfood day without external Timeskein notes."
     ts.in_day_structure.day_observation_log:
       progress: 0.35
       actual_start: "2026-07-08"
@@ -303,17 +303,17 @@ execution:
       confidence: 0.8
       note: "Implemented first slice. Closed gaps match Day Events by exact displayed interval and show classification labels in Today and Markdown reports: recovery, loss of manageability, idle, or explained. The model intentionally reuses Day Events for now; a dedicated gap table remains a possible period-report refinement."
     ts.in_day_structure.dispatch_mode:
-      progress: 0.45
+      progress: 0.6
       actual_start: "2026-07-08"
-      updated_at: "2026-07-08T23:45:00+03:00"
+      updated_at: "2026-07-08T23:58:00+03:00"
       confidence: 0.75
-      note: "Implemented first UI slice. When no focus is active, `Диспетчеризация` records active set, one first focus, parked work, and why this is important enough now. Saving creates a Coordination Day Event; starting first saves that event and then starts the chosen focus. Dogfood must still prove that this lowers day-entry and post-break friction."
+      note: "Implemented first UI slice plus report evidence. When no focus is active, `Диспетчеризация` records active set, one first focus, parked work, and why this is important enough now. Saving creates a Coordination Day Event; starting first saves that event and then starts the chosen focus. App telemetry, dogfood reports, and RC checks now count dispatch-ritual starts separately from typed and selected/list entries. Dogfood must still prove that this lowers day-entry and post-break friction."
     ts.in_day_structure.entry_protocol:
-      progress: 0.45
+      progress: 0.55
       actual_start: "2026-07-08"
-      updated_at: "2026-07-08T23:45:00+03:00"
+      updated_at: "2026-07-08T23:58:00+03:00"
       confidence: 0.75
-      note: "The protocol is represented by the first dispatch UI slice: active set, first focus, parked work, and why-now. If choosing fails, the current route is to record recovery/lost-control through Day Events or gap classification. Dogfood should decide whether the wording is enough."
+      note: "The protocol is represented by the first dispatch UI slice: active set, first focus, parked work, and why-now. If choosing fails, the current route is to record recovery/lost-control through Day Events or gap classification. The next dogfood day can now prove the protocol through explicit dispatch-ritual entry telemetry. Dogfood should decide whether the wording is enough."
     ts.in_day_structure.work_item_stages:
       progress: 0.0
       updated_at: "2026-07-08T23:45:00+03:00"

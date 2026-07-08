@@ -79,6 +79,7 @@ try {
       ('e1', '2026-06-30T06:00:00Z', 'ui', 'app_started', NULL),
       ('e2', '2026-06-30T06:00:01Z', 'ui', 'focus_start_requested', '{"action_id":"a1","control":"typed"}'),
       ('e3', '2026-06-30T06:00:01Z', 'ui', 'focus_started', '{"action_id":"a1","control":"typed"}'),
+      ('e3_dispatch', '2026-06-30T06:00:02Z', 'ui', 'focus_start_requested', '{"action_id":"a_dispatch","control":"dispatch_ritual"}'),
       ('e4', '2026-06-30T09:00:00Z', 'ui', 'window_shown', '{"control":"shortcut"}'),
       ('e5', '2026-06-30T09:05:00Z', 'ui', 'window_hidden', '{"control":"esc"}'),
       ('e6', '2026-06-30T09:00:00Z', 'ui', 'window_show_requested', '{"control":"tray_click"}'),
@@ -110,8 +111,8 @@ try {
   assert(good.stdout.includes("Событий дня с зоной активности: 1"), "good day zoned Day Events count is missing");
   assert(good.stdout.includes("Событий дня во время активного фокуса: 1"), "good day active-focus Day Events count is missing");
   assert(good.stdout.includes("Событий дел: 1"), "good day item events count is missing");
-  assert(good.stdout.includes("Запросов старт/переключение/остановка: 2/0/1"), "good day entry request count is missing");
-  assert(good.stdout.includes("Входов вводом/из списка: 1/1"), "good day entry control count is missing");
+  assert(good.stdout.includes("Запросов старт/переключение/остановка: 3/0/1"), "good day entry request count is missing");
+  assert(good.stdout.includes("Входов вводом/из списка/через диспетчеризацию: 1/1/1"), "good day entry control count is missing");
   assert(good.stdout.includes("Коррекций запрошено/применено/проверено/ошибок: 1/1/0/0"), "good day correction telemetry is missing");
   assert(good.stdout.includes("Закрытий дня начато/завершено: 1/1"), "good day closure telemetry is missing");
   assert(good.stdout.includes("Последняя длительность закрытия дня: 7:00"), "good day closure duration is missing");

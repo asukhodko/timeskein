@@ -448,6 +448,7 @@ export class MockDataStore {
       stop_requests: count("focus_stop_requested"),
       typed_entry_requests: this.countEntryRequestsByControls(events, ["typed"]),
       selected_entry_requests: this.countEntryRequestsByControls(events, ["selected_item", "selected_shortcut", "double_click"]),
+      dispatch_ritual_entry_requests: this.countEntryRequestsByControls(events, ["dispatch_ritual"]),
       start_failures: count("focus_start_failed"),
       stop_failures: count("focus_stop_failed"),
       correction_requests: count("focus_correction_requested"),

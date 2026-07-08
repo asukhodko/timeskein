@@ -81,7 +81,7 @@ flowchart LR
     class dogfood_hardening exec_done
     daily_control_gate["Daily<br/>Control Gate<br/>100%<br/>веха 2026-07-08"]
     class daily_control_gate exec_done
-    in_day_structure["In-day<br/>Structure<br/>55%<br/>веха 2026-07-13"]
+    in_day_structure["In-day<br/>Structure<br/>60%<br/>веха 2026-07-13"]
     class in_day_structure exec_mgmt_yellow
     style in_day_structure stroke:#111827,stroke-width:3px
     periodic_reflection["Periodic<br/>Reflection<br/>~0%"]
@@ -177,10 +177,10 @@ gantt
 /usr/bin/env PYTHONPATH=../../tools/opskarta python3 -m specs.v3.tools.cli render list ../../plans/timeskein/main.plan.yaml ../../plans/timeskein/nodes.plan.yaml ../../plans/timeskein/schedule.plan.yaml ../../plans/timeskein/execution.plan.yaml ../../plans/timeskein/views.plan.yaml --view current
 -->
 <!-- GENERATED:START -->
-- In-day structure and self-coordination [in_progress] (20 focus-blocks) {55%}
+- In-day structure and self-coordination [in_progress] (20 focus-blocks) {58%}
 - Keep dogfood day observations inside Timeskein [in_progress] (2 focus-blocks) {35%}
-- Support day entry and dispatching mode [in_progress] (3 focus-blocks) {45%}
-- Define the day-entry and post-break protocol [in_progress] (2 focus-blocks) {45%}
+- Support day entry and dispatching mode [in_progress] (3 focus-blocks) {60%}
+- Define the day-entry and post-break protocol [in_progress] (2 focus-blocks) {55%}
 - In-day structure dogfood gate [planned]
 <!-- GENERATED:END -->
 

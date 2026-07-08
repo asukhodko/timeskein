@@ -207,6 +207,7 @@ fn build_summary(events: Vec<AppEvent>) -> serde_json::Value {
         "stop_requests": count(&by_kind, "focus_stop_requested"),
         "typed_entry_requests": count_entry_requests_by_controls(&events, &["typed"]),
         "selected_entry_requests": count_entry_requests_by_controls(&events, &["selected_item", "selected_shortcut", "double_click"]),
+        "dispatch_ritual_entry_requests": count_entry_requests_by_controls(&events, &["dispatch_ritual"]),
         "start_failures": count(&by_kind, "focus_start_failed"),
         "stop_failures": count(&by_kind, "focus_stop_failed"),
         "correction_requests": count(&by_kind, "focus_correction_requested"),

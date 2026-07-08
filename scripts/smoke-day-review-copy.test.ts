@@ -703,7 +703,7 @@ test('copied report keeps key focus and telemetry sections localized', () => {
     'Start requests: 1',
     'Switch requests: 2',
     'Stop requests: 1',
-    'Typed/selected entry requests: 3/4',
+    'Typed/selected/dispatch entry requests: 3/4/1',
     'Start/stop failures: 0/1',
     'Window shown/hidden: 5/6',
     'Window show/hide requests: 7/8',
@@ -757,7 +757,7 @@ test('copied report keeps key focus and telemetry sections localized', () => {
   assert(localizedTelemetry.includes('## Телеметрия приложения'))
   assert(localizedTelemetry.includes('Всего событий: 3'))
   assert(localizedTelemetry.includes('Запросов переключения: 2'))
-  assert(localizedTelemetry.includes('Входов вводом/из списка: 3/4'))
+  assert(localizedTelemetry.includes('Входов вводом/из списка/через диспетчеризацию: 3/4/1'))
   assert(localizedTelemetry.includes('Ошибок старта/остановки: 0/1'))
   assert(localizedTelemetry.includes('Окно показано/скрыто: 5/6'))
   assert(localizedTelemetry.includes('Запросы показать/скрыть окно: 7/8'))

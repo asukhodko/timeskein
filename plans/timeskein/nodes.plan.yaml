@@ -353,7 +353,7 @@ nodes:
       - id: ts.day_review.export
       - id: ts.day_review.work_item_events
       - id: ts.day_review.day_events
-    notes: Today and dogfood reports show a Review Checklist for active-state blockers, open captures, significant gaps, open gaps, Activity Zone coverage, non-work tracking, capture coverage, Day Events, Work Item context coverage, entry paths, window entrypoints, and focus-correction evidence. Gap items can stage a Day Event through a Write action. Optional Activity Zone, Capture usage, entry path, window-entrypoint, Work Item badge, tracking-accuracy, and open-capture follow-up checks can be explicitly accepted as review telemetry. The checklist is meant to make evening cleanup explicit before copying the final report.
+    notes: Today and dogfood reports show a Review Checklist for active-state blockers, open captures, significant gaps, open gaps, Activity Zone coverage, non-work tracking, capture coverage, Day Events, Work Item context coverage, entry paths, window entrypoints, and focus-correction evidence. Gap items can stage a Day Event through `Объяснить` or quick templates `Управляемость` and `Восстановление`. Missing day/item context can stage a short context note through `Добавить контекст` or be explicitly accepted as `Контекст не нужен` when the report is already understandable. Optional Activity Zone, Capture usage, context coverage, entry path, window-entrypoint, Work Item badge, tracking-accuracy, and open-capture follow-up checks can be explicitly accepted as review telemetry. The checklist is meant to make evening cleanup explicit before copying the final report.
     x:
       ops:
         attention_class: current
@@ -504,7 +504,7 @@ nodes:
     kind: phase
     parent: ts
     status: in_progress
-    notes: The 2026-07-06 post-baseline day produced focus blocks, Activity Zones, Day Events, Work Item Events, Capture Activity, Work Item day/total time evidence, and strong strict evidence. Current strict goal-check still requires a measured evening closure duration from day_closure_started/day_closure_completed.
+    notes: "The 2026-07-06 and 2026-07-07 post-baseline dogfood days produced useful daily-control data: focus blocks, Activity Zones, Day Events, Work Item Events, Capture Activity, Work Item day/total time evidence, and zero API/copy/start-stop failures. Current strict goal-check still requires a final measured evening closure duration from day_closure_started/day_closure_completed."
     x:
       ops:
         attention_class: current
@@ -516,7 +516,7 @@ nodes:
     effort: 1
     deps:
       - id: ts.hardening.dogfood_release
-    notes: Completed on 2026-07-06 with 7:30:36 tracked, 19 entrances, two Activity Zones, Capture Inbox conversion, Day Events, Work Item Events, Work Item notes, typed and selected/list entry paths, and zero API/copy/start-stop failures.
+    notes: Completed on 2026-07-06 with 7:30:36 tracked, 19 entrances, two Activity Zones, Capture Inbox conversion, Day Events, Work Item Events, Work Item notes, typed and selected/list entry paths, and zero API/copy/start-stop failures. A follow-up 2026-07-07 day added stronger evidence for zones, Day Events, Work Item Events, and the real problem of restoring manageability after a break, but still did not produce a final measured closure.
     x:
       ops:
         attention_class: current
@@ -526,19 +526,137 @@ nodes:
     parent: ts.daily_control
     status: in_progress
     milestone: true
+    effort: 1
     deps:
       - id: ts.daily_control.real_day
-    notes: "`pnpm dogfood:finish:save -- --date 2026-07-06` saved the report and RC evidence. Current `pnpm dogfood:goal-check -- --date 2026-07-06 --no-codex-guidance` fails correctly because the day has no measured closure duration: 0/0 day_closure_started/day_closure_completed. The next real dogfood closure must start from `Начать закрытие дня`, finish with final `Копировать отчёт` in 10 minutes or less, and not need Codex to explain the next closure step."
+    notes: "Saved evidence for 2026-07-06 and 2026-07-07 is intentionally not enough yet. The 2026-07-07 saved report is still a draft: one large gap needs explanation, three safe review checks can be consciously accepted together with `Всё проверено`, and there is still no completed measured closure. The next real dogfood closure must start from `Начать закрытие дня`, finish with final `Копировать отчёт` in 10 minutes or less, and not need Codex to explain the next closure step."
     x:
       ops:
         attention_class: current
+
+  ts.in_day_structure:
+    title: In-day structure and self-coordination
+    kind: phase
+    parent: ts
+    status: planned
+    notes: "Turn Timeskein from a timer plus evening report into a day-structuring tool. The 2026-07-07 dogfood day showed that work becomes easier after one focus is selected, while the expensive part is rebuilding manageability after breaks and choosing one legitimate next action without external pressure. The next layer should capture thoughts inside active work, keep the user's Timeskein-day observations inside the app instead of Codex, make Work Item stages visible, show Activity Zone distribution during the day, support the day-entry and post-break dispatching ritual, and distinguish deliberate recovery from loss of control. This layer starts only after the current cheap-closure goal is proven; the calendar dates are provisional follow-up slots, not permission to abandon the active goal."
+    x:
+      ops:
+        attention_class: future
+  ts.in_day_structure.active_work_journal:
+    title: Stream thoughts inside active work
+    kind: task
+    parent: ts.in_day_structure
+    status: planned
+    effort: 3
+    deps:
+      - id: ts.daily_control.goal_check
+    notes: "Add a cheap way to append timestamped thoughts to the active Work Item without leaving focus. The first slice should add an active-focus event input, default to the current Work Item, allow day-level thoughts when the observation is not really about the current Work Item, preserve typed text on API failure, and show events in day and period reports. Event types can be thought, decision, question, next step, milestone, or interruption note. This is the product path for moving the user's Timeskein day notes from Codex/chat into Timeskein itself, including observations about entry cost, recovery, and product friction."
+    x:
+      ops:
+        attention_class: future
+  ts.in_day_structure.day_observation_log:
+    title: Keep dogfood day observations inside Timeskein
+    kind: task
+    parent: ts.in_day_structure
+    status: planned
+    effort: 2
+    deps:
+      - id: ts.in_day_structure.active_work_journal
+      - id: ts.day_review.day_events
+    notes: "Make it unnecessary to maintain a parallel 'Timeskein, day N' note in Codex. The first slice should let the user record product observations, working thoughts, recovery notes, and self-coordination comments either as Work Item Events or Day Events, then show them in the evening report. The dogfood protocol should explicitly ask whether any day observations still had to be kept outside Timeskein."
+    x:
+      ops:
+        attention_class: future
+  ts.in_day_structure.work_item_stages:
+    title: Track stages inside a Work Item
+    kind: task
+    parent: ts.in_day_structure
+    status: planned
+    effort: 5
+    deps:
+      - id: ts.in_day_structure.active_work_journal
+    notes: "Allow a Work Item such as '1x1 + preparation + post-analysis' to have explicit stages. Focus blocks should optionally attach to a stage, reports should show time by stage, and stage changes should not require splitting the Work Item into fake separate tasks."
+    x:
+      ops:
+        attention_class: future
+  ts.in_day_structure.zone_dashboard:
+    title: Show Activity Zone totals during the day
+    kind: task
+    parent: ts.in_day_structure
+    status: planned
+    effort: 2
+    deps:
+      - id: ts.daily_control.goal_check
+    notes: "Show today's Work / Coordination / Recovery / Idle / Personal totals in the live UI, not only in copied reports. The goal is quick calibration: whether the day is going into focused work, coordination, personal checks, recovery, or idle drift. The 2026-07-07 dogfood day showed that learning to use zones needs feedback during the day, not only at evening export."
+    x:
+      ops:
+        attention_class: future
+  ts.in_day_structure.dispatch_mode:
+    title: Support day entry and dispatching mode
+    kind: task
+    parent: ts.in_day_structure
+    status: planned
+    effort: 3
+    deps:
+      - id: ts.in_day_structure.day_observation_log
+      - id: ts.in_day_structure.active_work_journal
+      - id: ts.in_day_structure.zone_dashboard
+    notes: "Treat 'Вход в день' and post-break reorientation as real coordination work. Provide a bounded ritual: collect incoming signals, name candidate work, choose one 'good enough' next focus, state why it is important enough now, and start it. The product goal is to reduce the expensive jump from many open loops to one legitimate next action, especially when no manager, meeting, or incident is currently supplying external direction."
+    x:
+      ops:
+        attention_class: future
+  ts.in_day_structure.entry_protocol:
+    title: Define the day-entry and post-break protocol
+    kind: task
+    parent: ts.in_day_structure
+    status: planned
+    effort: 2
+    deps:
+      - id: ts.in_day_structure.active_work_journal
+      - id: ts.in_day_structure.zone_dashboard
+    notes: "Turn the observed self-coordination pattern into a small protocol: 15 minutes to collect signals, 5 minutes to choose one good-enough focus, then 25 minutes of protected action. If the choice fails, record the reason as recovery, meeting buffer, loss of manageability, low energy, or obligation conflict. The protocol should support the self-authorization move: 'I choose this for the next 25 minutes because it is important enough now.' The goal is to train internal direction without relying on a manager, meeting, incident, or chat request to supply priority from outside. This protocol is the acceptance lens for dispatch mode rather than a heavy planner."
+    x:
+      ops:
+        attention_class: future
+  ts.in_day_structure.gap_recovery_classification:
+    title: Classify gaps as recovery or lost control
+    kind: task
+    parent: ts.in_day_structure
+    status: planned
+    effort: 3
+    deps:
+      - id: ts.day_review.day_events
+      - id: ts.daily_control.goal_check
+    notes: "Extend gap explanation so a long break can be marked as deliberate recovery, meeting buffer, food/rest, external interruption, or loss of manageability. Reports should separate 'recovery that lowered the next entry cost' from untracked drift where the system failed to reassemble a controllable next action."
+    x:
+      ops:
+        attention_class: future
+  ts.in_day_structure.dogfood_gate:
+    title: In-day structure dogfood gate
+    kind: milestone
+    parent: ts.in_day_structure
+    status: planned
+    milestone: true
+    deps:
+      - id: ts.in_day_structure.active_work_journal
+      - id: ts.in_day_structure.day_observation_log
+      - id: ts.in_day_structure.work_item_stages
+      - id: ts.in_day_structure.zone_dashboard
+      - id: ts.in_day_structure.dispatch_mode
+      - id: ts.in_day_structure.entry_protocol
+      - id: ts.in_day_structure.gap_recovery_classification
+    notes: One real workday should prove that Timeskein can hold the user's thoughts, dogfood-day observations, stages, zone distribution, dispatching choices, and gap explanations without needing a parallel Codex note for "Timeskein, day N" observations.
+    x:
+      ops:
+        attention_class: future
 
   ts.periodic_reflection:
     title: Periodic reflection and meaning reports
     kind: phase
     parent: ts
     status: planned
-    notes: "Build arbitrary-period reports that answer what the user got from the period: real focus, active tracks, noise, recovery, open loops, and performance-review evidence. Keep the first slice outcome-first and based on existing manual data before adding automated context collection."
+    notes: "Build arbitrary-period reports that answer what the user got from the period: real focus, active tracks, noise, recovery, open loops, and performance-review evidence. Reports must support arbitrary date ranges such as week, sprint, month, quarter, and year; later slices should filter by Activity Zone, Track, parent Track/project, Labels, and report profile. Keep the first slice outcome-first and based on existing manual data before adding automated context collection. The in-day structure layer should feed these reports with better thoughts, stages, zones, dispatch decisions, and recovery/lost-control classifications."
     x:
       ops:
         attention_class: future
@@ -549,8 +667,8 @@ nodes:
     status: planned
     effort: 3
     deps:
-      - id: ts.daily_control.goal_check
-    notes: CLI-first report.period / pnpm report:period over a date range, with Markdown and JSON, totals by day, Work Item, Activity Zone, gaps, captures, Day Events, Work Item Events, data-quality warnings, and focus-tuning questions.
+      - id: ts.in_day_structure.dogfood_gate
+    notes: "CLI-first report.period / pnpm report:period over a date range, with Markdown and JSON, totals by day, Work Item, Activity Zone, gaps, captures, Day Events, Work Item Events, data-quality warnings, and focus-tuning questions. The first version may work without Tracks/Labels; it should still make the meaning question explicit: which 1-3 focus points deserve protected effort next, which work was necessary reaction, and which work was noise or recovery."
     x:
       ops:
         attention_class: future
@@ -700,7 +818,7 @@ nodes:
     parent: ts.future
     status: deferred
     effort: 8
-    notes: Explore only after the manual timer and post-factum correction loop is reliable. Future sources include active apps, browser tabs and URLs, messenger channels/chats, screenshots or screen chunks, and AI-assisted interpretation of activity, all behind explicit opt-in privacy controls.
+    notes: Explore only after the manual timer, day closure, in-day structure, and period-report loop are reliable. Future sources include active apps, browser tabs and URLs, messenger channels/chats, screenshots or screen chunks, and AI-assisted interpretation of activity, all behind explicit opt-in privacy controls. This is recorded as a future evidence layer, not as the next product goal.
     x:
       ops:
         attention_class: future

@@ -25,6 +25,8 @@ try {
   assert(ready.stdout.includes("Режим: старт"), "ready output did not report localized start mode");
   assert(ready.stdout.includes("Агент отвечает: нет"), "ready output did not report localized agent responsiveness");
   assert(ready.stdout.includes("Процессы приложения:"), "ready output did not report localized running app status");
+  assert(ready.stdout.includes("## Что мешает"), "ready output did not use the calm blockers heading");
+  assert(!ready.stdout.includes("## Блокеры"), "ready output should not use the old blockers heading");
   assert(ready.stdout.includes("## Что сделать дальше"), "ready output did not include localized next section");
   assert(ready.stdout.includes("pnpm dogfood:start"), "ready output did not include start command");
   assert(
@@ -32,6 +34,12 @@ try {
     "ready output did not include clean-start preview command"
   );
   assert(ready.stdout.includes("## Памятка закрытия дня"), "ready output did not include day-closure checklist");
+  const checklist = extractSection(ready.stdout, "## Памятка закрытия дня");
+  const checklistBullets = checklist.split("\n").filter((line) => line.startsWith("- "));
+  assert(
+    checklistBullets.length <= 12,
+    `day-closure checklist should stay compact, got ${checklistBullets.length} bullets`
+  );
   assert(
     ready.stdout.includes("Проверь входы в окно"),
     "ready output did not include window entrypoint reminder"
@@ -52,8 +60,16 @@ try {
     "ready output did not include measured day-closure reminder"
   );
   assert(
-    ready.stdout.includes("заполни только `Короткое закрытие`") &&
-      ready.stdout.includes("строку про 10 минут Timeskein заполнит сам"),
+    ready.stdout.includes("Если буфер обмена не примет отчёт") &&
+      ready.stdout.includes("выделенный Markdown") &&
+      ready.stdout.includes("Command+C"),
+    "ready output did not explain manual copy fallback before evening closure"
+  );
+  assert(
+    ready.stdout.includes("`Короткое закрытие` уже содержит статус") &&
+      ready.stdout.includes("главное наблюдение и следующий шаг заполняй только если это правда полезно") &&
+      ready.stdout.includes("доверие к данным") &&
+      ready.stdout.includes("строку про 10 минут"),
     "ready output did not keep short closure lightweight"
   );
   assert(
@@ -68,6 +84,12 @@ try {
     "ready output did not explain pending audit finish flow"
   );
   assert(
+    ready.stdout.includes("если пропущен интервал, нажми `Добавить блок`") &&
+      ready.stdout.includes("если таймлайн честный, нажми `Трекинг верен`") &&
+      !ready.stdout.includes("поправь одну безопасную деталь трекинга"),
+    "ready output did not explain the direct tracking correction/review paths"
+  );
+  assert(
     ready.stdout.includes("pnpm dogfood:goal-check -- --date YYYY-MM-DD --no-codex-guidance") &&
       ready.stdout.includes("Короткое закрытие: Закрытие уложилось в 10 минут: да") &&
       ready.stdout.includes("напечатанному следующему шагу"),
@@ -80,6 +102,25 @@ try {
     "ready output did not explain the soft goal-check status route"
   );
   assert(!ready.stdout.includes("pnpm dogfood:macos"), "ready output still suggests bypassing dogfood gates");
+
+  const emptyContinue = await runReady(["--mode", "continue"]);
+  assert(emptyContinue.code === 0, "continue mode should allow an empty fresh day");
+  assert(
+    emptyContinue.stdout.includes("Режим: продолжение"),
+    "empty continue output did not report localized continue mode"
+  );
+  assert(
+    emptyContinue.stdout.includes("Сегодня ещё нет фокус-блоков: открой Timeskein и начни первый фокус"),
+    "empty continue output did not give a first-focus next action"
+  );
+  assert(
+    !emptyContinue.stdout.includes("Продолжай текущий день в Timeskein"),
+    "empty continue output should not say that the day is already in progress"
+  );
+  assert(
+    emptyContinue.stdout.includes("pnpm dogfood:continue"),
+    "empty continue output did not include guarded continue command"
+  );
 
   const dummyApp = spawnDummyTimeskein();
   try {
@@ -115,6 +156,8 @@ try {
   const dirty = await runReady();
   assert(dirty.code !== 0, "dirty database should not be ready");
   assert(dirty.stdout.includes("Статус: НЕ ГОТОВО"), "dirty output did not report localized NOT READY");
+  assert(dirty.stdout.includes("## Что мешает"), "dirty output did not use the calm blockers heading");
+  assert(!dirty.stdout.includes("## Блокеры"), "dirty output should not use the old blockers heading");
   assert(dirty.stdout.includes("Активная фокус-сессия"), "dirty output did not mention localized active focus");
   assert(dirty.stdout.includes("Активное дело"), "dirty output did not mention localized active item");
   assert(dirty.stdout.includes("Сегодня уже есть фокус-блоки: 2"), "dirty output did not mention localized today's blocks");
@@ -153,8 +196,7 @@ try {
     !continuing.stdout.includes("Dogfood-день") &&
       !continuing.stdout.includes("dogfood-день") &&
       !continuing.stdout.includes("dogfood-днём") &&
-      !continuing.stdout.includes("AM") &&
-      !continuing.stdout.includes("PM"),
+      !hasAmPmClockTime(continuing.stdout),
     "continue output leaked old dogfood wording or AM/PM time"
   );
   assert(
@@ -281,6 +323,19 @@ function assert(condition, message) {
   if (!condition) {
     throw new Error(message);
   }
+}
+
+function hasAmPmClockTime(text) {
+  return /\b\d{1,2}:\d{2}\s*(AM|PM)\b/i.test(text);
+}
+
+function extractSection(text, heading) {
+  const start = text.indexOf(heading);
+  if (start === -1) return "";
+
+  const rest = text.slice(start + heading.length);
+  const nextHeading = rest.search(/\n## /);
+  return nextHeading === -1 ? rest : rest.slice(0, nextHeading);
 }
 
 function startOfLocalDay(date) {

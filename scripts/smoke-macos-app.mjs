@@ -159,6 +159,25 @@ try {
     },
   });
   const appEventSummary = await rpc(port, "app_event.summary", todayWindow());
+  const closureActionId = "packaged-closure-smoke";
+  await rpc(port, "app_event.log", {
+    source: "script",
+    kind: "day_closure_started",
+    payload: {
+      action_id: closureActionId,
+      control: "packaged_smoke",
+    },
+  });
+  const openClosureSummary = await rpc(port, "app_event.summary", todayWindow());
+  await rpc(port, "app_event.log", {
+    source: "script",
+    kind: "day_closure_completed",
+    payload: {
+      action_id: closureActionId,
+      control: "packaged_smoke",
+    },
+  });
+  const closedClosureSummary = await rpc(port, "app_event.summary", todayWindow());
 
   assert(status.db_ok === true, "agent.status did not report db_ok=true");
   assert(typeof status.storage_path === "string", "agent.status did not return storage_path");
@@ -192,6 +211,22 @@ try {
   assert(appEventSummary.by_kind.focus_started >= 1, "app_event.summary did not count focus_started");
   assert(appEventSummary.by_kind.focus_stopped >= 1, "app_event.summary did not count focus_stopped");
   assert(appEventSummary.by_kind.capture_created >= 1, "app_event.summary did not count capture_created");
+  assert(
+    openClosureSummary.open_day_closure_action_id === closureActionId,
+    "app_event.summary did not expose the open day closure action"
+  );
+  assert(
+    typeof openClosureSummary.open_day_closure_started_at === "string",
+    "app_event.summary did not expose the open day closure start"
+  );
+  assert(
+    !closedClosureSummary.open_day_closure_action_id,
+    "app_event.summary kept an open day closure after completion"
+  );
+  assert(
+    closedClosureSummary.last_day_closure_duration_seconds != null,
+    "app_event.summary did not calculate the completed day closure duration"
+  );
   assertSessionsOldestFirst(day.sessions);
 
   const historicalStop = new Date();

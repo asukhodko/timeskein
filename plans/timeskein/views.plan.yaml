@@ -52,12 +52,17 @@ views:
         nodes:
           - ts.daily_control
         expand_descendants: leaves
+      in-day-structure:
+        title: In-day structure
+        nodes:
+          - ts.in_day_structure
+        expand_descendants: leaves
 
 x:
   exec:
     program:
       committed_date: "2026-06-30"
-      note: The Session replacement baseline is accepted; the next useful product slice is proving the daily-control loop on one real day.
+      note: The Session replacement baseline is accepted; the current proof is cheap evening closure, followed by in-day structure before broad period reports.
     defaults:
       weight_strategy: effort_effective
       status_progress:
@@ -126,10 +131,20 @@ x:
         scope_nodes:
           - ts.daily_control
         target_gate: ts.daily_control.goal_check
+        progress_override: 0.91
         mgmt:
           health: yellow
           owner: a.sukhodko
-          next_sync_goal: Run one measured evening closure from the review panel, copy a final report in <=10 minutes, save evidence, and pass strict dogfood:goal-check with --no-codex-guidance.
+          next_sync_goal: Run one measured evening closure from the review panel, copy a final report in <=10 minutes, save evidence, and pass strict dogfood:goal-check with --no-codex-guidance. The useful 2026-07-07 draft day is not enough because closure remained unfinished.
+      in-day-structure:
+        title: In-day Structure
+        scope_nodes:
+          - ts.in_day_structure
+        target_gate: ts.in_day_structure.dogfood_gate
+        mgmt:
+          health: neutral
+          owner: a.sukhodko
+          sync_note: "Next near-term product layer after the closure goal, with provisional dates only: keep active-work thoughts, product observations, stages, live zone balance, day-entry/post-break dispatch decisions, and recovery/lost-control gap labels inside Timeskein instead of a parallel Codex note."
       periodic-reflection:
         title: Periodic Reflection
         scope_nodes:
@@ -137,7 +152,7 @@ x:
         mgmt:
           health: neutral
           owner: a.sukhodko
-          sync_note: "Next meaning layer after the daily-control loop: arbitrary-period reports, focus tuning, Track/Label slices, operational reality, and performance-review evidence. First slice should use existing manual data before adding automated context collection."
+          sync_note: "Next broad meaning layer after in-day structure: arbitrary-period reports for week/sprint/month/quarter/year, focus tuning, Track/Label slices, operational reality, and performance-review evidence. The first slice should use existing manual data enriched by thoughts, stages, zones, dispatch decisions, and recovery/lost-control gap labels, then answer which 1-3 focus points deserve protected effort before adding automated context collection."
       future-directions:
         title: Future directions
         scope_nodes:
@@ -166,6 +181,9 @@ x:
         to: daily-control-gate
         type: required
       - from: daily-control-gate
+        to: in-day-structure
+        type: required
+      - from: in-day-structure
         to: periodic-reflection
         type: required
       - from: periodic-reflection
@@ -182,6 +200,7 @@ x:
           - capture-inbox
           - dogfood-hardening
           - daily-control-gate
+          - in-day-structure
           - periodic-reflection
           - future-directions
         direction: LR
@@ -200,6 +219,7 @@ x:
           - capture-inbox
           - dogfood-hardening
           - daily-control-gate
+          - in-day-structure
         direction: TD
         color_mode: mgmt_hybrid
         highlight_current: true

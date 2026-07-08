@@ -22,7 +22,7 @@ A desktop application for quickly tracking focus sessions and work items with re
 
 **What works now:** Focus Session tracking, Capture Inbox, and Work Item inventory in browser mock mode and in the macOS `.app` with an embedded Rust agent.
 
-**Current focus:** The post-baseline daily-control check passed on 2026-07-06 after a full real workday: 7:30:36 tracked, 19 entrances, Activity Zones, Day/Work Item Events, Capture Inbox conversion, Work Item time evidence, and a green `pnpm dogfood:goal-check`. The active goal now is narrower: prove that evening closure is cheap enough. The next real Timeskein day must start closure from the review panel, copy the final report, and show `Day closure duration measured` at 10 minutes or less without Codex explaining the next action. Windows packaging is deferred.
+**Current focus:** The 2026-07-06 and 2026-07-07 post-baseline days produced useful daily-control evidence after real workdays: focus blocks, Activity Zones, Day/Work Item Events, Capture Inbox conversion, Work Item time evidence, and zero API/copy/start-stop failures. The strict goal check is still intentionally not complete because saved evidence has no final measured evening closure. The next real Timeskein day must start closure from the review panel, copy the final report, show `Длительность закрытия измерена` at 10 minutes or less, and not require Codex to explain the next action. Windows packaging is deferred.
 
 See [Current Implementation](docs/current-implementation.md) for the exact state of what runs today.
 Use [Dogfood Day Protocol](docs/dogfood-day.md) when testing Timeskein as a Session replacement for a real workday.
@@ -31,7 +31,9 @@ See [Dogfood Release Baseline](docs/dogfood-release-baseline.md) for the accepte
 
 The current execution roadmap is maintained as an opskarta v3 plan set:
 [Timeskein opskarta roadmap](docs/roadmap/opskarta.md).
-The next meaning layer is described in
+The next near-term product layer after the closure goal is described in
+[In-Day Structure Roadmap](docs/roadmap/0004-in-day-structure-roadmap.md).
+The broader meaning layer is described in
 [Periodic Reflection Roadmap](docs/roadmap/0003-periodic-reflection-roadmap.md)
 and [RFC-0008](docs/rfc/0008-periodic-reports-and-reflection.md).
 
@@ -101,7 +103,7 @@ pnpm dogfood:start
 
 The start check first reads the real local SQLite database for active sessions, active Work Items, duplicate titles, and existing blocks for today. If the real day is clean, it checks that no old `timeskein-desktop` process is running, runs the dogfood preflight, opens `Timeskein.app`, and waits for the embedded agent to respond.
 It refuses to open the app if `timeskein-desktop` is already running, so the Timeskein day does not accidentally reuse an older process after a rebuild.
-When readiness is clean, `dogfood:ready` also prints the next start command and the daily-control checklist for the next Timeskein day: window entrypoints, new and existing Work Item starts, Work Item day/total time visibility with explicit review acceptance, Activity Zones, Day Events, Work Item Events, Capture Inbox, tracking correction/review, measured evening closure, filling only the short closure notes, following the UI `Ближайшее действие` until final `Копировать отчёт`, avoiding Codex as closure navigation, using `dogfood:goal-check:status` only for calm readiness inspection, and treating the terminal `Короткое закрытие ... да (...)` plus the exact strict `dogfood:goal-check -- --date YYYY-MM-DD --no-codex-guidance` command as the proof path.
+When readiness is clean, `dogfood:ready` also prints the next start command and the daily-control checklist for the next Timeskein day: window entrypoints, new and existing Work Item starts, Work Item day/total time visibility with explicit review acceptance, Activity Zones, Day Events, Work Item Events, Capture Inbox, tracking correction/review, measured evening closure, treating the short closure notes as optional, following the UI `Ближайшее действие` until final `Копировать отчёт`, using the selected-Markdown `Command+C` fallback if clipboard copy is refused, avoiding Codex as closure navigation, using `dogfood:goal-check:status` only for calm readiness inspection, and treating the terminal `Статус закрытия: завершено`, `Короткое закрытие ... да (...)`, plus the exact strict `dogfood:goal-check -- --date YYYY-MM-DD --no-codex-guidance` command as the proof path.
 
 If Timeskein was quit during an already started day, reopen it through the continue check:
 
@@ -185,20 +187,28 @@ To inspect the closure check without re-saving the day report, rerun the evidenc
 pnpm dogfood:rc-check:save
 ```
 
-The closure check exits with code 1 for red items such as active state, duplicate Work Item titles, or an empty day. Its Russian `Сводка доказательств` includes total tracked time, work focus, non-work tracked time, Activity Zone coverage, Work Item notes/events, accepted review decisions, Capture Inbox coverage, typed entry and selected/list continuation evidence, correction telemetry, measured day-closure duration, window telemetry including both show and hide request evidence, and product-friction counters. It also includes a `Проверка закрытия дня` table that maps the current day to the active daily-control objective. The Work Item totals check row is marked for review when touched-item time was not explicitly accepted from the UI checklist. The Activity Zone, Capture usage, entry path, and window-entrypoint rows can be cleared by real evidence or by explicit accepted review telemetry. The day-closure row is marked for review when closure was not measured or took more than 10 minutes. Copying a draft report, or a report that still has pending review items, can start the closure timer, but it does not complete the measured closure until the report is final and review-clean. The gaps/captures row is marked for review when captures are missing, not linked to active focus, left open without a `capture_followup_reviewed` event, or when significant gaps lack Day Event explanations. Review items still require human judgment against the closure criteria.
-Before marking the daily-control goal complete, run the final check after `pnpm dogfood:finish:save`. For the real local database it first checks that both saved evidence files exist, that the saved report status is final, that the saved report includes `Короткое закрытие` with a positive generated `Закрытие уложилось в 10 минут: да` verdict, that it uses the grouped `Проверка перед отчётом` checklist with `Ближайшее действие`, and that the final command includes the explicit `--no-codex-guidance` confirmation; then it runs `pnpm test`, `pnpm dogfood:preflight`, and the strict closure check on the same code. If the saved evidence is missing or still draft, the command stops early with `Финальная проверка пока не готова`, repeats the saved report next action when available, and avoids a JavaScript stack trace:
+The closure check exits with code 1 for red items such as active state, duplicate Work Item titles, or an empty day. Its Russian `Сводка доказательств` includes total tracked time, work focus, non-work tracked time, Activity Zone coverage, Work Item notes/events, accepted review decisions, Capture Inbox coverage, typed entry and selected/list continuation evidence, correction telemetry, measured day-closure duration, window telemetry including both show and hide request evidence, and product-friction counters. It also includes a `Проверка закрытия дня` table that maps the current day to the active daily-control objective. The Work Item totals check row is marked for review when touched-item time was not explicitly accepted from the UI checklist. The Activity Zone, Capture usage, entry path, and window-entrypoint rows can be cleared by real evidence or by explicit accepted review telemetry. The day-closure row is marked for review when closure was not measured or took more than 10 minutes. The Today report button starts the closure timer, then stays on `Закрыть проверки` until the report is final and review-clean; CLI draft exports remain diagnostic evidence, but they do not complete measured closure. The gaps/captures row is marked for review when captures are missing, not linked to active focus, left open without a `capture_followup_reviewed` event, or when significant gaps lack Day Event explanations. Review items still require human judgment against the closure criteria.
+Before marking the daily-control goal complete, run the final check after `pnpm dogfood:finish:save`. For the real local database it first checks that both saved evidence files exist, that the saved report status is final, that the saved report includes `Короткое закрытие` with `Статус закрытия`, `Данным можно доверять: да`, and `Закрытие уложилось в 10 минут: да`, that it uses the grouped `Проверка перед отчётом` checklist with `Ближайшее действие` and `Сводка`, and that the final command includes the explicit `--no-codex-guidance` confirmation; then it runs `pnpm test`, `pnpm dogfood:preflight`, and the strict closure check on the same code. If the saved evidence is missing or still draft, the command stops early with `Финальная проверка пока не готова`, repeats the saved report next action when available, and avoids a JavaScript stack trace:
 
 ```bash
 pnpm dogfood:goal-check -- --no-codex-guidance
 ```
 
-If you only want to inspect whether the saved evidence is ready, without running the expensive local checks and without turning expected incompleteness into a pnpm failure, use the soft status command:
+If you only want to inspect whether the saved evidence is ready, without running the expensive local checks and without turning expected incompleteness into a pnpm failure, use the soft status command. It keeps the manual route compact: next action, summary, safe bulk-accept hint when available, and a short note instead of the detailed audit-row list:
 
 ```bash
 pnpm dogfood:goal-check:status -- --date YYYY-MM-DD
 ```
 
-When measured closure evidence is present and every `Проверка закрытия дня` row is already `ок`, `pnpm dogfood:finish:save` prints the short closure verdict, reminds that a day with Codex guidance is not proof for the active goal, and prints the exact dated `dogfood:goal-check` command with `--no-codex-guidance` to run next. If the saved report is still a draft, the command prints its saved status explicitly, repeats `Ближайшее действие` from the report under `До финального отчёта`, and keeps the next step visible without reopening the Markdown. If measured closure exists but check rows are still pending, it prints those pending rows and tells you to return to `Проверка перед отчётом` first.
+The status command reads the saved evidence files. If you already changed the current day in the app and the saved report looks stale, inspect the live next-action hint first:
+
+```bash
+pnpm dogfood:report -- --date YYYY-MM-DD
+```
+
+Then save the refreshed evidence with `pnpm dogfood:finish:save -- --date YYYY-MM-DD`.
+
+When measured closure evidence is present and every `Проверка закрытия дня` row is already `ок`, `pnpm dogfood:finish:save` prints `Статус закрытия`, the short closure verdict, reminds that a day with Codex guidance is not proof for the active goal, and prints the exact dated `dogfood:goal-check` command with `--no-codex-guidance` to run next. If the saved report is still a draft, `finish:save` and `goal-check:status` repeat `Ближайшее действие` and `Сводка проверки` from the report, repeat the one-click `Всё проверено` hint when safe review checks can be accepted together, and keep the next step visible without reopening the Markdown. If measured closure exists but check rows are still pending, `finish:save` prints those pending rows and tells you to return to `Проверка перед отчётом` first.
 
 If you close yesterday's dogfood day after midnight, pass the date explicitly:
 
@@ -325,7 +335,9 @@ If macOS rejects all three, use the macOS menu bar item or normal app switching.
 - Post-factum correction for stopped focus blocks: add a missed block, edit time/note/Work Item/Activity Zone, or split a block
 - Capture Inbox for incoming events that should be handled later without interrupting the current focus block
 - Timestamped Work Item Events for observations during the day, with edit/delete cleanup for user-authored notes
+- The Work Item event input keeps a local per-day, per-item draft until the event is successfully added
 - Timestamped Day Events for review context that belongs to the day rather than to one Work Item
+- The Day Event input keeps a local per-day draft until the event is successfully added, so a reload does not lose typed review context
 - Open captures can be edited, deleted, resolved, converted to Work Items, or appended as timestamped Work Item Events
 - Running focus session restored from SQLite after frontend/app restart
 - Focus sessions are linked to Work Items; typed titles reuse existing Work Items instead of creating duplicates
@@ -333,7 +345,7 @@ If macOS rejects all three, use the macOS menu bar item or normal app switching.
 - Day panel with focus blocks, total tracked time, work focus, non-work tracked time, entrance count, zones, and gaps
 - Open gap warning when no focus block is running and the time since the last stopped block is significant
 - Day totals count the part of each focus block that overlaps the selected local day
-- Russian review checklist in Today and copied dogfood reports: active-state blockers, open captures, significant gaps, open gap, Activity Zone coverage, non-work tracking, capture coverage, Work Item context coverage, current closure stage, elapsed closure time, compact summary of already-clean checks, `Объяснить` actions for gap Day Events, and specific accept-as-is actions for optional checks: `Зоны верны`, `Инбокс проверен`, `Пути проверены`, `Окно проверено`, `Трекинг верен`, `Время верно`, and `Оставить открытыми`; before `Начать закрытие дня`, Today keeps the checklist compact and does not show the full evening queue as daytime background pressure, the report button starts closure before it offers any copy action, and `Ближайшее действие` names the exact button or gesture for the current blocker, single review item, or final report copy
+- Russian review checklist in Today and copied dogfood reports: active-state red items, open captures, significant gaps, open gap, Activity Zone coverage, non-work tracking, capture coverage, Work Item context coverage, current closure stage, elapsed closure time, compact summary of already-clean checks, `Объяснить` / `Управляемость` / `Восстановление` actions for gap Day Events, direct `Добавить блок` for missing tracking intervals, and specific accept-as-is actions for optional checks: `Зоны верны`, `Инбокс проверен`, `Пути проверены`, `Окно проверено`, `Трекинг верен`, `Время верно`, `Контекст не нужен`, and `Оставить как хвост`; open captures stay a separate conscious decision and are not hidden behind the bulk `Всё проверено` action. Missing day/item context can either stage a short note through `Добавить контекст` or record an explicit `Контекст не нужен` review when the report is already understandable. Before `Начать закрытие дня`, Today keeps the checklist compact and does not show the full evening queue as daytime background pressure, the report button starts closure, then says `Закрыть проверки` until a final report is possible, `Ближайшее действие` names the exact button or gesture for the current red item, review item, or final report copy, `Сводка` separates remaining red items, fix-ups, and accept-as-is checks, every unresolved checklist row repeats its action hint in the UI and copied/CLI Markdown, and an active focus block is not duplicated as a separate active-item red item until the focus has actually stopped
 - Markdown day-closure report from the Today panel or CLI, with Russian focus data, Work Item totals, Activity Zone totals, Day Events, Work Item notes and timestamped events for touched items, significant gaps, Russian interruption history, open captures, review checklist/prompts, a short closure section for the minimal evening note with the measured 10-minute verdict prefilled, and draft status while a focus block, Work Item, or review check still needs attention
 - macOS menu bar item shows the active focus duration as a short `12 мин в фокусе` status while a block is running, and today's total when no block is active
 - Work item states: active, waiting, blocked, done, someday, unknown
@@ -370,6 +382,7 @@ If macOS rejects all three, use the macOS menu bar item or normal app switching.
 - [Current Implementation](docs/current-implementation.md) - what runs today
 - [Dogfood Day Protocol](docs/dogfood-day.md) - one-day Session replacement trial
 - [opskarta Roadmap](docs/roadmap/opskarta.md) - current machine-checkable roadmap
+- [In-Day Structure Roadmap](docs/roadmap/0004-in-day-structure-roadmap.md) - in-day thoughts, stages, live zone balance, dispatching, and recovery/lost-control gap classification
 - [Periodic Reflection Roadmap](docs/roadmap/0003-periodic-reflection-roadmap.md) - arbitrary-period reports and reflection loops
 - [MVP Technical Spec](mvp-technical%20specifications.md) - detailed requirements
 - [Glossary](docs/glossary.md) - term definitions

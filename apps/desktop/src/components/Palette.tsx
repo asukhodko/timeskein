@@ -545,6 +545,7 @@ export default function Palette() {
       {/* Note Editor */}
       {showNoteEditor && selectedItem && (
         <NoteEditor
+          itemId={selectedItem.id}
           itemTitle={selectedItem.title}
           currentNote={selectedItem.note || null}
           onSave={handleNoteSave}

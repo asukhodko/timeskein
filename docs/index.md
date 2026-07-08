@@ -41,8 +41,9 @@ The system answers questions like:
 8. **[Technical Specifications (RFC)](rfc/README.md)** - Detailed technical designs
 9. **[MVP User Stories](mvp/README.md)** - Features and acceptance criteria
 10. **[opskarta Roadmap](roadmap/opskarta.md)** - Current machine-checkable execution plan
-11. **[Periodic Reflection Roadmap](roadmap/0003-periodic-reflection-roadmap.md)** - Planned arbitrary-period reports and reflection loop
-12. **[Roadmap Archive](roadmap/README.md)** - Older roadmap documents and related links
+11. **[In-Day Structure Roadmap](roadmap/0004-in-day-structure-roadmap.md)** - Planned in-day thoughts, stages, zone visibility, dispatching, and gap classification
+12. **[Periodic Reflection Roadmap](roadmap/0003-periodic-reflection-roadmap.md)** - Planned arbitrary-period reports and reflection loop
+13. **[Roadmap Archive](roadmap/README.md)** - Older roadmap documents and related links
 
 ---
 
@@ -100,6 +101,7 @@ All documentation below is the **source of truth** for the project.
 | [0001-mvp-execution-roadmap.md](roadmap/0001-mvp-execution-roadmap.md) | MVP execution plan and phases |
 | [0002-level3-evidence-mode-roadmap.md](roadmap/0002-level3-evidence-mode-roadmap.md) | Level 3 Evidence-Mode roadmap (post-MVP) |
 | [0003-periodic-reflection-roadmap.md](roadmap/0003-periodic-reflection-roadmap.md) | Periodic reports, Track/Label slices, Reflection Sessions, and performance-review evidence |
+| [0004-in-day-structure-roadmap.md](roadmap/0004-in-day-structure-roadmap.md) | In-day thoughts, Work Item stages, live zone balance, dispatching, and gap classification |
 
 ---
 

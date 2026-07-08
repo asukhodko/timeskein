@@ -62,12 +62,17 @@ const ACCEPT_AS_IS_REVIEW_TITLES = new Set([
   "Confirm Work Item today/total badges",
   "Capture Inbox untested today",
   "Captures were not linked to active focus",
+  "No day or Work Item notes/events",
   "Exercise start and continue paths",
   "Test window entrypoints",
   "Confirm tracking accuracy or test correction",
 ]);
+const BULK_ACCEPT_AS_IS_REVIEW_TITLES = new Set(
+  [...ACCEPT_AS_IS_REVIEW_TITLES].filter((title) => title !== "Resolve, convert, or accept open captures")
+);
+const GAP_REVIEW_TITLES = new Set(["Classify significant gaps", "Explain current open gap"]);
 const REVIEW_ACTION_LABELS_BY_TITLE = {
-  "Resolve, convert, or accept open captures": "Оставить открытыми",
+  "Resolve, convert, or accept open captures": "Оставить как хвост",
   "Classify significant gaps": "Объяснить",
   "Explain current open gap": "Объяснить",
   "Review Activity Zone coverage": "Зоны верны",
@@ -75,7 +80,7 @@ const REVIEW_ACTION_LABELS_BY_TITLE = {
   "Confirm Work Item today/total badges": "Время верно",
   "Capture Inbox untested today": "Инбокс проверен",
   "Captures were not linked to active focus": "Инбокс проверен",
-  "No day or Work Item notes/events": "Добавить контекст",
+  "No day or Work Item notes/events": "Контекст не нужен",
   "Exercise start and continue paths": "Пути проверены",
   "Test window entrypoints": "Окно проверено",
   "Review failed focus corrections": "Трекинг верен",
@@ -122,6 +127,7 @@ const APP_EVENT_KIND_LABELS = {
   capture_delete_failed: "удаление отвлечения не удалось",
   capture_convert_failed: "превращение отвлечения не удалось",
   capture_followup_reviewed: "открытые отвлечения проверены",
+  day_context_reviewed: "контекст дня проверен",
   capture_usage_reviewed: "инбокс отвлечений проверен",
   work_item_time_badges_reviewed: "время по делам проверено",
   activity_zone_reviewed: "зоны активности проверены",
@@ -384,6 +390,25 @@ function buildDogfoodReport(
     );
   }
 
+  lines.push(formatShortClosureMarkdown(telemetryMarkdown, {
+    reportReady: isDayClosureReadyForFinalReport({
+      activeFocus: Boolean(activeFocus),
+      activeWorkItemCount: activeWorkItems.length,
+      pendingReviewItemCount,
+    }),
+  }).trim(), "");
+
+  lines.push(formatReviewChecklistMarkdown(reviewItems).trim(), "");
+  lines.push(formatDailyControlGoalAuditMarkdown({
+    activeFocus,
+    activeWorkItems,
+    openCaptures,
+    captureActivity,
+    focusMarkdown,
+    telemetryMarkdown,
+    reviewItems,
+  }).trim(), "");
+
   if (openCaptures.length > 0) {
     lines.push(
       "## Открытые отвлечения",
@@ -397,19 +422,6 @@ function buildDogfoodReport(
   if (captureActivity.length > 0) {
     lines.push(formatCaptureActivityMarkdown(captureActivity).trim(), "");
   }
-
-  lines.push(formatShortClosureMarkdown(telemetryMarkdown).trim(), "");
-
-  lines.push(formatReviewChecklistMarkdown(reviewItems).trim(), "");
-  lines.push(formatDailyControlGoalAuditMarkdown({
-    activeFocus,
-    activeWorkItems,
-    openCaptures,
-    captureActivity,
-    focusMarkdown,
-    telemetryMarkdown,
-    reviewItems,
-  }).trim(), "");
 
   lines.push(
     "## Данные фокуса",
@@ -505,15 +517,35 @@ function localizeActivityZoneCells(markdown) {
     .join("\n");
 }
 
-function formatShortClosureMarkdown(telemetryMarkdown) {
+function formatShortClosureMarkdown(telemetryMarkdown, { reportReady = false } = {}) {
   return [
     "## Короткое закрытие",
     "",
-    "- Данным можно доверять: да/нет",
+    formatShortClosureStatusLine(telemetryMarkdown),
+    formatShortClosureTrustLine(reportReady),
     formatShortClosureDurationLine(telemetryMarkdown),
-    "- Главное наблюдение дня:",
-    "- Следующий шаг после закрытия:",
+    "- Главное наблюдение дня (если нужно):",
+    "- Следующий шаг после закрытия (если уже ясен):",
   ].join("\n");
+}
+
+function formatShortClosureStatusLine(telemetryMarkdown) {
+  const closureCounts = parseCountPair(extractLineValue(telemetryMarkdown, "Day closure started/completed"));
+
+  if (!closureCounts || closureCounts.left === 0) {
+    return "- Статус закрытия: не начато";
+  }
+
+  if (closureCounts.left > closureCounts.right) {
+    return "- Статус закрытия: идёт (заверши через «Копировать отчёт»)";
+  }
+
+  return "- Статус закрытия: завершено";
+}
+
+function formatShortClosureTrustLine(reportReady) {
+  if (reportReady) return "- Данным можно доверять: да (проверки закрыты)";
+  return "- Данным можно доверять: пока нет (см. «Проверка перед отчётом»)";
 }
 
 function formatShortClosureDurationLine(telemetryMarkdown) {
@@ -548,6 +580,7 @@ function formatTelemetryForReport(markdown) {
     .replace(/^Manual copy fallbacks:/gm, "Ручных копирований вместо буфера:")
     .replace(/^Capture created\/resolved\/converted:/gm, "Отвлечений создано/закрыто/превращено:")
     .replace(/^Capture follow-up reviews:/gm, "Проверок открытых отвлечений:")
+    .replace(/^Day context reviews:/gm, "Проверок контекста дня:")
     .replace(/^Work Item time badge reviews:/gm, "Проверок времени по делам:")
     .replace(/^Activity Zone reviews:/gm, "Проверок зон активности:")
     .replace(/^Capture usage reviews:/gm, "Проверок использования инбокса:")
@@ -588,7 +621,7 @@ function buildReviewChecklistItems({
     });
   }
 
-  if (activeWorkItems.length > 0) {
+  if (!activeFocus && activeWorkItems.length > 0) {
     items.push({
       level: "blocker",
       title: "Clear active Work Item state",
@@ -606,11 +639,12 @@ function buildReviewChecklistItems({
     });
   }
 
-  if (focusMarkdown.includes("## Gaps >=") && !hasGapExplanationEvent(focusMarkdown)) {
+  const significantGapReviewDetail = formatSignificantGapReviewDetail(focusMarkdown);
+  if (significantGapReviewDetail) {
     items.push({
       level: "review",
       title: "Classify significant gaps",
-      detail: "Проверь секцию больших разрывов",
+      detail: significantGapReviewDetail,
     });
   }
 
@@ -665,16 +699,18 @@ function buildReviewChecklistItems({
     });
   }
 
+  const dayContextReviews = parseLeadingNumber(extractLineValue(telemetryMarkdown, "Day context reviews"));
   if (
     focusMarkdown.includes("| Time | Duration | Zone | Work Item | Note |") &&
     !focusMarkdown.includes("## Day Events") &&
     !focusMarkdown.includes("## Work Item Events") &&
-    !focusMarkdown.includes("## Work Item Notes")
+    !focusMarkdown.includes("## Work Item Notes") &&
+    dayContextReviews === 0
   ) {
     items.push({
       level: "review",
       title: "No day or Work Item notes/events",
-      detail: "Добавь контекст, если отчёт всё ещё требует памяти",
+      detail: "Если отчёт требует памяти, добавь одну фразу; если всё ясно, прими как есть",
     });
   }
 
@@ -763,6 +799,7 @@ function formatDailyControlGoalAuditMarkdown({
   const entryPathEvidence = extractLineValue(telemetryMarkdown, "Typed/selected entry requests") ?? "n/a";
   const entryTelemetry = parseEntryTelemetry(telemetryMarkdown);
   const captureFollowupReviews = parseLeadingNumber(extractLineValue(telemetryMarkdown, "Capture follow-up reviews"));
+  const dayContextReviews = parseLeadingNumber(extractLineValue(telemetryMarkdown, "Day context reviews"));
   const workItemTimeBadgeReviews = parseLeadingNumber(extractLineValue(telemetryMarkdown, "Work Item time badge reviews"));
   const activityZoneReviews = parseLeadingNumber(extractLineValue(telemetryMarkdown, "Activity Zone reviews"));
   const captureUsageReviews = parseLeadingNumber(extractLineValue(telemetryMarkdown, "Capture usage reviews"));
@@ -858,11 +895,12 @@ function formatDailyControlGoalAuditMarkdown({
     },
     {
       requirement: "Day and Work Item context present",
-      status: hasReview("No day or Work Item notes/events") ? "review" : "pass",
+      status: hasReview("No day or Work Item notes/events") && dayContextReviews === 0 ? "review" : "pass",
       evidence: [
         focusMarkdown.includes("## Day Events") ? "события дня" : "",
         focusMarkdown.includes("## Work Item Events") ? "события дел" : "",
         focusMarkdown.includes("## Work Item Notes") ? "заметки дел" : "",
+        dayContextReviews > 0 ? formatCount(dayContextReviews, "проверка контекста", "проверки контекста", "проверок контекста") : "",
       ].filter(Boolean).join(", ") || "контекстных секций нет",
     },
     {
@@ -1056,8 +1094,32 @@ function countActivityZoneRows(markdown) {
     .length;
 }
 
-function hasGapExplanationEvent(markdown) {
-  return /\bopen\s+gap\b|\bgap\b|разрыв|перерыв|буфер|recovery|восстановлен/i.test(extractMarkdownSection(markdown, "## Day Events"));
+function formatSignificantGapReviewDetail(markdown) {
+  const gaps = extractSignificantGapRows(markdown);
+  if (gaps.length === 0) return "";
+
+  const explainedCount = Math.min(countGapExplanationEvents(markdown), gaps.length);
+  const missing = Math.max(gaps.length - explainedCount, 0);
+  if (missing === 0) return "";
+
+  const nextGap = gaps[explainedCount];
+  const base = `${missing}/${gaps.length} больших разрывов без события дня`;
+  return nextGap ? `${base}; следующий: ${nextGap.range} (${nextGap.duration})` : base;
+}
+
+function extractSignificantGapRows(markdown) {
+  return extractMarkdownSection(markdown, "## Gaps >=")
+    .split("\n")
+    .map((line) => line.match(/^- ([0-9]{1,2}:[0-9]{2}-[0-9]{1,2}:[0-9]{2}): ([0-9:]+)$/))
+    .filter(Boolean)
+    .map((match) => ({ range: match[1], duration: match[2] }));
+}
+
+function countGapExplanationEvents(markdown) {
+  return extractMarkdownSection(markdown, "## Day Events")
+    .split("\n")
+    .filter((line) => /\bopen\s+gap\b|\bgap\b|разрыв|перерыв|буфер|recovery|восстановлен/i.test(line))
+    .length;
 }
 
 function hasOpenGapExplanationEvent(markdown) {
@@ -1074,7 +1136,12 @@ function extractMarkdownSection(markdown, title) {
 }
 
 function formatReviewChecklistMarkdown(items) {
-  const lines = ["## Проверка перед отчётом", "", `Ближайшее действие: ${formatDayReviewNextStep(items)}`, ""];
+  const lines = ["## Проверка перед отчётом", "", `Ближайшее действие: ${formatDayReviewNextStep(items)}`];
+  const summary = formatDayReviewSummary(items);
+  if (summary) {
+    lines.push(summary);
+  }
+  lines.push("");
   const blockers = items.filter((item) => item.level === "blocker");
   const reviews = items.filter((item) => item.level === "review");
   const fixups = reviews.filter((item) => !isAcceptAsIsReviewItem(item));
@@ -1084,9 +1151,42 @@ function formatReviewChecklistMarkdown(items) {
   appendReviewChecklistGroup(lines, "Сначала закрыть", blockers);
   appendReviewChecklistGroup(lines, "Дописать или исправить", fixups);
   appendReviewChecklistGroup(lines, "Осознанно проверить", accepts);
+  appendBulkAcceptAsIsHint(lines, items);
   appendReviewChecklistGroup(lines, "Готово", ready);
 
   return `${lines.join("\n")}\n`;
+}
+
+function formatDayReviewSummary(items) {
+  const blockers = items.filter((item) => item.level === "blocker");
+  const reviews = items.filter((item) => item.level === "review");
+  const fixups = reviews.filter((item) => !isAcceptAsIsReviewItem(item));
+  const accepts = reviews.filter((item) => isAcceptAsIsReviewItem(item));
+
+  if (blockers.length > 0) {
+    const tail = reviews.length > 0
+      ? `, затем ${formatCount(reviews.length, "проверка", "проверки", "проверок")}`
+      : "";
+    return `Сводка: ${formatCount(blockers.length, "красный пункт", "красных пункта", "красных пунктов")}${tail}.`;
+  }
+
+  if (fixups.length > 0 && accepts.length > 0) {
+    return `Сводка: ${formatCount(fixups.length, "пункт дописать или исправить", "пункта дописать или исправить", "пунктов дописать или исправить")}, ${formatCount(accepts.length, "пункт осознанно проверить", "пункта осознанно проверить", "пунктов осознанно проверить")}.`;
+  }
+
+  if (fixups.length > 0) {
+    return `Сводка: ${formatCount(fixups.length, "пункт дописать или исправить", "пункта дописать или исправить", "пунктов дописать или исправить")}.`;
+  }
+
+  if (accepts.length > 0) {
+    return `Сводка: ${formatCount(accepts.length, "пункт осознанно проверить", "пункта осознанно проверить", "пунктов осознанно проверить")}.`;
+  }
+
+  if (items.some((item) => item.level === "ok")) {
+    return "Сводка: проверка чистая.";
+  }
+
+  return "";
 }
 
 function formatDayReviewNextStep(items) {
@@ -1102,11 +1202,11 @@ function formatDayReviewNextStep(items) {
   }
 
   const accepts = reviews.filter((item) => isAcceptAsIsReviewItem(item));
-  if (accepts.length > 1) {
+  if (accepts.length > 1 && accepts.every((item) => isBulkAcceptAsIsReviewItem(item))) {
     return `осознанно проверить ${accepts.length} ${pluralRu(accepts.length, "пункт", "пункта", "пунктов")} или нажать «Всё проверено», если данные уже честные.`;
   }
 
-  if (accepts.length === 1) {
+  if (accepts.length > 0) {
     return formatNextStep("осознанно проверить", accepts);
   }
 
@@ -1118,16 +1218,53 @@ function formatDayReviewNextStep(items) {
 }
 
 function formatNextStep(prefix, items) {
-  const title = REVIEW_TITLE_LABELS[items[0].title] ?? items[0].title;
-  const actionHint = formatNextStepHint(items[0], items.length);
+  const item = items[0];
+  const label = {
+    title: REVIEW_TITLE_LABELS[item.title] ?? item.title,
+    detail: formatDayReviewDetail(item.detail),
+  };
+  const title = formatNextStepTitle(item, label);
+  const actionHint = formatNextStepHint(item);
   const rest = items.length > 1 ? ` Ещё ${items.length - 1}.` : "";
   return `${prefix}: ${title}.${actionHint}${rest}`;
 }
 
-function formatNextStepHint(item, itemCount) {
+function formatNextStepTitle(item, label) {
+  const nextGap = extractNextGapDetail(label.detail);
+  if (item.title === "Classify significant gaps" && nextGap) {
+    return `${label.title} — ${nextGap}`;
+  }
+
+  if (item.title === "Explain current open gap" && label.detail) {
+    return `${label.title} — ${label.detail}`;
+  }
+
+  return label.title;
+}
+
+function extractNextGapDetail(detail) {
+  return detail?.match(/(?:^|;\s*)следующий: (.+)$/)?.[1];
+}
+
+function formatNextStepHint(item) {
   const actionLabel = REVIEW_ACTION_LABELS_BY_TITLE[item.title];
   if (!actionLabel) return formatNextStepBlockerHint(item);
-  if (itemCount > 1) return "";
+
+  if (item.title === "Resolve, convert, or accept open captures") {
+    return ` Разбери записи в Инбоксе или нажми «${actionLabel}», если запись должна остаться видимым хвостом.`;
+  }
+
+  if (item.title === "No day or Work Item notes/events") {
+    return " Нажми «Добавить контекст», если отчёт требует памяти, или «Контекст не нужен», если всё ясно.";
+  }
+
+  if (item.title === "Confirm tracking accuracy or test correction") {
+    return " Нажми «Добавить блок», если в трекинге пропуск, или «Трекинг верен», если всё честно.";
+  }
+
+  if (GAP_REVIEW_TITLES.has(item.title)) {
+    return " Нажми «Объяснить», «Управляемость» или «Восстановление».";
+  }
 
   if (isAcceptAsIsReviewItem(item)) {
     return ` Нажми «${actionLabel}», если данные уже честные.`;
@@ -1142,7 +1279,7 @@ function formatNextStepBlockerHint(item) {
   }
 
   if (item.title === "Clear active Work Item state") {
-    return " Выбери активное дело и смени состояние с «Активно».";
+    return " В Timeskein нажми «Снять активность» или выполни `pnpm dogfood:stop-active -- --apply`.";
   }
 
   return "";
@@ -1157,12 +1294,14 @@ function formatDayReviewDetail(detail) {
     return formatCount(count, "открытое отвлечение", "открытых отвлечения", "открытых отвлечений");
   }
 
-  const unexplainedGapsMatch = detail.match(/^(\d+)\/(\d+) больших разрывов без события дня$/);
+  const unexplainedGapsMatch = detail.match(/^(\d+)\/(\d+) больших разрывов без события дня(?:; следующий: (.+))?$/);
   if (unexplainedGapsMatch) {
     const missing = Number(unexplainedGapsMatch[1]);
     const total = Number(unexplainedGapsMatch[2]);
+    const nextGap = unexplainedGapsMatch[3];
     const gapLabel = formatCount(missing, "большой разрыв", "больших разрыва", "больших разрывов");
-    return missing === total ? `${gapLabel} без события дня` : `${missing} из ${total} больших разрывов без события дня`;
+    const base = missing === total ? `${gapLabel} без события дня` : `${missing} из ${total} больших разрывов без события дня`;
+    return nextGap ? `${base}; следующий: ${nextGap}` : base;
   }
 
   const activeWorkItemMatch = detail.match(/^(\d+) Work Item с активным статусом$/);
@@ -1225,16 +1364,51 @@ function appendReviewChecklistGroup(lines, title, items) {
     const title = REVIEW_TITLE_LABELS[item.title] ?? item.title;
     const detail = formatDayReviewDetail(item.detail);
     const suffix = detail ? ` - ${formatMarkdownListText(detail)}` : "";
-    lines.push(`- ${marker} ${formatMarkdownListText(title)}${suffix}`);
+    const actionHint = formatChecklistActionHint(item);
+    lines.push(`- ${marker} ${formatMarkdownListText(title)}${suffix}${actionHint}`);
   }
+}
+
+function appendBulkAcceptAsIsHint(lines, items) {
+  const bulkAccepts = getBulkAcceptAsIsReviewItems(items);
+  if (bulkAccepts.length === 0) return;
+
+  lines.push(
+    `- Подсказка: ${formatCount(bulkAccepts.length, "проверочный пункт", "проверочных пункта", "проверочных пунктов")} можно закрыть одной кнопкой «Всё проверено», если данные уже честные.`
+  );
+}
+
+function formatChecklistActionHint(item) {
+  if (item.level === "ok") return "";
+
+  const hint = formatNextStepHint(item).trim();
+  return hint ? `. ${hint}` : "";
 }
 
 function isAcceptAsIsReviewItem(item) {
   return item.level === "review" && ACCEPT_AS_IS_REVIEW_TITLES.has(item.title);
 }
 
+function isBulkAcceptAsIsReviewItem(item) {
+  return item.level === "review" && BULK_ACCEPT_AS_IS_REVIEW_TITLES.has(item.title);
+}
+
+function getBulkAcceptAsIsReviewItems(items) {
+  if (items.some((item) => item.level === "blocker")) return [];
+
+  const reviews = items.filter((item) => item.level === "review");
+  const accepts = reviews.filter((item) => isAcceptAsIsReviewItem(item));
+  if (accepts.some((item) => !isBulkAcceptAsIsReviewItem(item))) return [];
+
+  return accepts.length > 1 ? accepts : [];
+}
+
 function countPendingReviewItems(items) {
   return items.filter((item) => item.level !== "ok").length;
+}
+
+function isDayClosureReadyForFinalReport({ activeFocus, activeWorkItemCount, pendingReviewItemCount }) {
+  return !activeFocus && (activeWorkItemCount ?? 0) === 0 && (pendingReviewItemCount ?? 0) === 0;
 }
 
 function formatDogfoodReportState({ activeFocus, activeWorkItemCount, pendingReviewItemCount }) {

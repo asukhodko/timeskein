@@ -16,6 +16,14 @@ try {
   });
   assert(helpStdout.includes("Использование: pnpm dogfood:rc-check"), "RC check help title is not localized");
   assert(helpStdout.includes("Проверяет, достаточно ли данных Timeskein"), "RC check help body is not localized");
+  assert(
+    helpStdout.includes("Пакетная команда pnpm dogfood:rc-check запускается с --soft-fail"),
+    "RC check help did not explain the soft package route"
+  );
+  assert(
+    helpStdout.includes("Прямой запуск node scripts/dogfood-rc-check.mjs без --soft-fail"),
+    "RC check help did not distinguish direct strict execution"
+  );
   assert(!helpStdout.includes("Usage:"), "RC check help leaked old English usage");
 
   const badDate = await runRcCheckArgs(["--date", "bad-date"]);
@@ -88,7 +96,7 @@ try {
 
   const good = await runRcCheck(goodDb);
   assert(good.code === 0, "good day should not be blocked");
-  assert(good.stdout.includes("Вердикт: готово к ручному вердикту"), "good day verdict is missing");
+  assert(good.stdout.includes("Вердикт: готово к финальной проверке"), "good day verdict is missing");
   assert(good.stdout.includes("Строгий режим: нет"), "good day strict-mode marker is missing");
   assert(good.stdout.includes("Всего учтено: 3:30:00"), "good day total tracked is missing");
   assert(good.stdout.includes("Рабочий фокус: 2:00:00"), "good day work focus is missing");
@@ -120,6 +128,14 @@ try {
   assert(good.stdout.includes("| Длительность закрытия измерена | ок |"), "good day closure-duration audit row is missing");
   assert(good.stdout.includes("| Локальные проверки | вручную |"), "good day local-gates audit row is missing");
   assert(good.stdout.includes("pnpm dogfood:goal-check"), "good day local-gates audit did not mention goal-check");
+  assert(good.stdout.includes("## Итог проверки"), "good day automatic summary is missing");
+  assert(good.stdout.includes("Сохранённые материалы готовы для финального `goal-check`"), "good day next-check summary is missing");
+  assert(
+    good.stdout.includes("pnpm dogfood:goal-check -- --date 2026-06-30 --no-codex-guidance"),
+    "good day next step should point to the final goal-check"
+  );
+  assert(!good.stdout.includes("## Ручной вердикт"), "good day should not include the old manual verdict questionnaire");
+  assert(!good.stdout.includes("да/нет"), "good day should not include yes/no verdict prompts");
   assert(good.stdout.includes("## По зонам активности"), "good day zone section is missing");
   assert(good.stdout.includes("## События дня"), "good day Day Events section is missing");
   assert(good.stdout.includes("Gap explained: meeting buffer was costly"), "good day Day Event text is missing");
@@ -292,6 +308,21 @@ try {
     noClosureStrict.stdout.includes("| Длительность закрытия измерена | проверить |"),
     "missing closure duration should mark closure audit for review"
   );
+  const openClosureDb = join(tempDir, "open-closure.db");
+  await copyDb(goodDb, openClosureDb);
+  await runSql(openClosureDb, "DELETE FROM app_events WHERE kind = 'day_closure_completed';");
+  const openClosureStrict = await runRcCheck(openClosureDb, ["--strict"]);
+  assert(openClosureStrict.code !== 0, "strict RC check should fail while day closure is still open");
+  assert(
+    openClosureStrict.stdout.includes("Закрытие дня уже начато") &&
+      openClosureStrict.stdout.includes("Продолжай «Проверка перед отчётом»") &&
+      openClosureStrict.stdout.includes("не переигрывай доказательство задним числом"),
+    "strict RC check should explain an already started but unfinished closure"
+  );
+  assert(
+    !openClosureStrict.stdout.includes("Начни закрытие кнопкой"),
+    "open closure RC check should not tell the user to start closure again"
+  );
 
   const savedPath = join(tempDir, "rc-check.md");
   const saved = await runRcCheck(goodDb, ["--out", savedPath]);
@@ -300,7 +331,8 @@ try {
   assert(!saved.stdout.includes("Saved Timeskein dogfood RC check:"), "save output leaked old English RC check message");
   const savedMarkdown = await readFile(savedPath, "utf8");
   assert(savedMarkdown.includes("# Проверка закрытия дня Timeskein - 2026-06-30"), "saved closure check title is missing");
-  assert(savedMarkdown.includes("Ручной вердикт"), "saved closure check manual verdict is missing");
+  assert(savedMarkdown.includes("Итог проверки"), "saved closure check automatic summary is missing");
+  assert(!savedMarkdown.includes("Ручной вердикт"), "saved closure check should not include the old manual verdict questionnaire");
 
   const reviewedOnlyDb = join(tempDir, "reviewed-only.db");
   await copyDb(goodDb, reviewedOnlyDb);
@@ -472,6 +504,25 @@ try {
   const empty = await runRcCheck(emptyDb);
   assert(empty.code !== 0, "empty day should be blocked");
   assert(empty.stdout.includes("За эту дату нет фокус-блоков"), "empty day blocker is missing");
+  assert(
+    empty.stdout.includes("pnpm dogfood:finish:save -- --date 2026-06-30"),
+    "blocked RC check should keep the finish command date-explicit"
+  );
+  assert(
+    !empty.stdout.includes("После этого снова сохрани отчёт: `pnpm dogfood:finish:save`."),
+    "blocked RC check should not suggest the old undated finish command"
+  );
+  const packageSoft = await runPackageRcCheck(emptyDb);
+  assert(packageSoft.code === 0, "pnpm dogfood:rc-check should soft-fail on expected blockers");
+  assert(
+    packageSoft.stdout.includes("За эту дату нет фокус-блоков") &&
+      packageSoft.stdout.includes("pnpm dogfood:finish:save -- --date 2026-06-30"),
+    "pnpm dogfood:rc-check should keep blocked diagnostics visible"
+  );
+  assert(
+    !`${packageSoft.stdout}${packageSoft.stderr}`.includes("ELIFECYCLE"),
+    "pnpm dogfood:rc-check should not show lifecycle noise on expected blockers"
+  );
 
   const duplicateDb = join(tempDir, "duplicate.db");
   await copyDb(goodDb, duplicateDb);
@@ -556,6 +607,37 @@ async function runRcCheckArgs(args) {
       cwd: repoRoot,
       maxBuffer: 10 * 1024 * 1024,
     });
+
+    return { code: 0, stdout, stderr };
+  } catch (error) {
+    return {
+      code: error.code ?? 1,
+      stdout: error.stdout ?? "",
+      stderr: error.stderr ?? "",
+    };
+  }
+}
+
+async function runPackageRcCheck(path, extraArgs = []) {
+  try {
+    const { stdout, stderr } = await execFileAsync(
+      "pnpm",
+      [
+        "dogfood:rc-check",
+        "--",
+        "--db",
+        path,
+        "--date",
+        "2026-06-30",
+        "--now",
+        "2026-06-30T12:00:00Z",
+        ...extraArgs,
+      ],
+      {
+        cwd: repoRoot,
+        maxBuffer: 10 * 1024 * 1024,
+      }
+    );
 
     return { code: 0, stdout, stderr };
   } catch (error) {

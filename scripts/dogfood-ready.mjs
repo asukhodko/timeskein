@@ -21,6 +21,7 @@ const lines = [`# Готовность Timeskein к дню - ${formatLocalDate(d
 const blockers = [];
 const warnings = [];
 const nextActions = [];
+const readyNextContext = { todaySessionsCount: undefined };
 const responsiveAgent = await detectResponsiveAgent(supportDir);
 const runningPids = await runningTimeskeinPids();
 
@@ -36,7 +37,7 @@ if (!existsSync(dbPath)) {
 } else {
   try {
     const summary = await loadSummary(dbPath, date);
-    addSummary(lines, blockers, warnings, nextActions, summary, responsiveAgent, runningPids, mode);
+    addSummary(lines, blockers, warnings, nextActions, summary, responsiveAgent, runningPids, mode, readyNextContext);
   } catch (error) {
     blockers.push(`Не удалось прочитать базу Timeskein: ${error instanceof Error ? error.message : String(error)}`);
   }
@@ -55,11 +56,11 @@ if (runningPids.length > 0) {
 }
 
 lines.push(`Статус: ${blockers.length === 0 ? "ГОТОВО" : "НЕ ГОТОВО"}`, "");
-appendSection(lines, "Блокеры", blockers);
+appendSection(lines, "Что мешает", blockers);
 appendSection(lines, "Предупреждения", warnings);
 
 if (blockers.length === 0) {
-  appendReadyNext(lines, mode);
+  appendReadyNext(lines, mode, readyNextContext);
   appendDailyControlChecklist(lines);
 } else {
   lines.push("## Что сделать дальше", "");
@@ -78,27 +79,27 @@ if (blockers.length > 0) {
 
 function appendDailyControlChecklist(lines) {
   lines.push("## Памятка закрытия дня", "");
-  lines.push("- Проверь входы в окно: menu bar, глобальный хоткей (`Ctrl+Shift+Space`, запасной `Ctrl+Option+Space` или `Cmd+Option+Space`), возврат через macOS, скрытие через Esc или закрытие окна.");
-  lines.push("- Начни одно новое дело вводом названия и продолжи одно существующее дело из списка.");
-  lines.push("- Когда у затронутого дела появится фокус-время, проверь в списке дел время за день и всего, затем нажми `Время верно` в соответствующей проверке.");
-  lines.push("- Используй минимум две зоны активности, включая одну нерабочую: координация, восстановление, простой или личные дела.");
-  lines.push("- Добавь одно событие дня через `Добавить событие дня...` для буфера, разрыва, восстановления или коррекции трекинга.");
-  lines.push("- Добавь или продвинь одно событие дела с временем, если для задачи важна конкретная подробность.");
-  lines.push("- Во время активного фокуса зафиксируй хотя бы одно входящее отвлечение через `Зафиксировать отвлечение...`, затем закрой его, преврати `В дело`/`В событие` или явно оставь открытым.");
-  lines.push("- Перед финальным отчётом поправь одну безопасную деталь трекинга или нажми `Трекинг верен` у проверки точности трекинга.");
-  lines.push("- Вечером нажми `Начать закрытие дня` и дальше иди по строке `Ближайшее действие`: она называет текущий жест или кнопку, пока ты не дойдёшь до финального `Копировать отчёт` за 10 минут или меньше.");
+  lines.push("- Минимум на день: Проверь входы в окно через menu bar, глобальный хоткей (`Ctrl+Shift+Space`, запасной `Ctrl+Option+Space` или `Cmd+Option+Space`), возврат через macOS и скрытие через Esc или закрытие окна; начни одно новое дело вводом названия и продолжи одно существующее дело из списка.");
+  lines.push("- Для доверия к данным: используй минимум две зоны активности, включая одну нерабочую; когда у затронутого дела появится фокус-время, проверь в списке дел время за день и всего, затем нажми `Время верно`.");
+  lines.push("- Для контекста без пересборки по памяти: добавь одно событие дня через `Добавить событие дня...` или действия разрыва `Объяснить` / `Управляемость` / `Восстановление`, добавь одно событие дела с временем и во время активного фокуса зафиксируй одно отвлечение через `Зафиксировать отвлечение...`.");
+  lines.push("- Перед финальным отчётом: если пропущен интервал, нажми `Добавить блок`; если таймлайн честный, нажми `Трекинг верен`; открытые отвлечения закрой, преврати `В дело`/`В событие` или явно оставь открытым.");
+  lines.push("- Вечером нажми `Начать закрытие дня` и дальше иди по строке `Ближайшее действие`: она ведёт к финальному `Копировать отчёт` за 10 минут или меньше.");
+  lines.push("- Если буфер обмена не примет отчёт, Timeskein покажет выделенный Markdown: нажми `Command+C` и вставь его куда нужно.");
   lines.push("- Во время закрытия не спрашивай Codex, что делать дальше. Если без Codex не удалось понять следующий шаг, этот день не закрывает текущую цель.");
-  lines.push("- В скопированном отчёте заполни только `Короткое закрытие`: доверие к данным, главное наблюдение и следующий шаг; строку про 10 минут Timeskein заполнит сам.");
-  lines.push("- Закрой день командой `pnpm dogfood:finish:save`; если проверка закрытия ещё не чистая, она покажет `Ближайшее действие` и куда вернуться в `Проверка перед отчётом`.");
-  lines.push("- День считается доказательством цели, когда `pnpm dogfood:finish:save` печатает `Короткое закрытие: Закрытие уложилось в 10 минут: да (...)` и точную команду `pnpm dogfood:goal-check -- --date YYYY-MM-DD --no-codex-guidance`.");
-  lines.push("- Если хочется спокойно проверить готовность до строгой проверки, используй `pnpm dogfood:goal-check:status -- --date YYYY-MM-DD`: он не закрывает цель и не запускает дорогие проверки.");
-  lines.push("- Если закрываешь день после полуночи, сначала явно передай дату дня Timeskein: `pnpm dogfood:finish:save -- --date YYYY-MM-DD`, затем следуй напечатанному следующему шагу.");
+  lines.push("- `Короткое закрытие` уже содержит статус, доверие к данным и строку про 10 минут; главное наблюдение и следующий шаг заполняй только если это правда полезно.");
+  lines.push("- Закрой день командой `pnpm dogfood:finish:save`; если проверка закрытия ещё не чистая, команда покажет `Ближайшее действие` и куда вернуться в `Проверка перед отчётом`.");
+  lines.push("- День считается доказательством цели, когда `pnpm dogfood:finish:save` печатает `Статус закрытия: завершено`, `Короткое закрытие: Закрытие уложилось в 10 минут: да (...)` и точную команду `pnpm dogfood:goal-check -- --date YYYY-MM-DD --no-codex-guidance`.");
+  lines.push("- Для спокойной проверки без дорогих команд используй `pnpm dogfood:goal-check:status -- --date YYYY-MM-DD`: он не закрывает цель и не запускает дорогие проверки. Если закрываешь день после полуночи, явно передай дату `pnpm dogfood:finish:save -- --date YYYY-MM-DD`, затем следуй напечатанному следующему шагу.");
 }
 
-function appendReadyNext(lines, mode) {
+function appendReadyNext(lines, mode, context) {
   lines.push("## Что сделать дальше", "");
   if (mode === "continue") {
-    lines.push("- Продолжай текущий день в Timeskein.");
+    if ((context?.todaySessionsCount ?? 0) > 0) {
+      lines.push("- Продолжай текущий день в Timeskein.");
+    } else {
+      lines.push("- Сегодня ещё нет фокус-блоков: открой Timeskein и начни первый фокус.");
+    }
     lines.push("- Если приложение не открыто, выполни `pnpm dogfood:continue`: команда проверит состояние дня и откроет собранное приложение.");
   } else {
     lines.push("- Начни день в Timeskein командой `pnpm dogfood:start`.");
@@ -239,8 +240,9 @@ function sqliteReadArgs(path, sql) {
   return ["-readonly", "-cmd", ".timeout 5000", "-json", path, sql];
 }
 
-function addSummary(lines, blockers, warnings, nextActions, summary, responsiveAgent, runningPids, mode) {
+function addSummary(lines, blockers, warnings, nextActions, summary, responsiveAgent, runningPids, mode, readyNextContext) {
   const todaySeconds = summary.todaySessions.reduce((sum, session) => sum + session.active_seconds, 0);
+  readyNextContext.todaySessionsCount = summary.todaySessions.length;
 
   lines.push("## Сводка", "");
   lines.push(`- Дел: ${summary.counts.work_items}`);

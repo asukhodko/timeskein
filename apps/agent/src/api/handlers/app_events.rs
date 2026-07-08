@@ -190,6 +190,12 @@ fn build_summary(events: Vec<AppEvent>) -> serde_json::Value {
     } else {
         Some(start_latency_ms.iter().sum::<i64>() / start_latency_ms.len() as i64)
     };
+    let open_day_closure = pending_day_closures
+        .iter()
+        .max_by(|left, right| left.1.cmp(right.1));
+    let open_day_closure_action_id = open_day_closure.map(|(action_id, _)| action_id.clone());
+    let open_day_closure_started_at =
+        open_day_closure.map(|(_, started_at)| started_at.to_rfc3339());
     let last_day_closure_duration_seconds = day_closure_durations_seconds.last().copied();
 
     serde_json::json!({
@@ -209,6 +215,8 @@ fn build_summary(events: Vec<AppEvent>) -> serde_json::Value {
         "correction_failures": count(&by_kind, "focus_correction_failed"),
         "day_closure_starts": count(&by_kind, "day_closure_started"),
         "day_closure_completions": count(&by_kind, "day_closure_completed"),
+        "open_day_closure_started_at": open_day_closure_started_at,
+        "open_day_closure_action_id": open_day_closure_action_id,
         "last_day_closure_duration_seconds": last_day_closure_duration_seconds,
         "api_errors": count(&by_kind, "api_error"),
         "copy_failures": count(&by_kind, "report_copy_failed"),
@@ -229,6 +237,7 @@ fn build_summary(events: Vec<AppEvent>) -> serde_json::Value {
         "capture_converted": count(&by_kind, "capture_converted"),
         "capture_convert_failures": count(&by_kind, "capture_convert_failed"),
         "capture_followup_reviews": count(&by_kind, "capture_followup_reviewed"),
+        "day_context_reviews": count(&by_kind, "day_context_reviewed"),
         "work_item_time_badge_reviews": count(&by_kind, "work_item_time_badges_reviewed"),
         "activity_zone_reviews": count(&by_kind, "activity_zone_reviewed"),
         "capture_usage_reviews": count(&by_kind, "capture_usage_reviewed"),

@@ -55,16 +55,17 @@ export function getBulkAcceptableReviewActions(items: BulkAcceptableReviewItem[]
   if (items.some((item) => item.level === 'blocker')) return []
 
   const reviewItems = items.filter((item) => item.level === 'review')
-  if (reviewItems.length <= 1) return []
-
-  const actions = reviewItems.map((item) => item.action)
-  if (actions.some((action) => !isBulkAcceptableReviewAction(action))) {
+  const acceptReviewItems = reviewItems.filter((item) => item.action?.startsWith('accept_'))
+  if (acceptReviewItems.some((item) => !isBulkAcceptableReviewAction(item.action))) {
     return []
   }
 
-  return [...new Set(actions)] as string[]
+  const acceptableReviewItems = acceptReviewItems.filter((item) => isBulkAcceptableReviewAction(item.action))
+  if (acceptableReviewItems.length <= 1) return []
+
+  return [...new Set(acceptableReviewItems.map((item) => item.action))] as string[]
 }
 
 export function isBulkAcceptableReviewAction(action?: string) {
-  return Boolean(action?.startsWith('accept_'))
+  return Boolean(action?.startsWith('accept_') && action !== 'accept_open_captures')
 }

@@ -6,7 +6,7 @@ import {
   useStopFocusSession,
   useTodayFocusSessions,
 } from '../hooks/useFocusSessions'
-import { useDeleteWorkItemEvent, useInventory, useUpdateWorkItemEvent, useWorkItemEvents } from '../hooks/useInventory'
+import { useDeleteWorkItemEvent, useInventory, useSetWorkItemState, useUpdateWorkItemEvent, useWorkItemEvents } from '../hooks/useInventory'
 import { useCaptureActivity, useOpenCaptures } from '../hooks/useCaptures'
 import { useAddDayEvent, useDayEvents, useDeleteDayEvent, useUpdateDayEvent } from '../hooks/useDayEvents'
 import { appEventApi, logAppEvent, shellApi } from '../api/client'
@@ -34,6 +34,9 @@ interface FocusPanelProps {
 
 const SIGNIFICANT_GAP_SECONDS = 20 * 60
 const ACTIVITY_ZONES: ActivityZone[] = ['work', 'coordination', 'recovery', 'idle', 'personal']
+const DAY_EVENT_DRAFT_STORAGE_PREFIX = 'timeskein.day-event-draft.v1.'
+export const MANUAL_COPY_HINT =
+  'Буфер обмена не принял текст. Поле уже выделено: нажми Command+C и вставь отчёт куда нужно.'
 
 export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }: FocusPanelProps) {
   const [title, setTitle] = useState('')
@@ -52,7 +55,9 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
   const dayEventInputRef = useRef<HTMLInputElement>(null)
   const manualCopyRef = useRef<HTMLTextAreaElement>(null)
   const dayClosureActionIdRef = useRef<string | null>(null)
+  const dayClosureStartedAtRef = useRef<Date | null>(null)
   const dayClosureCompletedRef = useRef(false)
+  const dayEventDraftLoadedKeyRef = useRef<string | null>(null)
   const localDayKey = formatLocalDate(now)
   const dayWindow = useMemo(() => {
     const dayStart = startOfLocalDay(now)
@@ -73,6 +78,7 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
   const startMutation = useStartFocusSession()
   const stopMutation = useStopFocusSession()
   const addDayEventMutation = useAddDayEvent()
+  const setWorkItemStateMutation = useSetWorkItemState()
 
   const current = currentQuery.data?.session
   const currentId = current?.id
@@ -125,6 +131,7 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
   const reportIsDraft = !reportIsFinal
   const pendingReviewItemCount = countPendingReviewItems(reviewItems)
   const reportHasPendingReview = pendingReviewItemCount > 0
+  const reportCanBeCopied = Boolean(dayClosureStartedAt) && !reportIsDraft && !reportHasPendingReview
   const dayClosureStage = getDayClosureStage({
     activeFocus: current?.state === 'active',
     activeWorkItemCount: activeWorkItems.length,
@@ -135,6 +142,19 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
   const dayClosureElapsedSeconds = dayClosureStartedAt
     ? Math.max(0, Math.floor((now.getTime() - dayClosureStartedAt.getTime()) / 1000))
     : undefined
+
+  const rememberDayClosureStartedAt = (startedAt: Date | null) => {
+    dayClosureStartedAtRef.current = startedAt
+    setDayClosureStartedAt(startedAt)
+  }
+
+  const restoreOpenDayClosure = (summary: AppEventSummary | null | undefined) => {
+    const restored = getOpenDayClosure(summary)
+    if (!restored || dayClosureStartedAtRef.current || dayClosureCompletedRef.current) return
+
+    dayClosureActionIdRef.current = restored.actionId
+    rememberDayClosureStartedAt(restored.startedAt)
+  }
   const trayStatusTitle = useMemo(
     () => buildTrayStatusTitle(current, now, activeSecondsTotal),
     [current, now, activeSecondsTotal]
@@ -158,6 +178,22 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
     const timer = window.setInterval(() => setNow(new Date()), 1000)
     return () => window.clearInterval(timer)
   }, [])
+
+  useEffect(() => {
+    const draft = readDayEventDraft(localDayKey)
+    dayEventDraftLoadedKeyRef.current = localDayKey
+    setDayEventText(draft.text)
+    setDayEventZone(draft.zone)
+  }, [localDayKey])
+
+  useEffect(() => {
+    if (dayEventDraftLoadedKeyRef.current !== localDayKey) return
+
+    writeDayEventDraft(localDayKey, {
+      text: dayEventText,
+      zone: dayEventZone,
+    })
+  }, [dayEventText, dayEventZone, localDayKey])
 
   useEffect(() => {
     const handleWindowFocus = () => {
@@ -221,6 +257,7 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
         .then((summary) => {
           if (!cancelled) {
             setAppEventSummary(summary)
+            restoreOpenDayClosure(summary)
           }
         })
         .catch(() => {
@@ -521,10 +558,21 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
       return dayClosureActionIdRef.current
     }
 
+    const existingSummary = appEventSummary ?? await loadAppEventSummary(now).catch(() => null)
+    const restored = getOpenDayClosure(existingSummary)
+    if (restored) {
+      dayClosureActionIdRef.current = restored.actionId
+      rememberDayClosureStartedAt(restored.startedAt)
+      if (existingSummary && existingSummary !== appEventSummary) {
+        setAppEventSummary(existingSummary)
+      }
+      return restored.actionId
+    }
+
     const actionId = createTelemetryActionId()
     dayClosureActionIdRef.current = actionId
     const startedAt = new Date()
-    setDayClosureStartedAt(startedAt)
+    rememberDayClosureStartedAt(startedAt)
 
     await logAppEvent({
       source: 'ui',
@@ -569,6 +617,7 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
       },
       {
         onSuccess: () => {
+          clearDayEventDraft(localDayKey)
           setDayEventText('')
           setDayEventZone('')
         },
@@ -586,25 +635,37 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
     })
   }
 
-  const stageGapDayEvent = (gap: Gap, label = 'Разрыв') => {
-    stageDayEvent(formatGapDayEventDraft(gap, label), 'recovery')
+  const stageGapDayEvent = (gap: Gap, label = 'Разрыв', preset?: GapExplanationPreset) => {
+    stageDayEvent(formatGapDayEventDraft(gap, label, preset), preset === 'lost_control' ? 'idle' : 'recovery')
   }
 
   const handleReviewAction = async (action: DayReviewAction) => {
-    if (action === 'stage_significant_gap') {
+    if (action === 'stop_active_focus') {
+      stopCurrentSession()
+      return
+    }
+
+    if (action === 'clear_active_work_items') {
+      await Promise.all(
+        activeWorkItems.map((item) => setWorkItemStateMutation.mutateAsync({ id: item.id, state: 'unknown' }))
+      )
+      return
+    }
+
+    if (isSignificantGapStageAction(action)) {
       const gap = pickNextGapForReview(
         gapsBetweenSessions(sessions).filter((item) => item.seconds >= SIGNIFICANT_GAP_SECONDS),
         dayEvents
       )
       if (gap) {
-        stageGapDayEvent(gap)
+        stageGapDayEvent(gap, 'Разрыв', presetFromReviewAction(action))
       }
       return
     }
 
-    if (action === 'stage_open_gap') {
+    if (isOpenGapStageAction(action)) {
       if (openGap) {
-        stageGapDayEvent(openGap, 'Открытый разрыв')
+        stageGapDayEvent(openGap, 'Открытый разрыв', presetFromReviewAction(action))
       }
       return
     }
@@ -614,9 +675,16 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
       return
     }
 
+    if (action === 'stage_focus_correction') {
+      setAddingMissedBlock(true)
+      return
+    }
+
     const actionId = createTelemetryActionId()
     const kind = reviewActionEventKind(action)
-    const touchedWorkItemCount = new Set(sessions.map((session) => session.work_item_id).filter(Boolean)).size
+    const touchedWorkItemIds = new Set(sessions.map((session) => session.work_item_id).filter(Boolean))
+    const touchedWorkItemCount = touchedWorkItemIds.size
+    const touchedWorkItemNoteCount = inventoryItems.filter((item) => touchedWorkItemIds.has(item.id) && item.note?.trim()).length
 
     await logAppEvent({
       source: 'ui',
@@ -625,6 +693,13 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
         action_id: actionId,
         control: 'review_checklist',
         ...(action === 'accept_open_captures' ? { open_count: openCaptures.length } : {}),
+        ...(action === 'accept_day_context'
+          ? {
+              day_event_count: dayEvents.length,
+              work_item_event_count: workItemEvents.length,
+              work_item_note_count: touchedWorkItemNoteCount,
+            }
+          : {}),
         ...(action === 'accept_work_item_time_badges' ? { touched_work_item_count: touchedWorkItemCount } : {}),
         ...(action === 'accept_activity_zones' ? { zone_count: activityZoneTotals.length } : {}),
         ...(action === 'accept_capture_usage' ? { capture_count: captureActivity.length } : {}),
@@ -788,9 +863,12 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
                     void ensureDayClosureStarted('report_button')
                     return
                   }
-                  void copyDogfoodReport()
+                  if (reportCanBeCopied) {
+                    void copyDogfoodReport()
+                  }
                 }}
-                disabled={sessions.length === 0}
+                disabled={sessions.length === 0 || (Boolean(dayClosureStartedAt) && !reportCanBeCopied)}
+                title={dayClosureStartedAt && !reportCanBeCopied ? 'Сначала выполни ближайшее действие в проверке перед отчётом' : undefined}
                 className="rounded border border-emerald-800 px-2 py-0.5 text-[11px] font-medium text-emerald-200 transition-colors hover:border-emerald-500 hover:text-emerald-100 disabled:cursor-not-allowed disabled:border-gray-800 disabled:text-gray-600"
               >
                 {formatReportButtonLabel({
@@ -821,6 +899,7 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
                 Закрыть
               </button>
             </div>
+            <div className="text-[11px] text-amber-100/80">{MANUAL_COPY_HINT}</div>
             <textarea
               ref={manualCopyRef}
               readOnly
@@ -836,14 +915,14 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
             className="grid gap-1.5 overflow-auto pr-1"
             style={{ maxHeight: `${todayListMaxHeightPx}px` }}
           >
-            {openGap && <OpenGapRow gap={openGap} onExplain={() => stageGapDayEvent(openGap, 'Открытый разрыв')} />}
+            {openGap && <OpenGapRow gap={openGap} onExplain={(preset) => stageGapDayEvent(openGap, 'Открытый разрыв', preset)} />}
             {sessionsWithGaps.map(({ session, gapBefore }) => (
               <FocusSessionRow
                 key={session.id}
                 session={session}
                 gapBefore={gapBefore}
                 onCorrect={() => setCorrectingSession(session)}
-                onExplainGap={gapBefore ? () => stageGapDayEvent(gapBefore) : undefined}
+                onExplainGap={gapBefore ? (preset) => stageGapDayEvent(gapBefore, 'Разрыв', preset) : undefined}
               />
             ))}
           </div>
@@ -872,6 +951,8 @@ function reviewActionEventKind(action: DayReviewAction): AppEventKind {
   switch (action) {
     case 'accept_open_captures':
       return 'capture_followup_reviewed'
+    case 'accept_day_context':
+      return 'day_context_reviewed'
     case 'accept_work_item_time_badges':
       return 'work_item_time_badges_reviewed'
     case 'accept_tracking_accuracy':
@@ -886,7 +967,14 @@ function reviewActionEventKind(action: DayReviewAction): AppEventKind {
       return 'window_entrypoints_reviewed'
     case 'stage_significant_gap':
     case 'stage_open_gap':
+    case 'stage_significant_gap_lost_control':
+    case 'stage_open_gap_lost_control':
+    case 'stage_significant_gap_recovery':
+    case 'stage_open_gap_recovery':
     case 'stage_day_context':
+    case 'stage_focus_correction':
+    case 'stop_active_focus':
+    case 'clear_active_work_items':
       throw new Error(`Review action does not map to telemetry: ${action}`)
   }
 }
@@ -924,6 +1012,73 @@ function isEditableElement(element: Element | null): element is HTMLElement {
 
 function createTelemetryActionId() {
   return globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`
+}
+
+export interface DayEventDraft {
+  text: string
+  zone: ActivityZone | ''
+}
+
+export function encodeDayEventDraft(draft: DayEventDraft) {
+  if (!draft.text && !draft.zone) return ''
+
+  return JSON.stringify({
+    text: draft.text,
+    zone: ACTIVITY_ZONES.includes(draft.zone as ActivityZone) ? draft.zone : '',
+  })
+}
+
+export function decodeDayEventDraft(raw: string | null | undefined): DayEventDraft {
+  if (!raw) return { text: '', zone: '' }
+
+  try {
+    const parsed = JSON.parse(raw) as Partial<DayEventDraft>
+    const zone = ACTIVITY_ZONES.includes(parsed.zone as ActivityZone) ? parsed.zone as ActivityZone : ''
+
+    return {
+      text: typeof parsed.text === 'string' ? parsed.text : '',
+      zone,
+    }
+  } catch {
+    return { text: '', zone: '' }
+  }
+}
+
+function dayEventDraftStorageKey(localDayKey: string) {
+  return `${DAY_EVENT_DRAFT_STORAGE_PREFIX}${localDayKey}`
+}
+
+function readDayEventDraft(localDayKey: string): DayEventDraft {
+  const storage = getLocalStorage()
+  if (!storage) return { text: '', zone: '' }
+
+  return decodeDayEventDraft(storage.getItem(dayEventDraftStorageKey(localDayKey)))
+}
+
+function writeDayEventDraft(localDayKey: string, draft: DayEventDraft) {
+  const storage = getLocalStorage()
+  if (!storage) return
+
+  const encoded = encodeDayEventDraft(draft)
+  const key = dayEventDraftStorageKey(localDayKey)
+  if (!encoded) {
+    storage.removeItem(key)
+    return
+  }
+
+  storage.setItem(key, encoded)
+}
+
+function clearDayEventDraft(localDayKey: string) {
+  getLocalStorage()?.removeItem(dayEventDraftStorageKey(localDayKey))
+}
+
+function getLocalStorage() {
+  try {
+    return globalThis.localStorage
+  } catch {
+    return undefined
+  }
 }
 
 function buildTodayMarkdown(
@@ -1078,6 +1233,36 @@ async function buildDogfoodReportMarkdown(
     )
   }
 
+  const appTelemetryMarkdown = await buildAppTelemetryMarkdown(now)
+  const reportFocusMarkdown = formatFocusMarkdownForReport(todayMarkdown)
+  const reportTelemetryMarkdown = formatTelemetryForReport(appTelemetryMarkdown)
+
+  lines.push(
+    formatShortClosureMarkdown(appTelemetryMarkdown, {
+      reportReady: isDayClosureReadyForFinalReport({
+        activeFocus: Boolean(activeFocus),
+        activeWorkItemCount: activeWorkItems.length,
+        pendingReviewItemCount,
+      }),
+    }).trim(),
+    ''
+  )
+
+  lines.push(
+    formatReviewChecklistMarkdown(reviewItems).trim(),
+    '',
+    formatDailyControlGoalAuditMarkdown({
+      activeFocus,
+      activeWorkItems,
+      openCaptures,
+      captureActivity,
+      todayMarkdown,
+      appTelemetryMarkdown,
+      reviewItems,
+    }).trim(),
+    '',
+  )
+
   if (openCaptures.length > 0) {
     lines.push(
       '## Открытые отвлечения',
@@ -1095,25 +1280,7 @@ async function buildDogfoodReportMarkdown(
     )
   }
 
-  const appTelemetryMarkdown = await buildAppTelemetryMarkdown(now)
-  const reportFocusMarkdown = formatFocusMarkdownForReport(todayMarkdown)
-  const reportTelemetryMarkdown = formatTelemetryForReport(appTelemetryMarkdown)
-
-  lines.push(formatShortClosureMarkdown(appTelemetryMarkdown).trim(), '')
-
   lines.push(
-    formatReviewChecklistMarkdown(reviewItems).trim(),
-    '',
-    formatDailyControlGoalAuditMarkdown({
-      activeFocus,
-      activeWorkItems,
-      openCaptures,
-      captureActivity,
-      todayMarkdown,
-      appTelemetryMarkdown,
-      reviewItems,
-    }).trim(),
-    '',
     '## Данные фокуса',
     '',
     reportFocusMarkdown.trim(),
@@ -1247,6 +1414,7 @@ const APP_EVENT_KIND_LABELS: Record<string, string> = {
   capture_delete_failed: 'удаление отвлечения не удалось',
   capture_convert_failed: 'превращение отвлечения не удалось',
   capture_followup_reviewed: 'открытые отвлечения проверены',
+  day_context_reviewed: 'контекст дня проверен',
   capture_usage_reviewed: 'инбокс отвлечений проверен',
   work_item_time_badges_reviewed: 'время по делам проверено',
   activity_zone_reviewed: 'зоны активности проверены',
@@ -1279,6 +1447,7 @@ export function formatTelemetryForReport(markdown: string) {
     .replace(/^Manual copy fallbacks:/gm, 'Ручных копирований вместо буфера:')
     .replace(/^Capture created\/resolved\/converted:/gm, 'Отвлечений создано/закрыто/превращено:')
     .replace(/^Capture follow-up reviews:/gm, 'Проверок открытых отвлечений:')
+    .replace(/^Day context reviews:/gm, 'Проверок контекста дня:')
     .replace(/^Work Item time badge reviews:/gm, 'Проверок времени по делам:')
     .replace(/^Activity Zone reviews:/gm, 'Проверок зон активности:')
     .replace(/^Capture usage reviews:/gm, 'Проверок использования инбокса:')
@@ -1301,15 +1470,38 @@ export function formatTelemetryForReport(markdown: string) {
     .replace(/^\| (\d+) \| ([a-z_]+) \|$/gm, (_line, count, kind) => `| ${count} | ${formatAppEventKind(kind)} |`)
 }
 
-export function formatShortClosureMarkdown(appTelemetryMarkdown: string) {
+export function formatShortClosureMarkdown(
+  appTelemetryMarkdown: string,
+  { reportReady = false }: { reportReady?: boolean } = {}
+) {
   return [
     '## Короткое закрытие',
     '',
-    '- Данным можно доверять: да/нет',
+    formatShortClosureStatusLine(appTelemetryMarkdown),
+    formatShortClosureTrustLine(reportReady),
     formatShortClosureDurationLine(appTelemetryMarkdown),
-    '- Главное наблюдение дня:',
-    '- Следующий шаг после закрытия:',
+    '- Главное наблюдение дня (если нужно):',
+    '- Следующий шаг после закрытия (если уже ясен):',
   ].join('\n')
+}
+
+function formatShortClosureStatusLine(appTelemetryMarkdown: string) {
+  const closureCounts = parseCountPair(extractLineValue(appTelemetryMarkdown, 'Day closure started/completed'))
+
+  if (!closureCounts || closureCounts.left === 0) {
+    return '- Статус закрытия: не начато'
+  }
+
+  if (closureCounts.left > closureCounts.right) {
+    return '- Статус закрытия: идёт (заверши через «Копировать отчёт»)'
+  }
+
+  return '- Статус закрытия: завершено'
+}
+
+function formatShortClosureTrustLine(reportReady: boolean) {
+  if (reportReady) return '- Данным можно доверять: да (проверки закрыты)'
+  return '- Данным можно доверять: пока нет (см. «Проверка перед отчётом»)'
 }
 
 function formatShortClosureDurationLine(appTelemetryMarkdown: string) {
@@ -1335,11 +1527,14 @@ export type DayReviewItem = {
   title: string
   detail?: string
   action?: DayReviewAction
+  secondaryActions?: DayReviewAction[]
 }
 
 export type DayReviewAction =
+  | 'stage_focus_correction'
   | 'accept_tracking_accuracy'
   | 'accept_open_captures'
+  | 'accept_day_context'
   | 'accept_work_item_time_badges'
   | 'accept_activity_zones'
   | 'accept_capture_usage'
@@ -1347,10 +1542,48 @@ export type DayReviewAction =
   | 'accept_window_entrypoints'
   | 'stage_significant_gap'
   | 'stage_open_gap'
+  | 'stage_significant_gap_lost_control'
+  | 'stage_open_gap_lost_control'
+  | 'stage_significant_gap_recovery'
+  | 'stage_open_gap_recovery'
   | 'stage_day_context'
+  | 'stop_active_focus'
+  | 'clear_active_work_items'
+
+function isSignificantGapStageAction(action: DayReviewAction) {
+  return (
+    action === 'stage_significant_gap' ||
+    action === 'stage_significant_gap_lost_control' ||
+    action === 'stage_significant_gap_recovery'
+  )
+}
+
+function isOpenGapStageAction(action: DayReviewAction) {
+  return (
+    action === 'stage_open_gap' ||
+    action === 'stage_open_gap_lost_control' ||
+    action === 'stage_open_gap_recovery'
+  )
+}
+
+function presetFromReviewAction(action: DayReviewAction): GapExplanationPreset | undefined {
+  if (action === 'stage_significant_gap_lost_control' || action === 'stage_open_gap_lost_control') {
+    return 'lost_control'
+  }
+
+  if (action === 'stage_significant_gap_recovery' || action === 'stage_open_gap_recovery') {
+    return 'recovery'
+  }
+
+  return undefined
+}
 
 function countPendingReviewItems(items: DayReviewItem[]) {
   return items.filter((item) => item.level !== 'ok').length
+}
+
+function isAcceptReviewAction(action?: DayReviewAction) {
+  return Boolean(action?.startsWith('accept_'))
 }
 
 function buildDayReviewItems({
@@ -1386,6 +1619,7 @@ function buildDayReviewItems({
   const gapExplanationCount = countGapExplanationTexts(dayEvents)
   const unexplainedGapCount = Math.max(gaps.length - gapExplanationCount, 0)
   const activityZoneReviewed = (appTelemetry?.by_kind.activity_zone_reviewed ?? 0) > 0
+  const dayContextReviewed = (appTelemetry?.by_kind.day_context_reviewed ?? 0) > 0
   const captureUsageReviewed = (appTelemetry?.by_kind.capture_usage_reviewed ?? 0) > 0
   const entryPathsReviewed = (appTelemetry?.by_kind.entry_paths_reviewed ?? 0) > 0
   const windowEntrypointsReviewed = (appTelemetry?.by_kind.window_entrypoints_reviewed ?? 0) > 0
@@ -1395,14 +1629,16 @@ function buildDayReviewItems({
       level: 'blocker',
       title: 'Stop the active focus block',
       detail: activeFocus.work_item_title ?? activeFocus.title,
+      action: 'stop_active_focus',
     })
   }
 
-  if (activeWorkItems.length > 0) {
+  if (!activeFocus && activeWorkItems.length > 0) {
     items.push({
       level: 'blocker',
       title: 'Clear active Work Item state',
       detail: `${formatCount(activeWorkItems.length, 'дело', 'дела', 'дел')} с активным статусом`,
+      action: 'clear_active_work_items',
     })
   }
 
@@ -1416,11 +1652,13 @@ function buildDayReviewItems({
   }
 
   if (unexplainedGapCount > 0) {
+    const nextGap = pickNextGapForReview(gaps, dayEvents)
     items.push({
       level: 'review',
       title: 'Classify significant gaps',
-      detail: `${unexplainedGapCount}/${gaps.length} больших разрывов без события дня`,
+      detail: formatSignificantGapReviewDetail(unexplainedGapCount, gaps.length, nextGap),
       action: 'stage_significant_gap',
+      secondaryActions: ['stage_significant_gap_lost_control', 'stage_significant_gap_recovery'],
     })
   }
 
@@ -1430,6 +1668,7 @@ function buildDayReviewItems({
       title: 'Explain current open gap',
       detail: `${formatDuration(openGap.seconds)} после последнего остановленного блока`,
       action: 'stage_open_gap',
+      secondaryActions: ['stage_open_gap_lost_control', 'stage_open_gap_recovery'],
     })
   }
 
@@ -1478,12 +1717,13 @@ function buildDayReviewItems({
     })
   }
 
-  if (sessions.length > 0 && dayEvents.length === 0 && workItemEvents.length === 0 && touchedWorkItemNoteCount === 0) {
+  if (sessions.length > 0 && dayEvents.length === 0 && workItemEvents.length === 0 && touchedWorkItemNoteCount === 0 && !dayContextReviewed) {
     items.push({
       level: 'review',
       title: 'No day or Work Item notes/events',
-      detail: 'Добавь контекст, если отчёт всё ещё требует памяти',
-      action: 'stage_day_context',
+      detail: 'Если отчёт требует памяти, добавь одну фразу; если всё ясно, прими как есть',
+      action: 'accept_day_context',
+      secondaryActions: ['stage_day_context'],
     })
   }
 
@@ -1526,6 +1766,7 @@ function buildDayReviewItems({
         title: 'Confirm tracking accuracy or test correction',
         detail: 'Сегодня не было коррекций фокус-блоков',
         action: 'accept_tracking_accuracy',
+        secondaryActions: ['stage_focus_correction'],
       })
     }
   }
@@ -1568,8 +1809,8 @@ function DayReviewPanel({
 }) {
   const blockers = items.filter((item) => item.level === 'blocker')
   const reviews = items.filter((item) => item.level === 'review')
-  const actionReviews = reviews.filter((item) => !isBulkAcceptableReviewAction(item.action))
-  const acceptReviews = reviews.filter((item) => isBulkAcceptableReviewAction(item.action))
+  const actionReviews = reviews.filter((item) => !isAcceptReviewAction(item.action))
+  const acceptReviews = reviews.filter((item) => isAcceptReviewAction(item.action))
   const readyItems = items.filter((item) => item.level === 'ok')
   const bulkAcceptReviewActions = getBulkAcceptableReviewActions(items) as DayReviewAction[]
   const compactAcceptReviews = shouldCompactAcceptAsIsReviewItems(items)
@@ -1603,8 +1844,11 @@ function DayReviewPanel({
   const prompt = formatDayClosurePrompt(closureStage, {
     blockers: blockers.length,
     reviews: reviews.length,
+    fixups: actionReviews.length,
+    accepts: acceptReviews.length,
     closureElapsedSeconds,
   })
+  const reviewSummary = showReviewDetails ? formatDayReviewSummary(items) : ''
   const acceptAllReviews = async () => {
     for (const action of bulkAcceptReviewActions) {
       await onAction?.(action)
@@ -1653,6 +1897,9 @@ function DayReviewPanel({
       )}
       <div className="rounded border border-gray-800/80 bg-gray-950/20 px-2 py-1 text-[11px] text-gray-300">
         <span className="font-medium text-gray-200">Ближайшее действие:</span> {nextStep}
+        {reviewSummary && (
+          <span className="mt-0.5 block text-gray-500">{reviewSummary}</span>
+        )}
       </div>
       {showReviewDetails && blockers.length > 0 && (
         <DayReviewGroup title="Сначала закрыть" items={blockers} onAction={onAction} />
@@ -1719,10 +1966,14 @@ export function formatDayClosurePrompt(
   {
     blockers,
     reviews,
+    fixups,
+    accepts,
     closureElapsedSeconds,
   }: {
     blockers: number
     reviews: number
+    fixups?: number
+    accepts?: number
     closureElapsedSeconds?: number
   }
 ) {
@@ -1735,15 +1986,38 @@ export function formatDayClosurePrompt(
   }
 
   if (stage === 'blocked') {
-    return `Сначала закрой красные пункты: осталось ${blockers} ${pluralRu(blockers, 'пункт', 'пункта', 'пунктов')} перед финальным отчётом.`
+    return `Сначала закрой красные пункты: осталось ${blockers} ${pluralRu(blockers, 'пункт', 'пункта', 'пунктов')} перед финальным отчётом.${formatClosureElapsedHint(closureElapsedSeconds)}`
   }
 
   if (stage === 'review') {
-    return `Осталось ${reviews} ${pluralRu(reviews, 'проверка', 'проверки', 'проверок')}: запиши недостающий контекст или отметь пункт как проверенный, если данные уже достаточно честные.`
+    if (fixups && accepts) {
+      return `Осталось: ${formatCount(fixups, 'пункт дописать', 'пункта дописать', 'пунктов дописать')}, ${formatCount(accepts, 'пункт только проверить', 'пункта только проверить', 'пунктов только проверить')}. Сначала выполни ближайшее действие ниже.${formatClosureElapsedHint(closureElapsedSeconds)}`
+    }
+    if (fixups) {
+      return `Осталось ${formatCount(fixups, 'пункт дописать или исправить', 'пункта дописать или исправить', 'пунктов дописать или исправить')}: запиши недостающий контекст.${formatClosureElapsedHint(closureElapsedSeconds)}`
+    }
+    if (accepts) {
+      return `Осталось ${formatCount(accepts, 'пункт осознанно проверить', 'пункта осознанно проверить', 'пунктов осознанно проверить')}: отметь их, если данные уже достаточно честные.${formatClosureElapsedHint(closureElapsedSeconds)}`
+    }
+    return `Осталось ${reviews} ${pluralRu(reviews, 'проверка', 'проверки', 'проверок')}: запиши недостающий контекст или отметь пункт как проверенный, если данные уже достаточно честные.${formatClosureElapsedHint(closureElapsedSeconds)}`
   }
 
-  const elapsedText = closureElapsedSeconds == null ? '' : ` Закрытие идёт ${formatDuration(closureElapsedSeconds)}.`
-  return `Проверки чистые.${elapsedText} Кнопка «Копировать отчёт» завершит закрытие дня.`
+  const elapsedText = formatClosureElapsedHint(closureElapsedSeconds)
+  return `Проверки чистые.${elapsedText} Кнопка «Копировать отчёт» завершит закрытие дня. После этого ` +
+    '`pnpm dogfood:finish:save` сохранит доказательства.'
+}
+
+function formatClosureElapsedHint(closureElapsedSeconds?: number) {
+  if (closureElapsedSeconds == null) {
+    return ''
+  }
+
+  const elapsed = formatDuration(closureElapsedSeconds)
+  if (closureElapsedSeconds <= 10 * 60) {
+    return ` Закрытие идёт ${elapsed}, цель — до 10:00.`
+  }
+
+  return ` Закрытие идёт ${elapsed}: этот день уже не докажет цель 10 минут, но данные всё равно стоит спокойно закрыть.`
 }
 
 function DayReviewGroup({
@@ -1760,6 +2034,8 @@ function DayReviewGroup({
       <div className="text-[11px] font-medium uppercase tracking-wide text-gray-500">{title}</div>
       {items.map((item) => {
         const label = formatDayReviewItem(item)
+        const actions = [item.action, ...(item.secondaryActions ?? [])].filter(Boolean) as DayReviewAction[]
+        const actionHint = formatReviewItemActionHint(item)
 
         return (
           <div key={`${item.level}:${item.title}:${item.detail ?? ''}`} className="grid grid-cols-[auto_minmax(0,1fr)_auto] gap-2">
@@ -1767,17 +2043,23 @@ function DayReviewGroup({
             <span className="min-w-0 text-gray-300">
               <span className="font-medium text-gray-200">{label.title}</span>
               {label.detail && <span className="text-gray-500"> · {truncate(label.detail, 100)}</span>}
+              {actionHint && <span className="mt-0.5 block text-gray-500">{actionHint}</span>}
             </span>
-            {item.action && (
-              <button
-                type="button"
-                onClick={() => {
-                  void onAction?.(item.action!)
-                }}
-                className="rounded border border-amber-800 px-1.5 py-0.5 text-[11px] font-medium text-amber-100 hover:border-amber-500"
-              >
-                {formatReviewActionLabel(item.action)}
-              </button>
+            {actions.length > 0 && (
+              <div className="flex flex-wrap justify-end gap-1">
+                {actions.map((action) => (
+                  <button
+                    key={action}
+                    type="button"
+                    onClick={() => {
+                      void onAction?.(action)
+                    }}
+                    className="rounded border border-amber-800 px-1.5 py-0.5 text-[11px] font-medium text-amber-100 hover:border-amber-500"
+                  >
+                    {formatReviewActionLabel(action)}
+                  </button>
+                ))}
+              </div>
             )}
           </div>
         )
@@ -1791,10 +2073,24 @@ export function formatReviewActionLabel(action: DayReviewAction) {
     case 'stage_significant_gap':
     case 'stage_open_gap':
       return 'Объяснить'
+    case 'stage_significant_gap_lost_control':
+    case 'stage_open_gap_lost_control':
+      return 'Управляемость'
+    case 'stage_significant_gap_recovery':
+    case 'stage_open_gap_recovery':
+      return 'Восстановление'
     case 'stage_day_context':
       return 'Добавить контекст'
+    case 'stage_focus_correction':
+      return 'Добавить блок'
+    case 'accept_day_context':
+      return 'Контекст не нужен'
+    case 'stop_active_focus':
+      return 'Стоп'
+    case 'clear_active_work_items':
+      return 'Снять активность'
     case 'accept_open_captures':
-      return 'Оставить открытыми'
+      return 'Оставить как хвост'
     case 'accept_work_item_time_badges':
       return 'Время верно'
     case 'accept_activity_zones':
@@ -1836,12 +2132,14 @@ function formatDayReviewDetail(detail?: string) {
     return formatCount(count, 'открытое отвлечение', 'открытых отвлечения', 'открытых отвлечений')
   }
 
-  const unexplainedGapsMatch = detail.match(/^(\d+)\/(\d+) больших разрывов без события дня$/)
+  const unexplainedGapsMatch = detail.match(/^(\d+)\/(\d+) больших разрывов без события дня(?:; следующий: (.+))?$/)
   if (unexplainedGapsMatch) {
     const missing = Number(unexplainedGapsMatch[1])
     const total = Number(unexplainedGapsMatch[2])
+    const nextGap = unexplainedGapsMatch[3]
     const gapLabel = formatCount(missing, 'большой разрыв', 'больших разрыва', 'больших разрывов')
-    return missing === total ? `${gapLabel} без события дня` : `${missing} из ${total} больших разрывов без события дня`
+    const base = missing === total ? `${gapLabel} без события дня` : `${missing} из ${total} больших разрывов без события дня`
+    return nextGap ? `${base}; следующий: ${nextGap}` : base
   }
 
   const activeWorkItemMatch = detail.match(/^(\d+) Work Item с активным статусом$/)
@@ -1889,6 +2187,16 @@ function formatDayReviewDetail(detail?: string) {
 
 function formatCount(value: number, one: string, few: string, many: string) {
   return `${value} ${pluralRu(value, one, few, many)}`
+}
+
+function formatSignificantGapReviewDetail(missing: number, total: number, nextGap?: Gap) {
+  const base = `${missing}/${total} больших разрывов без события дня`
+  if (!nextGap) return base
+  return `${base}; следующий: ${formatGapInterval(nextGap)}`
+}
+
+function formatGapInterval(gap: Gap) {
+  return `${formatClockTime(gap.from)}-${formatClockTime(gap.to)} (${formatDuration(gap.seconds)})`
 }
 
 const REVIEW_TITLE_LABELS: Record<string, string> = {
@@ -1971,24 +2279,62 @@ export function formatReportButtonLabel({
   if (copyState === 'copied') return 'Скопировано'
   if (copyState === 'failed') return 'Ошибка'
   if (!closureStarted) return 'Начать закрытие'
-  if (reportIsDraft || reportHasPendingReview) return 'Копировать черновик'
+  if (reportIsDraft || reportHasPendingReview) return 'Закрыть проверки'
   return 'Копировать отчёт'
 }
 
 export function formatReviewChecklistMarkdown(items: DayReviewItem[]) {
-  const lines = ['## Проверка перед отчётом', '', `Ближайшее действие: ${formatDayReviewNextStep(items)}`, '']
+  const lines = ['## Проверка перед отчётом', '', `Ближайшее действие: ${formatDayReviewNextStep(items)}`]
+  const summary = formatDayReviewSummary(items)
+  if (summary) {
+    lines.push(summary)
+  }
+  lines.push('')
   const blockers = items.filter((item) => item.level === 'blocker')
   const reviews = items.filter((item) => item.level === 'review')
-  const fixups = reviews.filter((item) => !isBulkAcceptableReviewAction(item.action))
-  const accepts = reviews.filter((item) => isBulkAcceptableReviewAction(item.action))
+  const fixups = reviews.filter((item) => !isAcceptReviewAction(item.action))
+  const accepts = reviews.filter((item) => isAcceptReviewAction(item.action))
   const ready = items.filter((item) => item.level === 'ok')
 
   appendReviewChecklistGroup(lines, 'Сначала закрыть', blockers)
   appendReviewChecklistGroup(lines, 'Дописать или исправить', fixups)
   appendReviewChecklistGroup(lines, 'Осознанно проверить', accepts)
+  appendBulkAcceptAsIsHint(lines, items)
   appendReviewChecklistGroup(lines, 'Готово', ready)
 
   return `${lines.join('\n')}\n`
+}
+
+export function formatDayReviewSummary(items: DayReviewItem[]) {
+  const blockers = items.filter((item) => item.level === 'blocker')
+  const reviews = items.filter((item) => item.level === 'review')
+  const fixups = reviews.filter((item) => !isAcceptReviewAction(item.action))
+  const accepts = reviews.filter((item) => isAcceptReviewAction(item.action))
+
+  if (blockers.length > 0) {
+    const tail = reviews.length > 0
+      ? `, затем ${formatCount(reviews.length, 'проверка', 'проверки', 'проверок')}`
+      : ''
+    return `Сводка: ${formatCount(blockers.length, 'красный пункт', 'красных пункта', 'красных пунктов')}${tail}.`
+  }
+
+  if (fixups.length > 0 && accepts.length > 0) {
+    return `Сводка: ${formatCount(fixups.length, 'пункт дописать или исправить', 'пункта дописать или исправить', 'пунктов дописать или исправить')}, ${formatCount(accepts.length, 'пункт осознанно проверить', 'пункта осознанно проверить', 'пунктов осознанно проверить')}.`
+  }
+
+  if (fixups.length > 0) {
+    return `Сводка: ${formatCount(fixups.length, 'пункт дописать или исправить', 'пункта дописать или исправить', 'пунктов дописать или исправить')}.`
+  }
+
+  if (accepts.length > 0) {
+    return `Сводка: ${formatCount(accepts.length, 'пункт осознанно проверить', 'пункта осознанно проверить', 'пунктов осознанно проверить')}.`
+  }
+
+  if (items.some((item) => item.level === 'ok')) {
+    return 'Сводка: проверка чистая.'
+  }
+
+  return ''
 }
 
 export function formatDayReviewNextStep(items: DayReviewItem[]) {
@@ -1998,17 +2344,18 @@ export function formatDayReviewNextStep(items: DayReviewItem[]) {
   }
 
   const reviews = items.filter((item) => item.level === 'review')
-  const fixups = reviews.filter((item) => !isBulkAcceptableReviewAction(item.action))
+  const fixups = reviews.filter((item) => !isAcceptReviewAction(item.action))
   if (fixups.length > 0) {
     return formatNextStep('дописать или исправить', fixups)
   }
 
-  const accepts = reviews.filter((item) => isBulkAcceptableReviewAction(item.action))
-  if (accepts.length > 1) {
+  const accepts = reviews.filter((item) => isAcceptReviewAction(item.action))
+  const bulkAcceptActionCount = getBulkAcceptableReviewActions(items).length
+  if (accepts.length > 1 && bulkAcceptActionCount > 0 && accepts.every((item) => isBulkAcceptableReviewAction(item.action))) {
     return `осознанно проверить ${accepts.length} ${pluralRu(accepts.length, 'пункт', 'пункта', 'пунктов')} или нажать «Всё проверено», если данные уже честные.`
   }
 
-  if (accepts.length === 1) {
+  if (accepts.length > 0) {
     return formatNextStep('осознанно проверить', accepts)
   }
 
@@ -2021,21 +2368,74 @@ export function formatDayReviewNextStep(items: DayReviewItem[]) {
 
 function formatNextStep(prefix: string, items: DayReviewItem[]) {
   const label = formatDayReviewItem(items[0])
-  const actionHint = formatNextStepHint(items[0], items.length)
+  const title = formatNextStepTitle(items[0], label)
+  const actionHint = formatNextStepHint(items[0])
   const rest = items.length > 1 ? ` Ещё ${items.length - 1}.` : ''
-  return `${prefix}: ${label.title}.${actionHint}${rest}`
+  return `${prefix}: ${title}.${actionHint}${rest}`
 }
 
-function formatNextStepHint(item: DayReviewItem, itemCount: number) {
+function formatNextStepTitle(item: DayReviewItem, label: { title: string; detail?: string }) {
+  const nextGap = extractNextGapDetail(label.detail)
+  if (item.title === 'Classify significant gaps' && nextGap) {
+    return `${label.title} — ${nextGap}`
+  }
+
+  if (item.title === 'Explain current open gap' && label.detail) {
+    return `${label.title} — ${label.detail}`
+  }
+
+  return label.title
+}
+
+function extractNextGapDetail(detail?: string) {
+  return detail?.match(/(?:^|;\s*)следующий: (.+)$/)?.[1]
+}
+
+function formatNextStepHint(item: DayReviewItem) {
   if (!item.action) return formatNextStepBlockerHint(item)
-  if (itemCount > 1) return ''
 
   const actionLabel = formatReviewActionLabel(item.action)
-  if (isBulkAcceptableReviewAction(item.action)) {
+  if (item.action === 'stop_active_focus') {
+    return ` Нажми «${actionLabel}» у активного фокуса.`
+  }
+
+  if (item.action === 'clear_active_work_items') {
+    return ` Нажми «${actionLabel}», если фокус уже остановлен.`
+  }
+
+  if (item.action === 'accept_open_captures') {
+    return ` Разбери записи в Инбоксе или нажми «${actionLabel}», если запись должна остаться видимым хвостом.`
+  }
+
+  if (item.title === 'No day or Work Item notes/events') {
+    return ' Нажми «Добавить контекст», если отчёт требует памяти, или «Контекст не нужен», если всё ясно.'
+  }
+
+  if (item.title === 'Confirm tracking accuracy or test correction') {
+    return ' Нажми «Добавить блок», если в трекинге пропуск, или «Трекинг верен», если всё честно.'
+  }
+
+  if (isAcceptReviewAction(item.action)) {
     return ` Нажми «${actionLabel}», если данные уже честные.`
   }
 
+  if (item.secondaryActions?.length) {
+    const labels = [actionLabel, ...item.secondaryActions.map((action) => formatReviewActionLabel(action))]
+    return ` Нажми ${formatQuotedListRu(labels)}.`
+  }
+
+  if (item.action === 'stage_day_context') {
+    return ` Нажми «${actionLabel}», допиши одну фразу и нажми «Добавить» в строке события дня.`
+  }
+
   return ` Нажми «${actionLabel}».`
+}
+
+function formatQuotedListRu(labels: string[]) {
+  const quoted = labels.map((label) => `«${label}»`)
+  if (quoted.length <= 1) return quoted[0] ?? ''
+  if (quoted.length === 2) return `${quoted[0]} или ${quoted[1]}`
+  return `${quoted.slice(0, -1).join(', ')} или ${quoted[quoted.length - 1]}`
 }
 
 function formatNextStepBlockerHint(item: DayReviewItem) {
@@ -2044,7 +2444,7 @@ function formatNextStepBlockerHint(item: DayReviewItem) {
   }
 
   if (item.title === 'Clear active Work Item state') {
-    return ' Выбери активное дело и смени состояние с «Активно».'
+    return ' Нажми «Снять активность», если фокус уже остановлен.'
   }
 
   return ''
@@ -2062,8 +2462,32 @@ function appendReviewChecklistGroup(lines: string[], title: string, items: DayRe
     const marker = item.level === 'ok' ? '[x]' : '[ ]'
     const label = formatDayReviewItem(item)
     const suffix = label.detail ? ` - ${formatMarkdownListText(label.detail)}` : ''
-    lines.push(`- ${marker} ${formatMarkdownListText(label.title)}${suffix}`)
+    const actionHint = formatChecklistActionHint(item)
+    lines.push(`- ${marker} ${formatMarkdownListText(label.title)}${suffix}${actionHint}`)
   }
+}
+
+function appendBulkAcceptAsIsHint(lines: string[], items: DayReviewItem[]) {
+  const bulkAccepts = getBulkAcceptableReviewActions(items)
+  if (bulkAccepts.length === 0) return
+
+  if (lines.length > 0 && lines[lines.length - 1] !== '') {
+    lines.push('')
+  }
+  lines.push(
+    `- Подсказка: ${formatCount(bulkAccepts.length, 'проверочный пункт', 'проверочных пункта', 'проверочных пунктов')} можно закрыть одной кнопкой «Всё проверено», если данные уже честные.`
+  )
+}
+
+function formatChecklistActionHint(item: DayReviewItem) {
+  const hint = formatReviewItemActionHint(item)
+  return hint ? `. ${hint}` : ''
+}
+
+export function formatReviewItemActionHint(item: DayReviewItem) {
+  if (item.level === 'ok') return ''
+
+  return formatNextStepHint(item).trim()
 }
 
 function formatDailyControlGoalAuditMarkdown({
@@ -2097,6 +2521,7 @@ function formatDailyControlGoalAuditMarkdown({
   const entryPathEvidence = extractLineValue(appTelemetryMarkdown, 'Typed/selected entry requests') ?? 'n/a'
   const entryTelemetry = parseEntryTelemetryMarkdown(appTelemetryMarkdown)
   const captureFollowupReviews = parseLeadingNumber(extractLineValue(appTelemetryMarkdown, 'Capture follow-up reviews'))
+  const dayContextReviews = parseLeadingNumber(extractLineValue(appTelemetryMarkdown, 'Day context reviews'))
   const workItemTimeBadgeReviews = parseLeadingNumber(extractLineValue(appTelemetryMarkdown, 'Work Item time badge reviews'))
   const activityZoneReviews = parseLeadingNumber(extractLineValue(appTelemetryMarkdown, 'Activity Zone reviews'))
   const captureUsageReviews = parseLeadingNumber(extractLineValue(appTelemetryMarkdown, 'Capture usage reviews'))
@@ -2193,11 +2618,12 @@ function formatDailyControlGoalAuditMarkdown({
     },
     {
       requirement: 'Day and Work Item context present',
-      status: hasReview('No day or Work Item notes/events') ? 'review' : 'pass',
+      status: hasReview('No day or Work Item notes/events') && dayContextReviews === 0 ? 'review' : 'pass',
       evidence: [
         todayMarkdown.includes('## Day Events') ? 'события дня' : '',
         todayMarkdown.includes('## Work Item Events') ? 'события дел' : '',
         todayMarkdown.includes('## Work Item Notes') ? 'заметки дел' : '',
+        dayContextReviews > 0 ? formatReviewEvidence(dayContextReviews, '', 'проверка контекста', 'проверки контекста', 'проверок контекста') : '',
       ].filter(Boolean).join(', ') || 'контекстных секций нет',
     },
     {
@@ -2867,6 +3293,22 @@ async function loadAppEventSummary(now: Date) {
   }
 }
 
+function getOpenDayClosure(summary: AppEventSummary | null | undefined) {
+  if (!summary?.open_day_closure_started_at || !summary.open_day_closure_action_id) {
+    return undefined
+  }
+
+  const startedAt = new Date(summary.open_day_closure_started_at)
+  if (Number.isNaN(startedAt.getTime())) {
+    return undefined
+  }
+
+  return {
+    actionId: summary.open_day_closure_action_id,
+    startedAt,
+  }
+}
+
 function formatAppTelemetryMarkdown(summary: AppEventSummary) {
   const lines = [
     '## Телеметрия приложения',
@@ -2884,6 +3326,7 @@ function formatAppTelemetryMarkdown(summary: AppEventSummary) {
     `Manual copy fallbacks: ${summary.manual_copy_fallbacks}`,
     `Capture created/resolved/converted: ${summary.capture_created}/${summary.capture_resolved}/${summary.capture_converted}`,
     `Capture follow-up reviews: ${summary.capture_followup_reviews}`,
+    `Day context reviews: ${summary.day_context_reviews}`,
     `Work Item time badge reviews: ${summary.work_item_time_badge_reviews}`,
     `Activity Zone reviews: ${summary.activity_zone_reviews}`,
     `Capture usage reviews: ${summary.capture_usage_reviews}`,
@@ -2972,8 +3415,20 @@ function getZoneActiveSeconds(
   return zoneTotals.find((item) => item.zone === zone)?.activeSeconds ?? 0
 }
 
-export function formatGapDayEventDraft(gap: Gap, label = 'Разрыв') {
-  return `${label} ${formatClockTime(gap.from)}-${formatClockTime(gap.to)} (${formatDuration(gap.seconds)}): `
+export type GapExplanationPreset = 'lost_control' | 'recovery'
+
+export function formatGapDayEventDraft(gap: Gap, label = 'Разрыв', preset?: GapExplanationPreset) {
+  const prefix = `${label} ${formatClockTime(gap.from)}-${formatClockTime(gap.to)} (${formatDuration(gap.seconds)}): `
+
+  if (preset === 'lost_control') {
+    return `${prefix}не удалось восстановить управляемость; необходимые дела воспринимались как недоступные.`
+  }
+
+  if (preset === 'recovery') {
+    return `${prefix}восстановление/перерыв; рабочий контур был временно закрыт.`
+  }
+
+  return prefix
 }
 
 export function countGapExplanationTexts(dayEvents: Array<{ text?: string }>) {
@@ -3287,7 +3742,7 @@ function FocusSessionRow({
     seconds: number
   }
   onCorrect: () => void
-  onExplainGap?: () => void
+  onExplainGap?: (preset?: GapExplanationPreset) => void
 }) {
   const range = `${formatClockTime(session.started_at)}-${formatClockTime(session.stopped_at)}`
   const stateClass = session.state === 'active' ? 'text-emerald-300' : 'text-gray-500'
@@ -3341,15 +3796,7 @@ function FocusSessionRow({
           <span>
             разрыв до блока: {formatClockTime(gapBefore.from)}-{formatClockTime(gapBefore.to)} · {formatDuration(gapBefore.seconds)}
           </span>
-          {onExplainGap && (
-            <button
-              type="button"
-              onClick={onExplainGap}
-              className="rounded border border-amber-900/70 px-1.5 py-0.5 text-[10px] text-amber-300/80 hover:border-amber-600 hover:text-amber-200"
-            >
-              Объяснить
-            </button>
-          )}
+          {onExplainGap && <GapExplainActions onExplain={onExplainGap} />}
         </div>
       )}
     </div>
@@ -3365,7 +3812,7 @@ function OpenGapRow({
     to: string
     seconds: number
   }
-  onExplain: () => void
+  onExplain: (preset?: GapExplanationPreset) => void
 }) {
   return (
     <div className="rounded border border-amber-800/50 bg-amber-950/20 px-2 py-1 text-xs">
@@ -3375,14 +3822,36 @@ function OpenGapRow({
         <span className="text-amber-300/80">
           {formatClockTime(gap.from)}-{formatClockTime(gap.to)}
         </span>
-        <button
-          type="button"
-          onClick={onExplain}
-          className="rounded border border-amber-800 px-1.5 py-0.5 text-[10px] font-medium text-amber-200 hover:border-amber-500 hover:text-amber-100"
-        >
-          Объяснить
-        </button>
+        <GapExplainActions onExplain={onExplain} />
       </div>
+    </div>
+  )
+}
+
+function GapExplainActions({ onExplain }: { onExplain: (preset?: GapExplanationPreset) => void }) {
+  return (
+    <div className="flex flex-wrap justify-end gap-1">
+      <button
+        type="button"
+        onClick={() => onExplain()}
+        className="rounded border border-amber-800 px-1.5 py-0.5 text-[10px] font-medium text-amber-200 hover:border-amber-500 hover:text-amber-100"
+      >
+        Объяснить
+      </button>
+      <button
+        type="button"
+        onClick={() => onExplain('lost_control')}
+        className="rounded border border-amber-800 px-1.5 py-0.5 text-[10px] font-medium text-amber-200 hover:border-amber-500 hover:text-amber-100"
+      >
+        Управляемость
+      </button>
+      <button
+        type="button"
+        onClick={() => onExplain('recovery')}
+        className="rounded border border-amber-800 px-1.5 py-0.5 text-[10px] font-medium text-amber-200 hover:border-amber-500 hover:text-amber-100"
+      >
+        Восстановление
+      </button>
     </div>
   )
 }

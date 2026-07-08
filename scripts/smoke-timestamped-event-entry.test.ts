@@ -1,7 +1,12 @@
 import { strict as assert } from 'node:assert'
 import test from 'node:test'
 
-import { appendTimestampedEventDraft } from '../apps/desktop/src/utils/timestampedEventEntry'
+import {
+  appendTimestampedEventDraft,
+  decodeTimestampedEventDraft,
+  encodeTimestampedEventDraft,
+  timestampedEventDraftStorageKey,
+} from '../apps/desktop/src/utils/timestampedEventEntry'
 
 test('timestamped event entry clears text only after successful append', async () => {
   const submitted: string[] = []
@@ -43,4 +48,26 @@ test('timestamped event entry does not submit blank or pending drafts', async ()
   assert.equal(pending.ok, false)
   assert.equal(pending.nextDraft, 'готовый текст')
   assert.equal(calls, 0)
+})
+
+test('timestamped event draft storage preserves text per local day and work item', () => {
+  const draft = '  записать решение перед закрытием  '
+  const encoded = encodeTimestampedEventDraft(draft)
+
+  assert.equal(decodeTimestampedEventDraft(encoded), draft)
+  assert.equal(decodeTimestampedEventDraft('{"text":42}'), '')
+  assert.equal(decodeTimestampedEventDraft('not-json'), '')
+  assert.equal(encodeTimestampedEventDraft(''), '')
+  assert.equal(
+    timestampedEventDraftStorageKey('item-1', new Date('2026-07-08T21:15:00+03:00')),
+    'timeskein.work-item-event-draft.v1.2026-07-08.item-1'
+  )
+  assert.notEqual(
+    timestampedEventDraftStorageKey('item-1', new Date('2026-07-08T21:15:00+03:00')),
+    timestampedEventDraftStorageKey('item-2', new Date('2026-07-08T21:15:00+03:00'))
+  )
+  assert.notEqual(
+    timestampedEventDraftStorageKey('item-1', new Date('2026-07-08T21:15:00+03:00')),
+    timestampedEventDraftStorageKey('item-1', new Date('2026-07-09T09:00:00+03:00'))
+  )
 })

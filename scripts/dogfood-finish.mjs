@@ -61,15 +61,19 @@ if (outputPath) {
   }
   const reportState = findReportState(stdout);
   const reviewNextAction = findReviewNextAction(stdout);
+  const reviewSummary = findReviewSummary(stdout);
+  const bulkAcceptHint = findBulkAcceptHint(stdout);
   const shortClosureVerdict = findShortClosureVerdict(stdout);
+  const shortClosureStatus = findShortClosureStatus(stdout);
+  const openClosureAttempt = hasOpenClosureAttempt(stdout);
   const closureStatus = findAuditRowStatus(stdout, ["Длительность закрытия измерена", "Day closure duration measured"]);
   const pendingAuditRows = findPendingAuditRows(stdout);
   if (closureStatus && !isPassingAuditStatus(closureStatus)) {
-    process.stdout.write(buildMeasuredClosureWarning(dateArg, reportState, reviewNextAction));
+    process.stdout.write(buildMeasuredClosureWarning(dateArg, reportState, reviewNextAction, reviewSummary, bulkAcceptHint, shortClosureVerdict, shortClosureStatus, openClosureAttempt));
   } else if (pendingAuditRows.length > 0 || (reportState && !isFinalReportState(reportState))) {
-    process.stdout.write(buildPendingReviewWarning(dateArg, pendingAuditRows, reportState, reviewNextAction));
+    process.stdout.write(buildPendingReviewWarning(dateArg, pendingAuditRows, reportState, reviewNextAction, reviewSummary, bulkAcceptHint, shortClosureStatus, openClosureAttempt));
   } else if (options.save && process.exitCode == null) {
-    process.stdout.write(buildGoalCheckNextStep(dateArg, shortClosureVerdict));
+    process.stdout.write(buildGoalCheckNextStep(dateArg, shortClosureVerdict, shortClosureStatus));
   }
 } else {
   process.stdout.write(stdout);
@@ -264,40 +268,91 @@ function formatBlockedNextAction(items) {
   return "исправь первый красный пункт из списка выше и повтори команду.";
 }
 
-function buildMeasuredClosureWarning(date, reportState, reviewNextAction) {
-  return [
-    "",
-    "## До финального отчёта",
-    "",
-    "- Отчёт сохранён, но это ещё не финальное закрытие дня: длительность закрытия не измерена или больше 10 минут.",
-    ...formatReportStateWarning(reportState),
-    ...formatReviewNextActionWarning(reviewNextAction),
-    "- В Timeskein нажми `Начать закрытие дня`, спокойно пройди `Проверка перед отчётом` и дойди до финального `Копировать отчёт` за 10 минут или меньше.",
-    `- Затем повтори: \`pnpm dogfood:finish:save -- --date ${date}\`.`,
-    "",
-  ].join("\n");
-}
-
-function buildPendingReviewWarning(date, rows, reportState, reviewNextAction) {
-  const visibleRows = rows.slice(0, 5).map((row) => `- ${row.requirement}: ${row.status}`);
-  if (rows.length > visibleRows.length) {
-    visibleRows.push(`- Ещё строк: ${rows.length - visibleRows.length}`);
-  } else if (visibleRows.length === 0) {
-    visibleRows.push("- В отчёте всё ещё стоит черновой статус; проверь оставшиеся пункты в панели.");
+function buildMeasuredClosureWarning(date, reportState, reviewNextAction, reviewSummary, bulkAcceptHint, shortClosureVerdict, shortClosureStatus, openClosureAttempt = false) {
+  if (isSlowClosureVerdict(shortClosureVerdict)) {
+    return [
+      "",
+      "## До финального отчёта",
+      "",
+      "- Отчёт сохранён, но закрытие заняло больше 10 минут.",
+      ...formatShortClosureStatusWarning(shortClosureStatus),
+      ...(shortClosureVerdict ? [`- Короткое закрытие: ${shortClosureVerdict}.`] : []),
+      "- Данные дня можно использовать для разбора, но этот день не доказывает текущую цель.",
+      ...formatReportStateWarning(reportState),
+      ...formatReviewNextActionWarning(reviewNextAction),
+      ...formatReviewSummaryWarning(reviewSummary),
+      ...formatBulkAcceptHintWarning(bulkAcceptHint),
+      "- Не пытайся чинить это задним числом: проведи следующий dogfood-день и начни закрытие снова через `Начать закрытие дня`.",
+      "- После следующего финального отчёта повтори `pnpm dogfood:finish:save` с датой того dogfood-дня.",
+      "",
+    ].join("\n");
   }
 
   return [
     "",
     "## До финального отчёта",
     "",
+    "- Отчёт сохранён, но это ещё не финальное закрытие дня: длительность закрытия не измерена.",
+    ...formatShortClosureStatusWarning(shortClosureStatus),
+    ...formatReportStateWarning(reportState),
+      ...formatReviewNextActionWarning(reviewNextAction),
+      ...formatReviewSummaryWarning(reviewSummary),
+      ...formatBulkAcceptHintWarning(bulkAcceptHint),
+      formatMeasuredClosureInstruction(openClosureAttempt),
+      formatSaveEvidenceInstruction(date),
+      "",
+    ].join("\n");
+}
+
+function isSlowClosureVerdict(shortClosureVerdict) {
+  return /^Закрытие уложилось в 10 минут:\s*нет\s*\(/u.test(shortClosureVerdict ?? "");
+}
+
+function buildPendingReviewWarning(date, rows, reportState, reviewNextAction, reviewSummary, bulkAcceptHint, shortClosureStatus, openClosureAttempt = false) {
+  return [
+    "",
+    "## До финального отчёта",
+    "",
     "- Отчёт сохранён как рабочий артефакт, но ещё не готов для финального закрытия дня.",
+    ...formatShortClosureStatusWarning(shortClosureStatus),
     ...formatReportStateWarning(reportState),
     ...formatReviewNextActionWarning(reviewNextAction),
-    ...visibleRows,
-    "- Вернись к `Проверка перед отчётом`: исправь пункты в «Дописать или исправить» и осознанно прими спорные проверки.",
-    `- Затем повтори: \`pnpm dogfood:finish:save -- --date ${date}\`.`,
+    ...formatReviewSummaryWarning(reviewSummary),
+    ...formatBulkAcceptHintWarning(bulkAcceptHint),
+    ...formatPendingAuditRowsFallback(rows, reviewNextAction, reviewSummary),
+    openClosureAttempt
+      ? "- Закрытие уже начато: продолжай `Проверка перед отчётом`, исправь пункты в «Дописать или исправить» и осознанно прими спорные проверки."
+      : "- Вернись к `Проверка перед отчётом`: исправь пункты в «Дописать или исправить» и осознанно прими спорные проверки.",
+    formatSaveEvidenceInstruction(date),
     "",
   ].join("\n");
+}
+
+function formatPendingAuditRowsFallback(rows, reviewNextAction, reviewSummary) {
+  if (reviewNextAction || reviewSummary) {
+    return [];
+  }
+
+  const visibleRows = rows.slice(0, 3).map((row) => `- ${row.requirement}: ${row.status}`);
+  if (rows.length > visibleRows.length) {
+    visibleRows.push(`- Ещё строк: ${rows.length - visibleRows.length}`);
+  } else if (visibleRows.length === 0) {
+    visibleRows.push("- В отчёте всё ещё стоит черновой статус; проверь оставшиеся пункты в панели.");
+  }
+
+  return ["- Технические строки, которые ещё не чистые:", ...visibleRows];
+}
+
+function formatMeasuredClosureInstruction(openClosureAttempt) {
+  if (openClosureAttempt) {
+    return "- Закрытие уже начато: продолжай `Проверка перед отчётом` и скопируй финальный отчёт. Если 10 минут уже прошли, спокойно закрой данные и докажи цель на следующем dogfood-дне.";
+  }
+
+  return "- Для замера нажми `Начать закрытие дня`, пройди `Проверка перед отчётом` и скопируй финальный отчёт за 10 минут или меньше.";
+}
+
+function formatSaveEvidenceInstruction(date) {
+  return `- После правок снова сохрани доказательства: \`pnpm dogfood:finish:save -- --date ${date}\`.`;
 }
 
 function formatReportStateWarning(reportState) {
@@ -316,12 +371,37 @@ function formatReviewNextActionWarning(reviewNextAction) {
   return [`- Ближайшее действие из отчёта: ${reviewNextAction}`];
 }
 
-function buildGoalCheckNextStep(date, shortClosureVerdict) {
+function formatReviewSummaryWarning(reviewSummary) {
+  if (!reviewSummary) {
+    return [];
+  }
+
+  return [`- Сводка проверки: ${reviewSummary}`];
+}
+
+function formatBulkAcceptHintWarning(bulkAcceptHint) {
+  if (!bulkAcceptHint) {
+    return [];
+  }
+
+  return [`- ${bulkAcceptHint}`];
+}
+
+function formatShortClosureStatusWarning(shortClosureStatus) {
+  if (!shortClosureStatus) {
+    return [];
+  }
+
+  return [`- ${shortClosureStatus}.`];
+}
+
+function buildGoalCheckNextStep(date, shortClosureVerdict, shortClosureStatus) {
   return [
     "",
     "## Следующий шаг",
     "",
     "- Отчёт финальный, закрытие измерено, проверка закрытия чистая.",
+    ...formatShortClosureStatusWarning(shortClosureStatus),
     ...(shortClosureVerdict ? [`- Короткое закрытие: ${shortClosureVerdict}.`] : []),
     "- Если во время закрытия пришлось спрашивать Codex, что делать дальше, не считай этот день доказательством цели: проведи ещё один день Timeskein.",
     `- Запусти финальную проверку цели: \`pnpm dogfood:goal-check -- --date ${date} --no-codex-guidance\`.`,
@@ -405,6 +485,34 @@ function findReviewNextAction(text) {
   return undefined;
 }
 
+function findReviewSummary(text) {
+  const section = extractSection(text, ["## Проверка перед отчётом", "## Review before report"]);
+  if (!section) {
+    return undefined;
+  }
+
+  for (const line of section.split("\n")) {
+    const match = line.match(/^Сводка:\s*(.+)$/);
+    if (match) return match[1].trim();
+  }
+
+  return undefined;
+}
+
+function findBulkAcceptHint(text) {
+  const section = extractSection(text, ["## Проверка перед отчётом", "## Review before report"]);
+  if (!section) {
+    return undefined;
+  }
+
+  for (const line of section.split("\n")) {
+    const match = line.match(/^-\s*(Подсказка:\s*.+)$/);
+    if (match) return match[1].trim();
+  }
+
+  return undefined;
+}
+
 function findShortClosureVerdict(text) {
   const section = extractSection(text, ["## Короткое закрытие"]);
   if (!section) {
@@ -417,6 +525,45 @@ function findShortClosureVerdict(text) {
   }
 
   return undefined;
+}
+
+function findShortClosureStatus(text) {
+  const section = extractSection(text, ["## Короткое закрытие"]);
+  if (!section) {
+    return undefined;
+  }
+
+  for (const line of section.split("\n")) {
+    const match = line.match(/^-\s*(Статус закрытия:\s*.+)$/);
+    if (match) return match[1].trim().replace(/\.$/, "");
+  }
+
+  return undefined;
+}
+
+function hasOpenClosureAttempt(text) {
+  const counts =
+    parseCountPair(extractLineValue(text, "Закрытий дня начато/завершено")) ??
+    parseCountPair(extractLineValue(text, "Day closure started/completed"));
+
+  return Boolean(counts && counts.left > counts.right);
+}
+
+function extractLineValue(text, label) {
+  for (const line of text.split("\n")) {
+    if (line.startsWith(`${label}:`)) {
+      return line.slice(label.length + 1).trim();
+    }
+  }
+
+  return undefined;
+}
+
+function parseCountPair(value) {
+  if (!value) return undefined;
+  const match = value.match(/^(\d+)\/(\d+)/);
+  if (!match) return undefined;
+  return { left: Number(match[1]), right: Number(match[2]) };
 }
 
 function isPassingAuditStatus(status) {

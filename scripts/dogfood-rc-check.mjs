@@ -41,7 +41,7 @@ if (outputPath) {
 } else {
   process.stdout.write(output);
 }
-process.exit(shouldFail ? 1 : 0);
+process.exit(shouldFail && !options.softFail ? 1 : 0);
 
 function parseArgs(args) {
   const result = {};
@@ -67,6 +67,8 @@ function parseArgs(args) {
       result.save = true;
     } else if (arg === "--strict") {
       result.strict = true;
+    } else if (arg === "--soft-fail") {
+      result.softFail = true;
     } else if (arg === "--help" || arg === "-h") {
       printHelp();
       process.exit(0);
@@ -79,12 +81,13 @@ function parseArgs(args) {
 }
 
 function printHelp() {
-  console.log(`Использование: pnpm dogfood:rc-check [--date YYYY-MM-DD] [--db path/to/timeskein.db] [--min-focus-minutes N] [--strict] [--save | --out path.md]
+  console.log(`Использование: pnpm dogfood:rc-check [--date YYYY-MM-DD] [--db path/to/timeskein.db] [--min-focus-minutes N] [--strict] [--soft-fail] [--save | --out path.md]
 
 Проверяет, достаточно ли данных Timeskein для строгой проверки закрытия дня.
-Команда завершается с кодом 1 при красных пунктах: активное состояние, дубли названий дел или пустой день.
-Пункты проверки печатаются, но без --strict оставляют код 0, потому что финальное решение всё ещё требует человеческого взгляда.
-С --strict пункты проверки тоже дают код 1. Используй это перед закрытием цели про дешёвое вечернее закрытие дня.`);
+Пакетная команда pnpm dogfood:rc-check запускается с --soft-fail: ожидаемая неготовность печатается без кода 1, чтобы ручной просмотр не добавлял pnpm-шум.
+Прямой запуск node scripts/dogfood-rc-check.mjs без --soft-fail завершается с кодом 1 при красных пунктах: активное состояние, дубли названий дел или пустой день.
+Пункты проверки печатаются, но без --strict оставляют код 0. С --strict пункты проверки тоже дают код 1.
+Используй strict-режим перед закрытием цели про дешёвое вечернее закрытие дня.`);
 }
 
 function outputReportPath(options, date) {
@@ -531,12 +534,10 @@ function assessEvidence(evidence, minFocusSeconds) {
   }
 
   if (evidence.telemetry.dayClosureCompletions === 0 || evidence.telemetry.lastDayClosureDurationSeconds == null) {
-    reviewItems.push(
-      "Длительность закрытия дня не измерена. Начни закрытие кнопкой «Начать закрытие дня», дойди до финального «Копировать отчёт» за 10 минут или меньше, затем пересохрани evidence."
-    );
+    reviewItems.push(formatMissingClosureReviewItem(evidence.telemetry));
   } else if (evidence.telemetry.lastDayClosureDurationSeconds > 10 * 60) {
     reviewItems.push(
-      `Последнее закрытие дня заняло ${formatDuration(evidence.telemetry.lastDayClosureDurationSeconds)}, это больше цели 10:00. Повтори вечернее закрытие спокойным коротким проходом.`
+      `Последнее закрытие дня заняло ${formatDuration(evidence.telemetry.lastDayClosureDurationSeconds)}, это больше цели 10:00. Данные дня можно использовать, но цель проверяй на следующем dogfood-дне.`
     );
   }
 
@@ -550,6 +551,18 @@ function assessEvidence(evidence, minFocusSeconds) {
     hardBlockers,
     reviewItems,
   };
+}
+
+function formatMissingClosureReviewItem(telemetry) {
+  if (telemetry.dayClosureStarts > telemetry.dayClosureCompletions) {
+    return "Закрытие дня уже начато, но финальный «Копировать отчёт» ещё не зафиксирован. Продолжай «Проверка перед отчётом», скопируй финальный отчёт и пересохрани evidence; если прошло больше 10 минут, не переигрывай доказательство задним числом.";
+  }
+
+  if (telemetry.dayClosureStarts > 0) {
+    return "Длительность закрытия дня не зафиксирована. Проверь, что финальный «Копировать отчёт» завершил тот же замер закрытия, затем пересохрани evidence.";
+  }
+
+  return "Длительность закрытия дня не измерена. Начни закрытие кнопкой «Начать закрытие дня», дойди до финального «Копировать отчёт» за 10 минут или меньше, затем пересохрани evidence.";
 }
 
 function buildMissingDbReport(date, path) {
@@ -674,26 +687,63 @@ function buildRcReport(date, path, evidence, assessment, minFocusSeconds, strict
   }
 
   lines.push(
-    "## Ручной вердикт",
+    "## Итог проверки",
     "",
-    "- Timeskein был основным трекером всего дня: да/нет",
-    "- Зоны активности достаточно отделили работу от координации, восстановления, простоя и личных дел: да/нет",
-    "- События дня, события дел или заметки снизили восстановление дня по памяти: да/нет",
-    "- Ошибки трекинга можно было исправить перед финальным отчётом: да/нет",
-    "- Capture Inbox удерживал фокус, а не стал ещё одной кучей: да/нет",
-    "- Отчёта достаточно без реконструкции по памяти: да/нет",
-    "- Оставшиеся ограничения приемлемы для ежедневного использования: да/нет",
-    "- Финальное решение: годится/не годится",
+    ...formatRcCheckSummary(assessment, strict),
     "",
     "## Что дальше",
     "",
-    "- Если есть красные пункты, исправь только их и проведи ещё один день Timeskein.",
-    "- Если остались пункты проверки, заполни ручной вердикт перед закрытием текущей цели.",
-    "- Если вердикт «годится», обнови docs/opskarta и закоммить рабочую точку пробной эксплуатации.",
+    ...formatRcNextSteps(assessment, strict, date),
     ""
   );
 
   return lines.join("\n");
+}
+
+function formatRcCheckSummary(assessment, strict) {
+  if (assessment.hardBlockers.length > 0) {
+    return [
+      `- Красные пункты: ${formatCount(assessment.hardBlockers.length, "пункт", "пункта", "пунктов")}.`,
+      "- Финальный отчёт пока не готов: сначала закрой красные пункты в Timeskein.",
+    ];
+  }
+
+  if (assessment.reviewItems.length > 0) {
+    return [
+      `- Пункты проверки: ${formatCount(assessment.reviewItems.length, "пункт", "пункта", "пунктов")}.`,
+      strict
+        ? "- Strict-режим блокирует закрытие цели, пока эти пункты не закрыты."
+        : "- Данные сохранены, но цель ещё не доказана: вернись к панели «Проверка перед отчётом».",
+    ];
+  }
+
+  return [
+    "- Красных пунктов и открытых проверок нет.",
+    "- Сохранённые материалы готовы для финального `goal-check`.",
+  ];
+}
+
+function formatRcNextSteps(assessment, strict, date) {
+  if (assessment.hardBlockers.length > 0) {
+    return [
+      "- В Timeskein закрой только красные пункты.",
+      `- После этого снова сохрани отчёт: \`pnpm dogfood:finish:save -- --date ${date}\`.`,
+    ];
+  }
+
+  if (assessment.reviewItems.length > 0) {
+    return [
+      "- Вернись к `Проверка перед отчётом` и выполни её `Ближайшее действие`.",
+      strict
+        ? `- Затем повтори strict-проверку или сохрани evidence: \`pnpm dogfood:finish:save -- --date ${date}\`.`
+        : `- Когда проверки чистые, повтори: \`pnpm dogfood:finish:save -- --date ${date}\`.`,
+    ];
+  }
+
+  return [
+    `- Запусти финальную проверку: \`pnpm dogfood:goal-check -- --date ${date} --no-codex-guidance\`.`,
+    "- Флаг `--no-codex-guidance` ставь только если вечернее закрытие прошло без Codex как навигатора.",
+  ];
 }
 
 function formatRcVerdict(assessment, strict) {
@@ -706,10 +756,10 @@ function formatRcVerdict(assessment, strict) {
   }
 
   if (assessment.reviewItems.length > 0) {
-    return "готово к ручному вердикту, есть пункты проверки";
+    return "нужно закрыть пункты проверки";
   }
 
-  return "готово к ручному вердикту";
+  return "готово к финальной проверке";
 }
 
 function formatYesNo(value) {
@@ -756,6 +806,12 @@ function formatGoalAuditMarkdown(evidence, assessment, minFocusSeconds) {
       : "входы через окно не проверены";
   const workItemTotalsEvidence = `${formatCount(evidence.workItemTotals.length, "строка итогов дел", "строки итогов дел", "строк итогов дел")}; ${workItemTimeReviewEvidence}`;
   const activityZoneEvidence = `${formatCount(evidence.activityZoneTotals.length, "зона", "зоны", "зон")}; ${formatDuration(evidence.workFocusSeconds)} работа, ${formatDuration(evidence.nonWorkSeconds)} вне работы; ${activityZoneReviewEvidence}`;
+  const dayContextEvidence = [
+    formatCount(evidence.dayEvents.length, "событие дня", "события дня", "событий дня"),
+    formatCount(evidence.workItemEvents.length, "событие дела", "события дел", "событий дел"),
+    formatCount(evidence.workItemNoteCount, "заметка дела", "заметки дел", "заметок дел"),
+    formatReviewEvidence(evidence.telemetry.dayContextReviews, "проверка контекста не отмечена", "проверка контекста", "проверки контекста", "проверок контекста"),
+  ].join("; ");
   const gapCaptureEvidence = [
     formatCount(evidence.gaps.length, "большой разрыв", "больших разрыва", "больших разрывов"),
     formatCount(Math.min(evidence.gapExplanationEvents, evidence.gaps.length), "разрыв объяснён", "разрыва объяснены", "разрывов объяснено"),
@@ -827,10 +883,10 @@ function formatGoalAuditMarkdown(evidence, assessment, minFocusSeconds) {
     },
     {
       requirement: "Day and Work Item context present",
-      status: evidence.dayEvents.length + evidence.workItemEvents.length + evidence.workItemNoteCount > 0
+      status: evidence.dayEvents.length + evidence.workItemEvents.length + evidence.workItemNoteCount > 0 || evidence.telemetry.dayContextReviews > 0
         ? "pass"
         : "review",
-      evidence: `${evidence.dayEvents.length} событий дня, ${evidence.workItemEvents.length} событий дел, ${evidence.workItemNoteCount} заметок дел`,
+      evidence: dayContextEvidence,
     },
     {
       requirement: "Gaps and captures visible",
@@ -1120,6 +1176,7 @@ function summarizeEvents(events) {
     dayClosureCompletions: count("day_closure_completed"),
     lastDayClosureDurationSeconds: closureDurationsSeconds.at(-1),
     captureFollowupReviews: count("capture_followup_reviewed"),
+    dayContextReviews: count("day_context_reviewed"),
     workItemTimeBadgeReviews: count("work_item_time_badges_reviewed"),
     activityZoneReviews: count("activity_zone_reviewed"),
     captureUsageReviews: count("capture_usage_reviewed"),

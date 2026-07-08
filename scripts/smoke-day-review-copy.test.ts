@@ -4,18 +4,23 @@ import test from 'node:test'
 import {
   formatDayReviewItem,
   formatDayReviewNextStep,
+  formatDayReviewSummary,
   formatDayClosurePrompt,
   formatDogfoodReportState,
   formatGapDayEventDraft,
   formatAdditionalReviewMarkdown,
   buildTrayStatusTitle,
+  decodeDayEventDraft,
+  encodeDayEventDraft,
   formatFocusMarkdownForReport,
   formatReportButtonLabel,
   formatReviewChecklistMarkdown,
   formatReviewActionLabel,
+  formatReviewItemActionHint,
   formatShortClosureMarkdown,
   formatTelemetryForReport,
   isOpenGapExplanationText,
+  MANUAL_COPY_HINT,
   pickNextGapForReview,
   type DayReviewAction,
   type DayReviewItem,
@@ -58,6 +63,13 @@ test('agent unavailable message stays useful during dogfood', () => {
   const labels = Object.values(APP_UI_LABELS).join('\n')
   assert(!labels.includes('mock server'), 'runtime UI should not send dogfood users into dev-server wording')
   assert(!labels.includes('mock'), 'runtime UI should not expose mock-only wording')
+})
+
+test('manual copy fallback explains the next step without Codex', () => {
+  assert.equal(
+    MANUAL_COPY_HINT,
+    'Буфер обмена не принял текст. Поле уже выделено: нажми Command+C и вставь отчёт куда нужно.'
+  )
 })
 
 test('clock time stays 24-hour and Russian-facing', () => {
@@ -124,9 +136,9 @@ test('focus correction labels keep evening fixes calm', () => {
 
 test('day review checklist keeps the evening ritual in Russian', () => {
   const items: DayReviewItem[] = [
-    { level: 'blocker', title: 'Stop the active focus block', detail: 'Вход в день' },
-    { level: 'blocker', title: 'Clear active Work Item state', detail: '1 дело с активным статусом' },
-    { level: 'review', title: 'Classify significant gaps', detail: '1/2 больших разрывов без события дня' },
+    { level: 'blocker', title: 'Stop the active focus block', detail: 'Вход в день', action: 'stop_active_focus' },
+    { level: 'blocker', title: 'Clear active Work Item state', detail: '1 дело с активным статусом', action: 'clear_active_work_items' },
+    { level: 'review', title: 'Classify significant gaps', detail: '1/2 больших разрывов без события дня; следующий: 12:10-13:28 (1:18:38)' },
     { level: 'review', title: 'Resolve, convert, or accept open captures', detail: '1 открыто' },
     {
       level: 'review',
@@ -150,7 +162,7 @@ test('day review checklist keeps the evening ritual in Russian', () => {
   assert.equal(formatDayReviewItem(items[1]).title, 'Снять активный статус с дела')
   assert.equal(formatDayReviewItem(items[1]).detail, '1 дело с активным статусом')
   assert.equal(formatDayReviewItem(items[2]).title, 'Объяснить большие разрывы')
-  assert.equal(formatDayReviewItem(items[2]).detail, '1 из 2 больших разрывов без события дня')
+  assert.equal(formatDayReviewItem(items[2]).detail, '1 из 2 больших разрывов без события дня; следующий: 12:10-13:28 (1:18:38)')
   assert.equal(formatDayReviewItem(items[3]).title, 'Разобрать открытые отвлечения')
   assert.equal(formatDayReviewItem(items[3]).detail, '1 открытое отвлечение')
   assert.equal(formatDayReviewItem(items[4]).title, 'Проверить время по делам')
@@ -166,6 +178,10 @@ test('day review checklist keeps the evening ritual in Russian', () => {
   assert(
     markdown.includes('Ближайшее действие: закрыть красный пункт: Остановить активный фокус-блок.'),
     'review checklist should name the next concrete action'
+  )
+  assert(
+    markdown.includes('Сводка: 2 красных пункта, затем 7 проверок.'),
+    'review checklist should separate blockers from the remaining review workload'
   )
   assert(markdown.includes('### Сначала закрыть'), 'blocker group should be explicit')
   assert(markdown.includes('### Дописать или исправить'), 'fix-up group should be explicit')
@@ -183,10 +199,199 @@ test('day review checklist keeps the evening ritual in Russian', () => {
   assert(!markdown.includes('Work Item с активным статусом'), 'model-side wording should not leak into review details')
 })
 
+test('day event draft persistence keeps typed context recoverable', () => {
+  const encoded = encodeDayEventDraft({
+    text: '  важное наблюдение перед закрытием дня  ',
+    zone: 'recovery',
+  })
+
+  assert.deepEqual(decodeDayEventDraft(encoded), {
+    text: '  важное наблюдение перед закрытием дня  ',
+    zone: 'recovery',
+  })
+  assert.deepEqual(decodeDayEventDraft('{"text":"контекст","zone":"wrong"}'), {
+    text: 'контекст',
+    zone: '',
+  })
+  assert.deepEqual(decodeDayEventDraft('not-json'), {
+    text: '',
+    zone: '',
+  })
+  assert.equal(encodeDayEventDraft({ text: '', zone: '' }), '')
+})
+
+test('day review summary makes the remaining workload legible', () => {
+  assert.equal(
+    formatDayReviewSummary([
+      { level: 'blocker', title: 'Stop the active focus block' },
+      { level: 'review', title: 'Classify significant gaps', action: 'stage_significant_gap' },
+      { level: 'review', title: 'Review Activity Zone coverage', action: 'accept_activity_zones' },
+    ]),
+    'Сводка: 1 красный пункт, затем 2 проверки.'
+  )
+
+  assert.equal(
+    formatDayReviewSummary([
+      { level: 'review', title: 'Classify significant gaps', action: 'stage_significant_gap' },
+      { level: 'review', title: 'No day or Work Item notes/events', action: 'accept_day_context', secondaryActions: ['stage_day_context'] },
+      { level: 'review', title: 'Review Activity Zone coverage', action: 'accept_activity_zones' },
+      { level: 'review', title: 'Confirm tracking accuracy or test correction', action: 'accept_tracking_accuracy' },
+    ]),
+    'Сводка: 1 пункт дописать или исправить, 3 пункта осознанно проверить.'
+  )
+
+  assert.equal(
+    formatDayReviewSummary([
+      { level: 'review', title: 'Review Activity Zone coverage', action: 'accept_activity_zones' },
+      { level: 'review', title: 'Test window entrypoints', action: 'accept_window_entrypoints' },
+    ]),
+    'Сводка: 2 пункта осознанно проверить.'
+  )
+
+  assert.equal(
+    formatDayReviewSummary([{ level: 'ok', title: 'Ready to copy final report' }]),
+    'Сводка: проверка чистая.'
+  )
+})
+
+test('day review checklist explains checklist item actions', () => {
+  const markdown = formatReviewChecklistMarkdown([
+    {
+      level: 'review',
+      title: 'No day or Work Item notes/events',
+      detail: 'Если отчёт требует памяти, добавь одну фразу; если всё ясно, прими как есть',
+      action: 'accept_day_context',
+      secondaryActions: ['stage_day_context'],
+    },
+    {
+      level: 'review',
+      title: 'Confirm Work Item today/total badges',
+      detail: '7 дел было в работе сегодня',
+      action: 'accept_work_item_time_badges',
+    },
+    {
+      level: 'review',
+      title: 'Confirm tracking accuracy or test correction',
+      detail: 'Сегодня не было коррекций фокус-блоков',
+      action: 'accept_tracking_accuracy',
+      secondaryActions: ['stage_focus_correction'],
+    },
+  ])
+
+  assert(
+    markdown.includes(
+      '- [ ] Нет событий дня или дел - Если отчёт требует памяти, добавь одну фразу; если всё ясно, прими как есть. Нажми «Добавить контекст», если отчёт требует памяти, или «Контекст не нужен», если всё ясно.'
+    ),
+    'context review item should explain both accept and add-context paths'
+  )
+  assert(
+    markdown.includes(
+      '- [ ] Проверить время по делам - 7 дел было в работе сегодня. Нажми «Время верно», если данные уже честные.'
+    ),
+    'accept-as-is review item should explain the acceptance button'
+  )
+  assert(
+    markdown.includes(
+      '- [ ] Подтвердить точность трекинга - Сегодня не было коррекций фокус-блоков. Нажми «Добавить блок», если в трекинге пропуск, или «Трекинг верен», если всё честно.'
+    ),
+    'tracking review item should offer direct correction and acceptance paths'
+  )
+})
+
+test('day review copied markdown repeats the bulk accept hint', () => {
+  const markdown = formatReviewChecklistMarkdown([
+    {
+      level: 'review',
+      title: 'Review Activity Zone coverage',
+      detail: 'В отчёте видна только одна зона',
+      action: 'accept_activity_zones',
+    },
+    {
+      level: 'review',
+      title: 'Exercise start and continue paths',
+      detail: '1 вводом, 1 из списка, 1 остановок',
+      action: 'accept_entry_paths',
+    },
+    {
+      level: 'review',
+      title: 'Test window entrypoints',
+      detail: '1 запросов показа, 1 запросов скрытия',
+      action: 'accept_window_entrypoints',
+    },
+  ])
+
+  assert(
+    markdown.includes(
+      'Ближайшее действие: осознанно проверить 3 пункта или нажать «Всё проверено», если данные уже честные.'
+    ),
+    'copied review markdown should name the bulk accept path as the next action'
+  )
+  assert(
+    markdown.includes(
+      '- Подсказка: 3 проверочных пункта можно закрыть одной кнопкой «Всё проверено», если данные уже честные.'
+    ),
+    'copied review markdown should repeat the bulk accept hint outside the next-action line'
+  )
+})
+
+test('day review item action hints keep every row self-explanatory', () => {
+  assert.equal(
+    formatReviewItemActionHint({ level: 'blocker', title: 'Stop the active focus block' }),
+    'Нажми «Стоп» у активного фокуса.'
+  )
+  assert.equal(
+    formatReviewItemActionHint({
+      level: 'blocker',
+      title: 'Clear active Work Item state',
+      action: 'clear_active_work_items',
+    }),
+    'Нажми «Снять активность», если фокус уже остановлен.'
+  )
+  assert.equal(
+    formatReviewItemActionHint({
+      level: 'review',
+      title: 'Explain current open gap',
+      action: 'stage_open_gap',
+      secondaryActions: ['stage_open_gap_lost_control', 'stage_open_gap_recovery'],
+    }),
+    'Нажми «Объяснить», «Управляемость» или «Восстановление».'
+  )
+  assert.equal(
+    formatReviewItemActionHint({
+      level: 'review',
+      title: 'No day or Work Item notes/events',
+      action: 'accept_day_context',
+      secondaryActions: ['stage_day_context'],
+    }),
+    'Нажми «Добавить контекст», если отчёт требует памяти, или «Контекст не нужен», если всё ясно.'
+  )
+  assert.equal(
+    formatReviewItemActionHint({
+      level: 'review',
+      title: 'Confirm Work Item today/total badges',
+      action: 'accept_work_item_time_badges',
+    }),
+    'Нажми «Время верно», если данные уже честные.'
+  )
+  assert.equal(
+    formatReviewItemActionHint({
+      level: 'review',
+      title: 'Confirm tracking accuracy or test correction',
+      action: 'accept_tracking_accuracy',
+      secondaryActions: ['stage_focus_correction'],
+    }),
+    'Нажми «Добавить блок», если в трекинге пропуск, или «Трекинг верен», если всё честно.'
+  )
+  assert.equal(
+    formatReviewItemActionHint({ level: 'ok', title: 'Ready to copy final report' }),
+    ''
+  )
+})
+
 test('day review next step points to one calm action', () => {
   assert.equal(
     formatDayReviewNextStep([
-      { level: 'blocker', title: 'Stop the active focus block', detail: 'Вход в день' },
+      { level: 'blocker', title: 'Stop the active focus block', detail: 'Вход в день', action: 'stop_active_focus' },
       { level: 'review', title: 'Classify significant gaps', action: 'stage_significant_gap' },
     ]),
     'закрыть красный пункт: Остановить активный фокус-блок. Нажми «Стоп» у активного фокуса.'
@@ -194,24 +399,56 @@ test('day review next step points to one calm action', () => {
 
   assert.equal(
     formatDayReviewNextStep([
-      { level: 'blocker', title: 'Clear active Work Item state', detail: '1 дело с активным статусом' },
+      { level: 'blocker', title: 'Clear active Work Item state', detail: '1 дело с активным статусом', action: 'clear_active_work_items' },
     ]),
-    'закрыть красный пункт: Снять активный статус с дела. Выбери активное дело и смени состояние с «Активно».'
+    'закрыть красный пункт: Снять активный статус с дела. Нажми «Снять активность», если фокус уже остановлен.'
   )
 
   assert.equal(
     formatDayReviewNextStep([
-      { level: 'review', title: 'Classify significant gaps', action: 'stage_significant_gap' },
-      { level: 'review', title: 'No day or Work Item notes/events', action: 'stage_day_context' },
+      {
+        level: 'review',
+        title: 'Classify significant gaps',
+        detail: '1/2 больших разрывов без события дня; следующий: 12:10-13:28 (1:18:38)',
+        action: 'stage_significant_gap',
+        secondaryActions: ['stage_significant_gap_lost_control', 'stage_significant_gap_recovery'],
+      },
+      { level: 'review', title: 'No day or Work Item notes/events', action: 'accept_day_context', secondaryActions: ['stage_day_context'] },
     ]),
-    'дописать или исправить: Объяснить большие разрывы. Ещё 1.'
+    'дописать или исправить: Объяснить большие разрывы — 12:10-13:28 (1:18:38). Нажми «Объяснить», «Управляемость» или «Восстановление».'
   )
 
   assert.equal(
     formatDayReviewNextStep([
-      { level: 'review', title: 'Classify significant gaps', action: 'stage_significant_gap' },
+      {
+        level: 'review',
+        title: 'Classify significant gaps',
+        detail: '1/1 больших разрывов без события дня; следующий: 12:10-13:28 (1:18:38)',
+        action: 'stage_significant_gap',
+        secondaryActions: ['stage_significant_gap_lost_control', 'stage_significant_gap_recovery'],
+      },
     ]),
-    'дописать или исправить: Объяснить большие разрывы. Нажми «Объяснить».'
+    'дописать или исправить: Объяснить большие разрывы — 12:10-13:28 (1:18:38). Нажми «Объяснить», «Управляемость» или «Восстановление».'
+  )
+
+  assert.equal(
+    formatDayReviewNextStep([
+      {
+        level: 'review',
+        title: 'Explain current open gap',
+        detail: '3:28 после последнего остановленного блока',
+        action: 'stage_open_gap',
+        secondaryActions: ['stage_open_gap_lost_control', 'stage_open_gap_recovery'],
+      },
+    ]),
+    'дописать или исправить: Объяснить текущий открытый разрыв — 3:28 после последнего остановленного блока. Нажми «Объяснить», «Управляемость» или «Восстановление».'
+  )
+
+  assert.equal(
+    formatDayReviewNextStep([
+      { level: 'review', title: 'No day or Work Item notes/events', action: 'accept_day_context', secondaryActions: ['stage_day_context'] },
+    ]),
+    'осознанно проверить: Нет событий дня или дел. Нажми «Добавить контекст», если отчёт требует памяти, или «Контекст не нужен», если всё ясно.'
   )
 
   assert.equal(
@@ -219,6 +456,33 @@ test('day review next step points to one calm action', () => {
       { level: 'review', title: 'Confirm Work Item today/total badges', action: 'accept_work_item_time_badges' },
     ]),
     'осознанно проверить: Проверить время по делам. Нажми «Время верно», если данные уже честные.'
+  )
+
+  assert.equal(
+    formatDayReviewNextStep([
+      {
+        level: 'review',
+        title: 'Confirm tracking accuracy or test correction',
+        action: 'accept_tracking_accuracy',
+        secondaryActions: ['stage_focus_correction'],
+      },
+    ]),
+    'осознанно проверить: Подтвердить точность трекинга. Нажми «Добавить блок», если в трекинге пропуск, или «Трекинг верен», если всё честно.'
+  )
+
+  assert.equal(
+    formatDayReviewNextStep([
+      { level: 'review', title: 'Resolve, convert, or accept open captures', action: 'accept_open_captures' },
+    ]),
+    'осознанно проверить: Разобрать открытые отвлечения. Разбери записи в Инбоксе или нажми «Оставить как хвост», если запись должна остаться видимым хвостом.'
+  )
+
+  assert.equal(
+    formatDayReviewNextStep([
+      { level: 'review', title: 'Resolve, convert, or accept open captures', action: 'accept_open_captures' },
+      { level: 'review', title: 'Review Activity Zone coverage', action: 'accept_activity_zones' },
+    ]),
+    'осознанно проверить: Разобрать открытые отвлечения. Разбери записи в Инбоксе или нажми «Оставить как хвост», если запись должна остаться видимым хвостом. Ещё 1.'
   )
 
   assert.equal(
@@ -239,14 +503,22 @@ test('day review action buttons explain what will happen', () => {
   const labels: Record<DayReviewAction, string> = {
     stage_significant_gap: 'Объяснить',
     stage_open_gap: 'Объяснить',
-    accept_open_captures: 'Оставить открытыми',
+    stage_significant_gap_lost_control: 'Управляемость',
+    stage_open_gap_lost_control: 'Управляемость',
+    stage_significant_gap_recovery: 'Восстановление',
+    stage_open_gap_recovery: 'Восстановление',
+    accept_open_captures: 'Оставить как хвост',
     accept_work_item_time_badges: 'Время верно',
     accept_activity_zones: 'Зоны верны',
     accept_capture_usage: 'Инбокс проверен',
     accept_entry_paths: 'Пути проверены',
     accept_window_entrypoints: 'Окно проверено',
     accept_tracking_accuracy: 'Трекинг верен',
+    accept_day_context: 'Контекст не нужен',
     stage_day_context: 'Добавить контекст',
+    stage_focus_correction: 'Добавить блок',
+    stop_active_focus: 'Стоп',
+    clear_active_work_items: 'Снять активность',
   }
 
   for (const [action, label] of Object.entries(labels) as [DayReviewAction, string][]) {
@@ -274,7 +546,7 @@ test('dogfood report state stays draft until review items are clear', () => {
   )
 })
 
-test('report button starts the closure ritual before it offers copying', () => {
+test('report button starts the closure ritual and only copies final reports', () => {
   assert.equal(
     formatReportButtonLabel({
       copyState: 'idle',
@@ -291,7 +563,7 @@ test('report button starts the closure ritual before it offers copying', () => {
       reportIsDraft: true,
       reportHasPendingReview: false,
     }),
-    'Копировать черновик'
+    'Закрыть проверки'
   )
   assert.equal(
     formatReportButtonLabel({
@@ -300,7 +572,7 @@ test('report button starts the closure ritual before it offers copying', () => {
       reportIsDraft: false,
       reportHasPendingReview: true,
     }),
-    'Копировать черновик'
+    'Закрыть проверки'
   )
   assert.equal(
     formatReportButtonLabel({
@@ -329,6 +601,24 @@ test('day closure start prompt stays small and calm', () => {
   assert(!prompt.includes('вечерний разбор'), 'start prompt should not frame closure as another review task')
 })
 
+test('day closure prompt keeps the 10 minute goal visible without panic', () => {
+  const inTimePrompt = formatDayClosurePrompt('review', { blockers: 0, reviews: 2, accepts: 2, closureElapsedSeconds: 7 * 60 })
+  assert(inTimePrompt.includes('Осталось 2 пункта осознанно проверить'))
+  assert(inTimePrompt.includes('Закрытие идёт 7:00, цель — до 10:00.'))
+
+  const mixedPrompt = formatDayClosurePrompt('review', { blockers: 0, reviews: 5, fixups: 2, accepts: 3, closureElapsedSeconds: 5 * 60 })
+  assert(mixedPrompt.includes('Осталось: 2 пункта дописать, 3 пункта только проверить'))
+  assert(mixedPrompt.includes('Сначала выполни ближайшее действие ниже'))
+
+  const slowPrompt = formatDayClosurePrompt('blocked', { blockers: 1, reviews: 0, closureElapsedSeconds: 11 * 60 })
+  assert(slowPrompt.includes('этот день уже не докажет цель 10 минут'))
+  assert(slowPrompt.includes('данные всё равно стоит спокойно закрыть'))
+
+  const readyPrompt = formatDayClosurePrompt('ready', { blockers: 0, reviews: 0, closureElapsedSeconds: 9 * 60 })
+  assert(readyPrompt.includes('Кнопка «Копировать отчёт» завершит закрытие дня.'))
+  assert(readyPrompt.includes('`pnpm dogfood:finish:save` сохранит доказательства.'))
+})
+
 test('gap review helpers keep repeated Explain actions on the next unresolved gap', () => {
   const gaps: Gap[] = [
     { from: '2026-07-07T09:00:00Z', to: '2026-07-07T09:30:00Z', seconds: 30 * 60 },
@@ -344,6 +634,8 @@ test('gap review helpers keep repeated Explain actions on the next unresolved ga
   assert.equal(pickNextGapForReview(gaps, [{ text: 'обычная заметка о ходе дня' }]), gaps[0])
   assert.equal(isOpenGapExplanationText('Открытый разрыв 12:00-12:30: ужин'), true)
   assert.equal(isOpenGapExplanationText('open gap 12:00-12:30: dinner'), true)
+  assert.match(formatGapDayEventDraft(gaps[0], 'Открытый разрыв', 'lost_control'), /не удалось восстановить управляемость/)
+  assert.match(formatGapDayEventDraft(gaps[0], 'Разрыв', 'recovery'), /восстановление\/перерыв/)
 })
 
 test('copied report keeps key focus and telemetry sections localized', () => {
@@ -473,12 +765,17 @@ test('copied report keeps key focus and telemetry sections localized', () => {
   assert(!localizedTelemetry.includes('Проверок follow-up по отвлечениям:'), 'old mixed-language follow-up label should not leak into copied report')
   assert(!localizedTelemetry.includes('Проверок использования Inbox:'), 'old mixed-language Inbox label should not leak into copied report')
 
-  const shortClosure = formatShortClosureMarkdown(telemetryMarkdown)
+  const shortClosure = formatShortClosureMarkdown(telemetryMarkdown, { reportReady: true })
   assert(shortClosure.includes('## Короткое закрытие'))
+  assert(shortClosure.includes('Статус закрытия: завершено'))
+  assert(shortClosure.includes('Данным можно доверять: да (проверки закрыты)'))
   assert(shortClosure.includes('Закрытие уложилось в 10 минут: да (0:07)'))
-  assert(shortClosure.includes('Главное наблюдение дня:'))
+  assert(shortClosure.includes('Главное наблюдение дня (если нужно):'))
+  assert(shortClosure.includes('Следующий шаг после закрытия (если уже ясен):'))
 
   const missingClosure = formatShortClosureMarkdown('## App Telemetry\n\nTotal events: 0')
+  assert(missingClosure.includes('Статус закрытия: не начато'))
+  assert(missingClosure.includes('Данным можно доверять: пока нет (см. «Проверка перед отчётом»)'))
   assert(missingClosure.includes('Закрытие уложилось в 10 минут: нет данных (закрытие не измерено)'))
 })
 

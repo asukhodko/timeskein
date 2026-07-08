@@ -85,9 +85,12 @@ try {
   assert(stdout.includes("## Телеметрия приложения"), "report did not include app telemetry section");
   assert(stdout.includes("## Проверка перед отчётом"), "report did not include review checklist section");
   assert(stdout.includes("Ближайшее действие:"), "report review checklist did not include next action");
+  assert(stdout.includes("Сводка:"), "report review checklist did not include a remaining-work summary");
   assert(
-    stdout.includes("Ближайшее действие: дописать или исправить: Объяснить большие разрывы. Нажми «Объяснить»."),
-    "report review checklist did not name the single remaining action button"
+    stdout.includes(
+      "Ближайшее действие: дописать или исправить: Объяснить большие разрывы — 09:25-10:00 (35:00). Нажми «Объяснить», «Управляемость» или «Восстановление»."
+    ),
+    "report review checklist did not name the exact gap and action button"
   );
   assert(stdout.includes("### Дописать или исправить"), "report review checklist did not group fix-up items");
   assert(stdout.includes("### Осознанно проверить"), "report review checklist did not group accept-as-is items");
@@ -211,13 +214,33 @@ try {
     "short closure should come before the review checklist"
   );
   assert(
+    stdout.indexOf("## Проверка перед отчётом") < stdout.indexOf("## Открытые отвлечения"),
+    "review checklist should come before detailed open captures"
+  );
+  assert(
+    stdout.indexOf("## Проверка закрытия дня") < stdout.indexOf("## История отвлечений"),
+    "daily-control audit should come before detailed capture history"
+  );
+  assert(
     stdout.indexOf("## Короткое закрытие") < stdout.indexOf("## Данные фокуса"),
     "short closure should come before detailed focus data"
   );
-  assert(stdout.includes("Данным можно доверять: да/нет"), "report did not include short trust prompt");
+  assert(
+    stdout.includes("Данным можно доверять: пока нет (см. «Проверка перед отчётом»)"),
+    "draft report did not mark trust as not ready yet"
+  );
+  assert(
+    stdout.includes("Статус закрытия: завершено"),
+    "report did not show the measured closure status"
+  );
   assert(
     stdout.includes("Закрытие уложилось в 10 минут: да (7:00)"),
     "report did not prefill short closure duration verdict"
+  );
+  assert(
+    stdout.includes("Главное наблюдение дня (если нужно):") &&
+      stdout.includes("Следующий шаг после закрытия (если уже ясен):"),
+    "short closure notes should be explicitly optional"
   );
   assert(stdout.includes("## Дополнительный разбор"), "report did not include optional deep-review section");
   assert(
@@ -259,8 +282,29 @@ try {
     "report review checklist did not flag missing day/Work Item context"
   );
   assert(
+    thinEvidenceStdout.includes(
+      "Нет событий дня или дел - Если отчёт требует памяти, добавь одну фразу; если всё ясно, прими как есть. Нажми «Добавить контекст», если отчёт требует памяти, или «Контекст не нужен», если всё ясно."
+    ),
+    "report review checklist did not explain context accept and add paths"
+  );
+  assert(
+    thinEvidenceStdout.includes(
+      "Ближайшее действие: дописать или исправить: Объяснить большие разрывы — 09:25-10:00 (35:00). Нажми «Объяснить», «Управляемость» или «Восстановление»."
+    ),
+    "report review checklist should name the first fix-up action"
+  );
+  assert(
+    thinEvidenceStdout.includes("Сводка: 1 пункт дописать или исправить") &&
+      thinEvidenceStdout.includes("пунктов осознанно проверить"),
+    "report review checklist should make mixed fix-up and accept-as-is work legible"
+  );
+  assert(
     thinEvidenceStdout.includes("Закрытие уложилось в 10 минут: нет данных (закрытие не измерено)"),
     "report did not explain missing closure measurement in the short closure section"
+  );
+  assert(
+    thinEvidenceStdout.includes("Статус закрытия: не начато"),
+    "report did not show that closure has not started yet"
   );
   assert(
     thinEvidenceStdout.includes("Проверить время по делам"),
@@ -269,6 +313,12 @@ try {
   assert(
     thinEvidenceStdout.includes("Подтвердить точность трекинга"),
     "report review checklist did not flag missing correction evidence"
+  );
+  assert(
+    thinEvidenceStdout.includes(
+      "Подтвердить точность трекинга - Сегодня не было коррекций фокус-блоков. Нажми «Добавить блок», если в трекинге пропуск, или «Трекинг верен», если всё честно."
+    ),
+    "report review checklist did not offer direct tracking correction and acceptance paths"
   );
   assert(
     thinEvidenceStdout.includes("Проверить старт и продолжение"),
@@ -286,6 +336,29 @@ try {
     thinEvidenceStdout.includes("| Длительность закрытия измерена | проверить |"),
     "report daily-control audit should review missing day closure duration"
   );
+
+  await runSql(`
+    UPDATE captures
+    SET state = 'resolved', resolved_at = '2026-06-30T07:50:00Z', updated_at = '2026-06-30T07:50:00Z'
+    WHERE id = 'c1';
+  `);
+
+  const { stdout: bulkAcceptableStdout } = await execFileAsync(
+    "node",
+    [join(repoRoot, "scripts/dogfood-report.mjs"), "--db", dbPath, "--date", "2026-06-30"],
+    { cwd: repoRoot }
+  );
+
+  assert(
+    bulkAcceptableStdout.includes("проверочных пунктов можно закрыть одной кнопкой «Всё проверено»"),
+    "report review checklist should mention the one-click accept path for safe checks"
+  );
+
+  await runSql(`
+    UPDATE captures
+    SET state = 'open', resolved_at = NULL, updated_at = '2026-06-30T07:50:30Z'
+    WHERE id = 'c1';
+  `);
 
   await runSql(`
     INSERT INTO app_events (id, ts, source, kind, payload)
@@ -411,6 +484,42 @@ try {
   );
 
   await runSql(`
+    DELETE FROM app_events WHERE kind = 'focus_correction_failed';
+
+    INSERT INTO day_events (id, ts, kind, text, focus_session_id, activity_zone, updated_at)
+    VALUES ('de_final_gap', '2026-06-30T06:30:00Z', 'note_added', 'Разрыв 09:25-10:00: восстановление после первого блока', NULL, 'recovery', '2026-06-30T06:30:00Z');
+
+    INSERT INTO app_events (id, ts, source, kind, payload)
+    VALUES
+      ('ae_final_badges', '2026-06-30T07:58:00Z', 'ui', 'work_item_time_badges_reviewed', '{"action_id":"bt1","control":"review_checklist","touched_work_item_count":2}'),
+      ('ae_final_closure_start', '2026-06-30T08:00:00Z', 'ui', 'day_closure_started', '{"action_id":"d2","control":"review_panel"}'),
+      ('ae_final_closure_done', '2026-06-30T08:06:00Z', 'ui', 'day_closure_completed', '{"action_id":"d2","control":"copy_report"}');
+  `);
+
+  const { stdout: finalStdout } = await execFileAsync(
+    "node",
+    [join(repoRoot, "scripts/dogfood-report.mjs"), "--db", dbPath, "--date", "2026-06-30"],
+    { cwd: repoRoot }
+  );
+
+  assert(
+    finalStdout.includes("Статус отчёта: финальный — нет активных фокус-блоков, активных дел и незакрытых проверок"),
+    "final report state is missing"
+  );
+  assert(
+    finalStdout.includes("Ближайшее действие: нажать «Копировать отчёт»."),
+    "final report should point to copy report as the next action"
+  );
+  assert(
+    finalStdout.includes("Данным можно доверять: да (проверки закрыты)"),
+    "final report did not mark short trust line as ready"
+  );
+  assert(
+    !finalStdout.includes("Данным можно доверять: пока нет"),
+    "final report should not keep the draft trust warning"
+  );
+
+  await runSql(`
     INSERT INTO work_items (id, title, type, state, pinned, created_at, updated_at, last_seen_at)
     VALUES ('w3', 'Stuck Active Item', 'task', 'active', 0, '2026-06-30T08:00:00Z', '2026-06-30T08:00:00Z', '2026-06-30T08:00:00Z');
 
@@ -441,7 +550,7 @@ try {
     "stuck active item review checklist did not include active item cleanup"
   );
   assert(
-    stuckItemDraftStdout.includes("Ближайшее действие: закрыть красный пункт: Снять активный статус с дела. Выбери активное дело и смени состояние с «Активно»."),
+    stuckItemDraftStdout.includes("Ближайшее действие: закрыть красный пункт: Снять активный статус с дела. В Timeskein нажми «Снять активность» или выполни `pnpm dogfood:stop-active -- --apply`."),
     "stuck active item next action did not explain how to clear the blocker"
   );
 
@@ -467,6 +576,10 @@ try {
   assert(
     draftStdout.includes("Остановить активный фокус-блок"),
     "active focus review checklist did not include stop action"
+  );
+  assert(
+    !draftStdout.includes("Снять активный статус с дела"),
+    "active focus draft should not show a second active-item blocker before focus is stopped"
   );
   assert(
     draftStdout.includes("Ближайшее действие: закрыть красный пункт: Остановить активный фокус-блок. Нажми «Стоп» у активного фокуса."),

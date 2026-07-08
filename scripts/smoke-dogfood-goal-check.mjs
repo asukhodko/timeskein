@@ -116,7 +116,8 @@ try {
     `${missingEvidence.stdout}${missingEvidence.stderr}`.includes("# Финальная проверка пока не готова") &&
       `${missingEvidence.stdout}${missingEvidence.stderr}`.includes("## До финальной проверки") &&
       `${missingEvidence.stdout}${missingEvidence.stderr}`.includes("Сохранённые материалы дня Timeskein ещё не найдены") &&
-      `${missingEvidence.stdout}${missingEvidence.stderr}`.includes("pnpm dogfood:finish:save -- --date 2026-06-30"),
+      `${missingEvidence.stdout}${missingEvidence.stderr}`.includes("pnpm dogfood:finish:save -- --date 2026-06-30") &&
+      `${missingEvidence.stdout}${missingEvidence.stderr}`.includes("pnpm dogfood:goal-check:status -- --date 2026-06-30"),
     "missing saved evidence error is missing"
   );
   assert(
@@ -139,6 +140,10 @@ try {
     "status mode missing-evidence message is incomplete"
   );
   assert(
+    !missingEvidenceStatus.stdout.includes("Для спокойного просмотра состояния без дорогих проверок"),
+    "status mode should not tell the user to run status again"
+  );
+  assert(
     !`${missingEvidenceStatus.stdout}${missingEvidenceStatus.stderr}`.includes("Error:") &&
       !`${missingEvidenceStatus.stdout}${missingEvidenceStatus.stderr}`.includes("at checkSavedEvidence"),
     "status mode missing-evidence message should not print a JavaScript stack trace"
@@ -148,7 +153,8 @@ try {
   assert(missingEvidenceFromFullCheck.code !== 0, "full goal-check should fail calmly when saved evidence is missing");
   assert(
     `${missingEvidenceFromFullCheck.stdout}${missingEvidenceFromFullCheck.stderr}`.includes("# Финальная проверка пока не готова") &&
-      `${missingEvidenceFromFullCheck.stdout}${missingEvidenceFromFullCheck.stderr}`.includes("Сохранённые материалы дня Timeskein ещё не найдены"),
+      `${missingEvidenceFromFullCheck.stdout}${missingEvidenceFromFullCheck.stderr}`.includes("Сохранённые материалы дня Timeskein ещё не найдены") &&
+      `${missingEvidenceFromFullCheck.stdout}${missingEvidenceFromFullCheck.stderr}`.includes("pnpm dogfood:goal-check:status -- --date 2026-06-30"),
     "full goal-check did not repeat the saved evidence not-ready message"
   );
   assert(
@@ -233,16 +239,36 @@ try {
     "## Проверка перед отчётом",
     "",
     "Ближайшее действие: нажать «Копировать отчёт».",
+    "Сводка: проверка чистая.",
     "",
     "### Готово",
     "",
     "- [x] Можно копировать финальный отчёт - Автоматических замечаний нет",
     "",
   ].join("\n");
+  const groupedReviewWithBulkHintMarkdown = [
+    "## Проверка перед отчётом",
+    "",
+    "Ближайшее действие: дописать или исправить: Объяснить большие разрывы — 12:10-13:28 (1:18:38).",
+    "Сводка: 1 пункт дописать или исправить, 3 пункта осознанно проверить.",
+    "",
+    "### Дописать или исправить",
+    "",
+    "- [ ] Объяснить большие разрывы - 1 большой разрыв без события дня; следующий: 12:10-13:28 (1:18:38).",
+    "",
+    "### Осознанно проверить",
+    "",
+    "- [ ] Проверить время по делам - Нажми «Время верно», если данные уже честные.",
+    "- [ ] Подтвердить точность трекинга - Нажми «Трекинг верен», если данные уже честные.",
+    "- [ ] Проверить входы в окно - Нажми «Окно проверено», если данные уже честные.",
+    "- Подсказка: 3 проверочных пункта можно закрыть одной кнопкой «Всё проверено», если данные уже честные.",
+    "",
+  ].join("\n");
   const shortClosureMarkdown = [
     "## Короткое закрытие",
     "",
-    "- Данным можно доверять: да",
+    "- Статус закрытия: завершено",
+    "- Данным можно доверять: да (проверки закрыты)",
     "- Закрытие уложилось в 10 минут: да (7:00)",
     "- Главное наблюдение дня: закрытие дня стало коротким.",
     "- Следующий шаг после закрытия: запустить goal-check.",
@@ -251,10 +277,30 @@ try {
   const incompleteShortClosureMarkdown = [
     "## Короткое закрытие",
     "",
-    "- Данным можно доверять: да",
+    "- Статус закрытия: не начато",
+    "- Данным можно доверять: да (проверки закрыты)",
     "- Закрытие уложилось в 10 минут: нет данных (закрытие не измерено)",
     "- Главное наблюдение дня: закрытие ещё не доказано.",
     "- Следующий шаг после закрытия: пересохранить evidence.",
+    "",
+  ].join("\n");
+  const untrustedShortClosureMarkdown = [
+    "## Короткое закрытие",
+    "",
+    "- Статус закрытия: завершено",
+    "- Данным можно доверять: пока нет (см. «Проверка перед отчётом»)",
+    "- Закрытие уложилось в 10 минут: да (7:00)",
+    "- Главное наблюдение дня: закрытие было быстрым, но проверки не закрыты.",
+    "- Следующий шаг после закрытия: закрыть проверки.",
+    "",
+  ].join("\n");
+  const missingStatusShortClosureMarkdown = [
+    "## Короткое закрытие",
+    "",
+    "- Данным можно доверять: да (проверки закрыты)",
+    "- Закрытие уложилось в 10 минут: да (7:00)",
+    "- Главное наблюдение дня (если нужно):",
+    "- Следующий шаг после закрытия (если уже ясен):",
     "",
   ].join("\n");
   const groupedReviewWithoutNextActionMarkdown = [
@@ -269,6 +315,17 @@ try {
     "## Проверка перед отчётом",
     "",
     "Ближайшее действие: нажать «Копировать отчёт».",
+    "Сводка: проверка чистая.",
+    "",
+    "- [x] Можно копировать финальный отчёт - Автоматических замечаний нет",
+    "",
+  ].join("\n");
+  const groupedReviewWithoutSummaryMarkdown = [
+    "## Проверка перед отчётом",
+    "",
+    "Ближайшее действие: нажать «Копировать отчёт».",
+    "",
+    "### Готово",
     "",
     "- [x] Можно копировать финальный отчёт - Автоматических замечаний нет",
     "",
@@ -287,7 +344,7 @@ try {
       "Статус отчёта: финальный — нет активных фокус-блоков, активных дел и незакрытых проверок",
       "## Focus Data",
       shortClosureMarkdown,
-      groupedReviewMarkdown,
+      groupedReviewWithBulkHintMarkdown,
       "## Daily Control Goal Audit",
       "",
       "| Requirement | Status | Evidence |",
@@ -324,13 +381,121 @@ try {
     "review saved evidence error did not mention the non-passing closure-duration row"
   );
   assert(
+    `${reviewEvidence.stdout}${reviewEvidence.stderr}`.includes(
+      "строка проверки «Длительность закрытия измерена» ещё не подтверждена в отчёте и RC-проверке"
+    ),
+    "review saved evidence error did not collapse duplicated report and RC audit rows"
+  );
+  assert(
     `${reviewEvidence.stdout}${reviewEvidence.stderr}`.includes("Ближайшее действие из сохранённого отчёта:"),
     "review saved evidence error did not repeat the saved report next action"
+  );
+  assert(
+    `${reviewEvidence.stdout}${reviewEvidence.stderr}`.includes("Подсказка: 3 проверочных пункта можно закрыть одной кнопкой «Всё проверено»"),
+    "review saved evidence error did not repeat the saved report bulk accept hint"
   );
   assert(
     `${reviewEvidence.stdout}${reviewEvidence.stderr}`.includes("нажми `Начать закрытие дня`") &&
       `${reviewEvidence.stdout}${reviewEvidence.stderr}`.includes("скопируй финальный отчёт за 10 минут или меньше"),
     "review saved evidence error did not explain how to create measured closure evidence"
+  );
+  assert(
+    `${reviewEvidence.stdout}${reviewEvidence.stderr}`.includes("pnpm dogfood:report -- --date 2026-06-30") &&
+      `${reviewEvidence.stdout}${reviewEvidence.stderr}`.includes("снова сохрани"),
+    "review saved evidence error should explain how to compare stale saved evidence with the live report"
+  );
+  assert(
+    `${reviewEvidence.stdout}${reviewEvidence.stderr}`.includes("pnpm dogfood:goal-check:status -- --date 2026-06-30"),
+    "review saved evidence error should mention the soft status command before expensive checks"
+  );
+
+  const reviewEvidenceStatus = await runGoalCheck(["--status", "--date", "2026-06-30"], tempDir);
+  assert(reviewEvidenceStatus.code === 0, "status mode should stay successful on incomplete review evidence");
+  assert(
+    reviewEvidenceStatus.stdout.includes("Ближайшее действие из сохранённого отчёта:") &&
+      reviewEvidenceStatus.stdout.includes("Подсказка: 3 проверочных пункта можно закрыть одной кнопкой «Всё проверено»") &&
+      reviewEvidenceStatus.stdout.includes("## Подробности"),
+    "status mode should keep next action and bulk accept hint for incomplete review evidence"
+  );
+  assert(
+    !reviewEvidenceStatus.stdout.includes("## Детали") &&
+      !reviewEvidenceStatus.stdout.includes("строка проверки «Длительность закрытия измерена» ещё не подтверждена"),
+    "status mode should hide detailed audit rows that belong to strict checks"
+  );
+  assert(
+    !reviewEvidenceStatus.stdout.includes("Если сохранённый отчёт уже не совпадает") &&
+      !reviewEvidenceStatus.stdout.includes("Если Timeskein закрыт") &&
+      !reviewEvidenceStatus.stdout.includes("Вернись к `Проверка перед отчётом`"),
+    "status mode should hide fallback branches so the next manual step stays short"
+  );
+  assert(
+    reviewEvidenceStatus.stdout.includes("Для замера нажми `Начать закрытие дня`") &&
+      !reviewEvidenceStatus.stdout.includes("Для измерения закрытия дня нажми"),
+    "status mode should keep the not-started closure hint short"
+  );
+
+  await writeFile(
+    join(tempDir, "timeskein-dogfood-report-2026-06-30.md"),
+    [
+      "# Отчёт закрытия дня Timeskein - 2026-06-30",
+      "Статус отчёта: финальный — нет активных фокус-блоков, активных дел и незакрытых проверок",
+      "## Focus Data",
+      shortClosureMarkdown,
+      groupedReviewWithBulkHintMarkdown,
+      "## Daily Control Goal Audit",
+      "",
+      "| Requirement | Status | Evidence |",
+      "| --- | --- | --- |",
+      ...failingClosureReportRows,
+      "",
+      "## App Telemetry",
+      "",
+      "Закрытий дня начато/завершено: 1/0",
+      "",
+    ].join("\n")
+  );
+
+  const openClosureStatus = await runGoalCheck(["--status", "--date", "2026-06-30"], tempDir);
+  assert(openClosureStatus.code === 0, "status mode should stay successful with an open closure attempt");
+  assert(
+    openClosureStatus.stdout.includes("Закрытие уже начато: продолжай `Проверка перед отчётом`") &&
+      openClosureStatus.stdout.includes("Если 10 минут уже прошли, спокойно закрой данные") &&
+      openClosureStatus.stdout.includes("докажи цель на следующем dogfood-дне") &&
+      !openClosureStatus.stdout.includes("не переигрывай задним числом"),
+    "status mode should keep the open-closure hint short"
+  );
+
+  await writeFile(
+    join(tempDir, "timeskein-dogfood-report-2026-06-30.md"),
+    [
+      "# Отчёт закрытия дня Timeskein - 2026-06-30",
+      "Статус отчёта: финальный — нет активных фокус-блоков, активных дел и незакрытых проверок",
+      "## Focus Data",
+      shortClosureMarkdown,
+      groupedReviewWithBulkHintMarkdown,
+      "## Daily Control Goal Audit",
+      "",
+      "| Requirement | Status | Evidence |",
+      "| --- | --- | --- |",
+      ...failingClosureReportRows,
+      "",
+      "## App Telemetry",
+      "",
+      "Day closure started/completed: 1/0",
+      "Last day closure duration: n/a",
+      "",
+    ].join("\n")
+  );
+  const openClosureEvidence = await runGoalCheck(["--check-saved-evidence-only", "--date", "2026-06-30"], tempDir);
+  assert(openClosureEvidence.code !== 0, "saved evidence with open closure should fail before expensive gates");
+  assert(
+    `${openClosureEvidence.stdout}${openClosureEvidence.stderr}`.includes("Закрытие уже начато") &&
+      `${openClosureEvidence.stdout}${openClosureEvidence.stderr}`.includes("продолжай `Проверка перед отчётом`") &&
+      `${openClosureEvidence.stdout}${openClosureEvidence.stderr}`.includes("После правок снова сохрани доказательства:") &&
+      !`${openClosureEvidence.stdout}${openClosureEvidence.stderr}`.includes("не переигрывай задним числом") &&
+      !`${openClosureEvidence.stdout}${openClosureEvidence.stderr}`.includes("Затем повтори") &&
+      !`${openClosureEvidence.stdout}${openClosureEvidence.stderr}`.includes("нажми `Начать закрытие дня`"),
+    "saved evidence with open closure should not tell the user to start closure again"
   );
 
   await writeFile(
@@ -393,10 +558,33 @@ try {
     join(tempDir, "timeskein-dogfood-report-2026-06-30.md"),
     [
       "# Отчёт закрытия дня Timeskein - 2026-06-30",
+      "Статус отчёта: финальный — нет активных фокус-блоков, активных дел и незакрытых проверок",
+      "## Focus Data",
+      shortClosureMarkdown,
+      groupedReviewWithoutSummaryMarkdown,
+      reportAuditMarkdown,
+      "## App Telemetry",
+      "",
+    ].join("\n")
+  );
+
+  const missingSummaryEvidence = await runGoalCheck(["--check-saved-evidence-only", "--date", "2026-06-30"], tempDir);
+  assert(missingSummaryEvidence.code !== 0, "saved evidence without a review summary should fail");
+  assert(
+    `${missingSummaryEvidence.stdout}${missingSummaryEvidence.stderr}`.includes(
+      "раздел «Проверка перед отчётом» должен содержать строку «Сводка»"
+    ),
+    "saved review evidence without summary did not mention the missing summary"
+  );
+
+  await writeFile(
+    join(tempDir, "timeskein-dogfood-report-2026-06-30.md"),
+    [
+      "# Отчёт закрытия дня Timeskein - 2026-06-30",
       "Статус отчёта: черновик — осталось 1 проверка перед финальным отчётом",
       "## Focus Data",
       shortClosureMarkdown,
-      groupedReviewMarkdown,
+      groupedReviewWithBulkHintMarkdown,
       reportAuditMarkdown,
       "## App Telemetry",
       "",
@@ -417,7 +605,14 @@ try {
   assert(
     `${draftReportEvidence.stdout}${draftReportEvidence.stderr}`.includes("# Финальная проверка пока не готова") &&
       `${draftReportEvidence.stdout}${draftReportEvidence.stderr}`.includes("статус отчёта ещё не финальный") &&
-      `${draftReportEvidence.stdout}${draftReportEvidence.stderr}`.includes("Ближайшее действие из сохранённого отчёта:"),
+      `${draftReportEvidence.stdout}${draftReportEvidence.stderr}`.includes("Ближайшее действие из сохранённого отчёта:") &&
+      `${draftReportEvidence.stdout}${draftReportEvidence.stderr}`.includes("Сводка проверки:") &&
+      `${draftReportEvidence.stdout}${draftReportEvidence.stderr}`.includes("Всё проверено") &&
+      `${draftReportEvidence.stdout}${draftReportEvidence.stderr}`.includes("После правок снова сохрани доказательства:") &&
+      !`${draftReportEvidence.stdout}${draftReportEvidence.stderr}`.includes("pnpm dogfood:continue") &&
+      !`${draftReportEvidence.stdout}${draftReportEvidence.stderr}`.includes("Затем повтори") &&
+      !`${draftReportEvidence.stdout}${draftReportEvidence.stderr}`.includes("не переигрывай задним числом") &&
+      `${draftReportEvidence.stdout}${draftReportEvidence.stderr}`.includes("pnpm dogfood:report -- --date 2026-06-30"),
     "draft saved report evidence error did not mention non-final report state"
   );
 
@@ -440,6 +635,19 @@ try {
     `${missingShortClosureEvidence.stdout}${missingShortClosureEvidence.stderr}`.includes("нет раздела «## Короткое закрытие»"),
     "saved evidence without short closure did not mention the missing short closure section"
   );
+  const missingShortClosureStatus = await runGoalCheck(["--status", "--date", "2026-06-30"], tempDir);
+  assert(missingShortClosureStatus.code === 0, "status mode should stay successful when saved evidence is structurally incomplete");
+  assert(
+    missingShortClosureStatus.stdout.includes("Ближайшее действие из сохранённого отчёта:") &&
+      missingShortClosureStatus.stdout.includes("После правок снова сохрани доказательства:"),
+    "status mode should keep the UI action and tell the user to save evidence after fixing structural gaps"
+  );
+  assert(
+    missingShortClosureStatus.stdout.indexOf("Ближайшее действие из сохранённого отчёта:") <
+      missingShortClosureStatus.stdout.indexOf("После правок снова сохрани доказательства:") &&
+      !missingShortClosureStatus.stdout.includes("Пересобери устаревшие или неполные файлы"),
+    "status mode should lead with the UI action before telling the user to save evidence again"
+  );
 
   await writeFile(
     join(tempDir, "timeskein-dogfood-report-2026-06-30.md"),
@@ -460,6 +668,48 @@ try {
   assert(
     `${incompleteShortClosureEvidence.stdout}${incompleteShortClosureEvidence.stderr}`.includes("короткое закрытие ещё не подтверждает критерий 10 минут"),
     "saved evidence with non-passing short closure did not explain the failed short closure verdict"
+  );
+
+  await writeFile(
+    join(tempDir, "timeskein-dogfood-report-2026-06-30.md"),
+    [
+      "# Отчёт закрытия дня Timeskein - 2026-06-30",
+      "Статус отчёта: финальный — нет активных фокус-блоков, активных дел и незакрытых проверок",
+      "## Focus Data",
+      untrustedShortClosureMarkdown,
+      groupedReviewMarkdown,
+      reportAuditMarkdown,
+      "## App Telemetry",
+      "",
+    ].join("\n")
+  );
+
+  const untrustedShortClosureEvidence = await runGoalCheck(["--check-saved-evidence-only", "--date", "2026-06-30"], tempDir);
+  assert(untrustedShortClosureEvidence.code !== 0, "saved evidence without trusted data should fail");
+  assert(
+    `${untrustedShortClosureEvidence.stdout}${untrustedShortClosureEvidence.stderr}`.includes("доверие к данным ещё не подтверждено"),
+    "saved evidence without trusted data did not explain the failed trust line"
+  );
+
+  await writeFile(
+    join(tempDir, "timeskein-dogfood-report-2026-06-30.md"),
+    [
+      "# Отчёт закрытия дня Timeskein - 2026-06-30",
+      "Статус отчёта: финальный — нет активных фокус-блоков, активных дел и незакрытых проверок",
+      "## Focus Data",
+      missingStatusShortClosureMarkdown,
+      groupedReviewMarkdown,
+      reportAuditMarkdown,
+      "## App Telemetry",
+      "",
+    ].join("\n")
+  );
+
+  const missingShortClosureStatusEvidence = await runGoalCheck(["--check-saved-evidence-only", "--date", "2026-06-30"], tempDir);
+  assert(missingShortClosureStatusEvidence.code !== 0, "saved evidence without closure status should fail");
+  assert(
+    `${missingShortClosureStatusEvidence.stdout}${missingShortClosureStatusEvidence.stderr}`.includes("строку «Статус закрытия»"),
+    "saved evidence without closure status did not mention the missing status line"
   );
 
   await writeFile(

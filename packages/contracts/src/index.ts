@@ -189,6 +189,7 @@ export type AppEventKind =
   | "capture_converted"
   | "capture_convert_failed"
   | "capture_followup_reviewed"
+  | "day_context_reviewed"
   | "work_item_time_badges_reviewed"
   | "activity_zone_reviewed"
   | "capture_usage_reviewed"
@@ -223,6 +224,8 @@ export interface AppEventSummary {
   correction_failures: number;
   day_closure_starts: number;
   day_closure_completions: number;
+  open_day_closure_started_at?: string;
+  open_day_closure_action_id?: string;
   last_day_closure_duration_seconds?: number;
   api_errors: number;
   copy_failures: number;
@@ -243,6 +246,7 @@ export interface AppEventSummary {
   capture_converted: number;
   capture_convert_failures: number;
   capture_followup_reviews: number;
+  day_context_reviews: number;
   work_item_time_badge_reviews: number;
   activity_zone_reviews: number;
   capture_usage_reviews: number;

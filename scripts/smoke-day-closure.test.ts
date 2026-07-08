@@ -101,7 +101,7 @@ test('ready review items stay compact while unresolved checks remain', () => {
   )
 })
 
-test('bulk accept is only available for purely optional review checks', () => {
+test('bulk accept is available for safe accept-as-is review checks', () => {
   assert.deepEqual(
     getBulkAcceptableReviewActions([
       { level: 'review', action: 'accept_activity_zones' },
@@ -129,6 +129,14 @@ test('bulk accept is only available for purely optional review checks', () => {
     getBulkAcceptableReviewActions([
       { level: 'review', action: 'accept_activity_zones' },
       { level: 'review', action: 'stage_significant_gap' },
+      { level: 'review', action: 'accept_entry_paths' },
+    ]),
+    ['accept_activity_zones', 'accept_entry_paths']
+  )
+  assert.deepEqual(
+    getBulkAcceptableReviewActions([
+      { level: 'review', action: 'accept_open_captures' },
+      { level: 'review', action: 'accept_activity_zones' },
     ]),
     []
   )
@@ -146,11 +154,12 @@ test('bulk accept is only available for purely optional review checks', () => {
     []
   )
   assert.equal(isBulkAcceptableReviewAction('accept_activity_zones'), true)
+  assert.equal(isBulkAcceptableReviewAction('accept_open_captures'), false)
   assert.equal(isBulkAcceptableReviewAction('stage_significant_gap'), false)
   assert.equal(isBulkAcceptableReviewAction('stage_day_context'), false)
 })
 
-test('pure accept-as-is review groups can be collapsed into one calm action', () => {
+test('safe accept-as-is review groups can be collapsed into one calm action', () => {
   assert.equal(
     shouldCompactAcceptAsIsReviewItems([
       { level: 'review', action: 'accept_activity_zones' },
@@ -162,14 +171,22 @@ test('pure accept-as-is review groups can be collapsed into one calm action', ()
     shouldCompactAcceptAsIsReviewItems([
       { level: 'review', action: 'accept_activity_zones' },
       { level: 'review', action: 'stage_significant_gap' },
+      { level: 'review', action: 'accept_entry_paths' },
     ]),
-    false
+    true
   )
   assert.equal(
     shouldCompactAcceptAsIsReviewItems([
       { level: 'blocker' },
       { level: 'review', action: 'accept_activity_zones' },
       { level: 'review', action: 'accept_entry_paths' },
+    ]),
+    false
+  )
+  assert.equal(
+    shouldCompactAcceptAsIsReviewItems([
+      { level: 'review', action: 'accept_open_captures' },
+      { level: 'review', action: 'accept_activity_zones' },
     ]),
     false
   )

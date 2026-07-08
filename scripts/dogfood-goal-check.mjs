@@ -62,7 +62,7 @@ if (options.status) {
     console.log(buildStatusReadyMessage(date));
     process.exit(0);
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
+    const message = stripSoftStatusHint(error instanceof Error ? error.message : String(error), date);
     if (message.startsWith("# Финальная проверка пока не готова")) {
       console.log(buildStatusNotReadyMessage(date, message));
       process.exit(0);
@@ -185,7 +185,7 @@ function buildStatusReadyMessage(date) {
 
 function buildStatusNotReadyMessage(date, message) {
   return [
-    message,
+    compactNotReadyMessageForStatus(message),
     "",
     "## Мягкая проверка",
     "",
@@ -193,6 +193,56 @@ function buildStatusNotReadyMessage(date, message) {
     "- Она не закрывает цель и не запускает локальные проверки.",
     `- Когда материалы будут готовы, строгая проверка останется такой: \`pnpm dogfood:goal-check -- --date ${date} --no-codex-guidance\`.`,
   ].join("\n");
+}
+
+function compactNotReadyMessageForStatus(message) {
+  const detailsMarker = "\n## Детали\n";
+  if (!message.includes(detailsMarker)) return message;
+
+  const [summary] = message.split(detailsMarker);
+  const compactSummary = compactStatusSummary(summary);
+  return [
+    compactSummary,
+    "",
+    "## Подробности",
+    "",
+    "- Подробный список технических причин останется в строгой проверке; для ручного закрытия достаточно выполнить ближайшее действие выше.",
+  ].join("\n");
+}
+
+function compactStatusSummary(summary) {
+  const lines = summary.trimEnd().split("\n");
+  const compact = [];
+
+  for (const line of lines) {
+    if (isStatusOnlyNoiseLine(line)) {
+      continue;
+    }
+
+    compact.push(compactStatusLine(line));
+  }
+
+  return compact.join("\n").trimEnd();
+}
+
+function compactStatusLine(line) {
+  if (line.startsWith("- Закрытие дня уже начато:")) {
+    return "- Закрытие уже начато: продолжай `Проверка перед отчётом` и скопируй финальный отчёт. Если 10 минут уже прошли, спокойно закрой данные и докажи цель на следующем dogfood-дне.";
+  }
+
+  if (line.startsWith("- Для измерения закрытия дня нажми")) {
+    return "- Для замера нажми `Начать закрытие дня`, скопируй финальный отчёт за 10 минут или меньше, затем сохрани доказательства.";
+  }
+
+  return line;
+}
+
+function isStatusOnlyNoiseLine(line) {
+  return (
+    line.startsWith("- Вернись к `Проверка перед отчётом`") ||
+    line.startsWith("- Если сохранённый отчёт уже не совпадает") ||
+    line.startsWith("- Если Timeskein закрыт")
+  );
 }
 
 async function checkSavedEvidence(date) {
@@ -270,12 +320,27 @@ async function checkSavedEvidence(date) {
   if (!hasReviewNextAction(report)) {
     weak.push(`В ${reportPath} раздел «Проверка перед отчётом» должен содержать строку «Ближайшее действие»`);
   }
+  if (!hasReviewSummary(report)) {
+    weak.push(`В ${reportPath} раздел «Проверка перед отчётом» должен содержать строку «Сводка»`);
+  }
   const reviewNextAction = findReviewNextAction(report);
+  const reviewSummary = findReviewSummary(report);
+  const bulkAcceptHint = findBulkAcceptHint(report);
+  const openClosureAttempt = hasOpenClosureAttempt(report);
   const shortClosureVerdict = findShortClosureVerdict(report);
   if (!shortClosureVerdict) {
     weak.push(`В ${reportPath} раздел «Короткое закрытие» должен содержать строку «Закрытие уложилось в 10 минут»`);
   } else if (!isPassingShortClosureVerdict(shortClosureVerdict)) {
     notPassing.push(`В ${reportPath} короткое закрытие ещё не подтверждает критерий 10 минут: ${shortClosureVerdict}`);
+  }
+  const shortClosureTrust = findShortClosureTrust(report);
+  if (!shortClosureTrust) {
+    weak.push(`В ${reportPath} раздел «Короткое закрытие» должен содержать строку «Данным можно доверять»`);
+  } else if (!isPassingShortClosureTrust(shortClosureTrust)) {
+    notPassing.push(`В ${reportPath} доверие к данным ещё не подтверждено: ${shortClosureTrust}`);
+  }
+  if (!findShortClosureStatus(report)) {
+    weak.push(`В ${reportPath} раздел «Короткое закрытие» должен содержать строку «Статус закрытия»`);
   }
   for (const aliases of rcRequirements) {
     if (!includesAny(rcCheck, aliases)) {
@@ -306,7 +371,9 @@ async function checkSavedEvidence(date) {
   }
 
   if (weak.length > 0 || notPassing.length > 0) {
-    throw new Error(buildIncompleteEvidenceMessage(date, weak, notPassing, reviewNextAction));
+    throw new Error(
+      buildIncompleteEvidenceMessage(date, weak, notPassing, reviewNextAction, reviewSummary, bulkAcceptHint, openClosureAttempt)
+    );
   }
 }
 
@@ -318,6 +385,7 @@ function buildMissingEvidenceMessage(date, missing) {
     "",
     "- Сохранённые материалы дня Timeskein ещё не найдены.",
     `- Сохрани вечерний отчёт и проверку закрытия дня: \`pnpm dogfood:finish:save -- --date ${date}\`.`,
+    formatSoftStatusHint(date),
     "",
     "## Детали",
     "",
@@ -337,26 +405,93 @@ function buildMissingNoCodexGuidanceMessage(date) {
   ].join("\n");
 }
 
-function buildIncompleteEvidenceMessage(date, weak, notPassing, reviewNextAction) {
+function buildIncompleteEvidenceMessage(date, weak, notPassing, reviewNextAction, reviewSummary, bulkAcceptHint, openClosureAttempt = false) {
+  const details = formatIncompleteEvidenceDetails(weak, notPassing);
+
   return [
     "# Финальная проверка пока не готова",
     "",
     "## До финальной проверки",
     "",
-    ...(weak.length > 0 ? [`- Пересобери устаревшие или неполные файлы: \`pnpm dogfood:finish:save -- --date ${date}\`.`] : []),
     ...formatReviewNextActionHint(reviewNextAction),
+    ...formatReviewSummaryHint(reviewSummary),
+    ...formatBulkAcceptHint(bulkAcceptHint),
     ...(notPassing.length > 0
       ? [
           "- Вернись к `Проверка перед отчётом`, закрой оставшиеся строки проверки и снова сохрани отчёт.",
-          `- Для измерения закрытия дня нажми \`Начать закрытие дня\`, скопируй финальный отчёт за 10 минут или меньше, затем повтори \`pnpm dogfood:finish:save -- --date ${date}\`.`,
+          `- Если сохранённый отчёт уже не совпадает с тем, что видно в приложении сейчас, посмотри живую подсказку: \`pnpm dogfood:report -- --date ${date}\`, затем снова сохрани: \`pnpm dogfood:finish:save -- --date ${date}\`.`,
+          formatMeasuredClosureInstruction(date, openClosureAttempt),
         ]
       : []),
+    ...(weak.length > 0 || notPassing.length > 0
+      ? [`- После правок снова сохрани доказательства: \`pnpm dogfood:finish:save -- --date ${date}\`.`]
+      : []),
+    formatSoftStatusHint(date),
     "",
     "## Детали",
     "",
-    ...weak.map((item) => `- ${item}`),
-    ...notPassing.map((item) => `- ${item}`),
+    ...details.map((item) => `- ${item}`),
   ].join("\n");
+}
+
+function formatSoftStatusHint(date) {
+  return `- Для спокойного просмотра состояния без дорогих проверок используй \`pnpm dogfood:goal-check:status -- --date ${date}\`.`;
+}
+
+function stripSoftStatusHint(message, date) {
+  const hint = formatSoftStatusHint(date);
+  return message
+    .split("\n")
+    .filter((line) => line !== hint)
+    .join("\n");
+}
+
+function formatIncompleteEvidenceDetails(weak, notPassing) {
+  const details = weak.map((text, index) => ({ index, text }));
+  const groupedAuditRows = new Map();
+  let index = weak.length;
+
+  for (const text of notPassing) {
+    const match = text.match(
+      /^В timeskein-dogfood-(report|rc-check)-\d{4}-\d{2}-\d{2}\.md строка проверки «(.+)» ещё не подтверждена$/
+    );
+    if (!match) {
+      details.push({ index, text });
+      index += 1;
+      continue;
+    }
+
+    const [, fileKind, row] = match;
+    const existing = groupedAuditRows.get(row) ?? { index, row, sources: new Set() };
+    existing.sources.add(fileKind === "report" ? "отчёте" : "RC-проверке");
+    groupedAuditRows.set(row, existing);
+    if (existing.index === index) index += 1;
+  }
+
+  for (const item of groupedAuditRows.values()) {
+    details.push({
+      index: item.index,
+      text: `строка проверки «${item.row}» ещё не подтверждена в ${formatAuditSources(item.sources)}`,
+    });
+  }
+
+  return details.sort((left, right) => left.index - right.index).map((item) => item.text);
+}
+
+function formatMeasuredClosureInstruction(date, openClosureAttempt) {
+  if (openClosureAttempt) {
+    return "- Закрытие уже начато: продолжай `Проверка перед отчётом` и скопируй финальный отчёт. Если 10 минут уже прошли, спокойно закрой данные и докажи цель на следующем dogfood-дне.";
+  }
+
+  return "- Для замера нажми `Начать закрытие дня`, скопируй финальный отчёт за 10 минут или меньше, затем сохрани доказательства.";
+}
+
+function formatAuditSources(sources) {
+  const hasReport = sources.has("отчёте");
+  const hasRcCheck = sources.has("RC-проверке");
+  if (hasReport && hasRcCheck) return "отчёте и RC-проверке";
+  if (hasReport) return "отчёте";
+  return "RC-проверке";
 }
 
 function formatReviewNextActionHint(reviewNextAction) {
@@ -365,6 +500,22 @@ function formatReviewNextActionHint(reviewNextAction) {
   }
 
   return [`- Ближайшее действие из сохранённого отчёта: ${reviewNextAction}`];
+}
+
+function formatReviewSummaryHint(reviewSummary) {
+  if (!reviewSummary) {
+    return [];
+  }
+
+  return [`- Сводка проверки: ${reviewSummary}`];
+}
+
+function formatBulkAcceptHint(bulkAcceptHint) {
+  if (!bulkAcceptHint) {
+    return [];
+  }
+
+  return [`- ${bulkAcceptHint}`];
 }
 
 function includesAny(text, aliases) {
@@ -421,6 +572,11 @@ function hasReviewNextAction(text) {
   return Boolean(section && /^Ближайшее действие:\s*\S/m.test(section));
 }
 
+function hasReviewSummary(text) {
+  const section = extractMarkdownSection(text, ["## Проверка перед отчётом", "## Review before report"]);
+  return Boolean(section && /^Сводка:\s*\S/m.test(section));
+}
+
 function findReviewNextAction(text) {
   const section = extractMarkdownSection(text, ["## Проверка перед отчётом", "## Review before report"]);
   if (!section) {
@@ -429,6 +585,34 @@ function findReviewNextAction(text) {
 
   for (const line of section.split("\n")) {
     const match = line.match(/^Ближайшее действие:\s*(.+)$/);
+    if (match) return match[1].trim();
+  }
+
+  return undefined;
+}
+
+function findReviewSummary(text) {
+  const section = extractMarkdownSection(text, ["## Проверка перед отчётом", "## Review before report"]);
+  if (!section) {
+    return undefined;
+  }
+
+  for (const line of section.split("\n")) {
+    const match = line.match(/^Сводка:\s*(.+)$/);
+    if (match) return match[1].trim();
+  }
+
+  return undefined;
+}
+
+function findBulkAcceptHint(text) {
+  const section = extractMarkdownSection(text, ["## Проверка перед отчётом", "## Review before report"]);
+  if (!section) {
+    return undefined;
+  }
+
+  for (const line of section.split("\n")) {
+    const match = line.match(/^-\s*(Подсказка:\s*.+)$/);
     if (match) return match[1].trim();
   }
 
@@ -449,8 +633,65 @@ function findShortClosureVerdict(text) {
   return undefined;
 }
 
+function findShortClosureStatus(text) {
+  const section = extractMarkdownSection(text, ["## Короткое закрытие"]);
+  if (!section) {
+    return undefined;
+  }
+
+  for (const line of section.split("\n")) {
+    const match = line.match(/^-\s*(Статус закрытия:\s*.+)$/);
+    if (match) return match[1].trim().replace(/\.$/, "");
+  }
+
+  return undefined;
+}
+
+function hasOpenClosureAttempt(text) {
+  const counts =
+    parseCountPair(extractLineValue(text, "Закрытий дня начато/завершено")) ??
+    parseCountPair(extractLineValue(text, "Day closure started/completed"));
+
+  return Boolean(counts && counts.left > counts.right);
+}
+
+function extractLineValue(text, label) {
+  for (const line of text.split("\n")) {
+    if (line.startsWith(`${label}:`)) {
+      return line.slice(label.length + 1).trim();
+    }
+  }
+
+  return undefined;
+}
+
+function parseCountPair(value) {
+  if (!value) return undefined;
+  const match = value.match(/^(\d+)\/(\d+)/);
+  if (!match) return undefined;
+  return { left: Number(match[1]), right: Number(match[2]) };
+}
+
 function isPassingShortClosureVerdict(value) {
   return /^Закрытие уложилось в 10 минут:\s*да(?:\s|\(|$)/u.test(value);
+}
+
+function findShortClosureTrust(text) {
+  const section = extractMarkdownSection(text, ["## Короткое закрытие"]);
+  if (!section) {
+    return undefined;
+  }
+
+  for (const line of section.split("\n")) {
+    const match = line.match(/^-\s*(Данным можно доверять:\s*.+)$/);
+    if (match) return match[1].trim().replace(/\.$/, "");
+  }
+
+  return undefined;
+}
+
+function isPassingShortClosureTrust(value) {
+  return /^Данным можно доверять:\s*да(?:\s|\(|$)/u.test(value);
 }
 
 function extractMarkdownSection(text, headings) {

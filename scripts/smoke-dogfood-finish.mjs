@@ -114,15 +114,45 @@ try {
     "finish --save leaked old English saved evidence messages"
   );
   assert(
-    cleanSavedDefault.stdout.includes("## До финального отчёта") &&
+      cleanSavedDefault.stdout.includes("## До финального отчёта") &&
       cleanSavedDefault.stdout.includes("это ещё не финальное закрытие дня") &&
-      cleanSavedDefault.stdout.includes("длительность закрытия не измерена или больше 10 минут") &&
+      cleanSavedDefault.stdout.includes("длительность закрытия не измерена") &&
+      cleanSavedDefault.stdout.includes("Статус закрытия: не начато") &&
       cleanSavedDefault.stdout.includes("Статус сохранённого отчёта:") &&
       cleanSavedDefault.stdout.includes("черновик") &&
       cleanSavedDefault.stdout.includes("Ближайшее действие из отчёта:") &&
-      cleanSavedDefault.stdout.includes("pnpm dogfood:finish:save -- --date 2026-06-30"),
+      cleanSavedDefault.stdout.includes("Сводка проверки:") &&
+      cleanSavedDefault.stdout.includes("Подсказка:") &&
+      cleanSavedDefault.stdout.includes("Всё проверено") &&
+      cleanSavedDefault.stdout.includes("Для замера нажми `Начать закрытие дня`") &&
+      cleanSavedDefault.stdout.includes("После правок снова сохрани доказательства: `pnpm dogfood:finish:save -- --date 2026-06-30`") &&
+      !cleanSavedDefault.stdout.includes("pnpm dogfood:continue") &&
+      !cleanSavedDefault.stdout.includes("Затем повтори:") &&
+      !cleanSavedDefault.stdout.includes("не переигрывай задним числом"),
     "finish --save did not calmly explain missing measured closure and saved draft report state"
   );
+  await runSql(cleanDb, `
+    INSERT INTO app_events (id, ts, source, kind, payload)
+    VALUES ('ae_closure_open_start', '2026-06-30T07:50:00Z', 'ui', 'day_closure_started', '{"action_id":"closure-open","control":"review_panel"}');
+  `);
+  const openClosureDefault = await runFinish(cleanDb, ["--save"], tempDir);
+  assert(openClosureDefault.code === 0, "open closure day should still save a draft report and RC check");
+  assert(
+    openClosureDefault.stdout.includes("Закрытие уже начато") &&
+      openClosureDefault.stdout.includes("Статус закрытия: идёт") &&
+      openClosureDefault.stdout.includes("продолжай `Проверка перед отчётом`") &&
+      openClosureDefault.stdout.includes("скопируй финальный отчёт") &&
+      openClosureDefault.stdout.includes("После правок снова сохрани доказательства: `pnpm dogfood:finish:save -- --date 2026-06-30`") &&
+      !openClosureDefault.stdout.includes("Для замера нажми `Начать закрытие дня`") &&
+      !openClosureDefault.stdout.includes("pnpm dogfood:continue") &&
+      !openClosureDefault.stdout.includes("Затем повтори:") &&
+      !openClosureDefault.stdout.includes("не переигрывай задним числом"),
+    "finish --save should not tell the user to start closure again when closure is already open"
+  );
+  await runSql(cleanDb, `
+    INSERT INTO app_events (id, ts, source, kind, payload)
+    VALUES ('ae_closure_open_done', '2026-06-30T07:55:00Z', 'ui', 'day_closure_completed', '{"action_id":"closure-open","control":"copy_report"}');
+  `);
   const defaultReportMarkdown = await readFile(defaultReportPath, "utf8");
   const defaultRcMarkdown = await readFile(defaultRcPath, "utf8");
   assert(
@@ -145,10 +175,19 @@ try {
   assert(
     measuredPendingDefault.stdout.includes("## До финального отчёта") &&
       measuredPendingDefault.stdout.includes("ещё не готов для финального закрытия дня") &&
+      measuredPendingDefault.stdout.includes("Статус закрытия: завершено") &&
       measuredPendingDefault.stdout.includes("Статус сохранённого отчёта:") &&
       measuredPendingDefault.stdout.includes("черновик") &&
       measuredPendingDefault.stdout.includes("Ближайшее действие из отчёта:") &&
-      measuredPendingDefault.stdout.includes("pnpm dogfood:finish:save -- --date 2026-06-30"),
+      measuredPendingDefault.stdout.includes("Сводка проверки:") &&
+      measuredPendingDefault.stdout.includes("Подсказка:") &&
+      measuredPendingDefault.stdout.includes("Всё проверено") &&
+      measuredPendingDefault.stdout.includes("После правок снова сохрани доказательства: `pnpm dogfood:finish:save -- --date 2026-06-30`") &&
+      !measuredPendingDefault.stdout.includes("pnpm dogfood:continue") &&
+      !measuredPendingDefault.stdout.includes("Затем повтори:") &&
+      !measuredPendingDefault.stdout.includes("не переигрывай задним числом") &&
+      !measuredPendingDefault.stdout.includes("- Локальные проверки:") &&
+      !measuredPendingDefault.stdout.includes("- Длительность закрытия измерена:"),
     "finish --save did not calmly explain pending daily-control audit rows and saved draft report state"
   );
   assert(
@@ -189,6 +228,7 @@ try {
   assert(
     measuredSavedDefault.stdout.includes("## Следующий шаг") &&
       measuredSavedDefault.stdout.includes("финальную проверку цели") &&
+      measuredSavedDefault.stdout.includes("Статус закрытия: завершено") &&
       measuredSavedDefault.stdout.includes("Короткое закрытие: Закрытие уложилось в 10 минут: да (7:00).") &&
       measuredSavedDefault.stdout.includes("Если во время закрытия пришлось спрашивать Codex") &&
       measuredSavedDefault.stdout.includes("pnpm dogfood:goal-check -- --date 2026-06-30 --no-codex-guidance"),
@@ -202,6 +242,30 @@ try {
   assert(
     !measuredSavedDefault.stdout.includes("Статус сохранённого отчёта:"),
     "finish --save should not print draft report status after final measured closure"
+  );
+
+  await runSql(cleanDb, `
+    INSERT INTO app_events (id, ts, source, kind, payload)
+    VALUES
+      ('ae_closure_slow_start', '2026-06-30T09:00:00Z', 'ui', 'day_closure_started', '{"action_id":"closure-2","control":"review_panel"}'),
+      ('ae_closure_slow_done', '2026-06-30T09:11:00Z', 'ui', 'day_closure_completed', '{"action_id":"closure-2","control":"copy_report"}');
+  `);
+  const slowClosureSavedDefault = await runFinish(cleanDb, ["--save"], tempDir);
+  assert(slowClosureSavedDefault.code === 0, "slow measured day should still save report and RC check");
+  assert(
+    slowClosureSavedDefault.stdout.includes("закрытие заняло больше 10 минут") &&
+      slowClosureSavedDefault.stdout.includes("Статус закрытия: завершено") &&
+      slowClosureSavedDefault.stdout.includes("Короткое закрытие: Закрытие уложилось в 10 минут: нет (11:00).") &&
+      slowClosureSavedDefault.stdout.includes("этот день не доказывает текущую цель") &&
+      slowClosureSavedDefault.stdout.includes("Не пытайся чинить это задним числом") &&
+      slowClosureSavedDefault.stdout.includes("с датой того dogfood-дня"),
+    "finish --save did not explain slow measured closure as a useful-but-not-goal-proof day"
+  );
+  assert(
+    !slowClosureSavedDefault.stdout.includes("длительность закрытия не измерена или больше 10 минут") &&
+      !slowClosureSavedDefault.stdout.includes("длительность закрытия не измерена") &&
+      !slowClosureSavedDefault.stdout.includes("В Timeskein нажми `Начать закрытие дня`"),
+    "finish --save should not reuse the missing-measurement instruction for a slow measured closure"
   );
 
   const activeDb = join(tempDir, "active.db");

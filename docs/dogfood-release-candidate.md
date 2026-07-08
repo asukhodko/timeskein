@@ -63,8 +63,8 @@ pnpm dogfood:finish:save
 ```
 
 If you close the day from the app UI first, start the measured closure from
-`Проверка перед отчётом` by clicking `Начать закрытие дня`, then clear hard
-blockers, consciously accept optional review items, and click `Копировать отчёт`.
+`Проверка перед отчётом` by clicking `Начать закрытие дня`, then clear red
+items, consciously accept review items, and click `Копировать отчёт`.
 The active daily-control goal expects that measured closure to take at most
 10 minutes and to be understandable without Codex guidance.
 
@@ -147,7 +147,7 @@ The RC passes only if all of these are true:
 - The day report is enough to discuss where the day went without rebuilding the
   timeline from memory.
 - Capture Inbox was used or consciously tested during an active focus block, and the result is known: it
-  either helped preserve focus, or it produced specific blockers to fix.
+  either helped preserve focus, or it produced specific red items to fix.
 - No focus blocks are missing often enough to break trust.
 - No duplicate Work Items appear from normal title reuse.
 - At most one active timer and one active Work Item exist during normal use.
@@ -156,8 +156,8 @@ The RC passes only if all of these are true:
 - Evening closure is measured, takes at most 10 minutes, and the review panel is
   clear enough to finish without Codex explaining what to do next.
 - Open captures are resolved, converted, or explicitly accepted as remaining
-  follow-up work through the review checklist.
-- Remaining limitations are documented and are not blockers for daily use.
+  visible-tail work through the review checklist.
+- Remaining limitations are documented and do not block daily use.
 - The roadmap marks the release baseline according to the actual result.
 
 ## Fail Criteria
@@ -172,7 +172,7 @@ The RC fails if any of these happens often enough to make Session feel safer:
 - report data cannot explain the day without substantial memory reconstruction;
 - local agent or database behavior makes data loss plausible.
 
-When the RC fails, fix only the blockers shown by the day evidence and run
+When the RC fails, fix only the red items shown by the day evidence and run
 another dogfood day. Do not expand the scope to future platforms, sync,
 automation, or health-data integrations before the Session replacement baseline
 is trustworthy.
@@ -194,5 +194,5 @@ The 2026-07-03 release-candidate day passed the gate for daily personal use:
 The day also exposed limitations: one focus block was left on the wrong Work
 Item for part of a meeting, one capture remained open, and several window/list
 polish issues remain. These are accepted as baseline limitations rather than
-release blockers because the report surfaced them clearly and the core tracking
+release red items because the report surfaced them clearly and the core tracking
 data remained recoverable enough for review.

@@ -92,4 +92,21 @@ schedule:
       start: "2026-07-06"
       duration: 1d
     ts.daily_control.goal_check:
-      start: "2026-07-07"
+      start: "2026-07-08"
+      duration: 1d
+
+    ts.in_day_structure.active_work_journal:
+      duration: 2d
+    ts.in_day_structure.day_observation_log:
+      duration: 1d
+    ts.in_day_structure.work_item_stages:
+      duration: 3d
+    ts.in_day_structure.zone_dashboard:
+      duration: 1d
+    ts.in_day_structure.dispatch_mode:
+      duration: 2d
+    ts.in_day_structure.entry_protocol:
+      duration: 1d
+    ts.in_day_structure.gap_recovery_classification:
+      duration: 2d
+    ts.in_day_structure.dogfood_gate: {}

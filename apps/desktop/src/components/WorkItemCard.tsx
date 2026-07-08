@@ -50,7 +50,7 @@ export default function WorkItemCard({
         {/* Pin indicator */}
         <div className="flex-shrink-0 w-4 pt-0.5">
           {item.pinned && (
-            <span className="text-yellow-500" title="Pinned">
+            <span className="text-yellow-500" title="Закреплено">
               📌
             </span>
           )}

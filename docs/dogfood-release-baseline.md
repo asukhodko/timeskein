@@ -26,7 +26,7 @@ Three real dogfood days were completed:
 | --- | ---: | ---: | --- | --- |
 | 2026-07-01 | 6:11:08 | 20 | not available yet | Proved the basic timer/report loop and exposed first friction. |
 | 2026-07-02 | 6:31:31 | 19 | 0 captures | Proved Timeskein could be used without Session in parallel. |
-| 2026-07-03 | 5:47:04 | 11 | 4 captures during active focus | Proved Capture Inbox in real use: 2 resolved, 1 converted, 1 left open as follow-up. |
+| 2026-07-03 | 5:47:04 | 11 | 4 captures during active focus | Proved Capture Inbox in real use: 2 resolved, 1 converted, 1 left open as a visible tail. |
 
 The 2026-07-03 release-candidate check reported:
 
@@ -44,7 +44,7 @@ Capture Inbox failure or data-loss risk.
 
 ## Known Limitations
 
-These were accepted limitations for the dogfood baseline, not blockers:
+These were accepted limitations for the dogfood baseline, not red items:
 
 - Focus correction is basic: stopped blocks can be added, edited, split, and
   reassigned, but there is no drag timeline, bulk edit, or dedicated correction
@@ -93,7 +93,7 @@ Post-dogfood correction and first review enrichment are now partly implemented:
   report.
 - User-authored Day Events can be edited or deleted before the final day report.
 - Today and copied reports include an automatic Review Checklist for active-state
-  blockers, open captures, significant gaps, open gaps, Activity Zone coverage,
+  red items, open captures, significant gaps, open gaps, Activity Zone coverage,
   non-work tracking, capture coverage, and Work Item context coverage.
 - App Telemetry and RC checks include both show and hide request counts, so the
   next dogfood day can distinguish real window entrypoint tests from passive

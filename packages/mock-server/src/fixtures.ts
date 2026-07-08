@@ -476,6 +476,7 @@ export class MockDataStore {
       capture_converted: count("capture_converted"),
       capture_convert_failures: count("capture_convert_failed"),
       capture_followup_reviews: count("capture_followup_reviewed"),
+      day_context_reviews: count("day_context_reviewed"),
       work_item_time_badge_reviews: count("work_item_time_badges_reviewed"),
       activity_zone_reviews: count("activity_zone_reviewed"),
       capture_usage_reviews: count("capture_usage_reviewed"),

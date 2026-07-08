@@ -1,8 +1,14 @@
 import { useState, useEffect, useRef } from 'react'
-import { appendTimestampedEventDraft } from '../utils/timestampedEventEntry'
+import {
+  appendTimestampedEventDraft,
+  decodeTimestampedEventDraft,
+  encodeTimestampedEventDraft,
+  timestampedEventDraftStorageKey,
+} from '../utils/timestampedEventEntry'
 import { ITEM_UI_LABELS } from '../utils/itemUiLabels'
 
 interface NoteEditorProps {
+  itemId: string
   itemTitle: string
   currentNote: string | null
   onSave: (note: string) => void
@@ -13,6 +19,7 @@ interface NoteEditorProps {
 }
 
 export default function NoteEditor({
+  itemId,
   itemTitle,
   currentNote,
   onSave,
@@ -25,11 +32,24 @@ export default function NoteEditor({
   const [eventText, setEventText] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const modalRef = useRef<HTMLDivElement>(null)
+  const eventDraftStorageKey = timestampedEventDraftStorageKey(itemId)
+  const eventDraftLoadedKeyRef = useRef<string | null>(null)
 
   useEffect(() => {
     textareaRef.current?.focus()
     textareaRef.current?.select()
   }, [])
+
+  useEffect(() => {
+    eventDraftLoadedKeyRef.current = eventDraftStorageKey
+    setEventText(readTimestampedEventDraft(eventDraftStorageKey))
+  }, [eventDraftStorageKey])
+
+  useEffect(() => {
+    if (eventDraftLoadedKeyRef.current !== eventDraftStorageKey) return
+
+    writeTimestampedEventDraft(eventDraftStorageKey, eventText)
+  }, [eventDraftStorageKey, eventText])
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -63,6 +83,9 @@ export default function NoteEditor({
     if (!trimmed || !onAppendEvent || appendPending) return
 
     const result = await appendTimestampedEventDraft(eventText, onAppendEvent, appendPending)
+    if (result.ok) {
+      clearTimestampedEventDraft(eventDraftStorageKey)
+    }
     setEventText(result.nextDraft)
   }
 
@@ -150,4 +173,36 @@ export default function NoteEditor({
       </div>
     </div>
   )
+}
+
+function readTimestampedEventDraft(key: string) {
+  const storage = getLocalStorage()
+  if (!storage) return ''
+
+  return decodeTimestampedEventDraft(storage.getItem(key))
+}
+
+function writeTimestampedEventDraft(key: string, draft: string) {
+  const storage = getLocalStorage()
+  if (!storage) return
+
+  const encoded = encodeTimestampedEventDraft(draft)
+  if (!encoded) {
+    storage.removeItem(key)
+    return
+  }
+
+  storage.setItem(key, encoded)
+}
+
+function clearTimestampedEventDraft(key: string) {
+  getLocalStorage()?.removeItem(key)
+}
+
+function getLocalStorage() {
+  try {
+    return globalThis.localStorage
+  } catch {
+    return undefined
+  }
 }

@@ -16,6 +16,7 @@ A desktop application for quickly tracking focus sessions and work items with re
 | Work Item Events | Working baseline | Timestamped notes linked to Work Items and optionally to focus blocks |
 | Day Events | Working baseline | Timestamped day-level notes for buffers, recovery, tracking corrections, and review context |
 | Dispatch Ritual | First slice | Day-entry and post-break panel records `Что в игре`, next focus, parked work, and reason as a coordination Day Event |
+| Period Reports | Working baseline | Read-only Markdown/JSON reports for any date range with daily/item/zone totals, gaps, events, captures, quality warnings, and focus-tuning candidates |
 | Dogfood Telemetry | Working baseline | Local app-event journal and CLI metrics for tracking UX friction |
 | Mock Server | Working | Full API implementation for development |
 | Rust Agent | Working | SQLite-backed Local API, embedded in macOS app |
@@ -23,12 +24,13 @@ A desktop application for quickly tracking focus sessions and work items with re
 
 **What works now:** Focus Session tracking, Capture Inbox, and Work Item inventory in browser mock mode and in the macOS `.app` with an embedded Rust agent.
 
-**Current focus:** The daily-control goal is closed. The 2026-07-08 dogfood day produced final saved evidence, measured evening closure took `2:32`, and `pnpm dogfood:goal-check -- --date 2026-07-08 --no-codex-guidance` passed after the full test, preflight, and strict evidence path. The 2026-07-09 dogfood day proved the first in-day structure layer: Timeskein can hold day/work observations, zone balance, classified recovery gaps, and a final report good enough for analysis. The next broad product focus is periodic reflection: arbitrary-period reports for week/sprint/month/quarter/year. In-day polish such as search normalization, larger notes, light theme, and panel ergonomics stays tracked as follow-up. Windows packaging is deferred.
+**Current focus:** Daily control and the first in-day structure layer are accepted. The first periodic-reflection slice is also working: `pnpm report:period` builds read-only Markdown or JSON from an arbitrary half-open date range. A real 2026-07-01..2026-07-10 review proved the report can expose effort allocation, old unexplained gaps, sparse context days, mixed zones, broad Work Items, and candidate decisions for the next period. Report profiles, reliable current/finished track state, filters, and saved Reflection Sessions remain later slices. In-day polish such as search normalization, larger notes, light theme, and panel ergonomics stays tracked as follow-up. Windows packaging is deferred.
 
 See [Current Implementation](docs/current-implementation.md) for the exact state of what runs today.
 Use [Dogfood Day Protocol](docs/dogfood-day.md) when testing Timeskein as a Session replacement for a real workday.
 Use [Dogfood Release Candidate](docs/dogfood-release-candidate.md) as the evidence checklist for deciding whether the current macOS baseline is good enough to replace Session in daily use.
 See [Dogfood Release Baseline](docs/dogfood-release-baseline.md) for the accepted 2026-07-03 verdict and known limitations.
+See [Periodic Report Dogfood](docs/dogfood-periodic-report.md) for the first real multi-day review and its limitations.
 
 The current execution roadmap is maintained as an opskarta v3 plan set:
 [Timeskein opskarta roadmap](docs/roadmap/opskarta.md).
@@ -95,6 +97,29 @@ pnpm --filter @timeskein/desktop build
 ```
 
 For real Timeskein days, prefer the guarded commands below over opening the app directly.
+
+### Building a Period Report
+
+The upper date boundary is exclusive. This command includes July 1 through July 9:
+
+```bash
+pnpm report:period -- --from 2026-07-01 --to 2026-07-10
+```
+
+JSON uses the same report model:
+
+```bash
+pnpm report:period -- --from 2026-07-01 --to 2026-07-10 --format json
+```
+
+Save either format explicitly when needed:
+
+```bash
+pnpm report:period -- --from 2026-07-01 --to 2026-07-10 --output timeskein-period-report-2026-07-01--2026-07-09.md
+pnpm report:period -- --from 2026-07-01 --to 2026-07-10 --format json --output timeskein-period-report-2026-07-01--2026-07-09.json
+```
+
+The report separates facts, review hypotheses, and next-period decisions. It includes totals by day, Activity Zone and Work Item; focus-block timeline; significant gaps and their recovery/lost-control classification; Day Events; Work Item Events; Capture Inbox outcomes; data-quality warnings; and up to three focus candidates. Candidates are prompts for conscious review, not automatic productivity judgments. Generated period reports are ignored by git by default.
 
 ### Starting a Timeskein Day on macOS
 

@@ -15,6 +15,7 @@ const steps = [
   ["pnpm", ["smoke:day-review-copy"]],
   ["pnpm", ["smoke:mock-api"]],
   ["pnpm", ["smoke:export-focus-day"]],
+  ["pnpm", ["smoke:period-report"]],
   ["pnpm", ["smoke:app-events"]],
   ["pnpm", ["smoke:dogfood-report"]],
   ["pnpm", ["smoke:dogfood-finish"]],

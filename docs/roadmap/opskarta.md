@@ -31,24 +31,20 @@ For future regression checks, `pnpm dogfood:finish:save` points to
 saved dogfood report and closure evidence for the real local database, verifies the
 grouped review checklist plus `Ближайшее действие`, then runs `pnpm test`,
 `pnpm dogfood:preflight`, and strict closure evidence on the same code.
-The current product layer is in-day structure. Its first slice is implemented:
-Today now shows live Activity Zone totals with an explicit `Учёл зоны` action,
-and reports separate working occupancy (`Work + Coordination`), executive work
-(`Work`), and non-work tracked time. The remaining work should move the user's
-"Timeskein, day N" observations from Codex into Timeskein itself, prove
-active-work thoughts and day-level observations in a real dogfood day, verify
-day-entry/post-break dispatching, and keep explicit recovery-versus-lost-control
-gap labels. Work Item stages stay a future slice unless dogfood proves they are
-needed for the current goal. It is the active path now that the closure goal has
-real evidence.
+The first in-day structure slice is accepted: Timeskein holds free day thoughts,
+active-work observations, live Activity Zone balance, dispatch choices, and
+recovery/lost-control gap labels. Work Item stages remain a future slice.
 
-After in-day structure, the next broad meaning layer is periodic reflection:
-reports for a week, sprint, month, quarter, year, or arbitrary date range. The
-first slice should work from existing local data and answer which 1-3 focus
-points deserve protected effort next. Later slices add Track/Label filters,
-parent project slices, performance-review evidence, and LLM export packs. Active
+The active product layer is periodic reflection. P0 is accepted:
+`pnpm report:period` exports an arbitrary half-open date range as Markdown or
+JSON with day/item/zone totals, timeline, gaps, captures, events, quality
+warnings, and focus-decision candidates. A real review of 1-9 July proved the
+value and exposed the next semantic gap: invested effort alone cannot tell a
+completed meeting from a track worth continuing. The next gate is distinct
+weekly, sprint, and performance-review profiles plus persisted review decisions.
+Track/Label filters and parent project slices come after that evidence. Active
 window, browser URL, messenger, screenshot, and Evidence Mode collection stay
-future opt-in layers rather than the next implementation step.
+future opt-in layers.
 
 ## Executive view
 
@@ -85,7 +81,7 @@ flowchart LR
     class daily_control_gate exec_done
     in_day_structure["In-day<br/>Structure<br/>100%<br/>веха 2026-07-09"]
     class in_day_structure exec_done
-    periodic_reflection["Periodic<br/>Reflection<br/>~0%<br/>окно 2026-07-09..2026-07-13"]
+    periodic_reflection["Periodic<br/>Reflection<br/>~15%<br/>окно 2026-07-10..2026-07-14"]
     class periodic_reflection exec_mgmt_yellow
     style periodic_reflection stroke:#111827,stroke-width:3px
     future_directions["Future<br/>directions<br/>n/a"]
@@ -115,7 +111,7 @@ Near-term plan should stay narrow: make Timeskein structure the day in progress 
 %%{init: {"theme": "base", "themeVariables": {"taskBkgColor": "#9ca3af", "taskBorderColor": "#4b5563", "taskTextColor": "#000000", "taskTextDarkColor": "#000000", "taskTextLightColor": "#000000", "activeTaskBkgColor": "#0ea5e9", "activeTaskBorderColor": "#0ea5e9", "doneTaskBkgColor": "#22c55e", "doneTaskBorderColor": "#16a34a", "critBkgColor": "#fecaca", "critBorderColor": "#fecaca", "todayLineColor": "#ef4444"}} }%%
 
 gantt
-    title Timeskein daily-control dogfood slice
+    title Timeskein current product path
     dateFormat YYYY-MM-DD
     axisFormat %d.%m
     excludes weekends
@@ -179,8 +175,8 @@ gantt
 /usr/bin/env PYTHONPATH=../../tools/opskarta python3 -m specs.v3.tools.cli render list ../../plans/timeskein/main.plan.yaml ../../plans/timeskein/nodes.plan.yaml ../../plans/timeskein/schedule.plan.yaml ../../plans/timeskein/execution.plan.yaml ../../plans/timeskein/views.plan.yaml --view current
 -->
 <!-- GENERATED:START -->
-- Periodic reflection and meaning reports [in_progress] (27 focus-blocks) {0% cov:11%}
-- Export arbitrary-period reports from existing data [planned] (3 focus-blocks) {0%}
+- Periodic reflection and meaning reports [in_progress] (27 focus-blocks) {50% cov:22%}
+- Add weekly, sprint, track, and performance report profiles [planned] (3 focus-blocks) {0%}
 <!-- GENERATED:END -->
 
 ## Deferred directions
@@ -192,7 +188,6 @@ gantt
 -->
 <!-- GENERATED:START -->
 - Activity Evidence Layer experiments [deferred] (8 focus-blocks)
-- Add weekly, sprint, track, and performance report profiles [planned] (3 focus-blocks)
 - Android client path [deferred] (8 focus-blocks)
 - Build operational reality panel [planned] (5 focus-blocks)
 - Complete broader Manual Inventory UX [deferred] (8 focus-blocks)

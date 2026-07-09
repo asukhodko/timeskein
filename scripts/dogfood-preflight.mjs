@@ -5,6 +5,7 @@ import { spawn } from "node:child_process";
 const steps = [
   ["node", ["--check", "scripts/open-macos-app.mjs"]],
   ["node", ["--check", "scripts/export-focus-day.mjs"]],
+  ["node", ["--check", "scripts/report-period.mjs"]],
   ["node", ["--check", "scripts/export-app-events.mjs"]],
   ["node", ["--check", "scripts/dogfood-metrics.mjs"]],
   ["node", ["--check", "scripts/dogfood-report.mjs"]],
@@ -23,6 +24,7 @@ const steps = [
   ["node", ["--check", "scripts/smoke-day-events-api.mjs"]],
   ["node", ["--check", "scripts/smoke-mock-api.mjs"]],
   ["node", ["--check", "scripts/smoke-export-focus-day.mjs"]],
+  ["node", ["--check", "scripts/smoke-period-report.mjs"]],
   ["node", ["--check", "scripts/smoke-app-events.mjs"]],
   ["node", ["--check", "scripts/smoke-dogfood-report.mjs"]],
   ["node", ["--check", "scripts/smoke-dogfood-finish.mjs"]],
@@ -47,6 +49,7 @@ const steps = [
   ["pnpm", ["smoke:day-review-copy"]],
   ["pnpm", ["smoke:mock-api"]],
   ["pnpm", ["smoke:export-focus-day"]],
+  ["pnpm", ["smoke:period-report"]],
   ["pnpm", ["smoke:app-events"]],
   ["pnpm", ["smoke:dogfood-report"]],
   ["pnpm", ["smoke:dogfood-finish"]],

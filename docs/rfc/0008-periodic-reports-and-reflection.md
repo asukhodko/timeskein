@@ -4,7 +4,7 @@
 
 ## Статус
 
-**Draft**.
+**P0 реализован и принят 2026-07-09.** Более широкая модель профилей, Tracks/Labels, Reflection Sessions и LLM Pack остаётся Draft.
 
 ## Уровень зрелости
 
@@ -901,6 +901,8 @@ report.period({
 
 ## 18. CLI
 
+P0 реализован командой `pnpm report:period`. Диапазон полуоткрытый: `--from` включается, `--to` не включается. Первый слой поддерживает профиль `weekly-review`, форматы `md` и `json`, вывод в stdout или `--output PATH`.
+
 Команды:
 
 ```bash
@@ -961,6 +963,8 @@ pnpm report:period -- --label performance-review --format json
 Первая полезная версия может быть CLI-only и работать поверх текущей схемы.
 
 ### P0: period export без новой таксономии
+
+**Статус: реализовано и проверено на реальных данных 2026-07-09.**
 
 - `report.period` / `pnpm report:period`;
 - произвольный диапазон дат;

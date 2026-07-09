@@ -11,6 +11,7 @@ const checkedFiles = [
   "docs/dogfood-day.md",
   "docs/dogfood-release-candidate.md",
   "docs/dogfood-release-baseline.md",
+  "docs/dogfood-periodic-report.md",
   "docs/roadmap/README.md",
   "docs/roadmap/0003-periodic-reflection-roadmap.md",
   "docs/roadmap/0004-in-day-structure-roadmap.md",
@@ -57,19 +58,41 @@ for (const file of checkedFiles) {
     failures.push(`${file}: documentation index does not link the in-day structure roadmap`);
   }
   if (
+    file === "README.md" &&
+    (!text.includes("pnpm report:period -- --from 2026-07-01 --to 2026-07-10") ||
+      !text.includes("Candidates are prompts for conscious review"))
+  ) {
+    failures.push(`${file}: period report command or interpretation boundary is missing`);
+  }
+  if (
+    file === "docs/current-implementation.md" &&
+    (!text.includes("## Period Reports") || !text.includes("pnpm smoke:period-report"))
+  ) {
+    failures.push(`${file}: current period report implementation or smoke coverage is missing`);
+  }
+  if (
     file === "docs/roadmap/README.md" &&
     (!text.includes("Keep the accepted daily-control gate green") ||
-      !text.includes("Build the active goal: in-day structure") ||
-      !text.includes("Add periodic reflection"))
+      !text.includes("Keep the accepted in-day structure layer useful") ||
+      !text.includes("Continue the active periodic-reflection layer"))
   ) {
     failures.push(`${file}: roadmap README does not preserve the current product order`);
   }
   if (
     file === "docs/roadmap/0003-periodic-reflection-roadmap.md" &&
     (!text.includes("сначала смысл результата") ||
-      !text.includes("Roadmap 0004"))
+      !text.includes("Roadmap 0004") ||
+      !text.includes("Статус: **готово**"))
   ) {
     failures.push(`${file}: periodic reflection roadmap does not keep outcome-first ordering after in-day structure`);
+  }
+  if (
+    file === "docs/dogfood-periodic-report.md" &&
+    (!text.includes("39:53:26") ||
+      !text.includes("P0 Period Report CLI: принят") ||
+      !text.includes("уже завершённая встреча"))
+  ) {
+    failures.push(`${file}: real period dogfood evidence or known limitation is missing`);
   }
   if (
     file === "docs/roadmap/0004-in-day-structure-roadmap.md" &&

@@ -52,6 +52,8 @@ coverage/
 *.temp
 timeskein-dogfood-report-*.md
 timeskein-dogfood-rc-check-*.md
+timeskein-period-report-*.md
+timeskein-period-report-*.json
 
 # Database files (local development)
 *.db

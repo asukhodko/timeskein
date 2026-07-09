@@ -36,14 +36,15 @@ The system answers questions like:
 3. **[Dogfood Day Protocol](dogfood-day.md)** - How to run one real Session replacement day
 4. **[Dogfood Release Candidate](dogfood-release-candidate.md)** - Gate for deciding whether Timeskein can replace Session in daily use
 5. **[Dogfood Release Baseline](dogfood-release-baseline.md)** - Accepted 2026-07-03 dogfood baseline and known limitations
-6. **[Glossary](glossary.md)** - Definitions of all terms used
-7. **[Architecture Decision Records](adr/README.md)** - Key architectural choices
-8. **[Technical Specifications (RFC)](rfc/README.md)** - Detailed technical designs
-9. **[MVP User Stories](mvp/README.md)** - Features and acceptance criteria
-10. **[opskarta Roadmap](roadmap/opskarta.md)** - Current machine-checkable execution plan
-11. **[In-Day Structure Roadmap](roadmap/0004-in-day-structure-roadmap.md)** - Active in-day thoughts, day observations, zone visibility, dispatching, and gap classification layer
-12. **[Periodic Reflection Roadmap](roadmap/0003-periodic-reflection-roadmap.md)** - Planned arbitrary-period reports and reflection loop
-13. **[Roadmap Archive](roadmap/README.md)** - Older roadmap documents and related links
+6. **[Periodic Report Dogfood](dogfood-periodic-report.md)** - First real multi-day report and evidence for the P0 periodic-reflection slice
+7. **[Glossary](glossary.md)** - Definitions of all terms used
+8. **[Architecture Decision Records](adr/README.md)** - Key architectural choices
+9. **[Technical Specifications (RFC)](rfc/README.md)** - Detailed technical designs
+10. **[MVP User Stories](mvp/README.md)** - Features and acceptance criteria
+11. **[opskarta Roadmap](roadmap/opskarta.md)** - Current machine-checkable execution plan
+12. **[In-Day Structure Roadmap](roadmap/0004-in-day-structure-roadmap.md)** - Accepted in-day thoughts, day observations, zone visibility, dispatching, and gap classification layer
+13. **[Periodic Reflection Roadmap](roadmap/0003-periodic-reflection-roadmap.md)** - Active arbitrary-period reports and reflection loop
+14. **[Roadmap Archive](roadmap/README.md)** - Older roadmap documents and related links
 
 ---
 
@@ -60,6 +61,7 @@ All documentation below is the **source of truth** for the project.
 | [dogfood-day.md](dogfood-day.md) | Protocol for replacing Session during one real workday, including Capture Inbox, Day Events, and local app telemetry checks |
 | [dogfood-release-candidate.md](dogfood-release-candidate.md) | Release-candidate gate for daily Session replacement |
 | [dogfood-release-baseline.md](dogfood-release-baseline.md) | Accepted 2026-07-03 baseline for daily macOS use and known limitations |
+| [dogfood-periodic-report.md](dogfood-periodic-report.md) | First real 2026-07-01..2026-07-10 period review, decision value, and known P0 limitations |
 | [glossary.md](glossary.md) | Definitions of all terms and entities |
 
 ### Architecture Decision Records (ADR)

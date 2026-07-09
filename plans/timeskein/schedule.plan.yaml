@@ -119,3 +119,6 @@ schedule:
     ts.periodic_reflection.period_export:
       start: "2026-07-09"
       duration: 3d
+    ts.periodic_reflection.report_profiles:
+      start: "2026-07-10"
+      duration: 3d

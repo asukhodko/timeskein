@@ -18,7 +18,7 @@ views:
         - future
     order_by: title
   current-gantt:
-    title: Timeskein daily-control dogfood slice
+    title: Timeskein current product path
     where:
       has_schedule: true
     window_start: "2026-06-30"
@@ -154,11 +154,11 @@ x:
         title: Periodic Reflection
         scope_nodes:
           - ts.periodic_reflection
-        target_gate: ts.periodic_reflection.period_export
+        target_gate: ts.periodic_reflection.report_profiles
         mgmt:
           health: yellow
           owner: a.sukhodko
-          next_sync_goal: "Build the first arbitrary-period report from existing daily data: totals by day, Work Item and Activity Zone, gaps, captures, Day/Work Item Events, data-quality warnings, and focus-tuning questions. The first slice should answer which 1-3 focus points deserve protected effort before adding Tracks/Labels or passive evidence collection."
+          next_sync_goal: "Turn the accepted P0 range export into distinct weekly, sprint and performance-review profiles, then save the chosen focus decisions. Use the real report finding that invested effort alone cannot tell a completed meeting from an active track before designing Tracks/Labels or passive evidence collection."
       future-directions:
         title: Future directions
         scope_nodes:

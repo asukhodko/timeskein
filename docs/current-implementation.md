@@ -104,6 +104,7 @@ pnpm smoke:mock-api
 pnpm --filter @timeskein/desktop build
 pnpm smoke:macos-app
 pnpm smoke:export-focus-day
+pnpm smoke:period-report
 pnpm smoke:app-events
 pnpm smoke:dogfood-report
 pnpm smoke:dogfood-finish
@@ -133,6 +134,7 @@ Runtime smoke on macOS:
 - `pnpm smoke:macos-app` also verifies Day Event add/update/delete/list against the packaged SQLite-backed app while ensuring day notes do not interrupt the active focus session
 - `pnpm smoke:macos-app` also verifies startup normalization of legacy active Work Items, orphan active focus sessions, stale `agent.lock` / `agent.port` recovery, and migration of older `app_events` kind constraints
 - `pnpm smoke:export-focus-day` verifies the Russian fallback Markdown export, the raw `--internal` format used by scripts, Day Events, Work Item notes, timestamped Work Item Events for touched items, and legacy focus-session schemas without Activity Zone columns, against temporary SQLite databases
+- `pnpm smoke:period-report` verifies half-open arbitrary date ranges, Markdown/JSON parity, daily/item/zone totals, significant gap classification, captures, Day Events, Work Item Events, required data-quality warnings, focus candidates, explicit file output, and exclusion of the upper date boundary against a temporary SQLite database
 - `pnpm smoke:app-events` verifies the local app-event migration, metrics summary, and Markdown export against a temporary SQLite database, including in-day Activity Zone glance telemetry
 - `pnpm smoke:dogfood-report` verifies the evening dogfood report wrapper, Russian focus-data labels, Russian review checklist, Russian daily-closure check, Activity Zone evidence warnings and in-day glance evidence, entry-path evidence prompts, Work Item time review prompts, correction evidence prompts, accepted correction review, accepted open-capture review, Day Events, Work Item notes, Work Item Events, interruption history, open captures, analysis prompts, and human-readable app telemetry section, including typed, selected/list, dispatch-ritual entry, and both window show and hide request evidence
 - `pnpm smoke:dogfood-finish` verifies the end-of-day gate: no active focus session, no active Work Item, at least one focus block, and `--save` writing both the day report and closure check
@@ -300,9 +302,37 @@ The Rust agent stores focus sessions in SQLite. Partial unique indexes enforce a
 
 Post-factum correction is implemented for stopped focus sessions. `focus.create_stopped` adds a missed stopped block without starting an active timer. `focus.update` edits the block title/Work Item, start, stop, target, and note. `focus.split` cuts one stopped block into left/right blocks at a timestamp; the right side can be assigned to another Work Item by title. This covers common tracking mistakes by adding a missed interval, splitting around the wrong interval, and updating the resulting block. The mock server exposes the same focus correction methods for browser development.
 
+## Period Reports
+
+The first periodic-reflection slice is implemented as a read-only CLI over the existing SQLite data:
+
+```bash
+pnpm report:period -- --from 2026-07-01 --to 2026-07-10
+pnpm report:period -- --from 2026-07-01 --to 2026-07-10 --format json
+```
+
+The range is half-open: `--from` is included and `--to` is excluded. `--output` writes the rendered report to an explicit path; without it, the command prints to stdout. The default and only P0 profile is `weekly-review`.
+
+Both formats come from one report model and include:
+
+- totals by calendar day, Work Item, and Activity Zone;
+- total tracked, working occupancy, executive work, non-work, and entrances;
+- clipped focus-block timeline;
+- significant within-day gaps and matched recovery/lost-control explanations;
+- Day Events and all Work Item Events, with user note text preserved;
+- Capture Inbox lifecycle events created, resolved, or converted in the period;
+- warnings for unexplained gaps, sparse contextual events, open captures, questionable zone use, and structurally broad Work Items;
+- observations about protected blocks, fragmentation, gap classifications, and capture outcomes;
+- up to three evidence-backed candidates for the next period plus process-tuning questions;
+- provenance and explicit limitations.
+
+The CLI never writes to SQLite. Generated period-report Markdown and JSON are ignored by git. Current Work Item titles are used because historical title snapshots are not stored yet. Focus candidates are review prompts rather than automatic value judgments; the first real report proved that a completed meeting can still rank highly when its Work Item state does not express semantic completion.
+
+The real P0 review is recorded in [Periodic Report Dogfood](dogfood-periodic-report.md).
+
 ## Dogfood Findings
 
-The 2026-07-01, 2026-07-02, and 2026-07-03 dogfood days showed that the core timer loop works, and that Capture Inbox can preserve incoming events without switching away from the current focus. The first post-baseline slice added post-factum correction, entry/window fixes, Day Events, Work Item Events, Activity Zones, explicit Work Item time review evidence, and strict report evidence. The 2026-07-06 dogfood day produced a strong daily-control trace in real use: 7:30:36 tracked, 19 entrances, Activity Zones, Day Events, Work Item Events, Capture Inbox conversion, Work Item day/total time evidence, and zero API/copy/start-stop failures. The 2026-07-07 dogfood day produced useful in-day structure evidence: zones, day events, Work Item events, and a clear long post-break loss of manageability. The 2026-07-08 dogfood day closed the daily-control goal: final saved evidence was clean, measured evening closure took 2:32, and strict `pnpm dogfood:goal-check -- --date 2026-07-08 --no-codex-guidance` passed after `pnpm test`, `pnpm dogfood:preflight`, and strict RC evidence. The 2026-07-09 dogfood day proved the first in-day structure layer on a harder day: 4:31:02 tracked, 13 entrances, 15 Day Events, 12 Work Item Events, four explained recovery gaps, no app/API/copy/start-stop failures, and a final saved report. Strict `pnpm dogfood:goal-check -- --date 2026-07-09 --no-codex-guidance` passed. The same day exposed three follow-up fixes: dispatch wording needed examples, free day thoughts needed an input even without active focus, and gap explanations needed tolerance when an open gap closed a minute later.
+The 2026-07-01, 2026-07-02, and 2026-07-03 dogfood days showed that the core timer loop works, and that Capture Inbox can preserve incoming events without switching away from the current focus. The first post-baseline slice added post-factum correction, entry/window fixes, Day Events, Work Item Events, Activity Zones, explicit Work Item time review evidence, and strict report evidence. The 2026-07-06 dogfood day produced a strong daily-control trace in real use: 7:30:36 tracked, 19 entrances, Activity Zones, Day Events, Work Item Events, Capture Inbox conversion, Work Item day/total time evidence, and zero API/copy/start-stop failures. The 2026-07-07 dogfood day produced useful in-day structure evidence: zones, day events, Work Item events, and a clear long post-break loss of manageability. The 2026-07-08 dogfood day closed the daily-control goal: final saved evidence was clean, measured evening closure took 2:32, and strict `pnpm dogfood:goal-check -- --date 2026-07-08 --no-codex-guidance` passed after `pnpm test`, `pnpm dogfood:preflight`, and strict RC evidence. The 2026-07-09 dogfood day proved the first in-day structure layer on a harder day: 4:31:02 tracked, 13 entrances, 15 Day Events, 12 Work Item Events, four explained recovery gaps, no app/API/copy/start-stop failures, and a final saved report. Strict `pnpm dogfood:goal-check -- --date 2026-07-09 --no-codex-guidance` passed. The same day exposed three follow-up fixes: dispatch wording needed examples, free day thoughts needed an input even without active focus, and gap explanations needed tolerance when an open gap closed a minute later. The first real period report then reviewed 1–9 July as one dataset: 39:53:26 tracked, 105 entrances, 28 Day Events, 16 contextual Work Item Events, 5 captures, and 19 significant gaps. It exposed nine old unexplained gaps, sparse-context days, mixed zones, broad Work Items, and the limits of selecting future focus without semantic completion state.
 
 High-signal findings:
 
@@ -419,7 +449,7 @@ On multi-monitor macOS setups, the tray/status item is controlled by the system 
 - macOS build currently produces `.app` only; DMG packaging is deferred.
 - Browser mode uses mock data only.
 - Focus Session does not implement pause, resume, or cancel yet.
-- Focus Session has a compact day list and Markdown copy, but not a full reporting/JSON/CSV export view yet.
+- Focus Session has a compact day list and Markdown copy. Periodic Markdown/JSON exists in the CLI, but there is no in-app report builder or CSV export yet.
 - App-event telemetry has CLI/report output, but no in-app inspection screen yet.
 - Post-factum correction is intentionally basic: stopped blocks can be added, edited, reassigned, re-zoned, and split, but there is no drag timeline, bulk edit, or dedicated correction wizard yet.
 - Capture Inbox is still compact: open captures can be edited or deleted, but there is no separate capture history screen beyond the open list and dogfood report.
@@ -435,7 +465,8 @@ On multi-monitor macOS setups, the tray/status item is controlled by the system 
 
 ## Next Engineering Steps
 
-1. Build the first arbitrary-period report. Use existing daily data first: focus blocks, Activity Zones, gaps, captures, Day Events, Work Item Events, and data-quality warnings. The report should answer which 1-3 focus points deserve protected effort next.
-2. Keep in-day structure polish in the backlog: larger multi-line note artifacts, calmer review of many observations, clearer distinction between quick timestamped events and longer working notes.
-3. Improve navigation polish exposed by dogfood when it starts blocking trust: search normalization for mixed Cyrillic/Latin lookalikes such as `sync` / `сynс`, light theme, and a more reliable upper/lower panel resizing experience.
-4. Add Tracks/Labels only after the first period report proves which slices are actually needed. Do not start with passive evidence collection.
+1. Use the accepted P0 report to define distinct weekly, sprint, and performance-review profiles. Keep facts, interpretations, and decisions separate in every profile.
+2. Add a saved Reflection Session or equivalent decision artifact so selected focus points and dismissed candidates survive the report conversation.
+3. Decide the smallest semantic model needed to distinguish active, completed, reactive, and parked tracks. Add filters and Tracks/Labels only from the concrete slices exposed by the real report.
+4. Keep in-day structure polish in the backlog: larger multi-line note artifacts, calmer review of many observations, clearer distinction between quick timestamped events and longer working notes.
+5. Improve navigation polish exposed by dogfood when it starts blocking trust: search normalization for mixed Cyrillic/Latin lookalikes such as `sync` / `сynс`, light theme, and a more reliable upper/lower panel resizing experience.

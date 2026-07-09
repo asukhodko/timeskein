@@ -330,13 +330,20 @@ execution:
       confidence: 0.85
       note: "Accepted after the 2026-07-09 real dogfood day and strict `pnpm dogfood:goal-check -- --date 2026-07-09 --no-codex-guidance`. Follow-up code/docs fixed the three sharp findings: no-active free day thoughts, dispatch help/wording, and tolerant gap matching."
     ts.periodic_reflection:
-      progress: 0.05
+      progress: 0.11
       actual_start: "2026-07-09"
-      updated_at: "2026-07-09T19:50:00+03:00"
-      confidence: 0.75
-      note: "Promoted to the next product layer after the in-day structure gate. The first goal should export arbitrary-period reports from existing daily data and answer which focus points deserve protected effort."
+      updated_at: "2026-07-09T22:15:00+03:00"
+      confidence: 0.85
+      note: "P0 period export is accepted. The real 1-9 July report combined 39:53:26 of tracking, 105 entrances, zones, events, captures and gaps, then produced quality warnings and focus-decision candidates. The next gate is scale-specific report profiles and persistent reflection decisions."
     ts.periodic_reflection.period_export:
+      progress: 1.0
+      actual_start: "2026-07-09"
+      actual_finish: "2026-07-09"
+      updated_at: "2026-07-09T22:15:00+03:00"
+      confidence: 0.9
+      note: "Done and dogfooded. Markdown/JSON share one report model; half-open date boundaries, file output, grouping, gaps, events, captures, required warnings, and focus candidates are covered by `pnpm smoke:period-report`. Raw real reports remain local; sanitized evidence is in docs/dogfood-periodic-report.md."
+    ts.periodic_reflection.report_profiles:
       progress: 0.0
-      updated_at: "2026-07-09T19:50:00+03:00"
+      updated_at: "2026-07-09T22:15:00+03:00"
       confidence: 0.75
-      note: "Next meaningful implementation target. Start with CLI-first period reports over existing focus sessions, Activity Zones, gaps, Day Events, Work Item Events, captures, and data-quality warnings before adding Tracks/Labels or automated evidence collection."
+      note: "Next gate. Give week, sprint and performance review distinct questions and output emphasis; preserve facts versus interpretations versus decisions. Use the P0 finding that effort alone cannot distinguish a completed meeting from a track worth continuing."

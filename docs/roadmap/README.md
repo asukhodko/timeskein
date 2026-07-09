@@ -14,14 +14,15 @@ technical subsystem looks tempting next.
    calm evening closure with final report, clean review state, measured closure
    `2:32`, and strict `dogfood:goal-check -- --date 2026-07-08
    --no-codex-guidance`. Future work must not regress this.
-2. **Build the active goal: in-day structure:** keep thoughts, decisions, questions, next steps,
-   Work Item stages, live Activity Zone totals, dispatch choices, and gap
-   classifications inside Timeskein. Success means a real workday no longer
-   needs a parallel "Timeskein, day N" note in Codex or Obsidian.
-3. **Add periodic reflection:** generate weekly/sprint/monthly reports from the
-   accumulated local data so the user can choose 1-3 protected focus points and
-   collect performance-review evidence without manual archaeology.
-4. **Only then broaden context capture:** Tracks/Labels, richer filters, LLM
+2. **Keep the accepted in-day structure layer useful:** free day thoughts,
+   active-work observations, live zones, dispatch choices, and gap
+   classifications must keep working without a parallel "Timeskein, day N"
+   note. Work Item stages remain a later refinement.
+3. **Continue the active periodic-reflection layer:** P0 range export is
+   accepted. Add scale-specific week/sprint/performance profiles and preserve
+   the user's chosen focus decisions.
+4. **Only then broaden semantic context:** use the real report findings to add
+   the smallest useful Track/Label and current-state model. Richer filters, LLM
    packs, active-window/browser evidence, screenshots, and Evidence Mode remain
    later opt-in layers. They should strengthen the manual loop, not replace it
    before it is reliable.
@@ -31,7 +32,7 @@ technical subsystem looks tempting next.
 | Document | Level | Description |
 |----------|-------|-------------|
 | [../current-implementation.md](../current-implementation.md) | Current | What runs today |
-| [opskarta.md](opskarta.md) | Current | opskarta v3 plan for the daily-control goal, in-day structure, and later period reports |
+| [opskarta.md](opskarta.md) | Current | opskarta v3 plan for accepted daily/in-day layers and active periodic reflection |
 | [0001-mvp-execution-roadmap.md](0001-mvp-execution-roadmap.md) | Level 0 | Historical MVP execution plan, phases, and milestones |
 | [0002-level3-evidence-mode-roadmap.md](0002-level3-evidence-mode-roadmap.md) | Level 3 | Evidence-Mode (opt-in screen evidence) roadmap |
 | [0003-periodic-reflection-roadmap.md](0003-periodic-reflection-roadmap.md) | Level 0+ / Level 2+ | Periodic reports, meaning slices, reflection sessions, and performance-review evidence |

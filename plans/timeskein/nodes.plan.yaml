@@ -95,7 +95,7 @@ nodes:
     notes: Left-click and Show/Hide toggle the window. The window no longer uses always-on-top or task-switcher hiding, macOS Reopen restores a hidden window, the native shell keeps the menu bar title updated from the local API, show/hide requests are logged for window entrypoints, and dogfood:continue reopens an already started dogfood day through the same guarded app-opening path.
     x:
       ops:
-        attention_class: current
+        attention_class: done
   ts.ux_entry.monitor_policy:
     title: Document macOS multi-monitor status item limits
     kind: task
@@ -107,12 +107,12 @@ nodes:
     notes: Documented that Timeskein creates one macOS status item and macOS controls which menu bar displays it; reliable alternate entrypoints are Show/Hide, global shortcut, and normal app switching.
     x:
       ops:
-        attention_class: current
+        attention_class: done
   ts.ux_entry.fast_track_flow:
     title: Reduce the path from intent to tracked work
     kind: task
     parent: ts.ux_entry
-    status: in_progress
+    status: done
     effort: 2
     deps:
       - id: ts.ux_entry.tray_actions
@@ -131,7 +131,7 @@ nodes:
     notes: Added Recent, Today, Pinned, and All modes to the Work Item list. The default Recent mode keeps pinned, active, today, and recently touched items visible; typed search still reaches older matching items. Alt+1..4 switches modes without leaving the keyboard.
     x:
       ops:
-        attention_class: current
+        attention_class: done
   ts.ux_entry.resizable_today_split:
     title: Resize Today versus Work Item inventory
     kind: task
@@ -255,7 +255,7 @@ nodes:
     title: Day review and export
     kind: phase
     parent: ts
-    status: in_progress
+    status: done
     notes: Turn raw sessions and local app telemetry into the working-day picture needed for productivity analysis.
     x:
       ops:
@@ -306,7 +306,7 @@ nodes:
     notes: Work Item Events can be appended from the note editor or promoted from Capture Inbox, linked to the active focus session when applicable, listed through Local API, shown in the focus panel, edited/deleted for user-authored note_added events, and exported in UI/CLI Markdown reports. Generated system events remain internal history.
     x:
       ops:
-        attention_class: current
+        attention_class: done
   ts.day_review.day_events:
     title: Timestamped Day Events
     kind: task
@@ -539,10 +539,10 @@ nodes:
     kind: phase
     parent: ts
     status: in_progress
-    notes: "Current product layer after the 2026-07-08 closure gate. Turn Timeskein from a timer plus evening report into a day-structuring tool. Dogfood days 2026-07-07 and 2026-07-08 showed that work becomes easier after one focus is selected, while the expensive part is rebuilding manageability after breaks and choosing one legitimate next action without external pressure. The first slices added live Activity Zone totals with explicit in-day glance evidence, separated working occupancy from executive work, added a cheap active-focus journal, classified explained gaps by exact interval, added a compact day-entry/post-break dispatch ritual, and made dispatch-ritual starts visible in dogfood telemetry and closure checks. The remaining layer should prove a day without a parallel Codex note and decide whether Work Item stages are still necessary."
+    notes: "Current product layer after the 2026-07-08 closure gate. Turn Timeskein from a timer plus evening report into a day-structuring tool. Dogfood days 2026-07-07 through 2026-07-09 showed that work becomes easier after one focus is selected, while the expensive part is rebuilding manageability after breaks and choosing one legitimate next action without external pressure. The implemented slices added live Activity Zone totals with explicit in-day glance evidence, separated working occupancy from executive work, added a cheap focus/day journal, classified explained gaps by interval, added a compact day-entry/post-break dispatch ritual, and made dispatch-ritual starts visible in dogfood telemetry and closure checks. The 2026-07-09 dogfood day proved useful in-day structure reports and exposed follow-up polish: clearer dispatch wording, free day thoughts without active focus, tolerant gap matching, search normalization, and richer note review."
     x:
       ops:
-        attention_class: current
+        attention_class: done
   ts.in_day_structure.active_work_journal:
     title: Stream thoughts inside active work
     kind: task
@@ -559,15 +559,15 @@ nodes:
     title: Keep dogfood day observations inside Timeskein
     kind: task
     parent: ts.in_day_structure
-    status: in_progress
+    status: done
     effort: 2
     deps:
       - id: ts.in_day_structure.active_work_journal
       - id: ts.day_review.day_events
-    notes: "In progress. The active-focus journal and existing Day Events now provide the mechanics for recording product observations, working thoughts, recovery notes, and self-coordination comments inside Timeskein. The remaining proof is dogfood: one day should run without a parallel 'Timeskein, day N' note in Codex, and the evening report should contain enough observations to reconstruct the day."
+    notes: "Done as the first in-day observation slice after the 2026-07-09 dogfood day. The focus panel can record working thoughts, product observations, recovery notes, and self-coordination comments as Work Item Events or Day Events. After dogfood exposed a missing route for thoughts while no focus was active, the same journal row now remains available as a free day-thought input. A calmer long-note review experience remains future work."
     x:
       ops:
-        attention_class: current
+        attention_class: done
   ts.in_day_structure.work_item_stages:
     title: Track stages inside a Work Item
     kind: task
@@ -596,29 +596,29 @@ nodes:
     title: Support day entry and dispatching mode
     kind: task
     parent: ts.in_day_structure
-    status: in_progress
+    status: done
     effort: 3
     deps:
       - id: ts.in_day_structure.day_observation_log
       - id: ts.in_day_structure.active_work_journal
       - id: ts.in_day_structure.zone_dashboard
-    notes: "First UI and evidence slice added on 2026-07-08. When no focus block is active, the focus panel shows `Диспетчеризация`: active set, one first focus, parked work, and why this is important enough now. Saving writes a Coordination Day Event; starting writes the event and starts the chosen focus. Dogfood telemetry, reports, and closure checks count dispatch-ritual starts separately from typed and selected/list entries. Remaining proof is dogfood: whether this actually makes day entry and post-break return cheaper."
+    notes: "First UI and evidence slice added on 2026-07-08 and clarified after dogfood on 2026-07-09. When no focus block is active, the focus panel shows `Диспетчеризация`: `Что в игре`, one first focus, parked work, and why this is important enough now. The panel now has a compact `?` with field examples. Saving writes a Coordination Day Event; starting writes the event and starts the chosen focus. Dogfood telemetry, reports, and closure checks count dispatch-ritual starts separately from typed and selected/list entries. Further dogfood can tune wording, but the first implementation is in place."
     x:
       ops:
-        attention_class: current
+        attention_class: done
   ts.in_day_structure.entry_protocol:
     title: Define the day-entry and post-break protocol
     kind: task
     parent: ts.in_day_structure
-    status: in_progress
+    status: done
     effort: 2
     deps:
       - id: ts.in_day_structure.active_work_journal
       - id: ts.in_day_structure.zone_dashboard
-    notes: "Protocol is now represented in the UI as a compact dispatch ritual, not a heavy planner: name the active set, choose one good-enough focus, park the rest, state why it is important enough now, and start. If the choice fails, record recovery/loss of manageability through Day Events or gap classification. The remaining work is dogfood validation and possible tightening of the wording."
+    notes: "Protocol is now represented in the UI as a compact dispatch ritual, not a heavy planner: name what is in play, choose one good-enough focus, park the rest, state why it is important enough now, and start. If the choice fails, record recovery/loss of manageability through Day Events or gap classification. Dogfood on 2026-07-09 showed the need for examples, so the panel now includes a short help block."
     x:
       ops:
-        attention_class: current
+        attention_class: done
   ts.in_day_structure.gap_recovery_classification:
     title: Classify gaps as recovery or lost control
     kind: task
@@ -628,7 +628,7 @@ nodes:
     deps:
       - id: ts.day_review.day_events
       - id: ts.daily_control.goal_check
-    notes: "Done as a first slice on 2026-07-08. Gap explanation remains stored as a Day Event, but closed gaps now match an exact displayed interval instead of a loose count of gap-like notes. Today and Markdown reports show a classification label next to explained gaps: recovery, loss of manageability, idle, or explained. A dedicated gaps table remains future work if period reports need richer filtering."
+    notes: "Done as a first slice on 2026-07-08 and tightened after 2026-07-09 dogfood. Gap explanation remains stored as a Day Event, but closed gaps now match a displayed interval instead of a loose count of gap-like notes. A small end-time tolerance keeps an open-gap explanation attached when the gap closes a minute or two later. Today and Markdown reports show a classification label next to explained gaps: recovery, loss of manageability, idle, or explained. A dedicated gaps table remains future work if period reports need richer filtering."
     x:
       ops:
         attention_class: done
@@ -636,7 +636,7 @@ nodes:
     title: In-day structure dogfood gate
     kind: milestone
     parent: ts.in_day_structure
-    status: planned
+    status: done
     milestone: true
     deps:
       - id: ts.in_day_structure.active_work_journal
@@ -645,20 +645,69 @@ nodes:
       - id: ts.in_day_structure.dispatch_mode
       - id: ts.in_day_structure.entry_protocol
       - id: ts.in_day_structure.gap_recovery_classification
-    notes: One real workday should prove that Timeskein can hold the user's thoughts, dogfood-day observations, zone distribution, dispatching choices, and gap explanations without needing a parallel Codex note for "Timeskein, day N" observations. Work Item stages remain a planned future slice unless the dogfood day proves they are necessary for the current goal.
+    notes: "Accepted after the 2026-07-09 dogfood day and follow-up fixes. The saved report was final, strict `pnpm dogfood:goal-check -- --date 2026-07-09 --no-codex-guidance` passed, the report contained enough Day Events and Work Item Events to analyze manageability without reconstructing the timeline from memory, zones were visible, and all large gaps were classified. Dogfood exposed polish now recorded as follow-up: free day thoughts without active focus, dispatch help/wording, tolerant gap matching, search normalization, larger notes, light theme, and better resizing."
     x:
       ops:
-        attention_class: current
+        attention_class: done
+
+  ts.in_day_structure.rich_note_review:
+    title: Review larger day and work notes calmly
+    kind: task
+    parent: ts.in_day_structure
+    status: planned
+    effort: 3
+    deps:
+      - id: ts.in_day_structure.dogfood_gate
+    notes: "Support larger multi-line notes as working artifacts, with comfortable view/edit/export. The 2026-07-09 dogfood day proved timestamped events are useful but also showed that longer thoughts need better handling than a compact row and a long evening list."
+    x:
+      ops:
+        attention_class: future
+  ts.in_day_structure.search_normalization:
+    title: Normalize search for Cyrillic and Latin lookalikes
+    kind: task
+    parent: ts.in_day_structure
+    status: planned
+    effort: 2
+    deps:
+      - id: ts.in_day_structure.dogfood_gate
+    notes: "Search should find mixed-script titles such as `spirit-code-daily-sync` even when some letters are Cyrillic lookalikes (`с`, `у`) from earlier dogfood workaround days. This is a data-trust and return-to-work polish item, not a new tracking model."
+    x:
+      ops:
+        attention_class: future
+  ts.in_day_structure.ui_readability_polish:
+    title: Improve readability and panel ergonomics
+    kind: task
+    parent: ts.in_day_structure
+    status: planned
+    effort: 3
+    deps:
+      - id: ts.in_day_structure.dogfood_gate
+    notes: "Dogfood asks for a light theme, clearer explanation of collapsed review checks, and a more reliable upper/lower resize experience. Keep this as polish after the in-day structure gate, unless daily use shows that one item blocks trust."
+    x:
+      ops:
+        attention_class: future
+  ts.in_day_structure.visible_causality:
+    title: Make small action outcomes visible
+    kind: task
+    parent: ts.in_day_structure
+    status: planned
+    effort: 3
+    deps:
+      - id: ts.in_day_structure.dogfood_gate
+    notes: "Support the practice `I did X -> state changed as Y` after a focus block or during review. The 2026-07-09 dogfood day showed that loss of perceived causality raises entry cost: action feels too small against the scale of accumulated problems."
+    x:
+      ops:
+        attention_class: future
 
   ts.periodic_reflection:
     title: Periodic reflection and meaning reports
     kind: phase
     parent: ts
-    status: planned
+    status: in_progress
     notes: "Build arbitrary-period reports that answer what the user got from the period: real focus, active tracks, noise, recovery, open loops, and performance-review evidence. Reports must support arbitrary date ranges such as week, sprint, month, quarter, and year; later slices should filter by Activity Zone, Track, parent Track/project, Labels, and report profile. Keep the first slice outcome-first and based on existing manual data before adding automated context collection. The in-day structure layer should feed these reports with better thoughts, stages, zones, dispatch decisions, and recovery/lost-control classifications."
     x:
       ops:
-        attention_class: future
+        attention_class: current
   ts.periodic_reflection.period_export:
     title: Export arbitrary-period reports from existing data
     kind: task
@@ -670,7 +719,7 @@ nodes:
     notes: "CLI-first report.period / pnpm report:period over a date range, with Markdown and JSON, totals by day, Work Item, Activity Zone, gaps, captures, Day Events, Work Item Events, data-quality warnings, and focus-tuning questions. The first version may work without Tracks/Labels; it should still make the meaning question explicit: which 1-3 focus points deserve protected effort next, which work was necessary reaction, and which work was noise or recovery."
     x:
       ops:
-        attention_class: future
+        attention_class: current
   ts.periodic_reflection.report_profiles:
     title: Add weekly, sprint, track, and performance report profiles
     kind: task

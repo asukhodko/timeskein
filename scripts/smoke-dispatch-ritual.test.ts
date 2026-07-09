@@ -8,7 +8,7 @@ import {
   isDispatchRitualStartReady,
 } from '../apps/desktop/src/utils/dispatchRitual'
 
-test('dispatch ritual event records active set, first focus, parking and reason', () => {
+test('dispatch ritual event records what is in play, first focus, parking and reason', () => {
   const event = formatDispatchRitualEvent({
     mode: 'day_entry',
     activeSet: '  входящие, цели команды, синк  ',
@@ -19,7 +19,7 @@ test('dispatch ritual event records active set, first focus, parking and reason'
 
   assert.equal(
     event,
-    'Вход в день: active set: входящие, цели команды, синк; первый фокус: Подготовить цели команды; припарковано: личные проекты, мелкие чаты; почему достаточно важно: это главный внешний дедлайн'
+    'Вход в день: что в игре: входящие, цели команды, синк; первый фокус: Подготовить цели команды; припарковано: личные проекты, мелкие чаты; почему достаточно важно: это главный внешний дедлайн'
   )
 })
 

@@ -145,18 +145,20 @@ x:
         scope_nodes:
           - ts.in_day_structure
         target_gate: ts.in_day_structure.dogfood_gate
+        progress_override: 1.0
         mgmt:
-          health: yellow
+          health: green
           owner: a.sukhodko
-          next_sync_goal: "Make Timeskein hold the day while it is happening: active-work thoughts, product observations, live zone balance, day-entry/post-break dispatch decisions, and recovery/lost-control gap labels inside the app instead of a parallel Codex note."
+          sync_note: "Accepted after the 2026-07-09 dogfood day. The report carried day/work observations, live-zone evidence, classified recovery gaps, and strict goal-check evidence. Follow-up polish is tracked separately: larger notes, search normalization, light theme, and panel ergonomics."
       periodic-reflection:
         title: Periodic Reflection
         scope_nodes:
           - ts.periodic_reflection
+        target_gate: ts.periodic_reflection.period_export
         mgmt:
-          health: neutral
+          health: yellow
           owner: a.sukhodko
-          sync_note: "Next broad meaning layer after in-day structure: arbitrary-period reports for week/sprint/month/quarter/year, focus tuning, Track/Label slices, operational reality, and performance-review evidence. The first slice should use existing manual data enriched by thoughts, stages, zones, dispatch decisions, and recovery/lost-control gap labels, then answer which 1-3 focus points deserve protected effort before adding automated context collection."
+          next_sync_goal: "Build the first arbitrary-period report from existing daily data: totals by day, Work Item and Activity Zone, gaps, captures, Day/Work Item Events, data-quality warnings, and focus-tuning questions. The first slice should answer which 1-3 focus points deserve protected effort before adding Tracks/Labels or passive evidence collection."
       future-directions:
         title: Future directions
         scope_nodes:

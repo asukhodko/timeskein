@@ -72,7 +72,7 @@ flowchart LR
     recovered_baseline["Recovered<br/>baseline<br/>100%<br/>веха 2026-06-30"]
     class recovered_baseline exec_done
     app_entry_ux["App<br/>entry UX<br/>100%<br/>веха 2026-07-03"]
-    class app_entry_ux exec_mgmt_green
+    class app_entry_ux exec_done
     focus_session_core["Focus<br/>Session core<br/>100%<br/>веха 2026-07-01"]
     class focus_session_core exec_done
     day_review_export["Day review<br/>and export<br/>95%<br/>веха 2026-07-01"]
@@ -83,11 +83,11 @@ flowchart LR
     class dogfood_hardening exec_done
     daily_control_gate["Daily<br/>Control Gate<br/>100%<br/>веха 2026-07-08"]
     class daily_control_gate exec_done
-    in_day_structure["In-day<br/>Structure<br/>60%<br/>веха 2026-07-09"]
-    class in_day_structure exec_mgmt_yellow
-    style in_day_structure stroke:#111827,stroke-width:3px
-    periodic_reflection["Periodic<br/>Reflection<br/>~0%"]
-    class periodic_reflection exec_mgmt_neutral
+    in_day_structure["In-day<br/>Structure<br/>100%<br/>веха 2026-07-09"]
+    class in_day_structure exec_done
+    periodic_reflection["Periodic<br/>Reflection<br/>~0%<br/>окно 2026-07-09..2026-07-13"]
+    class periodic_reflection exec_mgmt_yellow
+    style periodic_reflection stroke:#111827,stroke-width:3px
     future_directions["Future<br/>directions<br/>n/a"]
     class future_directions exec_mgmt_neutral
 
@@ -125,7 +125,7 @@ gantt
     ✅ Add clear hide and show behavior  :done, ts_ux_entry_hide_toggle,    2026-07-01, 1d
     ✅ Wire tray menu actions  :done, ts_ux_entry_tray_actions,    2026-07-02, 1d
     ✅ Document macOS multi-monitor status item limits  :done, ts_ux_entry_monitor_policy,    2026-07-03, 1d
-    🔄 Reduce the path from intent to tracked work  :active, ts_ux_entry_fast_track_flow,    2026-07-03, 1d
+    ✅ Reduce the path from intent to tracked work  :done, ts_ux_entry_fast_track_flow,    2026-07-03, 1d
     ✅ Keep the multi-day Work Item list navigable  :done, ts_ux_entry_inventory_modes,    2026-07-03, 1d
     ✅ Resize Today versus Work Item inventory  :done, ts_ux_entry_resizable_today_split,    2026-07-03, 1d
     section Focus Session core
@@ -162,13 +162,13 @@ gantt
     ✅ Close daily-control goal with strict evidence  :milestone, done, ts_daily_control_goal_check,    2026-07-08, 0d
     section In-day structure
     ✅ Stream thoughts inside active work  :done, ts_in_day_structure_active_work_journal,    2026-07-08, 1d
-    🔄 Keep dogfood day observations inside Timeskein  :active, ts_in_day_structure_day_observation_log,    2026-07-09, 1d
+    ✅ Keep dogfood day observations inside Timeskein  :done, ts_in_day_structure_day_observation_log,    2026-07-09, 1d
     Track stages inside a Work Item  :ts_in_day_structure_work_item_stages,    2026-07-09, 3d
     ✅ Show Activity Zone totals during the day  :done, ts_in_day_structure_zone_dashboard,    2026-07-08, 1d
-    🔄 Support day entry and dispatching mode  :active, ts_in_day_structure_dispatch_mode,    2026-07-08, 2d
-    🔄 Define the day-entry and post-break protocol  :active, ts_in_day_structure_entry_protocol,    2026-07-08, 1d
+    ✅ Support day entry and dispatching mode  :done, ts_in_day_structure_dispatch_mode,    2026-07-08, 2d
+    ✅ Define the day-entry and post-break protocol  :done, ts_in_day_structure_entry_protocol,    2026-07-08, 1d
     ✅ Classify gaps as recovery or lost control  :done, ts_in_day_structure_gap_recovery_classification,    2026-07-08, 1d
-    In-day structure dogfood gate  :milestone, ts_in_day_structure_dogfood_gate,    2026-07-09, 0d
+    ✅ In-day structure dogfood gate  :milestone, done, ts_in_day_structure_dogfood_gate,    2026-07-09, 0d
 ```
 
 ## Current work list
@@ -179,11 +179,8 @@ gantt
 /usr/bin/env PYTHONPATH=../../tools/opskarta python3 -m specs.v3.tools.cli render list ../../plans/timeskein/main.plan.yaml ../../plans/timeskein/nodes.plan.yaml ../../plans/timeskein/schedule.plan.yaml ../../plans/timeskein/execution.plan.yaml ../../plans/timeskein/views.plan.yaml --view current
 -->
 <!-- GENERATED:START -->
-- In-day structure and self-coordination [in_progress] (20 focus-blocks) {58%}
-- Keep dogfood day observations inside Timeskein [in_progress] (2 focus-blocks) {35%}
-- Support day entry and dispatching mode [in_progress] (3 focus-blocks) {60%}
-- Define the day-entry and post-break protocol [in_progress] (2 focus-blocks) {55%}
-- In-day structure dogfood gate [planned]
+- Periodic reflection and meaning reports [in_progress] (27 focus-blocks) {0% cov:11%}
+- Export arbitrary-period reports from existing data [planned] (3 focus-blocks) {0%}
 <!-- GENERATED:END -->
 
 ## Deferred directions
@@ -202,12 +199,14 @@ gantt
 - Evidence Mode [deferred] (20 focus-blocks)
 - Explicit context capture and SourceNodes [deferred] (13 focus-blocks)
 - Export LLM packs with redaction controls [deferred] (5 focus-blocks)
-- Export arbitrary-period reports from existing data [planned] (3 focus-blocks)
 - Future directions [deferred] (83 focus-blocks)
+- Improve readability and panel ergonomics [planned] (3 focus-blocks)
 - Introduce Tracks, Labels, and historical snapshots [planned] (5 focus-blocks)
+- Make small action outcomes visible [planned] (3 focus-blocks)
+- Normalize search for Cyrillic and Latin lookalikes [planned] (2 focus-blocks)
 - Pause, resume, and cancel focus sessions [deferred] (5 focus-blocks)
-- Periodic reflection and meaning reports [planned] (27 focus-blocks)
 - Preserve external artifacts and user thoughts as report evidence [planned] (3 focus-blocks)
+- Review larger day and work notes calmly [planned] (3 focus-blocks)
 - Save period conclusions as Reflection Sessions [planned] (3 focus-blocks)
 - Sync and multi-device continuity [deferred] (13 focus-blocks)
 - Track stages inside a Work Item [planned] (5 focus-blocks) {0%}

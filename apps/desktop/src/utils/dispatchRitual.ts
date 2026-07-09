@@ -21,7 +21,7 @@ const DISPATCH_RITUAL_DRAFT_STORAGE_PREFIX = 'timeskein.dispatch-ritual-draft.v1
 export function formatDispatchRitualEvent(draft: DispatchRitualDraft) {
   const normalized = normalizeDispatchRitualDraft(draft)
   const parts = [
-    ['active set', normalized.activeSet],
+    ['что в игре', normalized.activeSet],
     ['первый фокус', normalized.firstFocus],
     ['припарковано', normalized.parked],
     ['почему достаточно важно', normalized.reason],

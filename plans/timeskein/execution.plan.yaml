@@ -270,24 +270,25 @@ execution:
       confidence: 0.9
       note: "Passed on 2026-07-08 with `pnpm dogfood:goal-check -- --date 2026-07-08 --no-codex-guidance`. The command verified saved final evidence, then ran `pnpm test`, `pnpm dogfood:preflight`, and strict RC evidence against the same code. This closed the cheap evening-closure goal."
     ts.in_day_structure:
-      progress: 0.5
+      progress: 0.9
       actual_start: "2026-07-08"
-      updated_at: "2026-07-08T23:58:00+03:00"
-      confidence: 0.8
-      note: "Now the active product layer. Dogfood days 2026-07-07 and 2026-07-08 showed the next gap: when a focus is selected, work can feel available, but after a break or completed block the user has to rebuild control from scattered open loops. Coordination is real work, recovery needs explicit meaning, and `Работа` alone is too narrow for working occupancy. The first slices implemented live Activity Zone totals with `Учёл зоны` telemetry, report semantics for working occupancy vs executive work, a cheap active-focus journal, interval-based gap classification, a compact dispatch ritual, and report/RC telemetry evidence for starts through that ritual. Remaining proof is a dogfood day without external Timeskein notes."
+      updated_at: "2026-07-09T19:50:00+03:00"
+      confidence: 0.85
+      note: "The first in-day structure goal is accepted after 2026-07-09 dogfood and follow-up fixes. The saved final report had enough day/work events, zone evidence, classified recovery gaps, and closure evidence to analyze manageability without rebuilding the day from memory. Remaining work is follow-up polish and the next meaning layer: arbitrary-period reports."
     ts.in_day_structure.day_observation_log:
-      progress: 0.35
+      progress: 1.0
       actual_start: "2026-07-08"
-      updated_at: "2026-07-08T23:05:00+03:00"
-      confidence: 0.8
-      note: "Mechanics are partially in place: Day Events, Work Item Events, Capture-to-event, and the active-focus journal can now keep day observations inside Timeskein. The remaining evidence is a dogfood day without a parallel 'Timeskein, day N' note."
+      actual_finish: "2026-07-09"
+      updated_at: "2026-07-09T19:50:00+03:00"
+      confidence: 0.85
+      note: "Accepted as the first observation slice after the 2026-07-09 dogfood day. Day Events and Work Item Events carried enough semantic notes into the final report. Follow-up fix keeps the journal row available even with no active focus, so free day thoughts no longer need an external scratchpad."
     ts.in_day_structure.active_work_journal:
       progress: 1.0
       actual_start: "2026-07-08"
-      actual_finish: "2026-07-08"
-      updated_at: "2026-07-08T23:05:00+03:00"
+      actual_finish: "2026-07-09"
+      updated_at: "2026-07-09T19:50:00+03:00"
       confidence: 0.85
-      note: "Implemented first slice. The active focus panel can append thoughts, decisions, questions, next steps, milestones, and interruption notes to the current Work Item or to the day without stopping focus. Draft text is local and cleared only after successful save. Events appear through existing Work Item Event / Day Event report sections."
+      note: "Implemented first slice. The focus panel can append thoughts, decisions, questions, next steps, milestones, and interruption notes to the current Work Item or to the day without stopping focus. After 2026-07-09 dogfood it also stays visible without active focus and writes free day thoughts as Day Events. Draft text is local and cleared only after successful save. Events appear through existing Work Item Event / Day Event report sections."
     ts.in_day_structure.zone_dashboard:
       progress: 1.0
       actual_start: "2026-07-08"
@@ -295,27 +296,47 @@ execution:
       updated_at: "2026-07-09T00:35:00+03:00"
       confidence: 0.85
       note: "Implemented the first in-day-structure slice. Today shows a live `Зоны сегодня` panel with total tracked time, working occupancy (`Work + Coordination`), executive work (`Work`), non-work tracked time, and per-zone chips. The `Учёл зоны` action records `activity_zone_glanced`; UI/CLI reports and RC evidence now require two in-day glances or explicit evening zone acceptance. This makes zone usage a dogfood evidence point, not just a passive display."
-    ts.in_day_structure.gap_recovery_classification:
+    ts.in_day_structure.dispatch_mode:
       progress: 1.0
       actual_start: "2026-07-08"
-      actual_finish: "2026-07-08"
-      updated_at: "2026-07-08T23:25:00+03:00"
+      actual_finish: "2026-07-09"
+      updated_at: "2026-07-09T19:50:00+03:00"
       confidence: 0.8
-      note: "Implemented first slice. Closed gaps match Day Events by exact displayed interval and show classification labels in Today and Markdown reports: recovery, loss of manageability, idle, or explained. The model intentionally reuses Day Events for now; a dedicated gap table remains a possible period-report refinement."
-    ts.in_day_structure.dispatch_mode:
-      progress: 0.6
-      actual_start: "2026-07-08"
-      updated_at: "2026-07-08T23:58:00+03:00"
-      confidence: 0.75
-      note: "Implemented first UI slice plus report evidence. When no focus is active, `Диспетчеризация` records active set, one first focus, parked work, and why this is important enough now. Saving creates a Coordination Day Event; starting first saves that event and then starts the chosen focus. App telemetry, dogfood reports, and RC checks now count dispatch-ritual starts separately from typed and selected/list entries. Dogfood must still prove that this lowers day-entry and post-break friction."
+      note: "First slice accepted. `Диспетчеризация` records `Что в игре`, first focus, parked work, and why-now as a Coordination Day Event, and can start the chosen focus. After 2026-07-09 dogfood exposed unclear wording, the UI gained Russian labels and a compact help block with examples."
     ts.in_day_structure.entry_protocol:
-      progress: 0.55
+      progress: 1.0
       actual_start: "2026-07-08"
-      updated_at: "2026-07-08T23:58:00+03:00"
-      confidence: 0.75
-      note: "The protocol is represented by the first dispatch UI slice: active set, first focus, parked work, and why-now. If choosing fails, the current route is to record recovery/lost-control through Day Events or gap classification. The next dogfood day can now prove the protocol through explicit dispatch-ritual entry telemetry. Dogfood should decide whether the wording is enough."
+      actual_finish: "2026-07-09"
+      updated_at: "2026-07-09T19:50:00+03:00"
+      confidence: 0.8
+      note: "The protocol is represented by the compact dispatch UI: name what is in play, choose one good-enough focus, park the rest, explain why it is enough now, and start. If choosing fails, the user records recovery/lost-control through Day Events or gap classification."
     ts.in_day_structure.work_item_stages:
       progress: 0.0
       updated_at: "2026-07-08T23:45:00+03:00"
       confidence: 0.7
       note: "Not implemented. Kept as planned/future for the in-day layer; the next dogfood day should decide whether current Work Item Events are enough for long multi-stage work or whether explicit stages are still worth building."
+    ts.in_day_structure.gap_recovery_classification:
+      progress: 1.0
+      actual_start: "2026-07-08"
+      actual_finish: "2026-07-09"
+      updated_at: "2026-07-09T19:50:00+03:00"
+      confidence: 0.85
+      note: "Done. The 2026-07-09 dogfood day used classified recovery gaps in the final report. Follow-up matching now tolerates a small end-time shift when an open-gap explanation is written before the gap closes."
+    ts.in_day_structure.dogfood_gate:
+      progress: 1.0
+      actual_start: "2026-07-09"
+      actual_finish: "2026-07-09"
+      updated_at: "2026-07-09T19:50:00+03:00"
+      confidence: 0.85
+      note: "Accepted after the 2026-07-09 real dogfood day and strict `pnpm dogfood:goal-check -- --date 2026-07-09 --no-codex-guidance`. Follow-up code/docs fixed the three sharp findings: no-active free day thoughts, dispatch help/wording, and tolerant gap matching."
+    ts.periodic_reflection:
+      progress: 0.05
+      actual_start: "2026-07-09"
+      updated_at: "2026-07-09T19:50:00+03:00"
+      confidence: 0.75
+      note: "Promoted to the next product layer after the in-day structure gate. The first goal should export arbitrary-period reports from existing daily data and answer which focus points deserve protected effort."
+    ts.periodic_reflection.period_export:
+      progress: 0.0
+      updated_at: "2026-07-09T19:50:00+03:00"
+      confidence: 0.75
+      note: "Next meaningful implementation target. Start with CLI-first period reports over existing focus sessions, Activity Zones, gaps, Day Events, Work Item Events, captures, and data-quality warnings before adding Tracks/Labels or automated evidence collection."

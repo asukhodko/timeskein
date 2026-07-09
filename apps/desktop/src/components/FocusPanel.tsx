@@ -127,7 +127,7 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
   const currentId = current?.id
   const dispatchDraftKey = useMemo(() => dispatchRitualDraftStorageKey(now), [localDayKey])
   const activeJournalDraftKey = useMemo(
-    () => current ? activeFocusJournalDraftStorageKey(current.work_item_id ?? current.id, now) : null,
+    () => activeFocusJournalDraftStorageKey(current ? current.work_item_id ?? current.id : 'day', now),
     [current?.id, current?.work_item_id, localDayKey]
   )
   const sessions = todayQuery.data?.sessions ?? []
@@ -762,19 +762,17 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
   }
 
   const addActiveJournalEvent = () => {
-    if (!current) return
-
     const text = formatActiveFocusJournalText(activeJournalKind, activeJournalText)
     if (!text || addWorkItemEventMutation.isPending || addDayEventMutation.isPending) return
 
-    const target = current.work_item_id && activeJournalTarget === 'work_item' ? 'work_item' : 'day'
+    const target = current?.work_item_id && activeJournalTarget === 'work_item' ? 'work_item' : 'day'
     const clearDraft = () => {
       if (activeJournalDraftKey) clearActiveFocusJournalDraft(activeJournalDraftKey)
       setActiveJournalText('')
       window.requestAnimationFrame(() => activeJournalInputRef.current?.focus())
     }
 
-    if (target === 'work_item' && current.work_item_id) {
+    if (target === 'work_item' && current?.work_item_id) {
       addWorkItemEventMutation.mutate(
         {
           id: current.work_item_id,
@@ -789,8 +787,8 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
     addDayEventMutation.mutate(
       {
         text,
-        focus_session_id: current.id,
-        activity_zone: current.activity_zone,
+        focus_session_id: current?.id,
+        activity_zone: current?.activity_zone || selectedItem?.activity_zone,
       },
       { onSuccess: clearDraft }
     )
@@ -913,20 +911,19 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
           <ActiveFocusSession session={current} note={note} setNote={setNote} onStop={stopCurrentSession} stopping={stopMutation.isPending} />
         )}
 
-        {current && (
-          <ActiveFocusJournal
-            inputRef={activeJournalInputRef}
-            text={activeJournalText}
-            kind={activeJournalKind}
-            target={current.work_item_id ? activeJournalTarget : 'day'}
-            hasWorkItem={Boolean(current.work_item_id)}
-            pending={addWorkItemEventMutation.isPending || addDayEventMutation.isPending}
-            onTextChange={setActiveJournalText}
-            onKindChange={setActiveJournalKind}
-            onTargetChange={setActiveJournalTarget}
-            onSubmit={addActiveJournalEvent}
-          />
-        )}
+        <ActiveFocusJournal
+          inputRef={activeJournalInputRef}
+          text={activeJournalText}
+          kind={activeJournalKind}
+          target={current?.work_item_id ? activeJournalTarget : 'day'}
+          hasWorkItem={Boolean(current?.work_item_id)}
+          pending={addWorkItemEventMutation.isPending || addDayEventMutation.isPending}
+          placeholder={current ? 'Мысль, решение, вопрос или следующий шаг...' : 'Свободная мысль дня, решение, вопрос или следующий шаг...'}
+          onTextChange={setActiveJournalText}
+          onKindChange={setActiveJournalKind}
+          onTargetChange={setActiveJournalTarget}
+          onSubmit={addActiveJournalEvent}
+        />
 
         <div className="grid gap-2">
           <div className="flex items-center gap-2">
@@ -3835,8 +3832,7 @@ export function pickNextGapForReview(gaps: Gap[], dayEvents: Array<{ text?: stri
 }
 
 export function findGapExplanation(gap: Gap, dayEvents: Array<{ text?: string; activity_zone?: ActivityZone }>): GapExplanation | undefined {
-  const range = formatGapRange(gap)
-  const event = dayEvents.find((item) => isGapExplanationText(item.text) && item.text?.includes(range))
+  const event = dayEvents.find((item) => isGapExplanationText(item.text) && gapExplanationMatches(gap, item.text))
   if (!event?.text) return undefined
 
   return {
@@ -3896,6 +3892,37 @@ export function isOpenGapExplanationText(text: string | undefined) {
 
 function formatGapRange(gap: Gap) {
   return `${formatClockTime(gap.from)}-${formatClockTime(gap.to)}`
+}
+
+function gapExplanationMatches(gap: Gap, text: string | undefined) {
+  if (!text) return false
+
+  const exactRange = formatGapRange(gap)
+  if (text.includes(exactRange)) return true
+
+  const textRange = text.match(/(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/)
+  if (!textRange) return false
+
+  const textStart = parseClockMinutes(textRange[1])
+  const textEnd = parseClockMinutes(textRange[2])
+  const gapStart = parseClockMinutes(formatClockTime(gap.from))
+  const gapEnd = parseClockMinutes(formatClockTime(gap.to))
+  if (textStart == null || textEnd == null || gapStart == null || gapEnd == null) return false
+
+  const toleranceMinutes = 2
+  return Math.abs(textStart - gapStart) <= toleranceMinutes && Math.abs(textEnd - gapEnd) <= toleranceMinutes
+}
+
+function parseClockMinutes(value: string) {
+  const match = value.match(/^(\d{1,2}):(\d{2})$/)
+  if (!match) return undefined
+
+  const hours = Number(match[1])
+  const minutes = Number(match[2])
+  if (!Number.isFinite(hours) || !Number.isFinite(minutes)) return undefined
+  if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) return undefined
+
+  return hours * 60 + minutes
 }
 
 function appendWorkItemNotes(
@@ -4126,23 +4153,37 @@ function DispatchRitualPanel({
           <div className="font-medium text-cyan-100">Диспетчеризация</div>
           <div className="text-[11px] text-cyan-100/60">Собрать контуры, выбрать первое дело, припарковать остальное.</div>
         </div>
-        <select
-          value={draft.mode}
-          onChange={(event) => updateDraft({ mode: event.target.value as DispatchRitualMode })}
-          className="w-40 rounded border border-cyan-900/70 bg-gray-950 px-2 py-1.5 text-xs text-gray-200 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
-          title="Режим диспетчеризации"
-        >
-          {Object.entries(DISPATCH_RITUAL_MODE_LABELS).map(([value, label]) => (
-            <option key={value} value={value}>
-              {label}
-            </option>
-          ))}
-        </select>
+        <div className="flex items-center gap-2">
+          <details className="relative">
+            <summary className="cursor-pointer list-none rounded border border-cyan-900/70 px-2 py-1 text-[11px] font-semibold text-cyan-100 hover:border-cyan-500">
+              ?
+            </summary>
+            <div className="absolute right-0 z-20 mt-1 w-80 rounded-md border border-cyan-900 bg-gray-950 p-3 text-[11px] leading-relaxed text-cyan-50 shadow-xl">
+              <div className="mb-1 font-semibold text-cyan-100">Как заполнять</div>
+              <div><b>Что в игре:</b> какие контуры сейчас тянут внимание. Например: цели команды, 1x1, срочный чат.</div>
+              <div><b>Первое дело:</b> одно достаточно хорошее действие на ближайший блок. Например: открыть черновик целей.</div>
+              <div><b>Припарковать:</b> что сознательно не делаю сейчас. Например: личные проекты, мелкие сообщения.</div>
+              <div><b>Почему сейчас:</b> почему выбранного достаточно. Например: это снижает неопределённость перед встречей.</div>
+            </div>
+          </details>
+          <select
+            value={draft.mode}
+            onChange={(event) => updateDraft({ mode: event.target.value as DispatchRitualMode })}
+            className="w-40 rounded border border-cyan-900/70 bg-gray-950 px-2 py-1.5 text-xs text-gray-200 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
+            title="Режим диспетчеризации"
+          >
+            {Object.entries(DISPATCH_RITUAL_MODE_LABELS).map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       <div className="grid gap-2 md:grid-cols-2">
         <DispatchRitualInput
-          label="Active set"
+          label="Что в игре"
           placeholder="Что сегодня/сейчас реально в игре..."
           value={draft.activeSet}
           onChange={(value) => updateDraft({ activeSet: value })}
@@ -4229,6 +4270,7 @@ function ActiveFocusJournal({
   target,
   hasWorkItem,
   pending,
+  placeholder,
   onTextChange,
   onKindChange,
   onTargetChange,
@@ -4240,6 +4282,7 @@ function ActiveFocusJournal({
   target: ActiveFocusJournalTarget
   hasWorkItem: boolean
   pending: boolean
+  placeholder: string
   onTextChange: (value: string) => void
   onKindChange: (value: ActiveFocusJournalKind) => void
   onTargetChange: (value: ActiveFocusJournalTarget) => void
@@ -4257,7 +4300,7 @@ function ActiveFocusJournal({
             onSubmit()
           }
         }}
-        placeholder="Мысль, решение, вопрос или следующий шаг..."
+        placeholder={placeholder}
         className="min-w-0 flex-1 rounded border border-emerald-900/70 bg-gray-950 px-2 py-1.5 text-xs text-gray-100 placeholder-gray-600 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
       />
       <select

@@ -116,3 +116,6 @@ schedule:
       start: "2026-07-08"
       duration: 1d
     ts.in_day_structure.dogfood_gate: {}
+    ts.periodic_reflection.period_export:
+      start: "2026-07-09"
+      duration: 3d

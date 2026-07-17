@@ -2,9 +2,11 @@
 
 **Manual-first, local-first causal work memory and steering system.**
 
-A desktop application for quickly tracking focus sessions and work items with refs (URLs, files, issue keys), without background monitoring.
+A local desktop system for tracking real focus, preserving a historically
+honest causal work trace, and choosing a justified next action without
+background monitoring.
 
-## Current Status (MVP)
+## Current Status
 
 | Component | Status | Notes |
 |-----------|--------|-------|
@@ -21,15 +23,25 @@ A desktop application for quickly tracking focus sessions and work items with re
 | Evidence-backed Track story | Working baseline | Typed result/decision/blocker/next-step/observation events, immutable Ref snapshots, and decision follow-ups in Track retrospectives |
 | Causal Work Spine | Working baseline | Append-only intent, state, result, decision, next-action, confirmation, and correction records with provenance and semantic snapshots |
 | Operational Reality | Accepted baseline | Explainable current projection with unknowns, confidence, manual correction, Reflection follow-up, next-action lifecycle, JSON export, and a passed two-real-day gate |
+| Operational Workspace | Next milestone | One visible item-backed day contract and one morning/post-break start loop over Operational Reality, active focus, and inventory |
 | North-star architecture | Implemented foundation | Causal Work Memory, user-truth boundaries, risk gates, bounded Context Probe, and long-horizon capability map are defined in ADR-0004, RFC-0009, Roadmap 0005, and opskarta |
 | Dogfood Telemetry | Working baseline | Local app-event journal and CLI metrics for tracking UX friction |
 | Mock Server | Working | Full API implementation for development |
 | Rust Agent | Working | SQLite-backed Local API, embedded in macOS app |
 | Tauri Desktop | Working on macOS | Embeds Rust agent and builds macOS `.app` |
 
-**What works now:** Focus Session tracking, Capture Inbox, and Work Item inventory in browser mock mode and in the macOS `.app` with an embedded Rust agent.
+**What works now:** The browser mock and macOS `.app` support focus tracking,
+Capture Inbox, Work Item inventory, correction, day and period review,
+Tracks/Labels, typed evidence, causal history, and the accepted Operational
+Reality projection through the embedded Rust agent.
 
-**Current focus:** The manual day, period reflection, semantic history, evidence-backed Track story, and `Causal Work Spine + Operational Reality v1` are accepted. The real 15–16 July gate passed with two days, 11 starts from the projection, persistent correction, Reflection follow-up, and a complete intent/result-with-Ref/next-action chain. The next goal will be chosen between Operational Workspace convergence, a Working Memory Bridge, and the bounded Context Capture Probe. Full SourceNodes, sync, private intelligence, and opt-in Evidence Mode remain later capabilities.
+**Current focus:** The manual day, period reflection, semantic history,
+evidence-backed Track story, and `Causal Work Spine + Operational Reality v1`
+are accepted. Twelve real workdays established the next order: first converge
+Operational Reality, the day contract, active focus, and inventory into one
+operational workspace; then close the working-memory gap; only then run a
+bounded automatic-context probe. Full SourceNodes, sync, private intelligence,
+and opt-in Evidence Mode remain later capabilities.
 
 See [Current Implementation](docs/current-implementation.md) for the exact state of what runs today.
 Use [Dogfood Day Protocol](docs/dogfood-day.md) when testing Timeskein as a Session replacement for a real workday.
@@ -38,6 +50,8 @@ See [Dogfood Release Baseline](docs/dogfood-release-baseline.md) for the accepte
 See [Periodic Report Dogfood](docs/dogfood-periodic-report.md) for the first real multi-day review and its limitations.
 See [Operational Reality Dogfood](docs/dogfood-operational-reality.md) for the accepted two-real-day evidence and reproducible protocol.
 See [Causal Work Spine Acceptance Audit](docs/acceptance-causal-work-spine-v1.md) for requirement-by-requirement implementation and real-use evidence.
+See [Dogfood Findings](docs/dogfood-learnings.md) for the product conclusions
+and route derived from twelve real workdays.
 
 The current execution roadmap is maintained as an opskarta v3 plan set:
 [Timeskein opskarta roadmap](docs/roadmap/opskarta.md).

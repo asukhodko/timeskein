@@ -17,33 +17,37 @@ action. Work is ordered by user value and early risk reduction.
 2. **Use the accepted architecture gate:** ADR-0004, RFC-0009, Roadmap 0005,
    and opskarta define user truth, observations, derived inference, ephemeral
    artifacts, provenance, horizons, and dogfood gates.
-3. **Build on the accepted causal steering layer:** Causal Work Spine and
-   Operational Reality v1 passed their real-use gate. Choose whether to converge
-   the operational workspace, strengthen working memory, or retire the
-   far-future context risk through a bounded focus-scoped probe.
-4. **Generalize only proven context value:** SourceNodes, PolicyGate, broader
+3. **Converge the operational workspace:** Operational Reality, the day
+   contract, active focus, and inventory become one coherent start/resume loop.
+4. **Close the manual working-memory gap:** thoughts, materials, stages, state
+   changes, and next actions remain usable without an external notebook.
+5. **Generalize only proven context value:** SourceNodes, PolicyGate, broader
    collectors, and Evidence Mode do not precede the bounded value/trust gate.
-5. **Keep far capabilities coarse:** explainable Episodes/Threads, private
+6. **Keep far capabilities coarse:** explainable Episodes/Threads, private
    intelligence, sync, Windows, Android, and Full Context are visible but not
    scheduled before their preceding assumptions pass.
 
-## Next Goal Options
+## Committed Development Order
 
-| Option | User result | Size | Position |
-|--------|-------------|------|----------|
-| Operational Workspace convergence | Operational Reality supplies a structured day contract and subsequent starts without a competing free-text plan | Medium/Large | Leading integration candidate |
-| Bounded Context Capture Probe | One focus-scoped source tests automatic memory value with visible privacy controls and raw TTL | Medium/Large | Leading risk-reduction candidate |
-| Working Memory Bridge | A chronological thought/artifact stream, stages, and `action -> change` facts make long blocks causally legible | Medium | Leading evidence-quality candidate |
+| Order | Milestone | User result |
+|------:|-----------|-------------|
+| 1 | Operational Workspace convergence | One visible day contract and one justified next action drive morning entry, post-break return, and current focus without reconciling competing surfaces |
+| 2 | Working Memory Bridge | Thoughts, materials, stages, changes, and next actions remain usable across long work and multi-day returns without an external notebook |
+| 3 | Causal period review | Weekly and Track reviews foreground confirmed changes, decisions, unresolved commitments, and follow-up |
+| 4 | Bounded Context Capture Probe | One focus-scoped source proves or disproves automatic-context value under visible privacy and retention controls |
 
-Causal Work Spine + Operational Reality v1 is accepted, but no successor is
-silently committed. The next `/goal` discussion should choose one measurable
-user result and its real dogfood gate.
+Causal Work Spine + Operational Reality v1 is accepted. Twelve real workdays
+removed the former three-way ambiguity: workspace convergence is next because
+the largest observed cost is transition and representation reconciliation.
+The bounded automatic-context probe remains important, but it follows a
+coherent manual workspace and working-memory baseline.
 
 ## Roadmap Documents
 
 | Document | Level | Description |
 |----------|-------|-------------|
 | [../current-implementation.md](../current-implementation.md) | Current | What runs today |
+| [../dogfood-learnings.md](../dogfood-learnings.md) | Current | Cross-day evidence and the product conclusions that determine the route |
 | [opskarta.md](opskarta.md) | Current | opskarta v3 north-star capability map, horizons, assumptions, and risk gates |
 | [0001-mvp-execution-roadmap.md](0001-mvp-execution-roadmap.md) | Level 0 | Historical MVP execution plan, phases, and milestones |
 | [0002-level3-evidence-mode-roadmap.md](0002-level3-evidence-mode-roadmap.md) | Level 3 | Evidence-Mode (opt-in screen evidence) roadmap |

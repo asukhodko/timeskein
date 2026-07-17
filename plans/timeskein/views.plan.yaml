@@ -53,7 +53,7 @@ views:
     where:
       has_schedule: true
     window_start: "2026-06-30"
-    window_finish: "2026-07-18"
+    window_finish: "2026-07-31"
     date_format: YYYY-MM-DD
     axis_format: "%d.%m"
     lanes:
@@ -81,6 +81,14 @@ views:
           - ts.periodic_reflection.operational_reality
           - ts.steering.manual_correction
           - ts.steering.operational_reality_gate
+      operational-workspace:
+        title: Next operational workspace
+        nodes:
+          - ts.steering.workspace_day_contract
+          - ts.steering.workspace_primary_surface
+          - ts.steering.workspace_reentry
+          - ts.steering.workspace_explainability
+          - ts.steering.workspace_gate
 
 x:
   strategy:
@@ -88,11 +96,11 @@ x:
     planning_mode: backcasting-with-risk-gates
     horizons:
       now:
-        outcome: Establish the causal spine and prove explainable Operational Reality on real work.
+        outcome: Converge Operational Reality, the day contract, active focus, and inventory into one real-day start and re-entry loop.
       next:
-        outcome: Test bounded automatic context before committing to a SourceNode platform.
+        outcome: Replace the external working notebook, then carry confirmed causal change into period reviews.
       later:
-        outcome: Build explainable Episodes, private intelligence, multi-device continuity, and opt-in Full Context.
+        outcome: Test bounded automatic context, then build explainable Episodes, private intelligence, multi-device continuity, and opt-in Full Context.
     invariants:
       - Manual mode remains fully useful.
       - User-confirmed state and decisions are authoritative.
@@ -102,10 +110,10 @@ x:
       - Far work is not scheduled before its preceding risk gate passes.
   exec:
     program:
-      committed_date: "2026-07-16"
-      nearest_goal: Choose the first post-M1 result from Operational Workspace convergence, Working Memory Bridge, or Bounded Context Capture Probe.
-      success_by_next_sync: One successor has a bounded user result, explicit exclusions, and a real dogfood gate; the other candidates remain visible without accidental commitment.
-      note: Causal Work Spine and Operational Reality v1 passed real use on 15–16 July. Timeline integrity is hardened after the gate exposed a 9:05 overlap. The next decision is integration/evidence quality versus early automatic-context risk reduction.
+      committed_date: "2026-07-17"
+      nearest_goal: Operational Workspace convergence turns Operational Reality and the day contract into one visible, item-backed start and re-entry loop.
+      success_by_next_sync: The contract is built from real Work Items or Tracks, stays visible after start, and the primary screen no longer asks the user to reconcile dispatch, projection, and inventory.
+      note: Twelve dogfood days closed the former three-way choice. Transition and representation reconciliation are the observed bottleneck; Working Memory Bridge follows workspace acceptance, and the bounded context probe follows both manual layers.
     defaults:
       weight_strategy: effort_effective
       status_progress:
@@ -150,15 +158,36 @@ x:
         mgmt:
           health: green
           owner: a.sukhodko
-          sync_note: The manual causal spine, evidence chain, historical correction, and non-overlapping timeline baseline are accepted. Working Memory Bridge remains an optional next candidate; broader observation provenance belongs to the context probe.
+          sync_note: The manual causal spine, evidence chain, historical correction, and non-overlapping timeline baseline are accepted. Working Memory Bridge is committed after workspace convergence.
       current-steering:
-        title: Current-State Steering
+        title: Accepted Operational Reality
         scope_nodes:
-          - ts.steering
+          - ts.periodic_reflection.operational_reality
+          - ts.steering.manual_correction
+          - ts.steering.operational_reality_gate
+        target_gate: ts.steering.operational_reality_gate
+        progress_override: 1.0
         mgmt:
           health: green
           owner: a.sukhodko
-          sync_note: Operational Reality passed the 15–16 July real-use gate with 11 starts, persistent correction, Reflection follow-up, and a complete causal chain. Workspace convergence is the optional next integration candidate.
+          sync_note: Operational Reality passed the 15–16 July real-use gate with 11 starts, persistent correction, Reflection follow-up, and a complete causal chain.
+      operational-workspace:
+        title: Operational Workspace convergence
+        scope_nodes:
+          - ts.steering.workspace_convergence
+        target_gate: ts.steering.workspace_gate
+        mgmt:
+          health: yellow
+          owner: a.sukhodko
+          sync_note: Selected next. Build one visible item-backed day contract and one morning/post-break operational loop; keep inventory as a maintenance surface.
+      working-memory:
+        title: Working Memory Bridge
+        scope_nodes:
+          - ts.causal_memory.working_memory_bridge
+        mgmt:
+          health: neutral
+          owner: a.sukhodko
+          sync_note: Follows workspace acceptance. Replace the external notebook for chronological reasoning, materials, stages, and changed-state evidence.
       trust-controls:
         title: Trust and privacy controls
         scope_nodes:
@@ -176,7 +205,7 @@ x:
         mgmt:
           health: neutral
           owner: a.sukhodko
-          sync_note: Risk-first alternative candidate. Collect only during manual focus and decide from measured re-entry/evidence value.
+          sync_note: Run only after the operational workspace and working-memory bridge are coherent. Collect during manual focus and decide from measured re-entry/evidence value.
       context-fabric:
         title: Context Fabric
         scope_nodes:
@@ -229,10 +258,16 @@ x:
       - from: causal-memory
         to: current-steering
         type: required
+      - from: current-steering
+        to: operational-workspace
+        type: required
+      - from: operational-workspace
+        to: working-memory
+        type: required
       - from: architecture-gate
         to: trust-controls
         type: required
-      - from: causal-memory
+      - from: working-memory
         to: bounded-context-probe
         type: required
       - from: trust-controls
@@ -241,7 +276,7 @@ x:
       - from: bounded-context-probe
         to: context-fabric
         type: required
-      - from: current-steering
+      - from: working-memory
         to: private-intelligence
         type: required
       - from: context-fabric
@@ -269,6 +304,8 @@ x:
           - architecture-gate
           - causal-memory
           - current-steering
+          - operational-workspace
+          - working-memory
           - trust-controls
           - bounded-context-probe
           - context-fabric
@@ -283,12 +320,14 @@ x:
         show_owner: false
         wrap_title_lines: 2
         reduce_transitive_required_edges: true
-        caption: "The accepted manual foundation now includes Causal Work Spine and Operational Reality v1. The next decision is whether to converge the operational workspace, strengthen manual working memory, or test bounded automatic context before broader Context Fabric, private intelligence, continuity, and opt-in Full Context."
+        caption: "Twelve real workdays selected a concrete route: converge the operational workspace, close the manual working-memory gap, strengthen causal period review, and only then test bounded automatic context before broader Context Fabric, private intelligence, continuity, and opt-in Full Context."
       exec-active-tracks:
         blocks:
           - architecture-gate
           - causal-memory
           - current-steering
+          - operational-workspace
+          - working-memory
           - trust-controls
           - bounded-context-probe
         direction: TD

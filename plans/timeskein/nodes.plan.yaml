@@ -5,7 +5,7 @@ nodes:
     title: Timeskein
     kind: product
     status: in_progress
-    notes: Local-first causal work memory and steering system. The accepted manual foundation already covers daily control, in-day structure, arbitrary-period reflection, semantic Tracks/Labels, and evidence-backed Track stories. The strategic route now backcasts from Operational Reality, explainable context, private intelligence, multi-device continuity, and opt-in Evidence Mode.
+    notes: Local-first causal work memory and steering system. Twelve real workdays accepted daily control, in-day structure, period reflection, semantic Tracks/Labels, evidence-backed stories, the causal spine, and Operational Reality. The route now converges the operational workspace, closes the manual working-memory gap, promotes causal period review, and only then probes automatic context before broader intelligence, continuity, and opt-in Evidence Mode.
     x:
       ops:
         attention_class: overview
@@ -55,14 +55,14 @@ nodes:
     title: Add shared provenance and observation contracts
     kind: task
     parent: ts.causal_memory
-    status: in_progress
+    status: done
     effort: 3
     deps:
       - id: ts.causal_memory.architecture_gate
-    notes: "The manual causal slice now stores source/device, occurred/recorded time, schema version, confidence, correlation, and provenance. Sensitivity and derivation metadata remain for the future observation contract and bounded context probe."
+    notes: "Accepted for the manual causal slice: source/device, occurred/recorded time, schema version, confidence, correlation, and provenance are stored. Sensitivity and derivation metadata for machine observations belong to the future observation envelope, not to this completed gate."
     x:
       ops:
-        attention_class: now
+        attention_class: done
       strategy:
         horizon: now
         capability: causal-memory
@@ -133,10 +133,10 @@ nodes:
     kind: epic
     parent: ts.causal_memory
     status: planned
-    effort: 5
     deps:
       - id: ts.causal_memory.spine_gate
-    notes: "Candidate after M1. Provide a persistent chronological thought stream, a first-class artifact/material record, comfortable long-note review, optional Work Item stages, and explicit action -> change capture. Dogfood showed that long work can be well timed while its decisions and outcomes remain too thin."
+      - id: ts.steering.workspace_gate
+    notes: "Committed after Operational Workspace convergence. Provide a persistent chronological thought stream, first-class artifact/material records, comfortable long-note review, Work Item stages, semantic hygiene, and explicit action -> change capture. Dogfood showed that long work can be timed while its reasoning and outcomes remain split between Timeskein and an external notebook."
     x:
       ops:
         attention_class: next
@@ -146,6 +146,47 @@ nodes:
         architecture_layer: canonical
         success_signal: Long focus blocks leave enough structured change evidence to resume and review without an external notebook.
         privacy_class: mixed
+  ts.causal_memory.working_memory_stream:
+    title: Keep one chronological thought and material stream
+    kind: task
+    parent: ts.causal_memory.working_memory_bridge
+    status: planned
+    effort: 4
+    deps:
+      - id: ts.steering.workspace_gate
+    notes: Keep thoughts, questions, decisions, results, next actions, observations, and a first-class material/artifact kind visible with or without active focus. Preserve cheap capture and allow calm chronological review.
+    x:
+      ops:
+        attention_class: next
+      strategy:
+        horizon: next
+        capability: causal-memory
+        architecture_layer: canonical
+        success_signal: The user no longer needs an external scratchpad to see the reasoning and materials of one long work stream.
+        privacy_class: mixed
+  ts.causal_memory.working_memory_gate:
+    title: Working memory supports multi-day re-entry
+    kind: milestone
+    parent: ts.causal_memory.working_memory_bridge
+    status: planned
+    milestone: true
+    effort: 1
+    deps:
+      - id: ts.causal_memory.working_memory_stream
+      - id: ts.in_day_structure.rich_note_review
+      - id: ts.in_day_structure.work_item_stages
+      - id: ts.in_day_structure.visible_causality
+    notes: Accept only after a real long-running direction can be resumed after 1, 3, and 7 days from its Timeskein trace without reconstructing the work in an external notebook.
+    x:
+      ops:
+        attention_class: next
+      strategy:
+        horizon: next
+        capability: causal-memory
+        architecture_layer: control
+        success_signal: A multi-day return recovers reasoning, materials, changed state, and next action from Timeskein alone.
+        privacy_class: mixed
+        dogfood_gate: multi-day-working-memory
 
   ts.steering:
     title: Current-State Steering
@@ -207,19 +248,112 @@ nodes:
     kind: epic
     parent: ts.steering
     status: planned
-    effort: 5
     deps:
       - id: ts.steering.operational_reality_gate
-    notes: "Candidate after M1. Operational Reality should remain the source of truth; dispatching should choose 2–3 existing Work Items/Tracks from it into a visible day contract, and the full inventory should serve search, maintenance, deduplication, and hierarchy rather than compete for attention. Keep free text for why-now and parking rationale."
+    notes: "Selected next after twelve dogfood days. Operational Reality remains the state projection; dispatching selects 2–3 existing Work Items/Tracks into a visible and revisable day contract; active focus and the latest causal trace stay adjacent; the full inventory serves search and maintenance rather than competing for attention."
     x:
       ops:
-        attention_class: next
+        attention_class: now
       strategy:
-        horizon: next
+        horizon: now
         capability: steering
         architecture_layer: derived
         success_signal: The user can form and follow the day contract without maintaining three competing representations of current work.
         privacy_class: ordinary
+  ts.steering.workspace_day_contract:
+    title: Build a visible item-backed day contract
+    kind: task
+    parent: ts.steering.workspace_convergence
+    status: planned
+    effort: 3
+    deps:
+      - id: ts.steering.operational_reality_gate
+    notes: Replace the hidden free-text dispatch result with 2–3 selected Work Items or Tracks, one first action, explicit parked competitors, and one why-now statement. Keep the contract visible, revisable, and historically traceable after focus starts.
+    x:
+      ops:
+        attention_class: now
+      strategy:
+        horizon: now
+        capability: steering
+        architecture_layer: canonical
+        success_signal: The active set survives the first start and remains the reference point for later choices.
+        privacy_class: ordinary
+  ts.steering.workspace_primary_surface:
+    title: Make one primary operational surface
+    kind: task
+    parent: ts.steering.workspace_convergence
+    status: planned
+    effort: 4
+    deps:
+      - id: ts.steering.workspace_day_contract
+    notes: Combine current contract, Operational Reality grounds, active focus, next action, and latest changed-state evidence with progressive disclosure. Move full inventory, taxonomy, and deduplication into secondary maintenance flows.
+    x:
+      ops:
+        attention_class: now
+      strategy:
+        horizon: now
+        capability: steering
+        architecture_layer: derived
+        success_signal: The primary screen no longer asks the user to reconcile Operational Reality, dispatch, and inventory before acting.
+        privacy_class: ordinary
+  ts.steering.workspace_reentry:
+    title: Use the same loop for morning entry and re-entry
+    kind: task
+    parent: ts.steering.workspace_convergence
+    status: planned
+    effort: 3
+    deps:
+      - id: ts.steering.workspace_day_contract
+    notes: Morning entry, post-break coordination, meeting-tail processing, and return to a parked direction should all revise or reuse the same contract and record coordination time without creating a separate plan.
+    x:
+      ops:
+        attention_class: now
+      strategy:
+        horizon: now
+        capability: steering
+        architecture_layer: control
+        success_signal: A return after interruption reaches a justified next action without rebuilding the work set elsewhere.
+        privacy_class: ordinary
+  ts.steering.workspace_explainability:
+    title: Make workspace actions and review checks self-explanatory
+    kind: task
+    parent: ts.steering.workspace_convergence
+    status: planned
+    effort: 2
+    deps:
+      - id: ts.steering.workspace_primary_surface
+    notes: Use action labels that state their effect, explain counters and eligibility in place, and reveal maintenance details on demand. Preserve keyboard speed without relying on remembered dogfood instructions.
+    x:
+      ops:
+        attention_class: now
+      strategy:
+        horizon: now
+        capability: steering
+        architecture_layer: presentation
+        success_signal: The user can complete entry, correction, and day review without consulting an external instruction sheet.
+        privacy_class: ordinary
+  ts.steering.workspace_gate:
+    title: One operational workspace drives the real day
+    kind: milestone
+    parent: ts.steering.workspace_convergence
+    status: planned
+    milestone: true
+    effort: 1
+    deps:
+      - id: ts.steering.workspace_primary_surface
+      - id: ts.steering.workspace_reentry
+      - id: ts.steering.workspace_explainability
+    notes: Accept after at least three real days use one visible item-backed contract for morning entry and post-break return, preserve revisions, avoid an external active-work list, and keep the accepted tracking/correction/closure baseline green.
+    x:
+      ops:
+        attention_class: now
+      strategy:
+        horizon: now
+        capability: steering
+        architecture_layer: control
+        success_signal: Current focus, grounds, parking, state change, and next action are understandable in one workspace across a real day.
+        privacy_class: ordinary
+        dogfood_gate: operational-workspace-real-days
 
   ts.trust:
     title: Trust, Privacy, and Retention
@@ -229,7 +363,7 @@ nodes:
     notes: Cross-cutting control plane for source permissions, sensitivity, pause, purge, revocation, redaction, TTL, storage budget, and audit.
     x:
       ops:
-        attention_class: next
+        attention_class: later
       strategy:
         horizon: now-next
         capability: trust
@@ -248,9 +382,9 @@ nodes:
     notes: Before automatic observation, implement a visible indicator, pause, local-only storage, sensitivity, TTL, purge, and audit for the bounded source.
     x:
       ops:
-        attention_class: next
+        attention_class: later
       strategy:
-        horizon: next
+        horizon: later
         capability: trust
         architecture_layer: control
         success_signal: The bounded probe can be stopped and purged without hidden residue.
@@ -265,9 +399,9 @@ nodes:
     notes: Validate automatic context early through a bounded focus-scoped probe, then generalize only proven value into SourceNodes and explicit connectors.
     x:
       ops:
-        attention_class: next
+        attention_class: later
       strategy:
-        horizon: next
+        horizon: later
         capability: context
         architecture_layer: canonical
         success_signal: Context sources reduce re-entry cost while remaining explainable, optional, and revocable.
@@ -280,13 +414,14 @@ nodes:
     effort: 3
     deps:
       - id: ts.causal_memory.provenance_contract
+      - id: ts.causal_memory.working_memory_gate
       - id: ts.trust.minimum_policy_gate
     notes: Support one idempotent source with provenance, sensitivity, timestamps, correlation to an active Focus Session, and an explicit retention policy.
     x:
       ops:
-        attention_class: next
+        attention_class: later
       strategy:
-        horizon: next
+        horizon: later
         capability: context
         architecture_layer: canonical
         success_signal: One machine observation can be ingested, traced, corrected, and revoked.
@@ -302,9 +437,9 @@ nodes:
     notes: Collect only during a manually active Focus Session, start with one source, keep a visible indicator, cap raw TTL at 72 hours, distill refs/context, and compare re-entry and Track-review value against the manual trace.
     x:
       ops:
-        attention_class: next
+        attention_class: later
       strategy:
-        horizon: next
+        horizon: later
         capability: context
         architecture_layer: ephemeral
         assumption: Automatic context provides more re-entry or evidence value than noise and privacy cost.
@@ -322,9 +457,9 @@ nodes:
     notes: Decide whether to build Context Fabric, narrow the probe, or stop the branch. Code completion alone does not pass this gate.
     x:
       ops:
-        attention_class: next
+        attention_class: later
       strategy:
-        horizon: next
+        horizon: later
         capability: context
         architecture_layer: derived
         assumption: The user trusts the source and uses its distilled output.
@@ -412,9 +547,9 @@ nodes:
     notes: Stable UUIDs, device provenance, idempotent ingest, schema version, and separate observed/recorded time. Do not build Hub or CRDT yet.
     x:
       ops:
-        attention_class: next
+        attention_class: later
       strategy:
-        horizon: now-next
+        horizon: later
         capability: continuity
         architecture_layer: canonical
         success_signal: New data does not create an avoidable future sync migration.
@@ -997,11 +1132,12 @@ nodes:
   ts.in_day_structure.work_item_stages:
     title: Track stages inside a Work Item
     kind: task
-    parent: ts.causal_memory
+    parent: ts.causal_memory.working_memory_bridge
     status: planned
     effort: 5
     deps:
       - id: ts.in_day_structure.active_work_journal
+      - id: ts.steering.workspace_gate
     notes: "Allow a Work Item such as '1x1 + preparation + post-analysis' to have explicit stages. Focus blocks should optionally attach to a stage, reports should show time by stage, and stage changes should not require splitting the Work Item into fake separate tasks."
     x:
       ops:
@@ -1085,11 +1221,12 @@ nodes:
   ts.in_day_structure.rich_note_review:
     title: Review larger day and work notes calmly
     kind: task
-    parent: ts.causal_memory
+    parent: ts.causal_memory.working_memory_bridge
     status: planned
     effort: 3
     deps:
       - id: ts.in_day_structure.dogfood_gate
+      - id: ts.steering.workspace_gate
     notes: "Support larger multi-line notes as working artifacts, with comfortable view/edit/export. Dogfood through 2026-07-16 showed that a permanent chronological panel must remain useful even without active focus and should include an explicit artifact/material kind; the external notebook still wins on overview today."
     x:
       ops:
@@ -1127,11 +1264,12 @@ nodes:
   ts.in_day_structure.visible_causality:
     title: Make small action outcomes visible
     kind: task
-    parent: ts.causal_memory
+    parent: ts.causal_memory.working_memory_bridge
     status: planned
     effort: 3
     deps:
       - id: ts.causal_memory.transition_history
+      - id: ts.steering.workspace_gate
     notes: "Support the practice `I did X -> state changed as Y` after a focus block or during review. The 2026-07-09 dogfood day showed that loss of perceived causality raises entry cost: action feels too small against the scale of accumulated problems."
     x:
       ops:
@@ -1241,6 +1379,7 @@ nodes:
     effort: 3
     deps:
       - id: ts.causal_memory.spine_gate
+      - id: ts.causal_memory.working_memory_gate
       - id: ts.periodic_reflection.context_links
     notes: "Period reports already preserve typed evidence, but the accepted Operational Reality gate exposed a gap between the causal chain visible to the gate and the summary emphasis of ordinary weekly reports. Make confirmed changes, decisions, next actions, and unresolved commitments first-class period evidence."
     x:

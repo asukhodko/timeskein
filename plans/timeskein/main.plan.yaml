@@ -2,7 +2,7 @@ version: 3
 
 meta:
   id: timeskein
-  title: Timeskein causal work memory roadmap
+  title: Timeskein causal work memory and operational workspace roadmap
   effort_unit: focus-blocks
 
 statuses:

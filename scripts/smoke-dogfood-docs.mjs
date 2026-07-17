@@ -13,6 +13,7 @@ const checkedFiles = [
   "docs/dogfood-release-baseline.md",
   "docs/dogfood-periodic-report.md",
   "docs/dogfood-operational-reality.md",
+  "docs/dogfood-learnings.md",
   "docs/acceptance-causal-work-spine-v1.md",
   "docs/roadmap/README.md",
   "docs/roadmap/0003-periodic-reflection-roadmap.md",
@@ -83,14 +84,26 @@ for (const file of checkedFiles) {
     file === "docs/roadmap/README.md" &&
     (!text.includes("Keep the accepted manual foundation green") ||
       !text.includes("Use the accepted architecture gate") ||
-      !text.includes("Build on the accepted causal steering layer") ||
+      !text.includes("Converge the operational workspace") ||
+      !text.includes("Close the manual working-memory gap") ||
       !text.includes("Operational Workspace convergence") ||
       !text.includes("Bounded Context Capture Probe") ||
       !text.includes("Working Memory Bridge") ||
-      !text.includes("no successor is") ||
-      !text.includes("silently committed"))
+      !text.includes("Causal period review") ||
+      !text.includes("Twelve real workdays"))
   ) {
     failures.push(`${file}: roadmap README does not preserve the north-star product order`);
+  }
+  if (
+    file === "docs/dogfood-learnings.md" &&
+    (!text.includes("twelve real workdays") ||
+      !text.includes("The difficult part is usually the transition") ||
+      !text.includes("Operational Reality is the strongest new direction") ||
+      !text.includes("M2: Operational Workspace convergence") ||
+      !text.includes("M3: Working Memory Bridge") ||
+      !text.includes("M5: Bounded Context Capture Probe"))
+  ) {
+    failures.push(`${file}: cross-day findings or the evidence-derived route is missing`);
   }
   if (
     file === "docs/roadmap/0003-periodic-reflection-roadmap.md" &&
@@ -138,7 +151,10 @@ for (const file of checkedFiles) {
     file === "docs/roadmap/0005-causal-work-memory-roadmap.md" &&
     (!text.includes("## Северная звезда") ||
       !text.includes("M1. Causal Work Spine and Operational Reality v1") ||
-      !text.includes("M2. Bounded Context Capture Probe") ||
+      !text.includes("M2. Operational Workspace convergence") ||
+      !text.includes("M3. Working Memory Bridge") ||
+      !text.includes("M4. Causal Period Review") ||
+      !text.includes("M5. Bounded Context Capture Probe") ||
       !text.includes("## Риск-гейты") ||
       !text.includes("не переписывать всю базу на event sourcing"))
   ) {

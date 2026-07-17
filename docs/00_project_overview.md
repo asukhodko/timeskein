@@ -15,6 +15,7 @@
 - [ADR-0004: Ручная истина и производные выводы](adr/0004-user-truth-and-derived-inference.md)
 - [RFC-0009: Causal Work Memory and Operational Reality](rfc/0009-causal-work-memory-and-operational-reality.md)
 - [Roadmap 0005: Causal Work Memory](roadmap/0005-causal-work-memory-roadmap.md)
+- [Dogfood findings](dogfood-learnings.md)
 - [User Story: Ручной инвентарь](mvp/02_user_story_manual_inventory.md)
 - [Current Implementation](current-implementation.md)
 
@@ -22,7 +23,7 @@
 
 ## Текущее состояние реализации
 
-По состоянию на 2026-07-10 в репозитории есть рабочий baseline для:
+По состоянию на 2026-07-17 в репозитории есть рабочий baseline для:
 
 - browser development mode: React UI + mock server;
 - macOS desktop mode: Tauri `.app` со встроенным Rust agent;
@@ -32,10 +33,15 @@
 - произвольных периодических отчётов и сохраняемых Reflection Sessions;
 - Tracks/Labels с историческими снимками;
 - typed evidence и проверки последствий прежних решений Track.
+- append-only Causal Work Spine и принятой на двух реальных днях проекции
+  Operational Reality;
+- обнаружения пересекающихся исторических фокус-блоков без молчаливого
+  переписывания пользовательских данных.
 
 Windows packaging, Android, sync, SourceNodes, Context Capture и Evidence-Mode пока не реализованы.
 
-Актуальная техническая сводка живёт в [Current Implementation](current-implementation.md).
+Актуальная техническая сводка живёт в [Current Implementation](current-implementation.md),
+а выводы двенадцати рабочих дней — в [Dogfood findings](dogfood-learnings.md).
 
 ## Рабочее название и метафора
 
@@ -64,9 +70,10 @@ Manual-first слой является первым источником это�
 
 Маршрут строится обратным проектированием от дальней цели. Privacy,
 provenance, историческая честность и ручная коррекция проектируются до
-автоматического сбора. Сам риск автоматического контекста проверяется ранним
-bounded probe внутри ручного Focus Session, а полная SourceNode-платформа и
-Evidence Mode появляются только после доказанной пользы.
+автоматического сбора. Сначала Operational Reality, договор дня и ручная
+рабочая память сходятся в один понятный контур. Затем риск автоматического
+контекста проверяется bounded probe внутри ручного Focus Session, а полная
+SourceNode-платформа и Evidence Mode появляются только после доказанной пользы.
 
 См. [ADR-0004](adr/0004-user-truth-and-derived-inference.md),
 [RFC-0009](rfc/0009-causal-work-memory-and-operational-reality.md) и

@@ -154,3 +154,15 @@ schedule:
     ts.steering.operational_reality_gate:
       start: "2026-07-15"
       duration: 2d
+
+    ts.steering.workspace_day_contract:
+      start: "2026-07-17"
+      duration: 2d
+    ts.steering.workspace_primary_surface:
+      duration: 3d
+    ts.steering.workspace_reentry:
+      duration: 2d
+    ts.steering.workspace_explainability:
+      duration: 1d
+    ts.steering.workspace_gate:
+      start: "2026-07-29"

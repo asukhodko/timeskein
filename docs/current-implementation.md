@@ -2,9 +2,33 @@
 
 ## Status
 
-Last updated: 2026-07-16.
+Last updated: 2026-07-17.
 
 This document describes what the repository actually runs today. Target architecture and future plans remain in RFCs and roadmap documents.
+
+## Product Evidence and Current Boundary
+
+Twelve real workdays established that Timeskein is already a usable local
+replacement for a standalone focus timer. Daily tracking, corrections,
+captures, zones, period reports, semantic history, the causal spine, and
+Operational Reality all produced useful evidence on real work.
+
+The remaining product boundary is now clearer:
+
+- the main cost is choosing and resuming work after transitions, not keeping a
+  timer running once contact has been established;
+- Operational Reality, dispatching, the visible day contract, active focus,
+  and the full inventory still compete as separate representations;
+- Day and Work Item Events are reportable, but an external notebook remains
+  more comfortable for long chronological reasoning and materials;
+- duration is trustworthy only as evidence of contact, while confirmed change,
+  evidence, decision, and next action carry progress meaning;
+- automatic context collection remains unproven and is intentionally sequenced
+  after convergence of the manual operational workspace and working memory.
+
+The next planned product result is Operational Workspace convergence. See
+[Dogfood Findings](dogfood-learnings.md) and
+[Roadmap 0005](roadmap/0005-causal-work-memory-roadmap.md).
 
 ## Runtime Baseline
 
@@ -618,16 +642,23 @@ On multi-monitor macOS setups, the tray/status item is controlled by the system 
 ## Next Engineering Steps
 
 The semantic-history, evidence-backed Track story, Causal Work Spine, and
-Operational Reality v1 gates are accepted. The next goal has not been selected
-yet.
+Operational Reality v1 gates are accepted. Twelve dogfood days selected
+Operational Workspace convergence as the next milestone.
 
-Dogfood leaves three credible candidates: converge Operational Reality with the
-day contract and inventory; build a Working Memory Bridge for chronological
-thoughts, artifacts, stages, and explicit outcomes; or run the bounded Context
-Capture Probe to test whether automatic context improves re-entry enough to
-justify its privacy and noise cost. The choice should be made from the accepted
-M1 evidence rather than from architecture alone.
+The first slice replaces the hidden free-text dispatch result with a visible
+and revisable contract made from existing Work Items or Tracks. Operational
+Reality supplies current state and grounds; active focus and the latest causal
+change stay in the same primary workspace; the full inventory becomes a
+secondary search and maintenance surface. Morning entry and post-break re-entry
+reuse the same contract and preserve its revisions.
 
-After those gates, the planned capabilities are Context Fabric, explainable Episodes/Threads, in-app reflection and cited private intelligence, multi-device continuity, and opt-in Full Context. [Roadmap 0005](roadmap/0005-causal-work-memory-roadmap.md) and [RFC-0009](rfc/0009-causal-work-memory-and-operational-reality.md) are the current source of direction.
+The Working Memory Bridge follows that gate: chronological thoughts and
+materials, calm long-note review, stages, and explicit `action -> change`
+records should remove the remaining dependence on an external notebook. Causal
+period review follows working memory. The bounded Context Capture Probe then
+tests whether automatic context improves re-entry enough to justify its privacy
+and noise cost.
+
+After those gates, the planned capabilities are Context Fabric, explainable Episodes/Threads, in-app reflection and cited private intelligence, multi-device continuity, and opt-in Full Context. [Dogfood Findings](dogfood-learnings.md), [Roadmap 0005](roadmap/0005-causal-work-memory-roadmap.md), and [RFC-0009](rfc/0009-causal-work-memory-and-operational-reality.md) are the current source of direction.
 
 Navigation polish remains backlog work unless it blocks daily trust: mixed Cyrillic/Latin search normalization such as `sync` / `сynс`, light theme, and more reliable upper/lower panel resizing.

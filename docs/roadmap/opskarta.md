@@ -30,16 +30,17 @@ ones are explicit report-integrity blockers.
 Dogfood closed the former choice between integration, working-memory polish,
 and early automatic context. The committed order is now:
 
-1. converge Operational Reality, an item-backed day contract, active focus,
-   and inventory into one operational workspace;
+1. accept the implemented convergence of Operational Reality, an item-backed
+   day contract, active focus, and secondary inventory on three real days;
 2. replace the external working notebook with a chronological memory bridge;
 3. carry causal changes and commitments into period reviews;
 4. test one bounded automatic context source before building Context Fabric.
 
-The `current` view contains the accepted causal baseline and the scheduled
-Operational Workspace work. The `next` view contains manual working-memory and
-causal-review work. Automatic collection and later capabilities remain coarse
-and unscheduled until the manual gates pass.
+The Operational Workspace release candidate was implemented and automatically
+verified on 2026-07-17. The `current` view now contains the accepted causal
+baseline plus its three-day product gate. The `next` view contains manual
+working-memory and causal-review work. Automatic collection and later
+capabilities remain coarse and unscheduled until the manual gates pass.
 
 ## Executive view
 
@@ -68,7 +69,7 @@ flowchart LR
     class causal_memory exec_mgmt_green
     current_steering["Accepted<br/>Operational Reality<br/>100%<br/>веха 2026-07-15"]
     class current_steering exec_done
-    operational_workspace["Operational<br/>Workspace convergence<br/>0%<br/>веха 2026-07-29"]
+    operational_workspace["Operational<br/>Workspace convergence<br/>90%<br/>веха 2026-07-22"]
     class operational_workspace exec_mgmt_yellow
     style operational_workspace stroke:#111827,stroke-width:3px
     working_memory["Working<br/>Memory Bridge<br/>~0%"]
@@ -112,7 +113,7 @@ Twelve real workdays selected a concrete route: converge the operational workspa
 /usr/bin/env PYTHONPATH=../../tools/opskarta python3 -m specs.v3.tools.cli render tree ../../plans/timeskein/main.plan.yaml ../../plans/timeskein/nodes.plan.yaml ../../plans/timeskein/schedule.plan.yaml ../../plans/timeskein/execution.plan.yaml ../../plans/timeskein/views.plan.yaml --view north-star
 -->
 <!-- GENERATED:START -->
-└── Timeskein [in_progress] (284 focus-blocks) {79% cov:55%}
+└── Timeskein [in_progress] (284 focus-blocks) {86% cov:55%}
     ├── Causal Work Memory [in_progress] (29 focus-blocks) {38% cov:90%}
     │   ├── Build a chronological working-memory bridge [planned] (16 focus-blocks) {0% cov:31%}
     │   │   ├── Keep one chronological thought and material stream [planned] (4 focus-blocks)
@@ -129,14 +130,14 @@ Twelve real workdays selected a concrete route: converge the operational workspa
     │   ├── Explicit context capture and SourceNodes [planned] (13 focus-blocks)
     │   ├── Implement one source observation envelope [planned] (3 focus-blocks)
     │   └── Run a bounded active-app and browser-context probe [planned] (5 focus-blocks)
-    ├── Current-State Steering [in_progress] (22 focus-blocks) {41%}
+    ├── Current-State Steering [in_progress] (22 focus-blocks) {89%}
     │   ├── Confirm and correct operational state [done] (3 focus-blocks) {100%}
-    │   └── Converge Operational Reality, day contract, and inventory [planned] (13 focus-blocks) {0%}
-    │       ├── Build a visible item-backed day contract [planned] (3 focus-blocks) {0%}
-    │       ├── Make one primary operational surface [planned] (4 focus-blocks) {0%}
-    │       ├── Make workspace actions and review checks self-explanatory [planned] (2 focus-blocks) {0%}
+    │   └── Converge Operational Reality, day contract, and inventory [in_progress] (13 focus-blocks) {81%}
+    │       ├── Build a visible item-backed day contract [done] (3 focus-blocks) {100%}
+    │       ├── Make one primary operational surface [done] (4 focus-blocks) {100%}
+    │       ├── Make workspace actions and review checks self-explanatory [done] (2 focus-blocks) {100%}
     │       ├── One operational workspace drives the real day [planned] (1 focus-blocks) {0%}
-    │       └── Use the same loop for morning entry and re-entry [planned] (3 focus-blocks) {0%}
+    │       └── Use the same loop for morning entry and re-entry [in_progress] (3 focus-blocks) {50%}
     ├── Explainable Episodes and Private Intelligence [deferred] (27 focus-blocks)
     │   ├── Connect Episodes into semantic Threads [deferred] (8 focus-blocks)
     │   ├── Derive explainable work Episodes [deferred] (8 focus-blocks)
@@ -209,11 +210,11 @@ gantt
     ✅ Confirm and correct operational state  :done, ts_steering_manual_correction,    2026-07-10, 1d
     ✅ Operational Reality selects the next justified action  :milestone, done, ts_steering_operational_reality_gate,    2026-07-15, 0d
     section Next operational workspace
-    Build a visible item-backed day contract  :ts_steering_workspace_day_contract,    2026-07-17, 2d
-    Make one primary operational surface  :ts_steering_workspace_primary_surface,    2026-07-21, 3d
-    Use the same loop for morning entry and re-entry  :ts_steering_workspace_reentry,    2026-07-21, 2d
-    Make workspace actions and review checks self-explanatory  :ts_steering_workspace_explainability,    2026-07-24, 1d
-    One operational workspace drives the real day  :milestone, ts_steering_workspace_gate,    2026-07-29, 0d
+    ✅ Build a visible item-backed day contract  :done, ts_steering_workspace_day_contract,    2026-07-17, 1d
+    ✅ Make one primary operational surface  :done, ts_steering_workspace_primary_surface,    2026-07-17, 1d
+    🔄 Use the same loop for morning entry and re-entry  :active, ts_steering_workspace_reentry,    2026-07-20, 3d
+    ✅ Make workspace actions and review checks self-explanatory  :done, ts_steering_workspace_explainability,    2026-07-17, 1d
+    One operational workspace drives the real day  :milestone, ts_steering_workspace_gate,    2026-07-22, 0d
 ```
 
 ## Current work list
@@ -225,12 +226,9 @@ gantt
 -->
 <!-- GENERATED:START -->
 - Causal Work Memory [in_progress] (29 focus-blocks) {38% cov:90%}
-- Current-State Steering [in_progress] (22 focus-blocks) {41%}
-- Converge Operational Reality, day contract, and inventory [planned] (13 focus-blocks) {0%}
-- Build a visible item-backed day contract [planned] (3 focus-blocks) {0%}
-- Make one primary operational surface [planned] (4 focus-blocks) {0%}
-- Use the same loop for morning entry and re-entry [planned] (3 focus-blocks) {0%}
-- Make workspace actions and review checks self-explanatory [planned] (2 focus-blocks) {0%}
+- Current-State Steering [in_progress] (22 focus-blocks) {89%}
+- Converge Operational Reality, day contract, and inventory [in_progress] (13 focus-blocks) {81%}
+- Use the same loop for morning entry and re-entry [in_progress] (3 focus-blocks) {50%}
 - One operational workspace drives the real day [planned] (1 focus-blocks) {0%}
 <!-- GENERATED:END -->
 

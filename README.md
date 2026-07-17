@@ -23,7 +23,7 @@ background monitoring.
 | Evidence-backed Track story | Working baseline | Typed result/decision/blocker/next-step/observation events, immutable Ref snapshots, and decision follow-ups in Track retrospectives |
 | Causal Work Spine | Working baseline | Append-only intent, state, result, decision, next-action, confirmation, and correction records with provenance and semantic snapshots |
 | Operational Reality | Accepted baseline | Explainable current projection with unknowns, confidence, manual correction, Reflection follow-up, next-action lifecycle, JSON export, and a passed two-real-day gate |
-| Operational Workspace | Next milestone | One visible item-backed day contract and one morning/post-break start loop over Operational Reality, active focus, and inventory |
+| Operational Workspace | Release candidate | Item-backed day contract, immutable revisions, one primary steering surface, morning start, re-entry, export, telemetry, and executable gate; awaiting three real dogfood days |
 | North-star architecture | Implemented foundation | Causal Work Memory, user-truth boundaries, risk gates, bounded Context Probe, and long-horizon capability map are defined in ADR-0004, RFC-0009, Roadmap 0005, and opskarta |
 | Dogfood Telemetry | Working baseline | Local app-event journal and CLI metrics for tracking UX friction |
 | Mock Server | Working | Full API implementation for development |
@@ -37,11 +37,12 @@ Reality projection through the embedded Rust agent.
 
 **Current focus:** The manual day, period reflection, semantic history,
 evidence-backed Track story, and `Causal Work Spine + Operational Reality v1`
-are accepted. Twelve real workdays established the next order: first converge
-Operational Reality, the day contract, active focus, and inventory into one
-operational workspace; then close the working-memory gap; only then run a
-bounded automatic-context probe. Full SourceNodes, sync, private intelligence,
-and opt-in Evidence Mode remain later capabilities.
+are accepted. The Operational Workspace candidate now converges Operational
+Reality, an item-backed day contract, active focus, and the secondary inventory;
+three full real days remain before acceptance. Working Memory Bridge follows
+that gate, then causal period review and a bounded automatic-context probe.
+Full SourceNodes, sync, private intelligence, and opt-in Evidence Mode remain
+later capabilities.
 
 See [Current Implementation](docs/current-implementation.md) for the exact state of what runs today.
 Use [Dogfood Day Protocol](docs/dogfood-day.md) when testing Timeskein as a Session replacement for a real workday.
@@ -49,6 +50,7 @@ Use [Dogfood Release Candidate](docs/dogfood-release-candidate.md) as the eviden
 See [Dogfood Release Baseline](docs/dogfood-release-baseline.md) for the accepted 2026-07-03 verdict and known limitations.
 See [Periodic Report Dogfood](docs/dogfood-periodic-report.md) for the first real multi-day review and its limitations.
 See [Operational Reality Dogfood](docs/dogfood-operational-reality.md) for the accepted two-real-day evidence and reproducible protocol.
+Use [Operational Workspace Dogfood](docs/dogfood-operational-workspace.md) for the required three-real-day acceptance protocol and executable gate.
 See [Causal Work Spine Acceptance Audit](docs/acceptance-causal-work-spine-v1.md) for requirement-by-requirement implementation and real-use evidence.
 See [Dogfood Findings](docs/dogfood-learnings.md) for the product conclusions
 and route derived from twelve real workdays.
@@ -229,6 +231,35 @@ It passed with two days and 11 starts from the projection, real attention
 states, one explicit state correction followed by an app restart, three
 Reflection decision follow-ups, one causal chain from intent through a result
 with a Ref to a next action, and normal day closure on both days.
+
+### Operational Workspace
+
+`Рабочий контур` is now the primary steering surface. A morning contract selects
+2–3 existing Work Items or Tracks, one first-action Work Item, 1–3 parked
+competitors, and one `why now` statement. The saved contract remains visible
+after focus starts, shows Operational Reality grounds beside the selection,
+supports post-break re-entry, and records every adjustment as an append-only
+revision. The complete Work Item inventory is collapsed by default and remains
+available through `Дела` for search and maintenance.
+
+The browser mock and embedded Rust agent expose the same workspace, contract
+history, telemetry, and export behavior. Inspect a period of contracts with:
+
+```bash
+pnpm export:operational-workspace -- --from YYYY-MM-DD --to YYYY-MM-DD
+```
+
+After three full real days, run the acceptance gate with an exclusive upper
+date:
+
+```bash
+pnpm operational-workspace:gate -- --from YYYY-MM-DD --to YYYY-MM-DD
+```
+
+The exact daily protocol and interpretation boundary are in
+[Operational Workspace Dogfood](docs/dogfood-operational-workspace.md). Code,
+tests, macOS packaging, and the browser scenario are ready; the product result
+is deliberately not marked accepted before the real-use gate.
 
 Focus corrections cannot create overlapping stopped blocks. Existing
 historical overlaps block final day closure and appear as an explicit period
@@ -499,6 +530,7 @@ If macOS rejects all three, use the macOS menu bar item or normal app switching.
 - Work Item activity zones: work, coordination, recovery, idle, personal; focus blocks keep their own zone snapshot for report correction
 - One optional hierarchical Track and several optional Labels per Work Item; the `#` header action manages the taxonomy, while create/edit dialogs assign it without adding a mandatory start step
 - Explainable `Рабочая реальность` with active/waiting/blocked/parked/reactive/completed/stale-important/meeting-tail/unknown states, provenance, confidence, facts, unknowns, next actions, corrections, Track cards, captures, and Reflection follow-up
+- Persistent `Рабочий контур` with an item-backed 2–3-direction day contract, one first action, explicit parking, `why now`, immutable revision history, and one morning/re-entry path over Operational Reality and active focus
 - Append-only causal records keep `occurred_at` separate from `recorded_at`, preserve replaced assertions, and snapshot current Track/Labels for historical honesty
 - Focus blocks and Work Item Events keep immutable Track/Label snapshots; period reports distinguish captured history, legacy current-Work-Item inference, and `Unclassified` data
 - Work Item list shows Russian last-touched time like `5 мин назад` plus day/total tracked time when available
@@ -524,10 +556,11 @@ If macOS rejects all three, use the macOS menu bar item or normal app switching.
 - **Activity zone correction is basic** - new focus blocks snapshot the Work Item zone and stopped blocks can be corrected, but there is no bulk zone editor yet
 - **Semantic classification is intentionally optional** - unclassified work remains visible; old rows created before semantic snapshots are clearly reported as restored from the Work Item's current classification
 - **Taxonomy UI is minimal** - Tracks and Labels can be created, renamed, archived, and assigned, but there is no drag tree, bulk classifier, merge action, or automatic LLM classification
+- **Operational Workspace is not accepted yet** - the implementation and automated gate are ready, but three real full dogfood days, two post-break returns, and one honest contract revision are still required
 - **macOS window restore and menu bar counter are newly fixed** - the packaged app now avoids always-on-top/task-switcher hiding, handles macOS reopen, and updates the menu bar title from the native shell; 2026-07-06 and later dogfood days produced non-zero show/hide request telemetry, but further polish is still possible
 - **macOS packaging produces `.app` only** - DMG packaging is deferred
 - **Windows packaging deferred** - current recovery baseline targets browser and macOS first
-- **Automated e2e tests are not implemented yet** - current validation is manual smoke plus build/type checks
+- **Automated browser e2e tests are not implemented yet** - current validation combines Rust/API tests, mock parity, UI structure smoke, release build, packaged-app smoke, and manual browser inspection
 - **Operational Reality still has integration polish** - the accepted projection, dispatch ritual, and full inventory remain separate surfaces; Cmd+Tab restore, light theme, artifact events, and a chronological thought workspace are backlog items
 
 ## Documentation

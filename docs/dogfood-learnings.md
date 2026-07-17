@@ -139,11 +139,13 @@ the rest parked without pretending the backlog has disappeared.
 
 ### M2: Operational Workspace convergence
 
-Unify Operational Reality, the day contract, active focus, re-entry after a
-break, and the inventory boundary. The user should see one current working set,
-one justified next action, and one place to record what changed. Dispatching
-selects existing Work Items or Tracks instead of producing a hidden free-text
-plan. The complete inventory remains available for search and maintenance.
+The release candidate now unifies Operational Reality, the day contract,
+active focus, re-entry after a break, and the inventory boundary. The user sees
+one current working set and one justified next action; dispatching selects
+existing Work Items or Tracks instead of producing a hidden free-text plan.
+The complete inventory remains available for search and maintenance. This is
+an implemented hypothesis, not yet an accepted result: three full real days
+must show that the combined surface actually lowers transition cost.
 
 ### M3: Working Memory Bridge
 
@@ -179,6 +181,13 @@ show that:
   representations;
 - normal starting, switching, capture, correction, and day closure remain at
   least as reliable as the accepted baseline.
+
+The executable threshold is three contract/start/closure days, post-break
+re-entry on at least two days, and at least one honest saved contract revision.
+`pnpm operational-workspace:gate -- --from YYYY-MM-DD --to YYYY-MM-DD` checks
+the machine evidence; the user still confirms that no parallel external
+active-list was needed. The full protocol is in
+[Operational Workspace Dogfood](dogfood-operational-workspace.md).
 
 ## What the evidence does not prove
 

@@ -110,6 +110,18 @@ Reflection follow-up, полную причинную цепочку и `2/2` о
   конкурирующий главный экран;
 - история пересмотров договора без молчаливой перезаписи.
 
+Кандидат реализован 2026-07-17:
+
+- migration 013 хранит item-backed договор и append-only цепочку ревизий;
+- Rust API, TypeScript contracts и browser mock имеют одинаковый путь
+  `operational_workspace.get` / `day_contract.revise` / `day_contract.list`;
+- основной экран связывает договор, основания Operational Reality и активный
+  фокус, а полный инвентарь по умолчанию свёрнут;
+- утренний старт, возврат и пересмотр имеют отдельную телеметрию;
+- дневной отчёт и отдельный экспорт содержат историю версий;
+- строгий `operational-workspace:gate` проверяет три дня, два возврата,
+  ревизию, штатные закрытия, целостность истории и отсутствие регрессий.
+
 Gate:
 
 - несколько реальных дней проходят без внешнего списка для восстановления
@@ -120,7 +132,9 @@ Gate:
 - старт, capture, коррекция таймлайна и закрытие дня не регрессируют;
 - первичный экран больше не требует согласовывать три представления работы.
 
-Статус: **следующая запланированная веха.**
+Статус: **release candidate; ожидает трёх реальных dogfood-дней.** Код,
+автоматические тесты, браузерный сценарий, release build и packaged-app smoke
+пройдены. До зелёного gate веха остаётся `in_progress`.
 
 ## Горизонт Next
 
@@ -292,4 +306,5 @@ backlog соответствующих вех. Даты фактов и реда
 - [Roadmap 0003: Periodic Reflection](0003-periodic-reflection-roadmap.md)
 - [Roadmap 0004: In-Day Structure](0004-in-day-structure-roadmap.md)
 - [Dogfood findings](../dogfood-learnings.md)
+- [Operational Workspace dogfood](../dogfood-operational-workspace.md)
 - [opskarta](opskarta.md)

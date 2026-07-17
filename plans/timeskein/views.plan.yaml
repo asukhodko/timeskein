@@ -96,7 +96,7 @@ x:
     planning_mode: backcasting-with-risk-gates
     horizons:
       now:
-        outcome: Converge Operational Reality, the day contract, active focus, and inventory into one real-day start and re-entry loop.
+        outcome: Accept the implemented convergence of Operational Reality, day contract, active focus, and secondary inventory on three real days.
       next:
         outcome: Replace the external working notebook, then carry confirmed causal change into period reviews.
       later:
@@ -111,9 +111,9 @@ x:
   exec:
     program:
       committed_date: "2026-07-17"
-      nearest_goal: Operational Workspace convergence turns Operational Reality and the day contract into one visible, item-backed start and re-entry loop.
-      success_by_next_sync: The contract is built from real Work Items or Tracks, stays visible after start, and the primary screen no longer asks the user to reconcile dispatch, projection, and inventory.
-      note: Twelve dogfood days closed the former three-way choice. Transition and representation reconciliation are the observed bottleneck; Working Memory Bridge follows workspace acceptance, and the bounded context probe follows both manual layers.
+      nearest_goal: Accept the implemented Operational Workspace on three full real days with one item-backed morning and re-entry loop.
+      success_by_next_sync: Three contract/start/closure days, re-entry on two days, one honest revision, clean machine gate, and no external active-work list.
+      note: The release candidate passed tests, browser inspection, release build, and packaged-app smoke on 2026-07-17. Product acceptance remains intentionally open; Working Memory Bridge follows the real-use gate.
     defaults:
       weight_strategy: effort_effective
       status_progress:
@@ -179,7 +179,7 @@ x:
         mgmt:
           health: yellow
           owner: a.sukhodko
-          sync_note: Selected next. Build one visible item-backed day contract and one morning/post-break operational loop; keep inventory as a maintenance surface.
+          sync_note: Release candidate ready. Run the documented three-day protocol and strict gate; keep the inventory secondary and record whether any external active-list remains necessary.
       working-memory:
         title: Working Memory Bridge
         scope_nodes:

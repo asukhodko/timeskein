@@ -247,10 +247,10 @@ nodes:
     title: Converge Operational Reality, day contract, and inventory
     kind: epic
     parent: ts.steering
-    status: planned
+    status: in_progress
     deps:
       - id: ts.steering.operational_reality_gate
-    notes: "Selected next after twelve dogfood days. Operational Reality remains the state projection; dispatching selects 2–3 existing Work Items/Tracks into a visible and revisable day contract; active focus and the latest causal trace stay adjacent; the full inventory serves search and maintenance rather than competing for attention."
+    notes: "Release candidate implemented on 2026-07-17. Operational Reality remains the state projection; an item-backed 2–3-subject contract, first action, parking, why-now, active focus, and causal grounds now share one primary workspace. Full inventory is secondary. Acceptance still requires three full real days."
     x:
       ops:
         attention_class: now
@@ -264,11 +264,11 @@ nodes:
     title: Build a visible item-backed day contract
     kind: task
     parent: ts.steering.workspace_convergence
-    status: planned
+    status: done
     effort: 3
     deps:
       - id: ts.steering.operational_reality_gate
-    notes: Replace the hidden free-text dispatch result with 2–3 selected Work Items or Tracks, one first action, explicit parked competitors, and one why-now statement. Keep the contract visible, revisable, and historically traceable after focus starts.
+    notes: Migration 013, Rust API, shared contracts, browser mock, UI, reports, export, telemetry, and tests implement a visible 2–3-subject contract with first action, parking, why-now, and append-only revisions.
     x:
       ops:
         attention_class: now
@@ -282,11 +282,11 @@ nodes:
     title: Make one primary operational surface
     kind: task
     parent: ts.steering.workspace_convergence
-    status: planned
+    status: done
     effort: 4
     deps:
       - id: ts.steering.workspace_day_contract
-    notes: Combine current contract, Operational Reality grounds, active focus, next action, and latest changed-state evidence with progressive disclosure. Move full inventory, taxonomy, and deduplication into secondary maintenance flows.
+    notes: The primary Рабочий контур combines the current contract, Operational Reality grounds, and active focus. Inventory is collapsed by default and opened separately for search and maintenance; browser inspection and UI smoke passed.
     x:
       ops:
         attention_class: now
@@ -300,11 +300,11 @@ nodes:
     title: Use the same loop for morning entry and re-entry
     kind: task
     parent: ts.steering.workspace_convergence
-    status: planned
+    status: in_progress
     effort: 3
     deps:
       - id: ts.steering.workspace_day_contract
-    notes: Morning entry, post-break coordination, meeting-tail processing, and return to a parked direction should all revise or reuse the same contract and record coordination time without creating a separate plan.
+    notes: Morning, adjustment, and re-entry code paths reuse or append the same contract and emit dedicated telemetry. Real acceptance still requires re-entry on at least two of three full dogfood days.
     x:
       ops:
         attention_class: now
@@ -318,11 +318,11 @@ nodes:
     title: Make workspace actions and review checks self-explanatory
     kind: task
     parent: ts.steering.workspace_convergence
-    status: planned
+    status: done
     effort: 2
     deps:
       - id: ts.steering.workspace_primary_surface
-    notes: Use action labels that state their effect, explain counters and eligibility in place, and reveal maintenance details on demand. Preserve keyboard speed without relying on remembered dogfood instructions.
+    notes: Action labels state start, return, revision, maintenance, and history effects in place. The full three-day protocol is documented; candidate UI passed browser and structural smoke checks.
     x:
       ops:
         attention_class: now
@@ -343,7 +343,7 @@ nodes:
       - id: ts.steering.workspace_primary_surface
       - id: ts.steering.workspace_reentry
       - id: ts.steering.workspace_explainability
-    notes: Accept after at least three real days use one visible item-backed contract for morning entry and post-break return, preserve revisions, avoid an external active-work list, and keep the accepted tracking/correction/closure baseline green.
+    notes: Candidate ready. Accept only after `pnpm operational-workspace:gate` sees three contract/start/closure days, re-entry on two days, one honest revision, clean chains and no regressions, plus a manual verdict that no external active-work list was needed.
     x:
       ops:
         attention_class: now

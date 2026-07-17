@@ -13,6 +13,7 @@ const checkedFiles = [
   "docs/dogfood-release-baseline.md",
   "docs/dogfood-periodic-report.md",
   "docs/dogfood-operational-reality.md",
+  "docs/dogfood-operational-workspace.md",
   "docs/dogfood-learnings.md",
   "docs/acceptance-causal-work-spine-v1.md",
   "docs/roadmap/README.md",
@@ -75,16 +76,32 @@ for (const file of checkedFiles) {
     failures.push(`${file}: period report/reflection command or interpretation boundary is missing`);
   }
   if (
+    file === "README.md" &&
+    (!text.includes("Operational Workspace | Release candidate") ||
+      !text.includes("pnpm operational-workspace:gate") ||
+      !text.includes("pnpm export:operational-workspace"))
+  ) {
+    failures.push(`${file}: Operational Workspace candidate, gate, or export is missing`);
+  }
+  if (
     file === "docs/current-implementation.md" &&
     (!text.includes("## Period Reports") || !text.includes("pnpm smoke:period-report"))
   ) {
     failures.push(`${file}: current period report implementation or smoke coverage is missing`);
   }
   if (
+    file === "docs/current-implementation.md" &&
+    (!text.includes("## Operational Workspace") ||
+      !text.includes("day_contract_revisions") ||
+      !text.includes("three-real-day protocol"))
+  ) {
+    failures.push(`${file}: current Operational Workspace implementation or acceptance boundary is missing`);
+  }
+  if (
     file === "docs/roadmap/README.md" &&
     (!text.includes("Keep the accepted manual foundation green") ||
       !text.includes("Use the accepted architecture gate") ||
-      !text.includes("Converge the operational workspace") ||
+      !text.includes("Accept the operational workspace candidate") ||
       !text.includes("Close the manual working-memory gap") ||
       !text.includes("Operational Workspace convergence") ||
       !text.includes("Bounded Context Capture Probe") ||
@@ -95,11 +112,21 @@ for (const file of checkedFiles) {
     failures.push(`${file}: roadmap README does not preserve the north-star product order`);
   }
   if (
+    file === "docs/dogfood-operational-workspace.md" &&
+    (!text.includes("три полных реальных рабочих дня") ||
+      !text.includes("Вернуться по договору") ||
+      !text.includes("pnpm operational-workspace:gate") ||
+      !text.includes("внешний active-list"))
+  ) {
+    failures.push(`${file}: Operational Workspace real-use protocol or manual boundary is missing`);
+  }
+  if (
     file === "docs/dogfood-learnings.md" &&
     (!text.includes("twelve real workdays") ||
       !text.includes("The difficult part is usually the transition") ||
       !text.includes("Operational Reality is the strongest new direction") ||
       !text.includes("M2: Operational Workspace convergence") ||
+      !text.includes("release candidate now unifies") ||
       !text.includes("M3: Working Memory Bridge") ||
       !text.includes("M5: Bounded Context Capture Probe"))
   ) {
@@ -155,6 +182,7 @@ for (const file of checkedFiles) {
       !text.includes("M3. Working Memory Bridge") ||
       !text.includes("M4. Causal Period Review") ||
       !text.includes("M5. Bounded Context Capture Probe") ||
+      !text.includes("release candidate; ожидает трёх реальных dogfood-дней") ||
       !text.includes("## Риск-гейты") ||
       !text.includes("не переписывать всю базу на event sourcing"))
   ) {

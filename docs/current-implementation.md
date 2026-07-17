@@ -17,8 +17,8 @@ The remaining product boundary is now clearer:
 
 - the main cost is choosing and resuming work after transitions, not keeping a
   timer running once contact has been established;
-- Operational Reality, dispatching, the visible day contract, active focus,
-  and the full inventory still compete as separate representations;
+- the new Operational Workspace removes the former UI split, but its effect on
+  three complete real days and post-break returns is not accepted yet;
 - Day and Work Item Events are reportable, but an external notebook remains
   more comfortable for long chronological reasoning and materials;
 - duration is trustworthy only as evidence of contact, while confirmed change,
@@ -26,8 +26,10 @@ The remaining product boundary is now clearer:
 - automatic context collection remains unproven and is intentionally sequenced
   after convergence of the manual operational workspace and working memory.
 
-The next planned product result is Operational Workspace convergence. See
-[Dogfood Findings](dogfood-learnings.md) and
+The current product result is the Operational Workspace release candidate.
+Implementation and automated acceptance checks are complete; three full real
+days remain. See [Operational Workspace Dogfood](dogfood-operational-workspace.md),
+[Dogfood Findings](dogfood-learnings.md), and
 [Roadmap 0005](roadmap/0005-causal-work-memory-roadmap.md).
 
 ## Runtime Baseline
@@ -126,6 +128,9 @@ pnpm smoke:capture-api
 pnpm smoke:day-events-api
 pnpm smoke:semantic-api
 pnpm smoke:operational-reality-api
+pnpm smoke:operational-workspace-api
+pnpm smoke:operational-workspace-gate
+pnpm smoke:operational-workspace-ui
 pnpm smoke:mock-api
 pnpm --filter @timeskein/desktop build
 pnpm smoke:macos-app
@@ -161,6 +166,7 @@ Runtime smoke on macOS:
 - `pnpm smoke:macos-app` also verifies Capture Inbox create/update/delete/resolve/convert/append-event while ensuring capture actions do not interrupt the active focus session
 - `pnpm smoke:macos-app` also verifies Work Item Event add/update/delete/list against the packaged SQLite-backed app
 - `pnpm smoke:macos-app` also verifies typed result capture with a newly created Ref snapshot and proves that the action does not interrupt the packaged app's active focus session; `TIMESKEIN_APP_BINARY` can point the smoke at an isolated bundle
+- `pnpm smoke:macos-app` also creates and re-reads a real day contract through the packaged Rust agent, while the dedicated workspace smoke tests cover validation, immutable revision chains, mock parity, gate success/failure fixtures, and primary/secondary UI boundaries
 - `pnpm smoke:macos-app` also verifies Day Event add/update/delete/list against the packaged SQLite-backed app while ensuring day notes do not interrupt the active focus session
 - `pnpm smoke:macos-app` also verifies startup normalization of legacy active Work Items, orphan active focus sessions, stale `agent.lock` / `agent.port` recovery, and migration of older `app_events` kind constraints
 - `pnpm smoke:export-focus-day` verifies the Russian fallback Markdown export, the raw `--internal` format used by scripts, Day Events, Work Item notes, timestamped Work Item Events for touched items, and legacy focus-session schemas without Activity Zone columns, against temporary SQLite databases
@@ -489,6 +495,48 @@ include a date when they are not from today. `Enter` consistently opens the Work
 Item editor; URL refs are separate actions rather than an alternative meaning
 of the same key.
 
+## Operational Workspace
+
+Migration `013_operational_workspace.sql` adds append-only
+`day_contract_revisions`. Every version snapshots its active Work Items or
+Tracks, one first-action Work Item, parked competitors, `why now`, source,
+provenance, creation time, and the revision it supersedes. A contract requires
+2–3 active subjects and 1–3 parked subjects without duplicates or overlap. The
+first action must be an active Work Item or belong to an active Track. Morning,
+adjustment, and re-entry revisions form a validated chain; later title or Track
+changes do not rewrite an earlier snapshot.
+
+The Rust agent and browser mock expose matching APIs:
+
+- `operational_workspace.get` returns the current contract, its history,
+  Operational Reality, attention queue, current focus, and inventory fallback;
+- `day_contract.revise` appends a validated morning, adjustment, or re-entry
+  version;
+- `day_contract.list` returns immutable revisions for an arbitrary date range.
+
+The React `Рабочий контур` is mounted above the ordinary focus/day controls. It
+keeps the current contract visible after start, places Operational Reality
+grounds beside the selected direction, starts the first action, supports
+`Вернуться по договору` and honest post-break revision, and exposes history on
+demand. The old free-text dispatch form is removed from the primary path. The
+full inventory is collapsed by default, persists its disclosure choice, and is
+opened through `Дела` for search and maintenance.
+
+Telemetry records contract creation, revision, requested/successful/failed
+start, and reviewed re-entry without storing free-form contract text in event
+payloads. `pnpm export:operational-workspace` exports exact contract history;
+day reports include all versions for the selected date. The strict
+`pnpm operational-workspace:gate` verifies three contract/start/closure days,
+re-entry on two days, at least one revised day, revision-chain integrity, no
+API/start/stop/copy failures, no overlapping focus blocks, and no starts through
+the retired text dispatch path.
+
+The candidate passed TypeScript and Rust checks, unit/API/mock tests, report and
+gate fixtures, a browser interaction scenario, release `.app` build, and the
+packaged-app smoke path. Product acceptance remains pending until the
+three-real-day protocol in
+[Operational Workspace Dogfood](dogfood-operational-workspace.md) passes.
+
 ## Dogfood Findings
 
 The 2026-07-01, 2026-07-02, and 2026-07-03 dogfood days showed that the core timer loop works, and that Capture Inbox can preserve incoming events without switching away from the current focus. The first post-baseline slice added post-factum correction, entry/window fixes, Day Events, Work Item Events, Activity Zones, explicit Work Item time review evidence, and strict report evidence. The 2026-07-06 dogfood day produced a strong daily-control trace in real use: 7:30:36 tracked, 19 entrances, Activity Zones, Day Events, Work Item Events, Capture Inbox conversion, Work Item day/total time evidence, and zero API/copy/start-stop failures. The 2026-07-07 dogfood day produced useful in-day structure evidence: zones, day events, Work Item events, and a clear long post-break loss of manageability. The 2026-07-08 dogfood day closed the daily-control goal: final saved evidence was clean, measured evening closure took 2:32, and strict `pnpm dogfood:goal-check -- --date 2026-07-08 --no-codex-guidance` passed after `pnpm test`, `pnpm dogfood:preflight`, and strict RC evidence. The 2026-07-09 dogfood day proved the first in-day structure layer on a harder day: 4:31:02 tracked, 13 entrances, 15 Day Events, 12 Work Item Events, four explained recovery gaps, no app/API/copy/start-stop failures, and a final saved report. Strict `pnpm dogfood:goal-check -- --date 2026-07-09 --no-codex-guidance` passed. The same day exposed three follow-up fixes: dispatch wording needed examples, free day thoughts needed an input even without active focus, and gap explanations needed tolerance when an open gap closed a minute later. The first real period report then reviewed 1–9 July as one dataset: 39:53:26 tracked, 105 entrances, 28 Day Events, 16 contextual Work Item Events, 5 captures, and 19 significant gaps. It exposed nine old unexplained gaps, sparse-context days, mixed zones, broad Work Items, and the limits of selecting future focus without semantic completion state.
@@ -627,7 +675,7 @@ On multi-monitor macOS setups, the tray/status item is controlled by the system 
 - Work Item notes are included in day reports for touched items, but they remain mutable descriptions rather than dated observations.
 - macOS window restore and menu bar status refresh have one real dogfood pass with show/hide request telemetry. Further polish is still possible, but the daily-control gate no longer treats this as unproven.
 - Activity Zones have per-focus-block snapshots and overrides; there is no bulk zone correction UI yet.
-- Automated e2e tests are not implemented yet.
+- Automated browser e2e tests are not implemented yet; UI structure, API parity, packaged-app behavior, and a manual browser scenario are covered.
 - Cross-platform CI is not implemented yet.
 - Settings UI is not implemented yet.
 - Agent lifecycle is minimal: embedded startup works, but production-grade diagnostics/restart handling are not done.
@@ -635,22 +683,18 @@ On multi-monitor macOS setups, the tray/status item is controlled by the system 
 - A hidden macOS window still cannot reliably be restored through `Cmd+Tab`; the menu-bar item remains the dependable entrypoint.
 - The UI is dark-only. A light theme remains planned polish.
 - The journal lacks a dedicated `artifact/material` evidence kind and a permanent chronological thought workspace.
-- Dispatching and Operational Reality are both useful but still separate: dispatching uses free text rather than selecting Work Items/Tracks from the projection.
+- Operational Workspace has not yet passed its three-real-day gate; the code candidate is complete, but its transition and re-entry benefit remains a product hypothesis until dogfood acceptance.
 - Reflection follow-up is shown only for points with an unresolved review decision; the UI does not yet explain this eligibility or re-open the latest saved follow-up.
 - Gap explanations are stored as Day Events and can still produce competing classifications instead of a single corrected gap entity.
 
 ## Next Engineering Steps
 
 The semantic-history, evidence-backed Track story, Causal Work Spine, and
-Operational Reality v1 gates are accepted. Twelve dogfood days selected
-Operational Workspace convergence as the next milestone.
-
-The first slice replaces the hidden free-text dispatch result with a visible
-and revisable contract made from existing Work Items or Tracks. Operational
-Reality supplies current state and grounds; active focus and the latest causal
-change stay in the same primary workspace; the full inventory becomes a
-secondary search and maintenance surface. Morning entry and post-break re-entry
-reuse the same contract and preserve its revisions.
+Operational Reality v1 gates are accepted. The Operational Workspace code
+candidate is complete. The immediate engineering task is to keep this build
+unchanged through three full real days, collect morning/start/re-entry/revision
+and closure evidence, run `pnpm operational-workspace:gate`, and record the
+manual verdict about external active-list use and representation reconciliation.
 
 The Working Memory Bridge follows that gate: chronological thoughts and
 materials, calm long-note review, stages, and explicit `action -> change`

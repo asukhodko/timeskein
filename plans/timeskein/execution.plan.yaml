@@ -436,35 +436,43 @@ execution:
       confidence: 0.95
       note: "Accepted. `operational-reality:gate -- --from 2026-07-15 --to 2026-07-17` passed: 2/2 days, 11/3 projection starts, meeting-tail/stale-important/waiting/reactive states, 1/1 correction plus restart, 3/1 Reflection follow-ups, 1/1 causal chain, and 2/2 normal closures."
     ts.steering.workspace_convergence:
-      progress: 0.0
-      updated_at: "2026-07-17T09:30:00+03:00"
+      progress: 0.8
+      actual_start: "2026-07-17"
+      updated_at: "2026-07-17T10:55:00+03:00"
       confidence: 0.9
-      note: "Selected as the next milestone after twelve dogfood days. The observed bottleneck is transition and reconciliation between Operational Reality, dispatching, the hidden day choice, active focus, and inventory; automatic context remains after this manual loop and the working-memory bridge."
+      note: "Release candidate implemented and automatically verified. Item-backed contract, one primary workspace, secondary inventory, re-entry path, telemetry, export, and strict gate are ready. Product acceptance remains open until three real days and the manual no-external-active-list verdict."
     ts.steering.workspace_day_contract:
-      progress: 0.0
-      updated_at: "2026-07-17T09:30:00+03:00"
-      confidence: 0.9
-      note: "Planned first slice: select actual Work Items or Tracks into a visible and revisable 2–3-direction contract with one first action, parking, and why-now."
+      progress: 1.0
+      actual_start: "2026-07-17"
+      actual_finish: "2026-07-17"
+      updated_at: "2026-07-17T10:55:00+03:00"
+      confidence: 0.95
+      note: "Done. Migration 013, Rust API, shared contracts, browser mock, UI, day report, range export, telemetry, immutable revision test, and packaged-app smoke cover the item-backed contract."
     ts.steering.workspace_primary_surface:
-      progress: 0.0
-      updated_at: "2026-07-17T09:30:00+03:00"
-      confidence: 0.8
-      note: "Planned after the item-backed contract. The full inventory remains available for maintenance but stops competing with current-state steering on the primary attention path."
-    ts.steering.workspace_reentry:
-      progress: 0.0
-      updated_at: "2026-07-17T09:30:00+03:00"
-      confidence: 0.85
-      note: "Planned to use one contract for morning entry, post-break coordination, meeting tails, and returns to parked work."
-    ts.steering.workspace_explainability:
-      progress: 0.0
-      updated_at: "2026-07-17T09:30:00+03:00"
+      progress: 1.0
+      actual_start: "2026-07-17"
+      actual_finish: "2026-07-17"
+      updated_at: "2026-07-17T10:55:00+03:00"
       confidence: 0.9
-      note: "Planned to remove dogfood-only instruction dependence by making action effects, review counts, and state eligibility understandable in place."
+      note: "Done. Рабочий контур keeps contract, Operational Reality grounds, and active focus together; the full inventory is collapsed by default and remains a secondary maintenance surface. Browser and UI smoke passed."
+    ts.steering.workspace_reentry:
+      progress: 0.5
+      actual_start: "2026-07-17"
+      updated_at: "2026-07-17T10:55:00+03:00"
+      confidence: 0.85
+      note: "Implemented morning, adjustment, direct return, and post-break revision paths with dedicated telemetry. Awaiting re-entry evidence on at least two of three real days."
+    ts.steering.workspace_explainability:
+      progress: 1.0
+      actual_start: "2026-07-17"
+      actual_finish: "2026-07-17"
+      updated_at: "2026-07-17T10:55:00+03:00"
+      confidence: 0.9
+      note: "Done for v1. Actions name start, return, revision, history, and inventory effects; the exact real-use boundary is documented in the three-day dogfood protocol."
     ts.steering.workspace_gate:
       progress: 0.0
-      updated_at: "2026-07-17T09:30:00+03:00"
-      confidence: 0.8
-      note: "Requires at least three real days with a persistent item-backed contract, morning and post-break use, preserved revisions, no external active-work list, and no regression of tracking, correction, or closure."
+      updated_at: "2026-07-17T10:55:00+03:00"
+      confidence: 0.9
+      note: "Executable gate and fixtures are ready. Requires three contract/start/closure days, re-entry on two days, one honest revision, clean chains, no errors/overlaps/shadow dispatch starts, and a manual no-external-active-list verdict."
     ts.causal_memory.working_memory_bridge:
       progress: 0.0
       updated_at: "2026-07-17T09:30:00+03:00"

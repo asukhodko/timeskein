@@ -17,8 +17,9 @@ action. Work is ordered by user value and early risk reduction.
 2. **Use the accepted architecture gate:** ADR-0004, RFC-0009, Roadmap 0005,
    and opskarta define user truth, observations, derived inference, ephemeral
    artifacts, provenance, horizons, and dogfood gates.
-3. **Converge the operational workspace:** Operational Reality, the day
-   contract, active focus, and inventory become one coherent start/resume loop.
+3. **Accept the operational workspace candidate:** Operational Reality, the day
+   contract, active focus, and inventory are implemented as one coherent
+   start/resume loop; three full real days must now prove the product result.
 4. **Close the manual working-memory gap:** thoughts, materials, stages, state
    changes, and next actions remain usable without an external notebook.
 5. **Generalize only proven context value:** SourceNodes, PolicyGate, broader
@@ -31,16 +32,17 @@ action. Work is ordered by user value and early risk reduction.
 
 | Order | Milestone | User result |
 |------:|-----------|-------------|
-| 1 | Operational Workspace convergence | One visible day contract and one justified next action drive morning entry, post-break return, and current focus without reconciling competing surfaces |
+| 1 | Operational Workspace convergence | Release candidate ready; accept after one visible day contract and one justified next action drive three real days without reconciling competing surfaces |
 | 2 | Working Memory Bridge | Thoughts, materials, stages, changes, and next actions remain usable across long work and multi-day returns without an external notebook |
 | 3 | Causal period review | Weekly and Track reviews foreground confirmed changes, decisions, unresolved commitments, and follow-up |
 | 4 | Bounded Context Capture Probe | One focus-scoped source proves or disproves automatic-context value under visible privacy and retention controls |
 
 Causal Work Spine + Operational Reality v1 is accepted. Twelve real workdays
-removed the former three-way ambiguity: workspace convergence is next because
-the largest observed cost is transition and representation reconciliation.
-The bounded automatic-context probe remains important, but it follows a
-coherent manual workspace and working-memory baseline.
+removed the former three-way ambiguity, and the Operational Workspace
+implementation now embodies the selected route. Its code candidate passed
+tests, browser inspection, and packaged-app smoke; the three-day real-use gate
+is still open. The bounded automatic-context probe remains important, but it
+follows an accepted manual workspace and working-memory baseline.
 
 ## Roadmap Documents
 

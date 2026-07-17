@@ -16,6 +16,7 @@
 - [RFC-0009: Causal Work Memory and Operational Reality](rfc/0009-causal-work-memory-and-operational-reality.md)
 - [Roadmap 0005: Causal Work Memory](roadmap/0005-causal-work-memory-roadmap.md)
 - [Dogfood findings](dogfood-learnings.md)
+- [Operational Workspace dogfood](dogfood-operational-workspace.md)
 - [User Story: Ручной инвентарь](mvp/02_user_story_manual_inventory.md)
 - [Current Implementation](current-implementation.md)
 
@@ -35,6 +36,8 @@
 - typed evidence и проверки последствий прежних решений Track.
 - append-only Causal Work Spine и принятой на двух реальных днях проекции
   Operational Reality;
+- release candidate Operational Workspace: item-backed договор дня, единый
+  рабочий контур, история ревизий и строгий трёхдневный gate;
 - обнаружения пересекающихся исторических фокус-блоков без молчаливого
   переписывания пользовательских данных.
 
@@ -70,9 +73,10 @@ Manual-first слой является первым источником это�
 
 Маршрут строится обратным проектированием от дальней цели. Privacy,
 provenance, историческая честность и ручная коррекция проектируются до
-автоматического сбора. Сначала Operational Reality, договор дня и ручная
-рабочая память сходятся в один понятный контур. Затем риск автоматического
-контекста проверяется bounded probe внутри ручного Focus Session, а полная
+автоматического сбора. Operational Reality и договор дня уже сведены в
+кандидат единого рабочего контура; теперь его нужно принять на трёх реальных
+днях, после чего ручная рабочая память закроет внешний блокнот. Затем риск
+автоматического контекста проверяется bounded probe внутри ручного Focus Session, а полная
 SourceNode-платформа и Evidence Mode появляются только после доказанной пользы.
 
 См. [ADR-0004](adr/0004-user-truth-and-derived-inference.md),

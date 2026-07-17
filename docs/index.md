@@ -39,17 +39,18 @@ The system answers questions like:
 5. **[Dogfood Release Baseline](dogfood-release-baseline.md)** - Accepted 2026-07-03 dogfood baseline and known limitations
 6. **[Periodic Report Dogfood](dogfood-periodic-report.md)** - First real multi-day report and evidence for the P0 periodic-reflection slice
 7. **[Operational Reality Dogfood](dogfood-operational-reality.md)** - Accepted two-day evidence, protocol, and executable gate
-8. **[Causal Work Spine Acceptance Audit](acceptance-causal-work-spine-v1.md)** - Requirement-by-requirement implementation and real-use evidence
-9. **[Dogfood Findings](dogfood-learnings.md)** - Product conclusions and development order derived from twelve real workdays
-10. **[Glossary](glossary.md)** - Definitions of all terms used
-11. **[Architecture Decision Records](adr/README.md)** - Key architectural choices
-12. **[Technical Specifications (RFC)](rfc/README.md)** - Detailed technical designs
-13. **[MVP User Stories](mvp/README.md)** - Features and acceptance criteria
-14. **[Causal Work Memory Roadmap](roadmap/0005-causal-work-memory-roadmap.md)** - Current north-star route, horizons, assumptions, and risk gates
-15. **[opskarta Roadmap](roadmap/opskarta.md)** - Current machine-checkable capability map
-16. **[In-Day Structure Roadmap](roadmap/0004-in-day-structure-roadmap.md)** - Accepted in-day thoughts, zone visibility, dispatching, and gap classification layer
-17. **[Periodic Reflection Roadmap](roadmap/0003-periodic-reflection-roadmap.md)** - Accepted period reports, semantic history, evidence, and reflection loop
-18. **[Roadmap Index](roadmap/README.md)** - Roadmap status and related links
+8. **[Operational Workspace Dogfood](dogfood-operational-workspace.md)** - Required three-day acceptance protocol for the current release candidate
+9. **[Causal Work Spine Acceptance Audit](acceptance-causal-work-spine-v1.md)** - Requirement-by-requirement implementation and real-use evidence
+10. **[Dogfood Findings](dogfood-learnings.md)** - Product conclusions and development order derived from twelve real workdays
+11. **[Glossary](glossary.md)** - Definitions of all terms used
+12. **[Architecture Decision Records](adr/README.md)** - Key architectural choices
+13. **[Technical Specifications (RFC)](rfc/README.md)** - Detailed technical designs
+14. **[MVP User Stories](mvp/README.md)** - Features and acceptance criteria
+15. **[Causal Work Memory Roadmap](roadmap/0005-causal-work-memory-roadmap.md)** - Current north-star route, horizons, assumptions, and risk gates
+16. **[opskarta Roadmap](roadmap/opskarta.md)** - Current machine-checkable capability map
+17. **[In-Day Structure Roadmap](roadmap/0004-in-day-structure-roadmap.md)** - Accepted in-day thoughts, zone visibility, dispatching, and gap classification layer
+18. **[Periodic Reflection Roadmap](roadmap/0003-periodic-reflection-roadmap.md)** - Accepted period reports, semantic history, evidence, and reflection loop
+19. **[Roadmap Index](roadmap/README.md)** - Roadmap status and related links
 
 ---
 
@@ -68,6 +69,7 @@ All documentation below is the **source of truth** for the project.
 | [dogfood-release-baseline.md](dogfood-release-baseline.md) | Accepted 2026-07-03 baseline for daily macOS use and known limitations |
 | [dogfood-periodic-report.md](dogfood-periodic-report.md) | First real 2026-07-01..2026-07-10 period review, decision value, and known P0 limitations |
 | [dogfood-operational-reality.md](dogfood-operational-reality.md) | Accepted two-day Operational Reality evidence, protocol, and executable gate |
+| [dogfood-operational-workspace.md](dogfood-operational-workspace.md) | Three-day acceptance protocol, online gate, and interpretation boundary for the Operational Workspace release candidate |
 | [acceptance-causal-work-spine-v1.md](acceptance-causal-work-spine-v1.md) | Requirement-by-requirement implementation and real-use audit |
 | [dogfood-learnings.md](dogfood-learnings.md) | Cross-day product findings, principles, and updated development order |
 | [glossary.md](glossary.md) | Definitions of all terms and entities |

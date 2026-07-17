@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useId, useMemo, useState } from 'react'
 import type {
   DayContractRevisionKind,
   DayContractRevisionView,
@@ -36,6 +36,7 @@ type SubjectCandidate = DayContractSubjectRef & {
   detail: string
   workItem?: WorkItemView
   track?: TrackView
+  reality?: OperationalRealityItemView
 }
 
 const EMPTY_DRAFT: ContractDraft = {
@@ -65,8 +66,8 @@ export default function OperationalWorkspacePanel() {
   const workItems = useMemo(() => inventoryQuery.data?.items ?? [], [inventoryQuery.data?.items])
   const tracks = useMemo(() => taxonomyQuery.data?.tracks ?? [], [taxonomyQuery.data?.tracks])
   const candidates = useMemo(
-    () => buildCandidates(workItems, tracks),
-    [workItems, tracks]
+    () => buildCandidates(workItems, tracks, workspace?.reality.items ?? []),
+    [workItems, tracks, workspace?.reality.items]
   )
   const candidateByKey = useMemo(
     () => new Map(candidates.map((candidate) => [subjectKey(candidate), candidate])),
@@ -83,6 +84,15 @@ export default function OperationalWorkspacePanel() {
   }, [draft.active, workItems])
   const currentFocus = focusQuery.data?.session
   const hasTrackedToday = Boolean(todayQuery.data?.sessions.length)
+  const outsideContractToday = useMemo(
+    () => contract
+      ? workItems
+        .filter((item) => item.today_active_seconds > 0 || item.id === currentFocus?.work_item_id)
+        .filter((item) => !workItemCoveredByContract(item, contract))
+        .sort((left, right) => right.today_active_seconds - left.today_active_seconds)
+      : [],
+    [contract, currentFocus?.work_item_id, workItems]
+  )
   const activeReality = useMemo(
     () => contract?.active_subjects
       .map((snapshot) => liveRealityForSnapshot(workspace?.reality.items ?? [], snapshot))
@@ -269,8 +279,8 @@ export default function OperationalWorkspacePanel() {
 
       {!editingKind && contract && (
         <div className="border-t border-gray-800">
-          <div className="grid min-w-0 gap-0 lg:grid-cols-[minmax(18rem,0.85fr)_minmax(25rem,1.4fr)]">
-            <div className="min-w-0 border-b border-gray-800 px-4 py-3 lg:border-b-0 lg:border-r">
+          <div className="grid min-w-0 gap-0 lg:h-[24rem] lg:grid-cols-[minmax(18rem,0.85fr)_minmax(25rem,1.4fr)] lg:overflow-hidden">
+            <div className="min-w-0 border-b border-gray-800 px-4 py-3 lg:overflow-auto lg:border-b-0 lg:border-r">
               <div className="mb-2 text-[10px] font-semibold uppercase text-gray-500">Активные направления</div>
               <div className="space-y-1">
                 {contract.active_subjects.map((snapshot) => (
@@ -307,9 +317,30 @@ export default function OperationalWorkspacePanel() {
                   <span className="text-gray-400">{contract.parked_subjects.map((item) => item.title).join(' · ')}</span>
                 </div>
               </div>
+              {outsideContractToday.length > 0 && (
+                <div className="mt-3 rounded border border-amber-900/70 bg-amber-950/15 px-2 py-2 text-xs">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="font-medium text-amber-200">Сегодня вне договора · {outsideContractToday.length}</span>
+                    <button type="button" onClick={() => beginEdit('adjustment')} className={tertiaryButton}>
+                      Пересмотреть договор
+                    </button>
+                  </div>
+                  <div className="mt-1 text-[11px] text-gray-500">
+                    Работа уже состоялась, но не входит в текущий активный набор.
+                  </div>
+                  <div className="mt-1 space-y-0.5 text-gray-400">
+                    {outsideContractToday.slice(0, 5).map((item) => (
+                      <div key={item.id} className="flex min-w-0 justify-between gap-2">
+                        <span className="truncate">{item.title}</span>
+                        <span className="shrink-0 text-gray-600">{formatDuration(item.today_active_seconds)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
-            <div className="min-w-0">
+            <div className="min-w-0 lg:overflow-auto">
               {selectedReality ? (
                 <RealityDetails item={selectedReality} />
               ) : (
@@ -327,8 +358,13 @@ export default function OperationalWorkspacePanel() {
             <button type="button" onClick={() => setShowHistory((value) => !value)} className={tertiaryButton}>
               {showHistory ? 'Скрыть историю' : `История договора: ${workspace?.revisions.length ?? 0}`}
             </button>
-            <button type="button" onClick={() => void workspaceQuery.refetch()} className={tertiaryButton}>
-              Обновить факты
+            <button
+              type="button"
+              onClick={() => void workspaceQuery.refetch()}
+              className={tertiaryButton}
+              title="Перечитать сохранённые факты и заново собрать текущее состояние"
+            >
+              Пересобрать состояние
             </button>
           </div>
 
@@ -410,6 +446,7 @@ function ContractEditor({
         </label>
         <SubjectPicker
           label="Припарковано · 1–3 главных конкурента"
+          description="Выбери главное дело или направление, к которому сознательно не возвращаешься сегодня."
           selected={draft.parked}
           candidates={candidates}
           candidateByKey={candidateByKey}
@@ -440,6 +477,7 @@ function ContractEditor({
 
 function SubjectPicker({
   label,
+  description,
   selected,
   candidates,
   candidateByKey,
@@ -448,6 +486,7 @@ function SubjectPicker({
   onChange,
 }: {
   label: string
+  description?: string
   selected: DayContractSubjectRef[]
   candidates: SubjectCandidate[]
   candidateByKey: Map<string, SubjectCandidate>
@@ -455,28 +494,80 @@ function SubjectPicker({
   max: number
   onChange: (subjects: DayContractSubjectRef[]) => void
 }) {
+  const listboxId = useId()
+  const [query, setQuery] = useState('')
+  const [open, setOpen] = useState(false)
   const selectedKeys = new Set(selected.map(subjectKey))
+  const available = candidates
+    .filter((candidate) => !selectedKeys.has(subjectKey(candidate)) && !blockedKeys.has(subjectKey(candidate)))
+    .filter((candidate) => candidateMatchesQuery(candidate, query))
+    .slice(0, 30)
+  const disabled = selected.length >= max
+
+  const selectCandidate = (candidate: SubjectCandidate) => {
+    onChange([...selected, { kind: candidate.kind, subject_id: candidate.subject_id }])
+    setQuery('')
+    setOpen(false)
+  }
+
   return (
     <div className="grid min-w-0 gap-1 text-xs">
       <span className="font-medium text-gray-400">{label}</span>
-      <select
-        value=""
-        disabled={selected.length >= max}
-        onChange={(event) => {
-          const candidate = candidateByKey.get(event.target.value)
-          if (candidate) onChange([...selected, { kind: candidate.kind, subject_id: candidate.subject_id }])
-        }}
-        className={fieldClass}
-      >
-        <option value="">Добавить дело или направление...</option>
-        {candidates
-          .filter((candidate) => !selectedKeys.has(subjectKey(candidate)) && !blockedKeys.has(subjectKey(candidate)))
-          .map((candidate) => (
-            <option key={subjectKey(candidate)} value={subjectKey(candidate)}>
-              {candidate.kind === 'track' ? 'Направление' : 'Дело'} · {candidate.title}
-            </option>
-          ))}
-      </select>
+      {description && <span className="text-[11px] text-gray-600">{description}</span>}
+      <div className="relative">
+        <input
+          type="search"
+          role="combobox"
+          aria-expanded={open && !disabled}
+          aria-controls={listboxId}
+          value={query}
+          disabled={disabled}
+          onFocus={() => setOpen(true)}
+          onBlur={() => setOpen(false)}
+          onChange={(event) => {
+            setQuery(event.target.value)
+            setOpen(true)
+          }}
+          onKeyDown={(event) => {
+            if (event.key === 'Escape') setOpen(false)
+            if (event.key === 'Enter' && available[0]) {
+              event.preventDefault()
+              selectCandidate(available[0])
+            }
+          }}
+          placeholder={disabled ? `Выбрано максимум: ${max}` : 'Найти дело или направление...'}
+          className={fieldClass}
+        />
+        {open && !disabled && (
+          <div
+            id={listboxId}
+            role="listbox"
+            className="absolute z-30 mt-1 max-h-64 w-full min-w-0 overflow-auto rounded border border-gray-700 bg-gray-950 shadow-xl"
+          >
+            {available.length === 0 ? (
+              <div className="px-3 py-3 text-gray-500">Подходящих дел и направлений не найдено.</div>
+            ) : available.map((candidate) => (
+              <button
+                key={subjectKey(candidate)}
+                type="button"
+                role="option"
+                aria-selected="false"
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => selectCandidate(candidate)}
+                className="block w-full min-w-0 border-b border-gray-800 px-3 py-2 text-left last:border-b-0 hover:bg-gray-900"
+              >
+                <div className="flex min-w-0 items-start justify-between gap-2">
+                  <span className="min-w-0 break-words font-medium text-gray-200">{candidate.title}</span>
+                  <span className={candidate.reality?.requires_attention ? 'shrink-0 text-[10px] text-amber-300' : 'shrink-0 text-[10px] text-gray-600'}>
+                    {candidate.kind === 'track' ? 'направление' : 'дело'}
+                  </span>
+                </div>
+                {candidate.detail && <div className="mt-0.5 line-clamp-2 text-[11px] text-gray-500">{candidate.detail}</div>}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
       <div className="flex min-h-7 flex-wrap gap-1">
         {selected.map((subject) => {
           const candidate = candidateByKey.get(subjectKey(subject))
@@ -582,26 +673,78 @@ function ContractHistory({ revisions }: { revisions: DayContractRevisionView[] }
   )
 }
 
-function buildCandidates(workItems: WorkItemView[], tracks: TrackView[]): SubjectCandidate[] {
+function buildCandidates(
+  workItems: WorkItemView[],
+  tracks: TrackView[],
+  realityItems: OperationalRealityItemView[],
+): SubjectCandidate[] {
+  const realityBySubject = new Map(
+    realityItems.map((item) => [`${item.subject_kind}:${item.subject_id}`, item]),
+  )
   const trackCandidates: SubjectCandidate[] = tracks
     .filter((track) => !track.archived)
-    .map((track) => ({
-      kind: 'track',
-      subject_id: track.id,
-      title: track.title,
-      detail: track.path.map((node) => node.title).join(' → '),
-      track,
-    }))
+    .map((track) => {
+      const reality = realityBySubject.get(`track:${track.id}`)
+      return {
+        kind: 'track',
+        subject_id: track.id,
+        title: track.title,
+        detail: candidateDetail(reality, track.path.map((node) => node.title).join(' → ')),
+        track,
+        reality,
+      }
+    })
   const itemCandidates: SubjectCandidate[] = workItems
     .filter((item) => item.state !== 'done')
-    .map((item) => ({
-      kind: 'work_item',
-      subject_id: item.id,
-      title: item.title,
-      detail: item.track?.path.map((node) => node.title).join(' → ') ?? '',
-      workItem: item,
-    }))
-  return [...trackCandidates, ...itemCandidates].sort((left, right) => left.title.localeCompare(right.title, 'ru'))
+    .map((item) => {
+      const reality = realityBySubject.get(`work_item:${item.id}`)
+      return {
+        kind: 'work_item',
+        subject_id: item.id,
+        title: item.title,
+        detail: candidateDetail(reality, item.track?.path.map((node) => node.title).join(' → ') ?? ''),
+        workItem: item,
+        reality,
+      }
+    })
+  return [...trackCandidates, ...itemCandidates].sort((left, right) => {
+    const attention = Number(Boolean(right.reality?.requires_attention)) - Number(Boolean(left.reality?.requires_attention))
+    if (attention !== 0) return attention
+    return left.title.localeCompare(right.title, 'ru')
+  })
+}
+
+function candidateDetail(reality: OperationalRealityItemView | undefined, path: string) {
+  const details = []
+  if (reality) {
+    details.push(stateLabel(reality.state))
+    if (reality.next_action?.text) details.push(`дальше: ${reality.next_action.text}`)
+    if (reality.unknowns.length > 0) details.push(`неизвестно: ${reality.unknowns.length}`)
+  }
+  if (path) details.push(path)
+  return details.join(' · ')
+}
+
+function candidateMatchesQuery(candidate: SubjectCandidate, query: string) {
+  const normalized = normalizeSearchText(query)
+  if (!normalized) return true
+  return normalizeSearchText(`${candidate.title} ${candidate.detail}`).includes(normalized)
+}
+
+function normalizeSearchText(value: string) {
+  const homoglyphs: Record<string, string> = {
+    а: 'a', в: 'b', е: 'e', к: 'k', м: 'm', н: 'h', о: 'o', р: 'p', с: 'c', т: 't', у: 'y', х: 'x',
+  }
+  return Array.from(value.normalize('NFKC').trim().toLocaleLowerCase('ru-RU'))
+    .map((character) => homoglyphs[character] ?? character)
+    .join('')
+}
+
+function workItemCoveredByContract(item: WorkItemView, contract: DayContractRevisionView) {
+  return contract.active_subjects.some((subject) => {
+    if (subject.kind === 'work_item') return subject.subject_id === item.id
+    return item.track?.path.some((node) => node.id === subject.subject_id) ?? false
+  })
 }
 
 function draftFromContract(contract: DayContractRevisionView): ContractDraft {

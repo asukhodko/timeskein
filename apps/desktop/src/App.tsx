@@ -28,6 +28,30 @@ function App() {
   }, [])
 
   useEffect(() => {
+    const configurePlainTextFields = (root: ParentNode) => {
+      root.querySelectorAll('input, textarea').forEach((element) => {
+        element.setAttribute('autocorrect', 'off')
+        element.setAttribute('autocapitalize', 'off')
+        element.setAttribute('autocomplete', 'off')
+        element.setAttribute('spellcheck', 'false')
+      })
+    }
+
+    configurePlainTextFields(document)
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        for (const node of mutation.addedNodes) {
+          if (!(node instanceof Element)) continue
+          if (node.matches('input, textarea')) configurePlainTextFields(node.parentNode ?? node)
+          else configurePlainTextFields(node)
+        }
+      }
+    })
+    observer.observe(document.body, { childList: true, subtree: true })
+    return () => observer.disconnect()
+  }, [])
+
+  useEffect(() => {
     if (!isTauriRuntime()) return
 
     let cancelled = false

@@ -209,6 +209,66 @@ export interface OperationalRealityMutationResponse {
   reality: OperationalRealityView;
 }
 
+export type DayContractSubjectKind = "work_item" | "track";
+export type DayContractRevisionKind = "morning" | "reentry" | "adjustment";
+
+export interface DayContractSubjectRef {
+  kind: DayContractSubjectKind;
+  subject_id: string;
+}
+
+export interface DayContractSubjectSnapshot {
+  kind: DayContractSubjectKind;
+  subject_id: string;
+  title: string;
+  work_item_id?: string;
+  track_id?: string;
+  state: OperationalState;
+  state_provenance: CausalProvenance;
+  state_record_id?: string;
+  next_action?: OperationalNextActionView;
+  last_significant_change?: OperationalRealityBasisView;
+  track_path: TrackPathNode[];
+  labels: LabelView[];
+  captured_at: string;
+}
+
+export interface DayContractRevisionView {
+  id: string;
+  local_date: string;
+  revision_number: number;
+  revision_kind: DayContractRevisionKind;
+  active_subjects: DayContractSubjectSnapshot[];
+  first_action_work_item_id: string;
+  first_action: DayContractSubjectSnapshot;
+  parked_subjects: DayContractSubjectSnapshot[];
+  why_now: string;
+  created_at: string;
+  source: "user" | "system";
+  provenance: "confirmed" | "derived";
+  supersedes_id?: string;
+  schema_version: number;
+}
+
+export interface OperationalWorkspaceView {
+  local_date: string;
+  current_contract?: DayContractRevisionView;
+  revisions: DayContractRevisionView[];
+  reality: OperationalRealityView;
+  updated_at: string;
+}
+
+export interface DayContractMutationResponse {
+  revision: DayContractRevisionView;
+  workspace: OperationalWorkspaceView;
+}
+
+export interface DayContractListResponse {
+  revisions: DayContractRevisionView[];
+  total: number;
+  updated_at: string;
+}
+
 /**
  * Work item view returned by the API
  */
@@ -349,6 +409,12 @@ export type AppEventKind =
   | "focus_correction_failed"
   | "day_closure_started"
   | "day_closure_completed"
+  | "day_contract_created"
+  | "day_contract_revised"
+  | "day_contract_start_requested"
+  | "day_contract_started"
+  | "day_contract_start_failed"
+  | "day_contract_reentry_reviewed"
   | "report_copy_requested"
   | "report_copied"
   | "report_copy_failed"
@@ -406,6 +472,12 @@ export interface AppEventSummary {
   correction_failures: number;
   day_closure_starts: number;
   day_closure_completions: number;
+  day_contract_created: number;
+  day_contract_revisions: number;
+  day_contract_start_requests: number;
+  day_contract_starts: number;
+  day_contract_start_failures: number;
+  day_contract_reentries: number;
   open_day_closure_started_at?: string;
   open_day_closure_action_id?: string;
   last_day_closure_duration_seconds?: number;
@@ -750,6 +822,24 @@ export interface OperationalRealityFollowUpDecisionParams {
   status: "fulfilled" | "progressed" | "cancelled" | "parked" | "contradicted" | "no_evidence";
   note?: string;
   evidence_event_id?: string;
+}
+
+export interface OperationalWorkspaceGetParams {
+  local_date?: string;
+}
+
+export interface DayContractReviseParams {
+  local_date: string;
+  revision_kind: DayContractRevisionKind;
+  active_subjects: DayContractSubjectRef[];
+  first_action_work_item_id: string;
+  parked_subjects: DayContractSubjectRef[];
+  why_now: string;
+}
+
+export interface DayContractListParams {
+  from: string;
+  to: string;
 }
 
 export interface DayEventAddParams {

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type RefObject } from 'react'
-import type { ActivityZone, AppEventKind, AppEventSummary, CaptureView, DayEventView, FocusSessionView, RefKind, WorkItemEventView, WorkItemView } from '@timeskein/contracts'
+import type { ActivityZone, AppEventKind, AppEventSummary, CaptureView, DayContractRevisionView, DayEventView, FocusSessionView, RefKind, WorkItemEventView, WorkItemView } from '@timeskein/contracts'
 import {
   useCurrentFocusSession,
   useStartFocusSession,
@@ -8,6 +8,7 @@ import {
 } from '../hooks/useFocusSessions'
 import { useAddWorkItemEvent, useDeleteWorkItemEvent, useInventory, useSetWorkItemState, useUpdateWorkItemEvent, useWorkItemEvents } from '../hooks/useInventory'
 import { useCaptureActivity, useOpenCaptures } from '../hooks/useCaptures'
+import { useOperationalWorkspace } from '../hooks/useOperationalWorkspace'
 import { useAddDayEvent, useDayEvents, useDeleteDayEvent, useUpdateDayEvent } from '../hooks/useDayEvents'
 import { appEventApi, logAppEvent, shellApi } from '../api/client'
 import { formatClockTime, formatDuration, truncate } from '../utils/formatTime'
@@ -32,19 +33,6 @@ import {
   type ActiveFocusJournalKind,
   type ActiveFocusJournalTarget,
 } from '../utils/activeFocusJournal'
-import {
-  DEFAULT_DISPATCH_RITUAL_MODE,
-  DISPATCH_RITUAL_MODE_LABELS,
-  dispatchRitualContractStorageKey,
-  dispatchRitualDraftStorageKey,
-  decodeDispatchRitualDraft,
-  encodeDispatchRitualDraft,
-  formatDispatchRitualEvent,
-  hasDispatchRitualContent,
-  isDispatchRitualStartReady,
-  type DispatchRitualDraft,
-  type DispatchRitualMode,
-} from '../utils/dispatchRitual'
 import {
   getBulkAcceptableReviewActions,
   getDayClosureStage,
@@ -71,14 +59,6 @@ const ACTIVITY_ZONES: ActivityZone[] = ['work', 'coordination', 'recovery', 'idl
 const DAY_EVENT_DRAFT_STORAGE_PREFIX = 'timeskein.day-event-draft.v1.'
 export const MANUAL_COPY_HINT =
   'Буфер обмена не принял текст. Поле уже выделено: нажми Command+C и вставь отчёт куда нужно.'
-const EMPTY_DISPATCH_RITUAL_DRAFT: DispatchRitualDraft = {
-  mode: DEFAULT_DISPATCH_RITUAL_MODE,
-  activeSet: '',
-  firstFocus: '',
-  parked: '',
-  reason: '',
-}
-
 export default function FocusPanel({ selectedItem }: FocusPanelProps) {
   const [title, setTitle] = useState('')
   const [note, setNote] = useState('')
@@ -96,8 +76,6 @@ export default function FocusPanel({ selectedItem }: FocusPanelProps) {
   const [activeJournalRefChoice, setActiveJournalRefChoice] = useState('')
   const [activeJournalNewRefKind, setActiveJournalNewRefKind] = useState<RefKind>(DEFAULT_ACTIVE_FOCUS_JOURNAL_REF_KIND)
   const [activeJournalNewRefValue, setActiveJournalNewRefValue] = useState('')
-  const [dispatchDraft, setDispatchDraft] = useState<DispatchRitualDraft>(EMPTY_DISPATCH_RITUAL_DRAFT)
-  const [dispatchContract, setDispatchContract] = useState<DispatchRitualDraft | null>(null)
   const [appEventSummary, setAppEventSummary] = useState<AppEventSummary | null>(null)
   const [dayClosureStartedAt, setDayClosureStartedAt] = useState<Date | null>(null)
   const titleInputRef = useRef<HTMLInputElement>(null)
@@ -109,7 +87,6 @@ export default function FocusPanel({ selectedItem }: FocusPanelProps) {
   const dayClosureCompletedRef = useRef(false)
   const dayEventDraftLoadedKeyRef = useRef<string | null>(null)
   const activeJournalDraftLoadedKeyRef = useRef<string | null>(null)
-  const dispatchDraftLoadedKeyRef = useRef<string | null>(null)
   const localDayKey = formatLocalDate(now)
   const dayWindow = useMemo(() => {
     const dayStart = startOfLocalDay(now)
@@ -127,6 +104,7 @@ export default function FocusPanel({ selectedItem }: FocusPanelProps) {
   const dayEventsQuery = useDayEvents(dayWindow)
   const capturesQuery = useOpenCaptures()
   const captureActivityQuery = useCaptureActivity()
+  const workspaceQuery = useOperationalWorkspace(localDayKey)
   const startMutation = useStartFocusSession()
   const stopMutation = useStopFocusSession()
   const addDayEventMutation = useAddDayEvent()
@@ -135,8 +113,6 @@ export default function FocusPanel({ selectedItem }: FocusPanelProps) {
 
   const current = currentQuery.data?.session
   const currentId = current?.id
-  const dispatchDraftKey = useMemo(() => dispatchRitualDraftStorageKey(now), [localDayKey])
-  const dispatchContractKey = useMemo(() => dispatchRitualContractStorageKey(now), [localDayKey])
   const activeJournalDraftKey = useMemo(
     () => activeFocusJournalDraftStorageKey(current ? current.work_item_id ?? current.id : 'day', now),
     [current?.id, current?.work_item_id, localDayKey]
@@ -227,8 +203,16 @@ export default function FocusPanel({ selectedItem }: FocusPanelProps) {
     [current, now, activeSecondsTotal]
   )
   const todayMarkdown = useMemo(
-    () => buildTodayMarkdown(sessions, activeSecondsTotal, now, inventoryItems, workItemEvents, dayEvents),
-    [sessions, activeSecondsTotal, now, inventoryItems, workItemEvents, dayEvents]
+    () => buildTodayMarkdown(
+      sessions,
+      activeSecondsTotal,
+      now,
+      inventoryItems,
+      workItemEvents,
+      dayEvents,
+      workspaceQuery.data?.revisions ?? []
+    ),
+    [sessions, activeSecondsTotal, now, inventoryItems, workItemEvents, dayEvents, workspaceQuery.data?.revisions]
   )
   const focusTitleInput = ({ force = false } = {}) => {
     window.requestAnimationFrame(() => {
@@ -261,22 +245,6 @@ export default function FocusPanel({ selectedItem }: FocusPanelProps) {
       zone: dayEventZone,
     })
   }, [dayEventText, dayEventZone, localDayKey])
-
-  useEffect(() => {
-    const draft = readDispatchRitualDraft(dispatchDraftKey)
-    dispatchDraftLoadedKeyRef.current = dispatchDraftKey
-    setDispatchDraft(draft)
-  }, [dispatchDraftKey])
-
-  useEffect(() => {
-    setDispatchContract(readDispatchRitualContract(dispatchContractKey))
-  }, [dispatchContractKey])
-
-  useEffect(() => {
-    if (dispatchDraftLoadedKeyRef.current !== dispatchDraftKey) return
-
-    writeDispatchRitualDraft(dispatchDraftKey, dispatchDraft)
-  }, [dispatchDraftKey, dispatchDraft])
 
   useEffect(() => {
     if (!activeJournalDraftKey || !current) {
@@ -450,68 +418,6 @@ export default function FocusPanel({ selectedItem }: FocusPanelProps) {
 
   const startTypedSession = () => {
     startSessionByTitle(title, 'typed')
-  }
-
-  const dispatchTrackingActive = Boolean(
-    current &&
-    current.activity_zone === 'coordination' &&
-    Object.values(DISPATCH_RITUAL_MODE_LABELS).some((label) => label === current.title)
-  )
-
-  const startDispatchTracking = () => {
-    if (current || startMutation.isPending) return
-    startSessionByTitle(
-      DISPATCH_RITUAL_MODE_LABELS[dispatchDraft.mode],
-      'dispatch_ritual',
-      undefined,
-      'coordination'
-    )
-  }
-
-  const saveDispatchEvent = async () => {
-    const text = formatDispatchRitualEvent(dispatchDraft)
-    if (!text || addDayEventMutation.isPending) return false
-
-    await addDayEventMutation.mutateAsync({
-      text,
-      activity_zone: 'coordination',
-    })
-    return true
-  }
-
-  const saveDispatchOnly = async () => {
-    try {
-      const eventSaved = await saveDispatchEvent()
-      if (eventSaved) {
-        rememberDispatchRitualContract(dispatchContractKey, dispatchDraft)
-        setDispatchContract(dispatchDraft)
-        clearDispatchRitualDraft(dispatchDraftKey)
-        setDispatchDraft(EMPTY_DISPATCH_RITUAL_DRAFT)
-      }
-    } catch {
-      // The mutation error is shown by the shared error block.
-    }
-  }
-
-  const startDispatchFocus = async () => {
-    if (!isDispatchRitualStartReady(dispatchDraft) || startMutation.isPending || addDayEventMutation.isPending) return
-
-    let eventSaved = false
-    try {
-      eventSaved = await saveDispatchEvent()
-    } catch {
-      // Keep the draft if the coordination event failed to save.
-      return
-    }
-    if (!eventSaved) return
-
-    rememberDispatchRitualContract(dispatchContractKey, dispatchDraft)
-    setDispatchContract(dispatchDraft)
-
-    startSessionByTitle(dispatchDraft.firstFocus, 'dispatch_ritual', () => {
-      clearDispatchRitualDraft(dispatchDraftKey)
-      setDispatchDraft(EMPTY_DISPATCH_RITUAL_DRAFT)
-    })
   }
 
   const startSelectedSession = () => {
@@ -1049,29 +955,6 @@ export default function FocusPanel({ selectedItem }: FocusPanelProps) {
           )}
         </div>
 
-        {(!current || dispatchTrackingActive) && (
-          <DispatchRitualPanel
-            draft={dispatchDraft}
-            pending={addDayEventMutation.isPending || startMutation.isPending}
-            tracking={dispatchTrackingActive}
-            onChange={setDispatchDraft}
-            onStartTracking={startDispatchTracking}
-            onSave={() => {
-              void saveDispatchOnly()
-            }}
-            onStart={() => {
-              void startDispatchFocus()
-            }}
-          />
-        )}
-
-        {dispatchContract && (
-          <DispatchDayContract
-            contract={dispatchContract}
-            onReview={() => setDispatchDraft(dispatchContract)}
-          />
-        )}
-
         <CaptureInbox focusSessionId={current?.id} targetWorkItemId={current?.work_item_id ?? selectedItem?.id} />
 
         <div className="flex items-center gap-2 rounded-md border border-gray-800 bg-gray-900/40 px-3 py-2">
@@ -1392,46 +1275,6 @@ function clearDayEventDraft(localDayKey: string) {
   getLocalStorage()?.removeItem(dayEventDraftStorageKey(localDayKey))
 }
 
-function readDispatchRitualDraft(key: string) {
-  const storage = getLocalStorage()
-  if (!storage) return EMPTY_DISPATCH_RITUAL_DRAFT
-
-  return decodeDispatchRitualDraft(storage.getItem(key))
-}
-
-function writeDispatchRitualDraft(key: string, draft: DispatchRitualDraft) {
-  const storage = getLocalStorage()
-  if (!storage) return
-
-  const encoded = encodeDispatchRitualDraft(draft)
-  if (!encoded) {
-    storage.removeItem(key)
-    return
-  }
-
-  storage.setItem(key, encoded)
-}
-
-function clearDispatchRitualDraft(key: string) {
-  getLocalStorage()?.removeItem(key)
-}
-
-function readDispatchRitualContract(key: string) {
-  const storage = getLocalStorage()
-  if (!storage) return null
-
-  const contract = decodeDispatchRitualDraft(storage.getItem(key))
-  return hasDispatchRitualContent(contract) ? contract : null
-}
-
-function rememberDispatchRitualContract(key: string, contract: DispatchRitualDraft) {
-  const storage = getLocalStorage()
-  if (!storage) return
-
-  const encoded = encodeDispatchRitualDraft(contract)
-  if (encoded) storage.setItem(key, encoded)
-}
-
 function readActiveFocusJournalDraft(key: string) {
   const storage = getLocalStorage()
   if (!storage) {
@@ -1479,7 +1322,8 @@ function buildTodayMarkdown(
   now: Date,
   workItems: WorkItemView[] = [],
   workItemEvents: WorkItemEventView[] = [],
-  dayEvents: DayEventView[] = []
+  dayEvents: DayEventView[] = [],
+  dayContractRevisions: DayContractRevisionView[] = []
 ) {
   const dayStart = startOfLocalDay(now)
   const dayEnd = nextLocalDay(dayStart)
@@ -1553,6 +1397,7 @@ function buildTodayMarkdown(
   appendWorkItemNotes(lines, workItemTotals)
   appendDayEvents(lines, dayEvents, sessionsOldestFirst)
   appendWorkItemEvents(lines, workItemEvents, sessionsOldestFirst, workItems)
+  appendDayContract(lines, dayContractRevisions)
 
   const gaps = gapsBetweenSessions(sessionsOldestFirst).filter(
     (gap) => gap.seconds >= SIGNIFICANT_GAP_SECONDS
@@ -1724,6 +1569,12 @@ export function formatFocusMarkdownForReport(markdown: string) {
     .replace(/\| linked focus block \|/g, '| связанный фокус-блок |')
     .replace(/^## Work Item Events$/gm, '## События дел')
     .replace(/^\| Time \| Work Item \| During \| Event \|$/gm, '| Время | Дело | Во время | Событие |')
+    .replace(/^## Day Contract$/gm, '## Договор дня')
+    .replace(/^No day contract was recorded\.$/gm, 'Договор дня не сформирован.')
+    .replace(/^\| Revision \| Time \| Kind \| Active \| First Action \| Parked \| Why Now \|$/gm, '| Версия | Время | Тип | В игре | Первое действие | Припарковано | Почему сейчас |')
+    .replace(/\| morning \|/g, '| утро |')
+    .replace(/\| reentry \|/g, '| возвращение |')
+    .replace(/\| adjustment \|/g, '| корректировка |')
     .replace(/^## Gaps >=/gm, '## Разрывы >=')
     .replace(/^## Open Gap$/gm, '## Текущий открытый разрыв')
     .replace(/ since last stopped block$/gm, ' после последнего остановленного блока')
@@ -1820,6 +1671,12 @@ const APP_EVENT_KIND_LABELS: Record<string, string> = {
   entry_paths_reviewed: 'пути входа проверены',
   day_closure_started: 'закрытие дня начато',
   day_closure_completed: 'закрытие дня завершено',
+  day_contract_created: 'договор дня создан',
+  day_contract_revised: 'договор дня пересмотрен',
+  day_contract_start_requested: 'запрошен старт из договора',
+  day_contract_started: 'старт из договора выполнен',
+  day_contract_start_failed: 'старт из договора не удался',
+  day_contract_reentry_reviewed: 'договор просмотрен при возвращении',
   report_copy_requested: 'запрошено копирование отчёта',
   report_copied: 'отчёт скопирован',
   report_copy_failed: 'копирование отчёта не удалось',
@@ -1857,6 +1714,7 @@ export function formatTelemetryForReport(markdown: string) {
     .replace(/^Capture updated\/deleted:/gm, 'Отвлечений изменено/удалено:')
     .replace(/^Capture failures create\/resolve\/update\/delete\/convert:/gm, 'Ошибок отвлечений: создание/закрытие/изменение/удаление/превращение:')
     .replace(/^Corrections requested\/applied\/reviewed\/failed:/gm, 'Коррекций запрошено/применено/проверено/ошибок:')
+    .replace(/^Day contract created\/revised\/start requests\/starts\/failures\/reentries:/gm, 'Договор дня создан/пересмотрен/запрошено стартов/стартов/ошибок/возвратов:')
     .replace(/^Day closure started\/completed:/gm, 'Закрытий дня начато/завершено:')
     .replace(/^Last day closure duration:/gm, 'Последняя длительность закрытия дня:')
     .replace(/^API errors:/gm, 'Ошибок API:')
@@ -3878,6 +3736,7 @@ function formatAppTelemetryMarkdown(summary: AppEventSummary) {
     `Capture updated/deleted: ${summary.capture_updated}/${summary.capture_deleted}`,
     `Capture failures create/resolve/update/delete/convert: ${summary.capture_create_failures}/${summary.capture_resolve_failures}/${summary.capture_update_failures}/${summary.capture_delete_failures}/${summary.capture_convert_failures}`,
     `Corrections requested/applied/reviewed/failed: ${summary.correction_requests}/${summary.corrections}/${summary.correction_reviews}/${summary.correction_failures}`,
+    `Day contract created/revised/start requests/starts/failures/reentries: ${summary.day_contract_created}/${summary.day_contract_revisions}/${summary.day_contract_start_requests}/${summary.day_contract_starts}/${summary.day_contract_start_failures}/${summary.day_contract_reentries}`,
     `Day closure started/completed: ${summary.day_closure_starts}/${summary.day_closure_completions}`,
     `Last day closure duration: ${summary.last_day_closure_duration_seconds == null ? 'n/a' : formatDuration(summary.last_day_closure_duration_seconds)}`,
     `API errors: ${summary.api_errors}`,
@@ -4053,6 +3912,25 @@ function parseClockMinutes(value: string) {
   if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) return undefined
 
   return hours * 60 + minutes
+}
+
+function appendDayContract(lines: string[], revisions: DayContractRevisionView[]) {
+  lines.push('', '## Day Contract')
+  if (revisions.length === 0) {
+    lines.push('', 'No day contract was recorded.')
+    return
+  }
+
+  lines.push(
+    '',
+    '| Revision | Time | Kind | Active | First Action | Parked | Why Now |',
+    '| ---: | --- | --- | --- | --- | --- | --- |'
+  )
+  for (const revision of revisions) {
+    lines.push(
+      `| ${revision.revision_number} | ${escapeMarkdownTable(formatClockTime(revision.created_at))} | ${escapeMarkdownTable(revision.revision_kind)} | ${escapeMarkdownTable(revision.active_subjects.map((item) => item.title).join(' · '))} | ${escapeMarkdownTable(revision.first_action.title)} | ${escapeMarkdownTable(revision.parked_subjects.map((item) => item.title).join(' · '))} | ${escapeMarkdownTable(revision.why_now)} |`
+    )
+  }
 }
 
 function appendWorkItemNotes(
@@ -4268,222 +4146,6 @@ function formatTrayDuration(totalSeconds: number) {
   const hours = Math.floor(minutes / 60)
   const rest = minutes % 60
   return rest === 0 ? `${hours} ч` : `${hours} ч ${rest} мин`
-}
-
-function DispatchRitualPanel({
-  draft,
-  pending,
-  tracking,
-  onChange,
-  onStartTracking,
-  onSave,
-  onStart,
-}: {
-  draft: DispatchRitualDraft
-  pending: boolean
-  tracking: boolean
-  onChange: (draft: DispatchRitualDraft) => void
-  onStartTracking: () => void
-  onSave: () => void
-  onStart: () => void
-}) {
-  const updateDraft = (patch: Partial<DispatchRitualDraft>) => onChange({ ...draft, ...patch })
-  const canSave = Boolean(formatDispatchRitualEvent(draft))
-  const canStart = isDispatchRitualStartReady(draft)
-
-  return (
-    <div className="grid gap-2 rounded-md border border-cyan-900/60 bg-cyan-950/15 px-3 py-2 text-xs">
-      <div className="flex items-center justify-between gap-2">
-        <div className="min-w-0">
-          <div className="font-medium text-cyan-100">Диспетчеризация</div>
-          <div className="text-[11px] text-cyan-100/60">
-            Сузить портфель до 2–3 контуров и выдать себе одно исполнимое назначение.
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <details className="relative">
-            <summary className="cursor-pointer list-none rounded border border-cyan-900/70 px-2 py-1 text-[11px] font-semibold text-cyan-100 hover:border-cyan-500">
-              ?
-            </summary>
-            <div className="absolute right-0 z-20 mt-1 w-80 rounded-md border border-cyan-900 bg-gray-950 p-3 text-[11px] leading-relaxed text-cyan-50 shadow-xl">
-              <div className="mb-1 font-semibold text-cyan-100">Как заполнять</div>
-              <div><b>Активный набор:</b> 2–3 направления через точку с запятой. Это не полный реестр обязательств.</div>
-              <div><b>Первое дело:</b> ровно одно наблюдаемое действие на ближайший блок. Например: открыть черновик целей и выписать три пробела.</div>
-              <div><b>Припарковать:</b> 2–3 главных конкурента внимания, которые сознательно не делаю сейчас.</div>
-              <div><b>Почему сейчас:</b> одно предложение, которое делает выбор легитимным.</div>
-              <div className="mt-2 border-t border-cyan-900/60 pt-2 text-cyan-100/70">
-                «Начать учёт координации» запускает таймер диспетчеризации. «Сохранить без старта» только сохраняет выбор. «Сохранить и начать первое дело» сохраняет выбор и переключает таймер на первое дело.
-              </div>
-            </div>
-          </details>
-          <select
-            value={draft.mode}
-            onChange={(event) => updateDraft({ mode: event.target.value as DispatchRitualMode })}
-            className="w-40 rounded border border-cyan-900/70 bg-gray-950 px-2 py-1.5 text-xs text-gray-200 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
-            title="Режим диспетчеризации"
-          >
-            {Object.entries(DISPATCH_RITUAL_MODE_LABELS).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      <div className="grid gap-2 md:grid-cols-2">
-        <DispatchRitualInput
-          label="Активный набор (2–3 направления)"
-          placeholder="РБ/Jenkins; командное ретро; командные цели"
-          value={draft.activeSet}
-          onChange={(value) => updateDraft({ activeSet: value })}
-          multiline
-        />
-        <DispatchRitualInput
-          label="Первое дело (одно действие)"
-          placeholder="Проверить состояние РБ-учётки и записать следующий шаг"
-          value={draft.firstFocus}
-          onChange={(value) => updateDraft({ firstFocus: value })}
-          onEnter={onStart}
-        />
-        <DispatchRitualInput
-          label="Припарковать (2–3 конкурента)"
-          placeholder="Направление А; направление Б; курс до завершения ретро"
-          value={draft.parked}
-          onChange={(value) => updateDraft({ parked: value })}
-          multiline
-        />
-        <DispatchRitualInput
-          label="Почему сейчас (одно предложение)"
-          placeholder="Доступ блокирует срочную работу, а за 25 минут можно получить сигнал"
-          value={draft.reason}
-          onChange={(value) => updateDraft({ reason: value })}
-        />
-      </div>
-
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        {tracking ? (
-          <span className="text-[11px] font-medium text-emerald-300">Время диспетчеризации учитывается как координация</span>
-        ) : (
-          <button
-            type="button"
-            onClick={onStartTracking}
-            disabled={pending}
-            className="rounded border border-emerald-800 px-2 py-1 text-[11px] font-medium text-emerald-200 hover:border-emerald-500 disabled:cursor-not-allowed disabled:border-gray-800 disabled:text-gray-600"
-          >
-            Начать учёт координации
-          </button>
-        )}
-        <div className="flex items-center justify-end gap-2">
-        <button
-          type="button"
-          onClick={onSave}
-          disabled={!canSave || pending}
-          className="rounded border border-cyan-800 px-2 py-1 text-[11px] font-medium text-cyan-200 hover:border-cyan-500 hover:text-cyan-100 disabled:cursor-not-allowed disabled:border-gray-800 disabled:text-gray-600"
-        >
-          Сохранить без старта
-        </button>
-        <button
-          type="button"
-          onClick={onStart}
-          disabled={!canStart || pending}
-          className="rounded bg-cyan-700 px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-cyan-600 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-500"
-        >
-          Сохранить и начать первое дело
-        </button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function DispatchDayContract({
-  contract,
-  onReview,
-}: {
-  contract: DispatchRitualDraft
-  onReview: () => void
-}) {
-  const fields = [
-    ['Активный набор', contract.activeSet],
-    ['Первое дело', contract.firstFocus],
-    ['Припарковано', contract.parked],
-    ['Почему сейчас', contract.reason],
-  ].filter(([, value]) => value)
-
-  return (
-    <details open className="rounded-md border border-cyan-900/45 bg-cyan-950/10 px-3 py-2 text-xs">
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-3">
-        <span className="min-w-0 font-medium text-cyan-100">
-          Договор на день · {DISPATCH_RITUAL_MODE_LABELS[contract.mode]}
-        </span>
-        <button
-          type="button"
-          onClick={(event) => {
-            event.preventDefault()
-            onReview()
-          }}
-          className="shrink-0 rounded border border-cyan-900/70 px-2 py-1 text-[11px] text-cyan-200 hover:border-cyan-500"
-        >
-          Пересмотреть
-        </button>
-      </summary>
-      <div className="mt-2 grid gap-2 md:grid-cols-2 xl:grid-cols-4">
-        {fields.map(([label, value]) => (
-          <div key={label} className="min-w-0 rounded border border-gray-800/80 bg-gray-950/35 px-2 py-1.5">
-            <div className="text-[10px] uppercase text-cyan-100/50">{label}</div>
-            <div className="mt-0.5 whitespace-pre-wrap break-words text-gray-300">{value}</div>
-          </div>
-        ))}
-      </div>
-    </details>
-  )
-}
-
-function DispatchRitualInput({
-  label,
-  placeholder,
-  value,
-  onChange,
-  onEnter,
-  multiline = false,
-}: {
-  label: string
-  placeholder: string
-  value: string
-  onChange: (value: string) => void
-  onEnter?: () => void
-  multiline?: boolean
-}) {
-  const className = 'min-w-0 rounded border border-cyan-950 bg-gray-950 px-2 py-1.5 text-xs text-gray-100 placeholder-gray-600 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500'
-
-  return (
-    <label className="grid gap-1">
-      <span className="text-[10px] uppercase tracking-wide text-cyan-100/55">{label}</span>
-      {multiline ? (
-        <textarea
-          rows={2}
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          placeholder={placeholder}
-          className={`${className} resize-y`}
-        />
-      ) : (
-        <input
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter' && onEnter) {
-              event.preventDefault()
-              onEnter()
-            }
-          }}
-          placeholder={placeholder}
-          className={className}
-        />
-      )}
-    </label>
-  )
 }
 
 function ActiveFocusJournal({

@@ -3,6 +3,7 @@
 mod app_events;
 mod captures;
 mod connection;
+mod day_contracts;
 mod day_events;
 mod evidence;
 mod focus_sessions;

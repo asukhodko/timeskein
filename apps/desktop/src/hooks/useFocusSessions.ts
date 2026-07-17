@@ -48,6 +48,7 @@ export function useStartFocusSession() {
       queryClient.invalidateQueries({ queryKey: focusQueryKeys.today })
       queryClient.invalidateQueries({ queryKey: queryKeys.inventory })
       queryClient.invalidateQueries({ queryKey: ['operationalReality'] })
+      queryClient.invalidateQueries({ queryKey: ['operationalWorkspace'] })
     },
   })
 }
@@ -62,6 +63,7 @@ export function useStopFocusSession() {
       queryClient.invalidateQueries({ queryKey: focusQueryKeys.today })
       queryClient.invalidateQueries({ queryKey: queryKeys.inventory })
       queryClient.invalidateQueries({ queryKey: ['operationalReality'] })
+      queryClient.invalidateQueries({ queryKey: ['operationalWorkspace'] })
     },
   })
 }
@@ -76,6 +78,7 @@ export function useUpdateFocusSession() {
       queryClient.invalidateQueries({ queryKey: focusQueryKeys.today })
       queryClient.invalidateQueries({ queryKey: queryKeys.inventory })
       queryClient.invalidateQueries({ queryKey: ['operationalReality'] })
+      queryClient.invalidateQueries({ queryKey: ['operationalWorkspace'] })
     },
   })
 }
@@ -90,6 +93,7 @@ export function useCreateStoppedFocusSession() {
       queryClient.invalidateQueries({ queryKey: focusQueryKeys.today })
       queryClient.invalidateQueries({ queryKey: queryKeys.inventory })
       queryClient.invalidateQueries({ queryKey: ['operationalReality'] })
+      queryClient.invalidateQueries({ queryKey: ['operationalWorkspace'] })
     },
   })
 }
@@ -104,6 +108,7 @@ export function useSplitFocusSession() {
       queryClient.invalidateQueries({ queryKey: focusQueryKeys.today })
       queryClient.invalidateQueries({ queryKey: queryKeys.inventory })
       queryClient.invalidateQueries({ queryKey: ['operationalReality'] })
+      queryClient.invalidateQueries({ queryKey: ['operationalWorkspace'] })
     },
   })
 }

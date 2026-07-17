@@ -26,6 +26,7 @@ function useRealityMutation<T>(mutationFn: (params: T) => Promise<unknown>) {
       queryClient.invalidateQueries({ queryKey: ['inventory'] })
       queryClient.invalidateQueries({ queryKey: ['captures'] })
       queryClient.invalidateQueries({ queryKey: ['focus'] })
+      queryClient.invalidateQueries({ queryKey: ['operationalWorkspace'] })
     },
   })
 }

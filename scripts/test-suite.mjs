@@ -22,6 +22,8 @@ const steps = [
   ["pnpm", ["smoke:period-report"]],
   ["pnpm", ["smoke:reflection-session"]],
   ["pnpm", ["smoke:operational-reality-gate"]],
+  ["pnpm", ["smoke:operational-workspace-gate"]],
+  ["pnpm", ["smoke:operational-workspace-ui"]],
   ["pnpm", ["smoke:app-events"]],
   ["pnpm", ["smoke:dogfood-report"]],
   ["pnpm", ["smoke:dogfood-finish"]],

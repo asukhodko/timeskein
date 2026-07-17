@@ -26,6 +26,12 @@ import type {
   RefKind,
   TrackView,
   WorkItemSemanticsView,
+  DayContractListResponse,
+  DayContractReviseParams,
+  DayContractRevisionView,
+  DayContractSubjectRef,
+  DayContractSubjectSnapshot,
+  OperationalWorkspaceView,
 } from "@timeskein/contracts";
 import { v4 as uuidv4 } from "uuid";
 
@@ -192,6 +198,7 @@ export class MockDataStore {
   private tracks: Map<string, TrackView>;
   private labels: Map<string, LabelView>;
   private causalRecords: Map<string, CausalRecordView>;
+  private dayContractRevisions: Map<string, DayContractRevisionView[]>;
   private startTime: number;
 
   constructor() {
@@ -206,6 +213,7 @@ export class MockDataStore {
     this.tracks = new Map();
     this.labels = new Map();
     this.causalRecords = new Map();
+    this.dayContractRevisions = new Map();
     this.startTime = Date.now();
 
     // Initialize with mock data
@@ -316,6 +324,142 @@ export class MockDataStore {
     if (kind === "work_item") return this.workItems.has(id);
     if (kind === "track") return this.tracks.has(id);
     return this.captures.has(id);
+  }
+
+  getOperationalWorkspace(localDate: string): OperationalWorkspaceView {
+    const revisions = [...(this.dayContractRevisions.get(localDate) ?? [])];
+    return {
+      local_date: localDate,
+      current_contract: revisions.at(-1),
+      revisions,
+      reality: this.getOperationalReality(),
+      updated_at: new Date().toISOString(),
+    };
+  }
+
+  reviseDayContract(params: DayContractReviseParams): {
+    revision: DayContractRevisionView;
+    workspace: OperationalWorkspaceView;
+  } {
+    if (params.active_subjects.length < 2 || params.active_subjects.length > 3) {
+      throw new Error("Day contract must contain 2 or 3 active subjects");
+    }
+    if (params.parked_subjects.length < 1 || params.parked_subjects.length > 3) {
+      throw new Error("Day contract must contain 1 to 3 parked competitors");
+    }
+    if (!params.why_now.trim()) throw new Error("why_now is required");
+
+    const allRefs = [...params.active_subjects, ...params.parked_subjects];
+    const uniqueRefs = new Set(allRefs.map((subject) => `${subject.kind}:${subject.subject_id}`));
+    if (uniqueRefs.size !== allRefs.length) {
+      throw new Error("The same subject cannot appear more than once or be both active and parked");
+    }
+    for (const subject of allRefs) {
+      if (subject.kind === "work_item" && !this.workItems.has(subject.subject_id)) {
+        throw new Error("Work Item not found");
+      }
+      if (subject.kind === "track" && !this.tracks.has(subject.subject_id)) {
+        throw new Error("Track not found");
+      }
+    }
+
+    const firstAction = this.workItems.get(params.first_action_work_item_id);
+    if (!firstAction) throw new Error("First action Work Item not found");
+    const firstIsInScope = params.active_subjects.some((subject) =>
+      subject.kind === "work_item"
+        ? subject.subject_id === firstAction.id
+        : firstAction.track?.path.some((node) => node.id === subject.subject_id)
+    );
+    if (!firstIsInScope) {
+      throw new Error("First action must belong to one of the active Work Items or Tracks");
+    }
+
+    const previous = this.dayContractRevisions.get(params.local_date) ?? [];
+    if (previous.length === 0 && params.revision_kind !== "morning") {
+      throw new Error("The first contract revision must be morning");
+    }
+    if (previous.length > 0 && params.revision_kind === "morning") {
+      throw new Error("Morning contract already exists; use reentry or adjustment");
+    }
+    const capturedAt = new Date().toISOString();
+    const revision: DayContractRevisionView = {
+      id: uuidv4(),
+      local_date: params.local_date,
+      revision_number: previous.length + 1,
+      revision_kind: params.revision_kind,
+      active_subjects: params.active_subjects.map((subject) => this.snapshotContractSubject(subject, capturedAt)),
+      first_action_work_item_id: firstAction.id,
+      first_action: this.snapshotContractSubject({ kind: "work_item", subject_id: firstAction.id }, capturedAt),
+      parked_subjects: params.parked_subjects.map((subject) => this.snapshotContractSubject(subject, capturedAt)),
+      why_now: params.why_now.trim(),
+      created_at: capturedAt,
+      source: "user",
+      provenance: "confirmed",
+      supersedes_id: previous.at(-1)?.id,
+      schema_version: 1,
+    };
+    this.dayContractRevisions.set(params.local_date, [...previous, revision]);
+    this.logAppEvent({
+      source: "agent",
+      kind: previous.length === 0 ? "day_contract_created" : "day_contract_revised",
+      work_item_id: firstAction.id,
+      payload: {
+        revision_number: revision.revision_number,
+        revision_kind: revision.revision_kind,
+        active_count: revision.active_subjects.length,
+        parked_count: revision.parked_subjects.length,
+      },
+    });
+    return { revision, workspace: this.getOperationalWorkspace(params.local_date) };
+  }
+
+  listDayContracts(from: string, to: string): DayContractListResponse {
+    const revisions = Array.from(this.dayContractRevisions.entries())
+      .filter(([localDate]) => localDate >= from && localDate < to)
+      .flatMap(([, dayRevisions]) => dayRevisions)
+      .sort((left, right) =>
+        left.local_date.localeCompare(right.local_date) || left.revision_number - right.revision_number
+      );
+    return { revisions, total: revisions.length, updated_at: new Date().toISOString() };
+  }
+
+  private snapshotContractSubject(
+    subject: DayContractSubjectRef,
+    capturedAt: string,
+  ): DayContractSubjectSnapshot {
+    const reality = this.getOperationalReality(capturedAt).items.find(
+      (item) => item.subject_kind === subject.kind && item.subject_id === subject.subject_id
+    );
+    if (reality) {
+      return {
+        kind: subject.kind,
+        subject_id: subject.subject_id,
+        title: reality.title,
+        work_item_id: reality.work_item_id,
+        track_id: reality.track_id,
+        state: reality.state,
+        state_provenance: reality.state_provenance,
+        state_record_id: reality.state_record_id,
+        next_action: reality.next_action,
+        last_significant_change: reality.last_significant_change,
+        track_path: reality.track_path,
+        labels: reality.labels,
+        captured_at: capturedAt,
+      };
+    }
+    const track = this.tracks.get(subject.subject_id);
+    if (!track) throw new Error("Operational subject not found");
+    return {
+      kind: "track",
+      subject_id: track.id,
+      title: track.title,
+      track_id: track.id,
+      state: "unknown",
+      state_provenance: "derived",
+      track_path: track.path,
+      labels: [],
+      captured_at: capturedAt,
+    };
   }
 
   listCausalRecords(params: {
@@ -955,7 +1099,7 @@ export class MockDataStore {
       stop_requests: count("focus_stop_requested"),
       typed_entry_requests: this.countEntryRequestsByControls(events, ["typed"]),
       selected_entry_requests: this.countEntryRequestsByControls(events, ["selected_item", "selected_shortcut", "double_click"]),
-      dispatch_ritual_entry_requests: this.countEntryRequestsByControls(events, ["dispatch_ritual"]),
+      dispatch_ritual_entry_requests: this.countEntryRequestsByControls(events, ["dispatch_ritual", "day_contract"]),
       start_failures: count("focus_start_failed"),
       stop_failures: count("focus_stop_failed"),
       correction_requests: count("focus_correction_requested"),
@@ -964,6 +1108,12 @@ export class MockDataStore {
       correction_failures: count("focus_correction_failed"),
       day_closure_starts: count("day_closure_started"),
       day_closure_completions: count("day_closure_completed"),
+      day_contract_created: count("day_contract_created"),
+      day_contract_revisions: count("day_contract_revised"),
+      day_contract_start_requests: count("day_contract_start_requested"),
+      day_contract_starts: count("day_contract_started"),
+      day_contract_start_failures: count("day_contract_start_failed"),
+      day_contract_reentries: count("day_contract_reentry_reviewed"),
       last_day_closure_duration_seconds: closureDurationsSeconds.at(-1),
       api_errors: count("api_error"),
       copy_failures: count("report_copy_failed"),

@@ -14,6 +14,7 @@ import {
   type ActivityZone,
   type OperationalState,
   type OperationalSubjectKind,
+  type DayContractReviseParams,
 } from "@timeskein/contracts";
 import { MockDataStore } from "./fixtures";
 
@@ -78,6 +79,12 @@ const APP_EVENT_KINDS = new Set<string>([
   "focus_correction_failed",
   "day_closure_started",
   "day_closure_completed",
+  "day_contract_created",
+  "day_contract_revised",
+  "day_contract_start_requested",
+  "day_contract_started",
+  "day_contract_start_failed",
+  "day_contract_reentry_reviewed",
   "report_copy_requested",
   "report_copied",
   "report_copy_failed",
@@ -939,6 +946,51 @@ function handleMethod(
       });
     }
 
+    case "operational_workspace.get": {
+      const localDate = typeof params.local_date === "string"
+        ? params.local_date
+        : new Date().toISOString().slice(0, 10);
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(localDate)) {
+        return errorResponse(requestId, "validation_error", "local_date must be YYYY-MM-DD");
+      }
+      return successResponse(requestId, store.getOperationalWorkspace(localDate));
+    }
+
+    case "day_contract.revise": {
+      if (
+        typeof params.local_date !== "string" ||
+        typeof params.revision_kind !== "string" ||
+        !Array.isArray(params.active_subjects) ||
+        !Array.isArray(params.parked_subjects) ||
+        typeof params.first_action_work_item_id !== "string" ||
+        typeof params.why_now !== "string"
+      ) {
+        return errorResponse(requestId, "validation_error", "Complete day contract is required");
+      }
+      try {
+        return successResponse(
+          requestId,
+          store.reviseDayContract(params as unknown as DayContractReviseParams)
+        );
+      } catch (error) {
+        return errorResponse(
+          requestId,
+          "validation_error",
+          error instanceof Error ? error.message : "Day contract update failed"
+        );
+      }
+    }
+
+    case "day_contract.list": {
+      if (typeof params.from !== "string" || typeof params.to !== "string") {
+        return errorResponse(requestId, "validation_error", "from and to are required");
+      }
+      if (params.from >= params.to) {
+        return errorResponse(requestId, "validation_error", "to must be later than from");
+      }
+      return successResponse(requestId, store.listDayContracts(params.from, params.to));
+    }
+
     case "operational_reality.list":
       return successResponse(
         requestId,
@@ -1075,6 +1127,7 @@ app.listen(PORT, () => {
   console.log("  focus.current, focus.start, focus.stop, focus.update, focus.create_stopped, focus.split, focus.list");
   console.log("  ref.add, ref.remove, ref.open, ref.check_conflict");
   console.log("  causal_record.list, operational_reality.list, operational_reality.set_state, operational_reality.set_next_action, operational_reality.follow_up_decision");
+  console.log("  operational_workspace.get, day_contract.revise, day_contract.list");
   console.log("  settings.get, settings.set, settings.get_denylist, settings.add_to_denylist, settings.remove_from_denylist");
 });
 

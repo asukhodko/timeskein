@@ -4,6 +4,7 @@
 
 pub mod app_event;
 pub mod capture;
+pub mod day_contract;
 pub mod day_event;
 pub mod denylist;
 pub mod evidence;
@@ -15,6 +16,7 @@ pub mod work_item;
 
 pub use app_event::*;
 pub use capture::*;
+pub use day_contract::*;
 pub use day_event::*;
 pub use denylist::*;
 pub use evidence::*;

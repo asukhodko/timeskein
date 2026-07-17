@@ -148,7 +148,7 @@ function RealityRow({
   )
 }
 
-function RealityDetails({ item }: { item: OperationalRealityItemView }) {
+export function RealityDetails({ item }: { item: OperationalRealityItemView }) {
   const [stateValue, setStateValue] = useState<OperationalState>(item.state)
   const [stateReason, setStateReason] = useState('')
   const [nextActionText, setNextActionText] = useState(item.next_action?.text ?? '')

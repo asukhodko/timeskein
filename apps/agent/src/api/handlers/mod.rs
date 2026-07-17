@@ -7,6 +7,7 @@ mod day_events;
 mod focus_sessions;
 mod inventory;
 mod operational_reality;
+mod operational_workspace;
 mod refs;
 mod semantics;
 mod settings;
@@ -28,6 +29,7 @@ pub use day_events::*;
 pub use focus_sessions::*;
 pub use inventory::*;
 pub use operational_reality::*;
+pub use operational_workspace::*;
 pub use refs::*;
 pub use semantics::*;
 pub use settings::*;
@@ -210,6 +212,11 @@ async fn dispatch_method(
         "operational_reality.follow_up_decision" => {
             handle_operational_reality_follow_up_decision(state, params, request_id).await
         }
+        "operational_workspace.get" => {
+            handle_operational_workspace_get(state, params, request_id).await
+        }
+        "day_contract.revise" => handle_day_contract_revise(state, params, request_id).await,
+        "day_contract.list" => handle_day_contract_list(state, params, request_id).await,
 
         // Work item methods
         "work_item.create" => handle_work_item_create(state, params, request_id).await,

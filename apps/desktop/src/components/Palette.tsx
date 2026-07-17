@@ -23,7 +23,7 @@ import WorkItemEditor from './WorkItemEditor'
 import RefsPanel from './RefsPanel'
 import ConfirmDialog from './ConfirmDialog'
 import TaxonomyManager from './TaxonomyManager'
-import OperationalRealityPanel from './OperationalRealityPanel'
+import OperationalWorkspacePanel from './OperationalWorkspacePanel'
 import type { WorkItemAddEventParams, WorkItemState } from '@timeskein/contracts'
 import { useCurrentFocusSession, useStartFocusSession } from '../hooks/useFocusSessions'
 import {
@@ -45,11 +45,13 @@ import {
 import { resolveWorkItemOpenAction } from '../utils/workItemOpenAction'
 
 const workAreaHeightStorageKey = 'timeskein.workAreaHeightPx'
+const inventoryExpandedStorageKey = 'timeskein.inventoryExpanded'
 
 export default function Palette() {
   const [search, setSearch] = useState('')
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [inventoryMode, setInventoryMode] = useState<InventoryMode>('recent')
+  const [inventoryExpanded, setInventoryExpanded] = useState(readInventoryExpanded)
   const [workAreaHeightPx, setWorkAreaHeightPx] = useState(readWorkAreaHeight)
   const [showCreate, setShowCreate] = useState(false)
   const [showStateMenu, setShowStateMenu] = useState(false)
@@ -80,6 +82,10 @@ export default function Palette() {
   const startFocusMutation = useStartFocusSession()
   const currentFocusQuery = useCurrentFocusSession()
   const currentFocus = currentFocusQuery.data?.session
+
+  useEffect(() => {
+    globalThis.localStorage?.setItem(inventoryExpandedStorageKey, inventoryExpanded ? 'true' : 'false')
+  }, [inventoryExpanded])
 
   const handleHideWindow = async () => {
     try {
@@ -261,10 +267,13 @@ export default function Palette() {
       if (shortcutMode) {
         e.preventDefault()
         e.stopPropagation()
+        setInventoryExpanded(true)
         setInventoryMode(shortcutMode)
         setSelectedIndex(0)
         return
       }
+
+      if (!inventoryExpanded) return
 
       // Use e.code for layout-independent shortcuts (works with Russian keyboard)
       switch (e.code) {
@@ -313,7 +322,7 @@ export default function Palette() {
           break
       }
     },
-    [visibleItems.length, selectedItem, showCreate, showStateMenu, showNoteEditor, showWorkItemEditor, showRefsPanel, showDeleteConfirm, showTaxonomyManager, handleFocusSelected]
+    [visibleItems.length, selectedItem, inventoryExpanded, showCreate, showStateMenu, showNoteEditor, showWorkItemEditor, showRefsPanel, showDeleteConfirm, showTaxonomyManager, handleFocusSelected]
   )
 
   useEffect(() => {
@@ -382,6 +391,19 @@ export default function Palette() {
           </span>
           <button
             data-no-drag
+            onClick={() => setInventoryExpanded((value) => !value)}
+            className={[
+              'rounded border px-2 py-1 text-xs transition-colors',
+              inventoryExpanded
+                ? 'border-blue-700 bg-blue-950/50 text-blue-200'
+                : 'border-gray-700 text-gray-400 hover:border-blue-700 hover:text-blue-200',
+            ].join(' ')}
+            title={inventoryExpanded ? 'Скрыть инвентарь' : 'Открыть инвентарь дел'}
+          >
+            Дела
+          </button>
+          <button
+            data-no-drag
             onClick={() => setShowTaxonomyManager(true)}
             className="flex h-6 w-6 items-center justify-center rounded bg-gray-800 text-sm font-bold text-cyan-300 transition-colors hover:bg-gray-700"
             title="Направления и метки"
@@ -409,27 +431,29 @@ export default function Palette() {
       </div>
 
       <div
-        className="min-h-0 shrink-0 overflow-y-auto"
-        style={{ height: `${workAreaHeightPx}px` }}
+        className={inventoryExpanded ? 'min-h-0 shrink-0 overflow-y-auto' : 'min-h-0 flex-1 overflow-y-auto'}
+        style={inventoryExpanded ? { height: `${workAreaHeightPx}px` } : undefined}
       >
-        <OperationalRealityPanel />
-        <FocusPanel selectedItem={selectedItem} />
+        <OperationalWorkspacePanel />
+        <FocusPanel selectedItem={inventoryExpanded ? selectedItem : undefined} />
       </div>
 
-      <button
-        type="button"
-        data-no-drag
-        onMouseDown={handleStartWorkAreaResize}
-        onDoubleClick={resetWorkAreaHeight}
-        className="group flex h-2 cursor-row-resize items-center justify-center border-b border-gray-700 bg-gray-950/80 hover:bg-gray-800/80"
-        title="Потяни, чтобы изменить соотношение рабочего контура и списка дел. Двойной клик сбросит высоту."
-        aria-label="Изменить высоту рабочего контура"
-      >
-        <span className="h-0.5 w-12 rounded bg-gray-700 transition-colors group-hover:bg-blue-500/70" />
-      </button>
+      {inventoryExpanded && (
+        <button
+          type="button"
+          data-no-drag
+          onMouseDown={handleStartWorkAreaResize}
+          onDoubleClick={resetWorkAreaHeight}
+          className="group flex h-2 cursor-row-resize items-center justify-center border-b border-gray-700 bg-gray-950/80 hover:bg-gray-800/80"
+          title="Потяни, чтобы изменить соотношение рабочего контура и инвентаря. Двойной клик сбросит высоту."
+          aria-label="Изменить высоту рабочего контура"
+        >
+          <span className="h-0.5 w-12 rounded bg-gray-700 transition-colors group-hover:bg-blue-500/70" />
+        </button>
+      )}
 
-      {/* Search */}
-      <div className="px-4 py-2 border-b border-gray-700">
+      {inventoryExpanded && <>
+      <div className="border-b border-gray-700 px-4 py-2">
         <SearchInput
           value={search}
           onChange={setSearch}
@@ -538,6 +562,7 @@ export default function Palette() {
           </button>
         </div>
       </div>
+      </>}
 
       {/* Create Dialog */}
       {showCreate && (
@@ -629,6 +654,14 @@ function readWorkAreaHeight() {
   return Number.isFinite(parsed)
     ? clampWorkAreaHeight(parsed, window.innerHeight)
     : defaultWorkAreaHeight(window.innerHeight)
+}
+
+function readInventoryExpanded() {
+  try {
+    return globalThis.localStorage?.getItem(inventoryExpandedStorageKey) === 'true'
+  } catch {
+    return false
+  }
 }
 
 function writeWorkAreaHeight(height: number) {

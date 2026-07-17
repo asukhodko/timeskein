@@ -140,6 +140,12 @@ const APP_EVENT_KIND_LABELS = {
   entry_paths_reviewed: "пути входа проверены",
   day_closure_started: "закрытие дня начато",
   day_closure_completed: "закрытие дня завершено",
+  day_contract_created: "договор дня создан",
+  day_contract_revised: "договор дня пересмотрен",
+  day_contract_start_requested: "запрошен старт из договора",
+  day_contract_started: "старт из договора выполнен",
+  day_contract_start_failed: "старт из договора не удался",
+  day_contract_reentry_reviewed: "договор просмотрен при возвращении",
   report_copy_requested: "запрошено копирование отчёта",
   report_copied: "отчёт скопирован",
   report_copy_failed: "копирование отчёта не удалось",
@@ -154,6 +160,9 @@ if (options.date) {
 const activeSummary = existsSync(dbPath)
   ? await loadActiveSummary(dbPath, from, to)
   : { activeFocus: undefined, activeWorkItems: [], openCaptures: [], captureActivity: [], focusOverlaps: [] };
+const dayContractRevisions = existsSync(dbPath)
+  ? await loadDayContractRevisions(dbPath, reportDate)
+  : [];
 const { stdout: dayMarkdown } = await execFileAsync(process.execPath, exportArgs, {
   cwd: repoRoot,
   maxBuffer: 10 * 1024 * 1024,
@@ -173,7 +182,8 @@ process.stdout.write(
     activeSummary.openCaptures,
     activeSummary.captureActivity,
     dayMarkdown,
-    activeSummary.focusOverlaps
+    activeSummary.focusOverlaps,
+    dayContractRevisions
   )
 );
 
@@ -360,7 +370,8 @@ function buildDogfoodReport(
   openCaptures = [],
   captureActivity = [],
   focusMarkdown = dayMarkdown,
-  focusOverlaps = []
+  focusOverlaps = [],
+  dayContractRevisions = []
 ) {
   const hasActiveWorkItems = activeWorkItems.length > 0;
   const humanFocusMarkdown = formatFocusMarkdownForReport(dayMarkdown);
@@ -443,6 +454,8 @@ function buildDogfoodReport(
     lines.push(formatCaptureActivityMarkdown(captureActivity).trim(), "");
   }
 
+  lines.push(formatDayContractMarkdown(dayContractRevisions).trim(), "");
+
   lines.push(
     "## Данные фокуса",
     "",
@@ -454,6 +467,59 @@ function buildDogfoodReport(
   );
 
   return `${lines.join("\n")}\n`;
+}
+
+async function loadDayContractRevisions(path, localDate) {
+  const tables = await queryJson(path, `
+    SELECT name FROM sqlite_master
+    WHERE type = 'table' AND name = 'day_contract_revisions';
+  `);
+  if (tables.length === 0) return [];
+  const rows = await queryJson(path, `
+    SELECT id, revision_number, revision_kind, active_subjects_json,
+           first_action_snapshot_json, parked_subjects_json, why_now,
+           created_at, supersedes_id, source, provenance
+    FROM day_contract_revisions
+    WHERE local_date = ${sqlString(localDate)}
+    ORDER BY revision_number ASC;
+  `);
+  return rows.map((row) => ({
+    ...row,
+    active_subjects: JSON.parse(row.active_subjects_json),
+    first_action: JSON.parse(row.first_action_snapshot_json),
+    parked_subjects: JSON.parse(row.parked_subjects_json),
+  }));
+}
+
+function formatDayContractMarkdown(revisions) {
+  const lines = ["## Договор дня", ""];
+  if (revisions.length === 0) {
+    lines.push("Договор дня не сформирован.");
+    return lines.join("\n");
+  }
+  const current = revisions.at(-1);
+  lines.push(
+    `Текущая версия: ${current.revision_number}. История сохранена: ${revisions.length} ${pluralRu(revisions.length, "версия", "версии", "версий")}.`,
+    "",
+    "| Версия | Время | Тип | В игре | Первое действие | Припарковано | Почему сейчас |",
+    "| ---: | --- | --- | --- | --- | --- | --- |",
+  );
+  for (const revision of revisions) {
+    lines.push(
+      `| ${revision.revision_number} | ${formatClockTime(revision.created_at)} | ${formatRevisionKind(revision.revision_kind)} | ${escapeTable(revision.active_subjects.map((item) => item.title).join(" · "))} | ${escapeTable(revision.first_action.title)} | ${escapeTable(revision.parked_subjects.map((item) => item.title).join(" · "))} | ${escapeTable(revision.why_now)} |`,
+    );
+  }
+  return lines.join("\n");
+}
+
+function formatRevisionKind(kind) {
+  if (kind === "morning") return "утро";
+  if (kind === "reentry") return "возвращение";
+  return "корректировка";
+}
+
+function escapeTable(value) {
+  return String(value ?? "").replaceAll("|", "\\|").replaceAll("\n", " ");
 }
 
 function formatAdditionalReviewMarkdown() {
@@ -613,6 +679,7 @@ function formatTelemetryForReport(markdown) {
     .replace(/^Capture updated\/deleted:/gm, "Отвлечений изменено/удалено:")
     .replace(/^Capture failures create\/resolve\/update\/delete\/convert:/gm, "Ошибок отвлечений: создание/закрытие/изменение/удаление/превращение:")
     .replace(/^Corrections requested\/applied\/reviewed\/failed:/gm, "Коррекций запрошено/применено/проверено/ошибок:")
+    .replace(/^Day contract created\/revised\/start requests\/starts\/failures\/reentries:/gm, "Договор дня создан/пересмотрен/запрошено стартов/стартов/ошибок/возвратов:")
     .replace(/^Day closure started\/completed:/gm, "Закрытий дня начато/завершено:")
     .replace(/^Last day closure duration:/gm, "Последняя длительность закрытия дня:")
     .replace(/^API errors:/gm, "Ошибок API:")

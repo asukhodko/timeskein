@@ -60,6 +60,12 @@ import {
   type OperationalRealitySetNextActionParams,
   type OperationalRealitySetStateParams,
   type OperationalRealityView,
+  type OperationalWorkspaceGetParams,
+  type OperationalWorkspaceView,
+  type DayContractListParams,
+  type DayContractListResponse,
+  type DayContractMutationResponse,
+  type DayContractReviseParams,
   isApiError,
 } from '@timeskein/contracts'
 
@@ -212,6 +218,15 @@ export const operationalRealityApi = {
       'operational_reality.follow_up_decision',
       params
     ),
+}
+
+export const operationalWorkspaceApi = {
+  get: (params?: OperationalWorkspaceGetParams) =>
+    rpc<OperationalWorkspaceView>('operational_workspace.get', params),
+  reviseContract: (params: DayContractReviseParams) =>
+    rpc<DayContractMutationResponse>('day_contract.revise', params),
+  listContracts: (params: DayContractListParams) =>
+    rpc<DayContractListResponse>('day_contract.list', params),
 }
 
 export const dayEventApi = {

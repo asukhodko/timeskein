@@ -115,6 +115,46 @@ test("day events do not interrupt active focus and can be cleaned up", async () 
   assert.equal(store.listDayEvents().length, 1);
 });
 
+test("day contracts keep append-only item-backed revisions", () => {
+  const store = new MockDataStore();
+  const track = store.createTrack("Workspace Track");
+  const first = store.createWorkItem("Workspace First");
+  const second = store.createWorkItem("Workspace Second");
+  const parked = store.createWorkItem("Workspace Parked");
+  store.setWorkItemSemantics(first.id, track.id, []);
+
+  const morning = store.reviseDayContract({
+    local_date: "2099-01-17",
+    revision_kind: "morning",
+    active_subjects: [
+      { kind: "track", subject_id: track.id },
+      { kind: "work_item", subject_id: second.id },
+    ],
+    first_action_work_item_id: first.id,
+    parked_subjects: [{ kind: "work_item", subject_id: parked.id }],
+    why_now: "The first action is the nearest useful signal",
+  });
+  const originalTitle = morning.revision.first_action.title;
+  store.updateWorkItem(first.id, { title: "Workspace First Renamed" });
+  const adjustment = store.reviseDayContract({
+    local_date: "2099-01-17",
+    revision_kind: "adjustment",
+    active_subjects: [
+      { kind: "work_item", subject_id: first.id },
+      { kind: "work_item", subject_id: second.id },
+    ],
+    first_action_work_item_id: second.id,
+    parked_subjects: [{ kind: "work_item", subject_id: parked.id }],
+    why_now: "New evidence changed the first action",
+  });
+
+  const history = store.listDayContracts("2099-01-17", "2099-01-18");
+  assert.equal(history.total, 2);
+  assert.equal(history.revisions[0].first_action.title, originalTitle);
+  assert.equal(history.revisions[1].supersedes_id, history.revisions[0].id);
+  assert.equal(adjustment.workspace.current_contract?.id, adjustment.revision.id);
+});
+
 test("focus correction update, split and work item edit are reflected in day data", async () => {
   const store = new MockDataStore();
   const started = store.startFocusSession({

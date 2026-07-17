@@ -30,6 +30,22 @@ try {
   const port = await waitForResponsiveAgent(portFile, 15_000);
   const status = await rpc(port, "agent.status");
   const inventory = await rpc(port, "inventory.list");
+  const stoppedLegacy = await rpc(port, "focus.stop", {
+    note: "packaged app normalized legacy focus",
+  });
+  assert(
+    stoppedLegacy.id === "00000000-0000-4000-8000-000000000201",
+    "startup migration kept an unexpected legacy focus session active"
+  );
+  const normalizedLegacyStop = new Date();
+  normalizedLegacyStop.setDate(normalizedLegacyStop.getDate() - 1);
+  normalizedLegacyStop.setHours(23, 56, 0, 0);
+  const normalizedLegacyStart = new Date(normalizedLegacyStop.getTime() - 60_000);
+  await rpc(port, "focus.update", {
+    id: stoppedLegacy.id,
+    started_at: normalizedLegacyStart.toISOString(),
+    stopped_at: normalizedLegacyStop.toISOString(),
+  });
   const title = `Packaged app smoke ${new Date().toISOString()}`;
   const started = await rpc(port, "focus.start", {
     title,
@@ -160,6 +176,34 @@ try {
   const stopped = await rpc(port, "focus.stop", {
     note: "packaged app smoke done",
   });
+  const contractSecond = await rpc(port, "work_item.create", {
+    title: `Packaged contract second ${new Date().toISOString()}`,
+    type: "task",
+  });
+  const contractParked = await rpc(port, "work_item.create", {
+    title: `Packaged contract parked ${new Date().toISOString()}`,
+    type: "task",
+  });
+  const contractDate = formatLocalDate(new Date());
+  const contract = await rpc(port, "day_contract.revise", {
+    local_date: contractDate,
+    revision_kind: "morning",
+    active_subjects: [
+      { kind: "work_item", subject_id: started.work_item_id },
+      { kind: "work_item", subject_id: contractSecond.id },
+    ],
+    first_action_work_item_id: started.work_item_id,
+    parked_subjects: [{ kind: "work_item", subject_id: contractParked.id }],
+    why_now: "Packaged smoke proves the persisted operational workspace path",
+  });
+  assert(contract.revision.revision_number === 1, "packaged app failed to create the day contract");
+  const packagedWorkspace = await rpc(port, "operational_workspace.get", { local_date: contractDate });
+  assert(packagedWorkspace.current_contract?.id === contract.revision.id, "packaged workspace did not persist the day contract");
+  const packagedContractHistory = await rpc(port, "day_contract.list", {
+    from: contractDate,
+    to: nextLocalDate(contractDate),
+  });
+  assert(packagedContractHistory.total === 1, "packaged app day-contract history is unavailable");
   const initialReality = await rpc(port, "operational_reality.list");
   assert(
     initialReality.items.some((item) => item.work_item_id === started.work_item_id),
@@ -617,21 +661,19 @@ async function rpc(port, method, params = {}) {
 
 async function runCorrectionSmoke(port) {
   const title = `Packaged correction ${new Date().toISOString()}`;
-  const started = await rpc(port, "focus.start", {
+  const correctionWindow = previousDayWindow();
+  const start = new Date(new Date(correctionWindow.from).getTime() + 60 * 60_000);
+  const end = new Date(start.getTime() + 60_000);
+  const started = await rpc(port, "focus.create_stopped", {
     title,
-    target_seconds: 60,
-  });
-  await new Promise((resolve) => setTimeout(resolve, 1100));
-
-  const stopped = await rpc(port, "focus.stop", {
+    started_at: start.toISOString(),
+    stopped_at: end.toISOString(),
     note: "packaged correction original note",
   });
-  const end = new Date(stopped.stopped_at);
-  const start = new Date(end.getTime() - 60_000);
   const splitAt = new Date(start.getTime() + 30_000);
   const correctedTitle = `${title} corrected`;
   const updated = await rpc(port, "focus.update", {
-    id: stopped.id,
+    id: started.id,
     title: correctedTitle,
     started_at: start.toISOString(),
     stopped_at: end.toISOString(),
@@ -657,8 +699,7 @@ async function runCorrectionSmoke(port) {
   assert(split.right.work_item_title === rightTitle, "focus.split did not assign right title");
   assert(split.right.activity_zone === "work", "focus.split did not snapshot packaged right zone");
 
-  const currentDay = todayWindow();
-  const missedStart = new Date(new Date(currentDay.from).getTime() + 12 * 60 * 60_000);
+  const missedStart = new Date(new Date(correctionWindow.from).getTime() + 2 * 60 * 60_000);
   const missedStop = new Date(missedStart.getTime() + 20 * 60_000);
   const missedTitle = `${title} missed`;
   const missed = await rpc(port, "focus.create_stopped", {
@@ -688,7 +729,7 @@ async function runCorrectionSmoke(port) {
   assert(editedItem.type === "project", "work_item.update did not update type");
   assert(editedItem.activity_zone === "coordination", "work_item.update did not update activity zone");
 
-  const beforeZoneCorrection = await rpc(port, "focus.list", todayWindow());
+  const beforeZoneCorrection = await rpc(port, "focus.list", correctionWindow);
   const rightBeforeZoneCorrection = beforeZoneCorrection.sessions.find((session) => session.id === split.right.id);
   assert(
     rightBeforeZoneCorrection?.activity_zone === "work",
@@ -741,7 +782,7 @@ async function runCorrectionSmoke(port) {
     "work_item.delete_event left packaged event visible"
   );
 
-  const day = await rpc(port, "focus.list", todayWindow());
+  const day = await rpc(port, "focus.list", correctionWindow);
   const rightFound = day.sessions.find((session) => session.id === split.right.id);
   const missedFound = day.sessions.find((session) => session.id === missed.id);
   assert(rightFound?.work_item_title === editedRightTitle, "focus.list did not reflect edited item title");
@@ -831,6 +872,34 @@ function todayWindow() {
   };
 }
 
+function previousDayWindow() {
+  const from = new Date();
+  from.setDate(from.getDate() - 1);
+  from.setHours(0, 0, 0, 0);
+
+  const to = new Date(from);
+  to.setDate(to.getDate() + 1);
+
+  return {
+    from: from.toISOString(),
+    to: to.toISOString(),
+  };
+}
+
+function formatLocalDate(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function nextLocalDate(value) {
+  const [year, month, day] = value.split("-").map(Number);
+  const date = new Date(year, month - 1, day);
+  date.setDate(date.getDate() + 1);
+  return formatLocalDate(date);
+}
+
 async function waitForExit(process, timeoutMs) {
   if (process.exitCode !== null || process.signalCode !== null) return;
 
@@ -849,6 +918,8 @@ async function stopChild(process) {
 
 async function seedLegacyDbWithMultipleActiveWorkItems() {
   const dbPath = join(dataDir, "timeskein.db");
+  const legacyNewerAt = new Date(Date.now() - 2 * 60_000).toISOString();
+  const legacyOlderAt = new Date(Date.now() - 4 * 60_000).toISOString();
   await mkdir(dataDir, { recursive: true });
   await runSqlFile(dbPath, join(repoRoot, "apps/agent/migrations/001_initial.sql"));
   await runSql(
@@ -927,7 +998,7 @@ async function seedLegacyDbWithMultipleActiveWorkItems() {
       INSERT INTO app_events (id, ts, source, kind, work_item_id, focus_session_id, payload)
       VALUES (
         '00000000-0000-4000-8000-000000000301',
-        '2026-06-30T07:00:00Z',
+        '${legacyNewerAt}',
         'agent',
         'agent_started',
         NULL,
@@ -937,11 +1008,11 @@ async function seedLegacyDbWithMultipleActiveWorkItems() {
 
       INSERT INTO work_items (id, title, type, state, pinned, created_at, updated_at, last_seen_at)
       VALUES
-        ('00000000-0000-4000-8000-000000000101', 'Legacy Active Older', 'task', 'active', 0, '2026-06-30T06:00:00Z', '2026-06-30T06:00:00Z', '2026-06-30T06:00:00Z'),
-        ('00000000-0000-4000-8000-000000000102', 'Legacy Active Newer', 'task', 'active', 0, '2026-06-30T07:00:00Z', '2026-06-30T07:00:00Z', '2026-06-30T07:00:00Z');
+        ('00000000-0000-4000-8000-000000000101', 'Legacy Active Older', 'task', 'active', 0, '${legacyOlderAt}', '${legacyOlderAt}', '${legacyOlderAt}'),
+        ('00000000-0000-4000-8000-000000000102', 'Legacy Active Newer', 'task', 'active', 0, '${legacyNewerAt}', '${legacyNewerAt}', '${legacyNewerAt}');
 
       INSERT INTO focus_sessions (id, title, work_item_id, state, target_seconds, note, started_at, stopped_at, updated_at)
-      VALUES ('00000000-0000-4000-8000-000000000201', 'Legacy Active Newer', '00000000-0000-4000-8000-000000000102', 'active', 1500, NULL, '2026-06-30T07:00:00Z', NULL, '2026-06-30T07:00:00Z');
+      VALUES ('00000000-0000-4000-8000-000000000201', 'Legacy Active Newer', '00000000-0000-4000-8000-000000000102', 'active', 1500, NULL, '${legacyNewerAt}', NULL, '${legacyNewerAt}');
     `
   );
 }

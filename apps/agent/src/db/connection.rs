@@ -102,6 +102,12 @@ impl Database {
             .execute(&self.pool)
             .await?;
 
+        let operational_workspace_sql =
+            include_str!("../../migrations/013_operational_workspace.sql");
+        sqlx::raw_sql(operational_workspace_sql)
+            .execute(&self.pool)
+            .await?;
+
         Ok(())
     }
 
@@ -199,7 +205,10 @@ impl Database {
 
         if table_sql
             .as_deref()
-            .is_some_and(|sql| sql.contains("activity_zone_glanced"))
+            .is_some_and(|sql| {
+                sql.contains("activity_zone_glanced")
+                    && sql.contains("day_contract_reentry_reviewed")
+            })
         {
             return Ok(());
         }

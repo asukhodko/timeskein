@@ -2,7 +2,7 @@ version: 3
 
 meta:
   id: timeskein
-  title: Timeskein roadmap
+  title: Timeskein causal work memory roadmap
   effort_unit: focus-blocks
 
 statuses:
@@ -32,3 +32,6 @@ profiles:
   - id: timeskein.ops
     version: 1
     namespace: ops
+  - id: timeskein.strategy
+    version: 1
+    namespace: strategy

@@ -1,8 +1,13 @@
+import type { EvidenceKind, RefKind } from '@timeskein/contracts'
+
 export const ACTIVE_FOCUS_JOURNAL_KIND_LABELS = {
+  result: 'Результат',
   thought: 'Мысль',
   decision: 'Решение',
+  blocker: 'Блокер',
   question: 'Вопрос',
   next_step: 'Следующий шаг',
+  observation: 'Наблюдение',
   milestone: 'Веха',
   interruption: 'Отвлечение',
 } as const
@@ -20,10 +25,15 @@ export interface ActiveFocusJournalDraft {
   text: string
   kind: ActiveFocusJournalKind
   target: ActiveFocusJournalTarget
+  refChoice: string
+  newRefKind: RefKind
+  newRefValue: string
 }
 
 export const DEFAULT_ACTIVE_FOCUS_JOURNAL_KIND: ActiveFocusJournalKind = 'thought'
 export const DEFAULT_ACTIVE_FOCUS_JOURNAL_TARGET: ActiveFocusJournalTarget = 'work_item'
+export const DEFAULT_ACTIVE_FOCUS_JOURNAL_REF_KIND: RefKind = 'url'
+export const ACTIVE_FOCUS_JOURNAL_NEW_REF = '__new__'
 
 const KIND_VALUES = Object.keys(ACTIVE_FOCUS_JOURNAL_KIND_LABELS) as ActiveFocusJournalKind[]
 const TARGET_VALUES = Object.keys(ACTIVE_FOCUS_JOURNAL_TARGET_LABELS) as ActiveFocusJournalTarget[]
@@ -37,9 +47,22 @@ export function formatActiveFocusJournalText(kind: ActiveFocusJournalKind, text:
   return `${label}: ${trimmed}`
 }
 
+export function evidenceKindForJournalKind(kind: ActiveFocusJournalKind): EvidenceKind {
+  if (kind === 'result' || kind === 'decision' || kind === 'blocker' || kind === 'next_step' || kind === 'observation') {
+    return kind
+  }
+  return 'observation'
+}
+
 export function encodeActiveFocusJournalDraft(draft: ActiveFocusJournalDraft) {
   const safeDraft = normalizeActiveFocusJournalDraft(draft)
-  if (!safeDraft.text && safeDraft.kind === DEFAULT_ACTIVE_FOCUS_JOURNAL_KIND && safeDraft.target === DEFAULT_ACTIVE_FOCUS_JOURNAL_TARGET) {
+  if (
+    !safeDraft.text
+    && safeDraft.kind === DEFAULT_ACTIVE_FOCUS_JOURNAL_KIND
+    && safeDraft.target === DEFAULT_ACTIVE_FOCUS_JOURNAL_TARGET
+    && !safeDraft.refChoice
+    && !safeDraft.newRefValue
+  ) {
     return ''
   }
 
@@ -55,6 +78,9 @@ export function decodeActiveFocusJournalDraft(raw: string | null | undefined): A
       text: typeof parsed.text === 'string' ? parsed.text : '',
       kind: parsed.kind as ActiveFocusJournalKind,
       target: parsed.target as ActiveFocusJournalTarget,
+      refChoice: typeof parsed.refChoice === 'string' ? parsed.refChoice : '',
+      newRefKind: parsed.newRefKind as RefKind,
+      newRefValue: typeof parsed.newRefValue === 'string' ? parsed.newRefValue : '',
     })
   } catch {
     return emptyActiveFocusJournalDraft()
@@ -71,6 +97,9 @@ export function normalizeActiveFocusJournalDraft(draft: Partial<ActiveFocusJourn
     text: typeof draft.text === 'string' ? draft.text : '',
     kind: isActiveFocusJournalKind(draft.kind) ? draft.kind : DEFAULT_ACTIVE_FOCUS_JOURNAL_KIND,
     target: isActiveFocusJournalTarget(draft.target) ? draft.target : DEFAULT_ACTIVE_FOCUS_JOURNAL_TARGET,
+    refChoice: typeof draft.refChoice === 'string' ? draft.refChoice : '',
+    newRefKind: isRefKind(draft.newRefKind) ? draft.newRefKind : DEFAULT_ACTIVE_FOCUS_JOURNAL_REF_KIND,
+    newRefValue: typeof draft.newRefValue === 'string' ? draft.newRefValue : '',
   }
 }
 
@@ -79,6 +108,9 @@ function emptyActiveFocusJournalDraft(): ActiveFocusJournalDraft {
     text: '',
     kind: DEFAULT_ACTIVE_FOCUS_JOURNAL_KIND,
     target: DEFAULT_ACTIVE_FOCUS_JOURNAL_TARGET,
+    refChoice: '',
+    newRefKind: DEFAULT_ACTIVE_FOCUS_JOURNAL_REF_KIND,
+    newRefValue: '',
   }
 }
 
@@ -88,6 +120,10 @@ function isActiveFocusJournalKind(value: unknown): value is ActiveFocusJournalKi
 
 function isActiveFocusJournalTarget(value: unknown): value is ActiveFocusJournalTarget {
   return TARGET_VALUES.includes(value as ActiveFocusJournalTarget)
+}
+
+function isRefKind(value: unknown): value is RefKind {
+  return ['url', 'file_path', 'issue_key', 'custom'].includes(String(value))
 }
 
 function formatLocalDayKey(date: Date) {

@@ -233,6 +233,9 @@ pub struct WorkItemView {
     pub refs: Vec<super::RefView>,
     pub today_active_seconds: i64,
     pub total_active_seconds: i64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub track: Option<super::TrackView>,
+    pub labels: Vec<super::LabelView>,
     pub created_at: String,
     pub updated_at: String,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -250,6 +253,22 @@ impl WorkItemView {
         today_active_seconds: i64,
         total_active_seconds: i64,
     ) -> Self {
+        Self::from_work_item_with_stats_and_semantics(
+            item,
+            refs,
+            today_active_seconds,
+            total_active_seconds,
+            super::WorkItemSemanticsView::default(),
+        )
+    }
+
+    pub fn from_work_item_with_stats_and_semantics(
+        item: &WorkItem,
+        refs: Vec<super::RefView>,
+        today_active_seconds: i64,
+        total_active_seconds: i64,
+        semantics: super::WorkItemSemanticsView,
+    ) -> Self {
         Self {
             id: item.id,
             title: item.title.clone(),
@@ -262,6 +281,8 @@ impl WorkItemView {
             refs,
             today_active_seconds,
             total_active_seconds,
+            track: semantics.track,
+            labels: semantics.labels,
             created_at: item.created_at.to_rfc3339(),
             updated_at: item.updated_at.to_rfc3339(),
             last_seen_at: item.last_seen_at.map(|dt| dt.to_rfc3339()),
@@ -362,22 +383,35 @@ pub struct WorkItemEventView {
     pub focus_session_id: Option<Uuid>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub payload: Option<serde_json::Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub evidence: Option<super::EvidenceEntryView>,
 }
 
 impl WorkItemEventView {
     pub fn from_event(event: WorkItemEvent) -> Self {
+        Self::from_event_with_evidence(event, None)
+    }
+
+    pub fn from_event_with_evidence(
+        event: WorkItemEvent,
+        evidence: Option<super::EvidenceEntryView>,
+    ) -> Self {
         let text = event
             .payload
             .as_ref()
             .and_then(|payload| payload.get("text"))
             .and_then(|value| value.as_str())
             .map(str::to_string);
-        let focus_session_id = event
+        let legacy_focus_session_id = event
             .payload
             .as_ref()
             .and_then(|payload| payload.get("focus_session_id"))
             .and_then(|value| value.as_str())
             .and_then(|value| Uuid::parse_str(value).ok());
+        let focus_session_id = evidence
+            .as_ref()
+            .and_then(|entry| entry.focus_session_id)
+            .or(legacy_focus_session_id);
 
         Self {
             id: event.id,
@@ -387,6 +421,7 @@ impl WorkItemEventView {
             text,
             focus_session_id,
             payload: event.payload,
+            evidence,
         }
     }
 }

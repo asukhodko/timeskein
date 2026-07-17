@@ -31,6 +31,7 @@ export function useCreateCapture() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: captureQueryKeys.open })
       queryClient.invalidateQueries({ queryKey: captureQueryKeys.activity })
+      queryClient.invalidateQueries({ queryKey: ['operationalReality'] })
     },
   })
 }
@@ -43,6 +44,7 @@ export function useResolveCapture() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: captureQueryKeys.open })
       queryClient.invalidateQueries({ queryKey: captureQueryKeys.activity })
+      queryClient.invalidateQueries({ queryKey: ['operationalReality'] })
     },
   })
 }
@@ -55,6 +57,7 @@ export function useUpdateCapture() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: captureQueryKeys.open })
       queryClient.invalidateQueries({ queryKey: captureQueryKeys.activity })
+      queryClient.invalidateQueries({ queryKey: ['operationalReality'] })
     },
   })
 }
@@ -67,6 +70,7 @@ export function useDeleteCapture() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: captureQueryKeys.open })
       queryClient.invalidateQueries({ queryKey: captureQueryKeys.activity })
+      queryClient.invalidateQueries({ queryKey: ['operationalReality'] })
     },
   })
 }
@@ -80,6 +84,7 @@ export function useConvertCaptureToWorkItem() {
       queryClient.invalidateQueries({ queryKey: captureQueryKeys.open })
       queryClient.invalidateQueries({ queryKey: captureQueryKeys.activity })
       queryClient.invalidateQueries({ queryKey: queryKeys.inventory })
+      queryClient.invalidateQueries({ queryKey: ['operationalReality'] })
     },
   })
 }
@@ -95,6 +100,7 @@ export function useAppendCaptureToWorkItemEvent() {
       queryClient.invalidateQueries({ queryKey: captureQueryKeys.activity })
       queryClient.invalidateQueries({ queryKey: queryKeys.inventory })
       queryClient.invalidateQueries({ queryKey: ['workItemEvents'] })
+      queryClient.invalidateQueries({ queryKey: ['operationalReality'] })
     },
   })
 }

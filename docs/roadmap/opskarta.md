@@ -4,47 +4,37 @@ This is the current machine-checkable roadmap for Timeskein. The source files li
 `plans/timeskein/*.plan.yaml` and use the vendored opskarta v3 tools in
 `tools/opskarta`.
 
-The macOS dogfood release baseline was accepted on 2026-07-03 after three real
-tracked workdays. The daily-control gate was closed on 2026-07-08: the final
-saved report was clean, measured evening closure took `2:32`, and strict
-`pnpm dogfood:goal-check -- --date 2026-07-08 --no-codex-guidance` passed after
-the full test, preflight, and strict RC evidence path.
+## Strategic position
 
-The completed `Проверка закрытия дня` in the UI/CLI dogfood report and in
-`pnpm dogfood:rc-check` checked whether a real day had enough closure evidence for focus
-blocks, Work Item totals, Activity Zones, notes/events, captures, gaps,
-corrections, and app-friction review. Work Item totals required an explicit UI
-checklist acceptance that touched Work Item cards showed day/total time, not
-only the presence of `By Work Item` rows in the Markdown report. Window friction
-evidence included both show and hide request counts, so window entrypoints were
-exercised rather than inferred from passive visibility events. Entry evidence
-also checked both typed start and selected/list continuation, proving that
-starting new work and returning to existing work are both usable. If Timeskein
-is quit during an already started dogfood day, `pnpm dogfood:continue` reopens
-it through readiness continue mode and the same process/preflight/app-open guard
-as the normal start path.
-`pnpm dogfood:finish:save` now saves both the readable day report and the
-closure-check evidence file, so the evening package is collected in one step.
-For future regression checks, `pnpm dogfood:finish:save` points to
-`pnpm dogfood:goal-check -- --date YYYY-MM-DD --no-codex-guidance` only after measured closure is present and the saved
-`Проверка закрытия дня` has no pending rows. The goal check first requires the
-saved dogfood report and closure evidence for the real local database, verifies the
-grouped review checklist plus `Ближайшее действие`, then runs `pnpm test`,
-`pnpm dogfood:preflight`, and strict closure evidence on the same code.
-The first in-day structure slice is accepted: Timeskein holds free day thoughts,
-active-work observations, live Activity Zone balance, dispatch choices, and
-recovery/lost-control gap labels. Work Item stages remain a future slice.
+The accepted manual foundation includes the macOS Session replacement, cheap
+day closure, in-day structure, period reports, Reflection Sessions,
+Tracks/Labels, historical snapshots, typed evidence, and decision follow-up.
+Real gates through 2026-07-10 remain green and are preserved as regression
+requirements.
 
-The active product layer is periodic reflection. P0 is accepted:
-`pnpm report:period` exports an arbitrary half-open date range as Markdown or
-JSON with day/item/zone totals, timeline, gaps, captures, events, quality
-warnings, and focus-decision candidates. A real review of 1-9 July proved the
-value and exposed the next semantic gap: invested effort alone cannot tell a
-completed meeting from a track worth continuing. The next gate is distinct
-weekly, sprint, and performance-review profiles plus persisted review decisions.
-Track/Label filters and parent project slices come after that evidence. Active
-window, browser URL, messenger, screenshot, and Evidence Mode collection stay
-future opt-in layers.
+The roadmap now backcasts from one north star:
+
+```text
+intention -> work episode -> context -> change
+          -> evidence -> decision -> next action
+```
+
+ADR-0004, RFC-0009, and Roadmap 0005 define the architecture gate. The route
+pulls provenance, privacy, correction, and sync-readiness forward, while
+testing automatic context through a bounded focus-scoped probe before building
+a general SourceNode platform. `Causal Work Spine + Operational Reality v1`
+was accepted on the real 2026-07-15 and 2026-07-16 workdays. The executable
+gate confirmed two closures, eleven starts from Operational Reality, three
+corrections, Reflection follow-up, and a complete causal chain. The same review
+found one historical overlap between focus blocks; new overlaps are now
+rejected and old ones are explicit report-integrity blockers.
+
+The `current` view preserves the accepted causal-spine milestone and its trust
+guard. The `next` view exposes the actual choice opened by dogfood:
+converge Operational Reality, dispatching, and inventory into one workspace;
+strengthen long-work memory; enrich period stories with causal outcomes; or
+run the bounded context probe. Later capabilities remain coarse and
+unscheduled until that choice is made as a separate goal.
 
 ## Executive view
 
@@ -65,42 +55,108 @@ flowchart LR
     classDef exec_mgmt_red fill:#fca5a5,stroke:#4b5563,color:#111827,stroke-width:1px
     classDef exec_mgmt_neutral fill:#d1d5db,stroke:#4b5563,color:#111827,stroke-width:1px
 
-    recovered_baseline["Recovered<br/>baseline<br/>100%<br/>веха 2026-06-30"]
-    class recovered_baseline exec_done
-    app_entry_ux["App<br/>entry UX<br/>100%<br/>веха 2026-07-03"]
-    class app_entry_ux exec_done
-    focus_session_core["Focus<br/>Session core<br/>100%<br/>веха 2026-07-01"]
-    class focus_session_core exec_done
-    day_review_export["Day review<br/>and export<br/>95%<br/>веха 2026-07-01"]
-    class day_review_export exec_done
-    capture_inbox["Capture<br/>Inbox<br/>100%<br/>окно 2026-07-07..2026-07-08"]
-    class capture_inbox exec_done
-    dogfood_hardening["Dogfood<br/>hardening<br/>100%<br/>веха 2026-07-06"]
-    class dogfood_hardening exec_done
-    daily_control_gate["Daily<br/>Control Gate<br/>100%<br/>веха 2026-07-08"]
-    class daily_control_gate exec_done
-    in_day_structure["In-day<br/>Structure<br/>100%<br/>веха 2026-07-09"]
-    class in_day_structure exec_done
-    periodic_reflection["Periodic<br/>Reflection<br/>~15%<br/>окно 2026-07-10..2026-07-14"]
-    class periodic_reflection exec_mgmt_yellow
-    style periodic_reflection stroke:#111827,stroke-width:3px
-    future_directions["Future<br/>directions<br/>n/a"]
-    class future_directions exec_mgmt_neutral
+    accepted_foundation["Accepted manual<br/>foundation<br/>100%<br/>веха 2026-07-10"]
+    class accepted_foundation exec_done
+    architecture_gate["North-star<br/>architecture gate<br/>100%<br/>веха 2026-07-10"]
+    class architecture_gate exec_done
+    causal_memory["Causal<br/>Work Memory<br/>~35%"]
+    class causal_memory exec_mgmt_green
+    style causal_memory stroke:#111827,stroke-width:3px
+    current_steering["Current-State<br/>Steering<br/>100%"]
+    class current_steering exec_done
+    trust_controls["Trust and<br/>privacy controls<br/>n/a"]
+    class trust_controls exec_mgmt_neutral
+    bounded_context_probe["Bounded<br/>context probe<br/>~0%"]
+    class bounded_context_probe exec_mgmt_neutral
+    context_fabric["Context<br/>Fabric<br/>~0%"]
+    class context_fabric exec_mgmt_neutral
+    private_intelligence["Explainable private<br/>intelligence<br/>n/a"]
+    class private_intelligence exec_mgmt_neutral
+    continuity["Multi-device<br/>continuity<br/>~0%"]
+    class continuity exec_mgmt_neutral
+    full_context["Opt-in Full<br/>Context<br/>n/a"]
+    class full_context exec_mgmt_neutral
 
-    recovered_baseline --> app_entry_ux
-    app_entry_ux --> focus_session_core
-    focus_session_core --> day_review_export
-    day_review_export --> capture_inbox
-    capture_inbox --> dogfood_hardening
-    dogfood_hardening --> daily_control_gate
-    daily_control_gate --> in_day_structure
-    in_day_structure --> periodic_reflection
-    periodic_reflection -. later .-> future_directions
+    accepted_foundation --> architecture_gate
+    architecture_gate --> causal_memory
+    causal_memory --> current_steering
+    architecture_gate --> trust_controls
+    causal_memory --> bounded_context_probe
+    trust_controls --> bounded_context_probe
+    bounded_context_probe --> context_fabric
+    current_steering --> private_intelligence
+    context_fabric --> private_intelligence
+    causal_memory -. sync-ready first .-> continuity
+    context_fabric --> full_context
+    private_intelligence -. derived meaning .-> full_context
+    continuity -. multi-device sources .-> full_context
 ```
 
-Near-term plan should stay narrow: make Timeskein structure the day in progress before reopening sync, Evidence Mode, or platform expansion.
+The accepted manual foundation now includes Causal Work Spine and Operational Reality v1. The next decision is whether to converge the operational workspace, strengthen manual working memory, or test bounded automatic context before broader Context Fabric, private intelligence, continuity, and opt-in Full Context.
 
-## Current schedule
+## North-star capability tree
+
+<!--
+Перегенерить:
+/usr/bin/env PYTHONPATH=../../tools/opskarta python3 -m specs.v3.tools.cli validate ../../plans/timeskein/main.plan.yaml ../../plans/timeskein/nodes.plan.yaml ../../plans/timeskein/schedule.plan.yaml ../../plans/timeskein/execution.plan.yaml ../../plans/timeskein/views.plan.yaml
+/usr/bin/env PYTHONPATH=../../tools/opskarta python3 -m specs.v3.tools.cli render tree ../../plans/timeskein/main.plan.yaml ../../plans/timeskein/nodes.plan.yaml ../../plans/timeskein/schedule.plan.yaml ../../plans/timeskein/execution.plan.yaml ../../plans/timeskein/views.plan.yaml --view north-star
+-->
+<!-- GENERATED:START -->
+└── Timeskein [in_progress] (276 focus-blocks) {92% cov:54%}
+    ├── Causal Work Memory [in_progress] (29 focus-blocks) {65% cov:52%}
+    │   ├── Add shared provenance and observation contracts [in_progress] (3 focus-blocks) {90%}
+    │   ├── Build a chronological working-memory bridge [planned] (5 focus-blocks)
+    │   ├── Carry causal outcomes into period reports [planned] (3 focus-blocks)
+    │   ├── Make small action outcomes visible [planned] (3 focus-blocks)
+    │   ├── Preserve manual state and next-action transitions [done] (3 focus-blocks) {100%}
+    │   ├── Review larger day and work notes calmly [planned] (3 focus-blocks)
+    │   └── Track stages inside a Work Item [planned] (5 focus-blocks) {0%}
+    ├── Context Fabric [planned] (31 focus-blocks)
+    │   ├── Activity Evidence Layer experiments [planned] (8 focus-blocks)
+    │   ├── Automatic context proves value and trust [planned] (1 focus-blocks)
+    │   ├── Context Fabric supports one explicit external source [deferred] (1 focus-blocks)
+    │   ├── Explicit context capture and SourceNodes [planned] (13 focus-blocks)
+    │   ├── Implement one source observation envelope [planned] (3 focus-blocks)
+    │   └── Run a bounded active-app and browser-context probe [planned] (5 focus-blocks)
+    ├── Current-State Steering [in_progress] (14 focus-blocks) {100% cov:64%}
+    │   ├── Confirm and correct operational state [done] (3 focus-blocks) {100%}
+    │   └── Converge Operational Reality, day contract, and inventory [planned] (5 focus-blocks)
+    ├── Explainable Episodes and Private Intelligence [deferred] (27 focus-blocks)
+    │   ├── Connect Episodes into semantic Threads [deferred] (8 focus-blocks)
+    │   ├── Derive explainable work Episodes [deferred] (8 focus-blocks)
+    │   ├── Export LLM packs with redaction controls [deferred] (5 focus-blocks)
+    │   ├── Private intelligence improves a real reflection decision [deferred] (1 focus-blocks)
+    │   └── Run period reviews inside the app [planned] (5 focus-blocks)
+    ├── Multi-device Continuity [deferred] (33 focus-blocks)
+    │   ├── Android client path [deferred] (8 focus-blocks)
+    │   ├── Canonical history survives multi-device use [deferred] (1 focus-blocks)
+    │   ├── Keep new canonical facts sync-ready [planned] (3 focus-blocks)
+    │   ├── Sync and multi-device continuity [deferred] (13 focus-blocks)
+    │   └── Windows packaging and tray behavior [deferred] (8 focus-blocks)
+    ├── Opt-in Full Context and Evidence Mode [deferred] (21 focus-blocks)
+    │   ├── Evidence Mode [deferred] (20 focus-blocks)
+    │   └── Full Context reconstructs work without becoming surveillance [deferred] (1 focus-blocks)
+    └── Trust, Privacy, and Retention [planned] (2 focus-blocks)
+        └── Define minimum policy controls for a context probe [planned] (2 focus-blocks)
+<!-- GENERATED:END -->
+
+## Strategic dogfood gates
+
+<!--
+Перегенерить:
+/usr/bin/env PYTHONPATH=../../tools/opskarta python3 -m specs.v3.tools.cli validate ../../plans/timeskein/main.plan.yaml ../../plans/timeskein/nodes.plan.yaml ../../plans/timeskein/schedule.plan.yaml ../../plans/timeskein/execution.plan.yaml ../../plans/timeskein/views.plan.yaml
+/usr/bin/env PYTHONPATH=../../tools/opskarta python3 -m specs.v3.tools.cli render list ../../plans/timeskein/main.plan.yaml ../../plans/timeskein/nodes.plan.yaml ../../plans/timeskein/schedule.plan.yaml ../../plans/timeskein/execution.plan.yaml ../../plans/timeskein/views.plan.yaml --view risk-gates
+-->
+<!-- GENERATED:START -->
+- Automatic context proves value and trust [planned] (1 focus-blocks)
+- Canonical history survives multi-device use [deferred] (1 focus-blocks)
+- Context Fabric supports one explicit external source [deferred] (1 focus-blocks)
+- Define minimum policy controls for a context probe [planned] (2 focus-blocks)
+- Full Context reconstructs work without becoming surveillance [deferred] (1 focus-blocks)
+- Private intelligence improves a real reflection decision [deferred] (1 focus-blocks)
+<!-- GENERATED:END -->
+
+## Accepted history and committed schedule
 
 <!--
 Перегенерить:
@@ -111,60 +167,29 @@ Near-term plan should stay narrow: make Timeskein structure the day in progress 
 %%{init: {"theme": "base", "themeVariables": {"taskBkgColor": "#9ca3af", "taskBorderColor": "#4b5563", "taskTextColor": "#000000", "taskTextDarkColor": "#000000", "taskTextLightColor": "#000000", "activeTaskBkgColor": "#0ea5e9", "activeTaskBorderColor": "#0ea5e9", "doneTaskBkgColor": "#22c55e", "doneTaskBorderColor": "#16a34a", "critBkgColor": "#fecaca", "critBorderColor": "#fecaca", "todayLineColor": "#ef4444"}} }%%
 
 gantt
-    title Timeskein current product path
+    title Timeskein accepted history and committed work
     dateFormat YYYY-MM-DD
     axisFormat %d.%m
     excludes weekends
 
-    section App entry UX
-    ✅ Make the app window movable  :done, ts_ux_entry_window_drag,    2026-06-30, 1d
-    ✅ Add clear hide and show behavior  :done, ts_ux_entry_hide_toggle,    2026-07-01, 1d
-    ✅ Wire tray menu actions  :done, ts_ux_entry_tray_actions,    2026-07-02, 1d
-    ✅ Document macOS multi-monitor status item limits  :done, ts_ux_entry_monitor_policy,    2026-07-03, 1d
-    ✅ Reduce the path from intent to tracked work  :done, ts_ux_entry_fast_track_flow,    2026-07-03, 1d
-    ✅ Keep the multi-day Work Item list navigable  :done, ts_ux_entry_inventory_modes,    2026-07-03, 1d
-    ✅ Resize Today versus Work Item inventory  :done, ts_ux_entry_resizable_today_split,    2026-07-03, 1d
-    section Focus Session core
-    ✅ Add FocusSession persistence  :done, ts_focus_core_model_migrations,    2026-06-30, 2d
-    ✅ Add contracts and Local API for focus sessions  :done, ts_focus_core_contracts_api,    2026-07-02, 2d
-    ✅ Build focus timer UI with overflow  :done, ts_focus_core_timer_ui,    2026-07-06, 2d
-    ✅ Implement manual start and stop lifecycle  :done, ts_focus_core_session_lifecycle,    2026-07-08, 2d
-    ✅ Restore running focus session after app restart  :done, ts_focus_core_restart_restore,    2026-07-10, 1d
-    ✅ Bind focus sessions to Work Items or free intentions  :done, ts_focus_core_work_item_binding,    2026-07-06, 1d
-    ✅ Capture a note at the end of a focus session  :done, ts_focus_core_session_notes,    2026-07-10, 1d
+    section Accepted manual gates
+    ✅ Current implementation documentation  :done, ts_baseline_docs,    2026-06-30, 1d
     ✅ First real Focus Session dogfood  :milestone, done, ts_focus_core_dogfood_gate,    2026-07-01, 0d
-    section Day review
-    🔄 Show focus blocks on a daily timeline  :active, ts_day_review_timeline,    2026-07-02, 2d
-    🔄 Compute totals, gaps, and entry count  :active, ts_day_review_totals_gaps,    2026-07-06, 1d
-    🔄 Export dogfood day data as Markdown  :active, ts_day_review_export,    2026-07-07, 1d
-    ✅ Timestamped Work Item Events  :done, ts_day_review_work_item_events,    2026-07-03, 1d
-    ✅ Timestamped Day Events  :done, ts_day_review_day_events,    2026-07-03, 1d
-    ✅ Post-factum focus correction  :done, ts_day_review_corrections,    2026-07-03, 1d
-    ✅ Add local app-event telemetry for dogfood analysis  :done, ts_day_review_app_telemetry,    2026-07-08, 1d
     ✅ End-of-day analysis can use Timeskein data  :milestone, done, ts_day_review_analysis_gate,    2026-07-01, 0d
-    section Capture Inbox
-    ✅ Add captured-event model and Local API  :done, ts_capture_model_api,    2026-07-01, 2d
-    ✅ Add fast capture control  :done, ts_capture_quick_ui,    2026-07-03, 2d
-    ✅ Review and promote captured events  :done, ts_capture_review_flow,    2026-07-07, 2d
-    section Dogfood hardening
-    🔄 Add smoke checks for focus-session flows  :active, ts_hardening_smoke,    2026-07-02, 1d
-    🔄 Fix first dogfood friction  :active, ts_hardening_post_dogfood_friction,    2026-07-01, 1d
-    ✅ Add local data backup and reset path  :done, ts_hardening_backup_reset,    2026-07-02, 1d
-    ✅ Rebuild macOS app for regular personal use  :done, ts_hardening_package_app,    2026-07-03, 1d
-    ✅ Write dogfood release notes and known limitations  :done, ts_hardening_release_notes,    2026-07-06, 1d
     ✅ Session replacement dogfood baseline  :milestone, done, ts_hardening_dogfood_release,    2026-07-06, 0d
-    section Daily Control Gate
-    ✅ Run post-baseline daily-control dogfood day  :done, ts_daily_control_real_day,    2026-07-06, 1d
     ✅ Close daily-control goal with strict evidence  :milestone, done, ts_daily_control_goal_check,    2026-07-08, 0d
-    section In-day structure
-    ✅ Stream thoughts inside active work  :done, ts_in_day_structure_active_work_journal,    2026-07-08, 1d
-    ✅ Keep dogfood day observations inside Timeskein  :done, ts_in_day_structure_day_observation_log,    2026-07-09, 1d
-    Track stages inside a Work Item  :ts_in_day_structure_work_item_stages,    2026-07-09, 3d
-    ✅ Show Activity Zone totals during the day  :done, ts_in_day_structure_zone_dashboard,    2026-07-08, 1d
-    ✅ Support day entry and dispatching mode  :done, ts_in_day_structure_dispatch_mode,    2026-07-08, 2d
-    ✅ Define the day-entry and post-break protocol  :done, ts_in_day_structure_entry_protocol,    2026-07-08, 1d
-    ✅ Classify gaps as recovery or lost control  :done, ts_in_day_structure_gap_recovery_classification,    2026-07-08, 1d
+    section Accepted meaning gates
     ✅ In-day structure dogfood gate  :milestone, done, ts_in_day_structure_dogfood_gate,    2026-07-09, 0d
+    ✅ Save period conclusions as Reflection Sessions  :done, ts_periodic_reflection_reflection_sessions,    2026-07-09, 1d
+    ✅ Prove semantic history on fresh dogfood data  :milestone, done, ts_periodic_reflection_semantic_dogfood_gate,    2026-07-10, 0d
+    ✅ Build an evidence-backed Track story  :done, ts_periodic_reflection_context_links,    2026-07-10, 1d
+    section North-star architecture
+    ✅ Fix the causal model and truth boundaries  :milestone, done, ts_causal_memory_architecture_gate,    2026-07-10, 0d
+    🔄 Add shared provenance and observation contracts  :active, ts_causal_memory_provenance_contract,    2026-07-10, 1d
+    ✅ Preserve manual state and next-action transitions  :done, ts_causal_memory_transition_history,    2026-07-10, 1d
+    ✅ Build operational reality panel  :done, ts_periodic_reflection_operational_reality,    2026-07-10, 1d
+    ✅ Confirm and correct operational state  :done, ts_steering_manual_correction,    2026-07-10, 1d
+    ✅ Operational Reality selects the next justified action  :milestone, done, ts_steering_operational_reality_gate,    2026-07-15, 0d
 ```
 
 ## Current work list
@@ -175,8 +200,32 @@ gantt
 /usr/bin/env PYTHONPATH=../../tools/opskarta python3 -m specs.v3.tools.cli render list ../../plans/timeskein/main.plan.yaml ../../plans/timeskein/nodes.plan.yaml ../../plans/timeskein/schedule.plan.yaml ../../plans/timeskein/execution.plan.yaml ../../plans/timeskein/views.plan.yaml --view current
 -->
 <!-- GENERATED:START -->
-- Periodic reflection and meaning reports [in_progress] (27 focus-blocks) {50% cov:22%}
-- Add weekly, sprint, track, and performance report profiles [planned] (3 focus-blocks) {0%}
+- Causal Work Memory [in_progress] (29 focus-blocks) {65% cov:52%}
+- Add shared provenance and observation contracts [in_progress] (3 focus-blocks) {90%}
+- Current-State Steering [in_progress] (14 focus-blocks) {100% cov:64%}
+<!-- GENERATED:END -->
+
+## Next risk-reduction work
+
+<!--
+Перегенерить:
+/usr/bin/env PYTHONPATH=../../tools/opskarta python3 -m specs.v3.tools.cli validate ../../plans/timeskein/main.plan.yaml ../../plans/timeskein/nodes.plan.yaml ../../plans/timeskein/schedule.plan.yaml ../../plans/timeskein/execution.plan.yaml ../../plans/timeskein/views.plan.yaml
+/usr/bin/env PYTHONPATH=../../tools/opskarta python3 -m specs.v3.tools.cli render list ../../plans/timeskein/main.plan.yaml ../../plans/timeskein/nodes.plan.yaml ../../plans/timeskein/schedule.plan.yaml ../../plans/timeskein/execution.plan.yaml ../../plans/timeskein/views.plan.yaml --view next
+-->
+<!-- GENERATED:START -->
+- Build a chronological working-memory bridge [planned] (5 focus-blocks)
+- Converge Operational Reality, day contract, and inventory [planned] (5 focus-blocks)
+- Trust, Privacy, and Retention [planned] (2 focus-blocks)
+- Define minimum policy controls for a context probe [planned] (2 focus-blocks)
+- Context Fabric [planned] (31 focus-blocks)
+- Implement one source observation envelope [planned] (3 focus-blocks)
+- Run a bounded active-app and browser-context probe [planned] (5 focus-blocks)
+- Automatic context proves value and trust [planned] (1 focus-blocks)
+- Keep new canonical facts sync-ready [planned] (3 focus-blocks)
+- Track stages inside a Work Item [planned] (5 focus-blocks) {0%}
+- Review larger day and work notes calmly [planned] (3 focus-blocks)
+- Make small action outcomes visible [planned] (3 focus-blocks)
+- Carry causal outcomes into period reports [planned] (3 focus-blocks)
 <!-- GENERATED:END -->
 
 ## Deferred directions
@@ -187,23 +236,26 @@ gantt
 /usr/bin/env PYTHONPATH=../../tools/opskarta python3 -m specs.v3.tools.cli render list ../../plans/timeskein/main.plan.yaml ../../plans/timeskein/nodes.plan.yaml ../../plans/timeskein/schedule.plan.yaml ../../plans/timeskein/execution.plan.yaml ../../plans/timeskein/views.plan.yaml --view backlog
 -->
 <!-- GENERATED:START -->
-- Activity Evidence Layer experiments [deferred] (8 focus-blocks)
+- Activity Evidence Layer experiments [planned] (8 focus-blocks)
 - Android client path [deferred] (8 focus-blocks)
-- Build operational reality panel [planned] (5 focus-blocks)
+- Canonical history survives multi-device use [deferred] (1 focus-blocks)
 - Complete broader Manual Inventory UX [deferred] (8 focus-blocks)
+- Connect Episodes into semantic Threads [deferred] (8 focus-blocks)
+- Context Fabric supports one explicit external source [deferred] (1 focus-blocks)
+- Derive explainable work Episodes [deferred] (8 focus-blocks)
 - Evidence Mode [deferred] (20 focus-blocks)
-- Explicit context capture and SourceNodes [deferred] (13 focus-blocks)
+- Explainable Episodes and Private Intelligence [deferred] (27 focus-blocks)
+- Explicit context capture and SourceNodes [planned] (13 focus-blocks)
 - Export LLM packs with redaction controls [deferred] (5 focus-blocks)
-- Future directions [deferred] (83 focus-blocks)
+- Full Context reconstructs work without becoming surveillance [deferred] (1 focus-blocks)
 - Improve readability and panel ergonomics [planned] (3 focus-blocks)
-- Introduce Tracks, Labels, and historical snapshots [planned] (5 focus-blocks)
-- Make small action outcomes visible [planned] (3 focus-blocks)
+- Maintenance and deferred polish [deferred] (13 focus-blocks)
+- Multi-device Continuity [deferred] (33 focus-blocks)
 - Normalize search for Cyrillic and Latin lookalikes [planned] (2 focus-blocks)
+- Opt-in Full Context and Evidence Mode [deferred] (21 focus-blocks)
 - Pause, resume, and cancel focus sessions [deferred] (5 focus-blocks)
-- Preserve external artifacts and user thoughts as report evidence [planned] (3 focus-blocks)
-- Review larger day and work notes calmly [planned] (3 focus-blocks)
-- Save period conclusions as Reflection Sessions [planned] (3 focus-blocks)
+- Private intelligence improves a real reflection decision [deferred] (1 focus-blocks)
+- Run period reviews inside the app [planned] (5 focus-blocks)
 - Sync and multi-device continuity [deferred] (13 focus-blocks)
-- Track stages inside a Work Item [planned] (5 focus-blocks) {0%}
 - Windows packaging and tray behavior [deferred] (8 focus-blocks)
 <!-- GENERATED:END -->

@@ -9,10 +9,9 @@ import { promisify } from "node:util";
 
 const repoRoot = resolve(import.meta.dirname, "..");
 const execFileAsync = promisify(execFile);
-const appBinary = join(
-  repoRoot,
-  "target/release/bundle/macos/Timeskein.app/Contents/MacOS/timeskein-desktop"
-);
+const appBinary = process.env.TIMESKEIN_APP_BINARY
+  ? resolve(process.env.TIMESKEIN_APP_BINARY)
+  : join(repoRoot, "target/release/bundle/macos/Timeskein.app/Contents/MacOS/timeskein-desktop");
 
 if (!existsSync(appBinary)) {
   throw new Error(`Packaged app binary not found: ${appBinary}`);
@@ -36,6 +35,20 @@ try {
     title,
     target_seconds: 60,
   });
+  const evidenceEvent = await rpc(port, "work_item.add_event", {
+    id: started.work_item_id,
+    focus_session_id: started.id,
+    text: "Packaged app preserves a typed result with its Ref snapshot",
+    evidence_kind: "result",
+    new_ref: { kind: "issue_key", value: `PACKAGED-${Date.now()}` },
+  });
+  assert(evidenceEvent.evidence?.kind === "result", "packaged app lost typed evidence kind");
+  assert(evidenceEvent.evidence?.refs?.length === 1, "packaged app lost the evidence Ref snapshot");
+  const currentAfterEvidence = await rpc(port, "focus.current");
+  assert(
+    currentAfterEvidence.session?.id === started.id,
+    "recording evidence interrupted the packaged app focus session"
+  );
   const capture = await rpc(port, "capture.create", {
     text: `Packaged smoke capture ${new Date().toISOString()}`,
   });
@@ -147,6 +160,37 @@ try {
   const stopped = await rpc(port, "focus.stop", {
     note: "packaged app smoke done",
   });
+  const initialReality = await rpc(port, "operational_reality.list");
+  assert(
+    initialReality.items.some((item) => item.work_item_id === started.work_item_id),
+    "packaged app Operational Reality omitted the stopped Work Item"
+  );
+  await rpc(port, "operational_reality.set_state", {
+    subject_kind: "work_item",
+    subject_id: started.work_item_id,
+    state: "blocked",
+    reason: "Packaged smoke verifies a correctable causal assertion",
+  });
+  await rpc(port, "operational_reality.set_next_action", {
+    subject_kind: "work_item",
+    subject_id: started.work_item_id,
+    action: "set",
+    text: "Inspect the packaged smoke evidence",
+  });
+  const updatedReality = await rpc(port, "operational_reality.list");
+  const updatedRealityItem = updatedReality.items.find(
+    (item) => item.work_item_id === started.work_item_id
+  );
+  assert(updatedRealityItem?.state === "blocked", "packaged app lost the confirmed operational state");
+  assert(
+    updatedRealityItem?.next_action?.text === "Inspect the packaged smoke evidence",
+    "packaged app lost the operational next action"
+  );
+  const causalRecords = await rpc(port, "causal_record.list", {
+    subject_kind: "work_item",
+    subject_id: started.work_item_id,
+  });
+  assert(causalRecords.total >= 3, "packaged app did not persist the causal Work Item history");
   const day = await rpc(port, "focus.list", todayWindow());
   const appEvents = await waitForAppEvents(port, ["agent_started", "app_started", "focus_started", "focus_stopped"], 5_000);
   await rpc(port, "app_event.log", {

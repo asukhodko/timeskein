@@ -270,11 +270,12 @@ execution:
       confidence: 0.9
       note: "Passed on 2026-07-08 with `pnpm dogfood:goal-check -- --date 2026-07-08 --no-codex-guidance`. The command verified saved final evidence, then ran `pnpm test`, `pnpm dogfood:preflight`, and strict RC evidence against the same code. This closed the cheap evening-closure goal."
     ts.in_day_structure:
-      progress: 0.9
+      progress: 1.0
       actual_start: "2026-07-08"
+      actual_finish: "2026-07-09"
       updated_at: "2026-07-09T19:50:00+03:00"
       confidence: 0.85
-      note: "The first in-day structure goal is accepted after 2026-07-09 dogfood and follow-up fixes. The saved final report had enough day/work events, zone evidence, classified recovery gaps, and closure evidence to analyze manageability without rebuilding the day from memory. Remaining work is follow-up polish and the next meaning layer: arbitrary-period reports."
+      note: "Accepted after 2026-07-09 dogfood and follow-up fixes. The saved final report had enough day/work events, zone evidence, classified gaps, and closure evidence to analyze manageability without rebuilding the day from memory. Remaining note/stage/polish work now supports the causal-memory route rather than keeping this accepted phase open."
     ts.in_day_structure.day_observation_log:
       progress: 1.0
       actual_start: "2026-07-08"
@@ -300,9 +301,9 @@ execution:
       progress: 1.0
       actual_start: "2026-07-08"
       actual_finish: "2026-07-09"
-      updated_at: "2026-07-09T19:50:00+03:00"
-      confidence: 0.8
-      note: "First slice accepted. `Диспетчеризация` records `Что в игре`, first focus, parked work, and why-now as a Coordination Day Event, and can start the chosen focus. After 2026-07-09 dogfood exposed unclear wording, the UI gained Russian labels and a compact help block with examples."
+      updated_at: "2026-07-10T19:45:00+03:00"
+      confidence: 0.9
+      note: "Accepted flow strengthened after the 2026-07-10 pre-gate day: active set and parking cardinality are explicit, the help explains button effects, dispatch time can be tracked as Coordination, and save-only versus save-and-start are separate actions."
     ts.in_day_structure.entry_protocol:
       progress: 1.0
       actual_start: "2026-07-08"
@@ -330,11 +331,12 @@ execution:
       confidence: 0.85
       note: "Accepted after the 2026-07-09 real dogfood day and strict `pnpm dogfood:goal-check -- --date 2026-07-09 --no-codex-guidance`. Follow-up code/docs fixed the three sharp findings: no-active free day thoughts, dispatch help/wording, and tolerant gap matching."
     ts.periodic_reflection:
-      progress: 0.11
+      progress: 1.0
       actual_start: "2026-07-09"
-      updated_at: "2026-07-09T22:15:00+03:00"
-      confidence: 0.85
-      note: "P0 period export is accepted. The real 1-9 July report combined 39:53:26 of tracking, 105 entrances, zones, events, captures and gaps, then produced quality warnings and focus-decision candidates. The next gate is scale-specific report profiles and persistent reflection decisions."
+      actual_finish: "2026-07-10"
+      updated_at: "2026-07-10T14:40:00+03:00"
+      confidence: 0.9
+      note: "Accepted. Period export, four profiles, Reflection Sessions, Tracks/Labels, historical snapshots, and the evidence-backed Track story passed real gates. Operational Reality and private analysis have moved into the north-star capability map."
     ts.periodic_reflection.period_export:
       progress: 1.0
       actual_start: "2026-07-09"
@@ -343,7 +345,92 @@ execution:
       confidence: 0.9
       note: "Done and dogfooded. Markdown/JSON share one report model; half-open date boundaries, file output, grouping, gaps, events, captures, required warnings, and focus candidates are covered by `pnpm smoke:period-report`. Raw real reports remain local; sanitized evidence is in docs/dogfood-periodic-report.md."
     ts.periodic_reflection.report_profiles:
-      progress: 0.0
-      updated_at: "2026-07-09T22:15:00+03:00"
-      confidence: 0.75
-      note: "Next gate. Give week, sprint and performance review distinct questions and output emphasis; preserve facts versus interpretations versus decisions. Use the P0 finding that effort alone cannot distinguish a completed meeting from a track worth continuing."
+      progress: 1.0
+      actual_start: "2026-07-09"
+      actual_finish: "2026-07-09"
+      updated_at: "2026-07-09T23:31:00+03:00"
+      confidence: 0.9
+      note: "Done. weekly-review, sprint-review, track-retrospective, and performance-evidence have distinct questions, evidence slices, and honest limitations. Markdown and JSON explicitly separate facts, observations, warnings, and decisions."
+    ts.periodic_reflection.reflection_sessions:
+      progress: 1.0
+      actual_start: "2026-07-09"
+      actual_finish: "2026-07-09"
+      updated_at: "2026-07-09T23:31:00+03:00"
+      confidence: 0.9
+      note: "Done for the CLI baseline. SQLite stores Reflection Sessions and Work Item/Track-scoped decisions; save/list commands and repeated filtered reports expose them. Real weekly and Timeskein Track reviews verified both scopes."
+    ts.periodic_reflection.tracks_labels:
+      progress: 1.0
+      actual_start: "2026-07-10"
+      actual_finish: "2026-07-10"
+      updated_at: "2026-07-10T10:20:00+03:00"
+      confidence: 0.9
+      note: "Done and dogfooded. Migration 010 adds Tracks, Labels, assignments, semantic snapshots, and Track decision links. Rust, mock, TypeScript, report, and reflection tests cover hierarchy, history, filters, and repeated decisions. Real `Личные проекты / Timeskein` review stayed conservative about ambiguous legacy work."
+    ts.periodic_reflection.semantic_dogfood_gate:
+      progress: 1.0
+      actual_start: "2026-07-10"
+      actual_finish: "2026-07-10"
+      updated_at: "2026-07-10T14:02:00+03:00"
+      confidence: 0.95
+      note: "Passed. Real Track `Личные проекты / Timeskein` has 3/3 captured blocks, 4/4 typed evidence entries with captured classification, 1/1 confirmed change, protect-next-focus=fulfilled, continue=progressed, and evidence links. The strict gate command passes."
+    ts.periodic_reflection.context_links:
+      progress: 1.0
+      actual_start: "2026-07-10"
+      actual_finish: "2026-07-10"
+      updated_at: "2026-07-10T14:02:00+03:00"
+      confidence: 0.9
+      note: "Accepted. Migration 011, typed evidence API, immutable Ref snapshots, active-focus and post-block capture UI, evidence_story Markdown/JSON, missing-evidence warnings, and decision follow-ups pass pnpm test, browser interaction, packaged macOS smoke, and the real evidence gate."
+    ts.causal_memory.architecture_gate:
+      progress: 1.0
+      actual_start: "2026-07-10"
+      actual_finish: "2026-07-10"
+      updated_at: "2026-07-10T14:40:00+03:00"
+      confidence: 0.9
+      note: "Done as a strategy and documentation gate. ADR-0004, RFC-0009, Roadmap 0005, and opskarta define the causal spine, truth boundaries, provenance direction, incremental migration, bounded context probe, horizons, and dogfood risk gates."
+    ts.causal_memory.provenance_contract:
+      progress: 0.9
+      actual_start: "2026-07-10"
+      updated_at: "2026-07-10T17:05:00+03:00"
+      confidence: 0.9
+      note: "Manual causal records now carry UUID, subject, source, provenance, confidence, schema/device/correlation, occurred_at/recorded_at, and semantic snapshots. Sensitivity and derivation metadata remain for observations."
+    ts.causal_memory.transition_history:
+      progress: 1.0
+      actual_start: "2026-07-10"
+      actual_finish: "2026-07-10"
+      updated_at: "2026-07-10T16:30:00+03:00"
+      confidence: 0.95
+      note: "Migration 012 and Rust handlers preserve append-only intent, state, result, decision, next-action, confirmation, and correction history with explicit supersedes links."
+    ts.causal_memory.timeline_integrity:
+      progress: 1.0
+      actual_start: "2026-07-16"
+      actual_finish: "2026-07-16"
+      updated_at: "2026-07-16T22:45:00+03:00"
+      confidence: 0.95
+      note: "A real 9:05 overlap exposed false trust in summed time. Rust create/update now rejects overlaps; UI, CLI closure, RC, and period reports detect existing conflicts; Rust, TypeScript, day-report, and period-report tests cover the boundary."
+    ts.causal_memory.spine_gate:
+      progress: 1.0
+      actual_start: "2026-07-10"
+      actual_finish: "2026-07-16"
+      updated_at: "2026-07-16T22:45:00+03:00"
+      confidence: 0.95
+      note: "Accepted after 15–16 July real use. The strict gate found one complete intent -> result with Ref -> next-action chain, persistent state correction, Reflection follow-up, historical honesty, and normal period export. Timeline integrity was hardened after the same run exposed an overlap."
+    ts.periodic_reflection.operational_reality:
+      progress: 1.0
+      actual_start: "2026-07-10"
+      actual_finish: "2026-07-10"
+      updated_at: "2026-07-10T18:04:10+03:00"
+      confidence: 0.95
+      note: "Deterministic projection, Local API, browser mock, React panel, JSON export, Track/capture/reflection cards, historical Track evidence, and attention-vs-full-projection rules are implemented and checked on a migrated real database copy."
+    ts.steering.manual_correction:
+      progress: 1.0
+      actual_start: "2026-07-10"
+      actual_finish: "2026-07-10"
+      updated_at: "2026-07-10T16:30:00+03:00"
+      confidence: 0.9
+      note: "State confirmation/correction and next-action set/replace/complete/dismiss are available in UI and API; correction reasons and superseding history are enforced and tested."
+    ts.steering.operational_reality_gate:
+      progress: 1.0
+      actual_start: "2026-07-10"
+      actual_finish: "2026-07-16"
+      updated_at: "2026-07-16T22:45:00+03:00"
+      confidence: 0.95
+      note: "Accepted. `operational-reality:gate -- --from 2026-07-15 --to 2026-07-17` passed: 2/2 days, 11/3 projection starts, meeting-tail/stale-important/waiting/reactive states, 1/1 correction plus restart, 3/1 Reflection follow-ups, 1/1 causal chain, and 2/2 normal closures."

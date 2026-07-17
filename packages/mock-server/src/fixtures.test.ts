@@ -248,3 +248,23 @@ test("focus correction update, split and work item edit are reflected in day dat
   assert.equal(editedItem?.today_active_seconds, 120);
   assert.equal(editedItem?.total_active_seconds, 120);
 });
+
+test("inventory search is Unicode-case-insensitive and dispatch creates coordination work", () => {
+  const store = new MockDataStore();
+  const item = store.createWorkItem("Проект Альфа", "task", "unknown", "work");
+
+  assert.equal(store.listWorkItems("проект альфа")[0]?.id, item.id);
+
+  const reused = store.startFocusSession({ title: "ПРОЕКТ АЛЬФА" });
+  assert.equal(reused.work_item_id, item.id);
+  store.stopFocusSession(reused.id);
+
+  const dispatch = store.startFocusSession({
+    title: "Возврат после перерыва",
+    activity_zone: "coordination",
+  });
+  assert.equal(dispatch.activity_zone, "coordination");
+
+  store.createWorkItem("spirit-сode-daily-synс", "task", "unknown", "work");
+  assert.equal(store.listWorkItems("spirit-code-daily-sync").length, 1);
+});

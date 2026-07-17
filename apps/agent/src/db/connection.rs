@@ -82,6 +82,26 @@ impl Database {
         self.ensure_work_item_note_events().await?;
         self.ensure_focus_session_activity_zones().await?;
 
+        let reflection_sessions_sql = include_str!("../../migrations/009_reflection_sessions.sql");
+        sqlx::raw_sql(reflection_sessions_sql)
+            .execute(&self.pool)
+            .await?;
+
+        let semantic_tracks_sql = include_str!("../../migrations/010_semantic_tracks.sql");
+        sqlx::raw_sql(semantic_tracks_sql)
+            .execute(&self.pool)
+            .await?;
+
+        let evidence_story_sql = include_str!("../../migrations/011_evidence_story.sql");
+        sqlx::raw_sql(evidence_story_sql)
+            .execute(&self.pool)
+            .await?;
+
+        let causal_work_spine_sql = include_str!("../../migrations/012_causal_work_spine.sql");
+        sqlx::raw_sql(causal_work_spine_sql)
+            .execute(&self.pool)
+            .await?;
+
         Ok(())
     }
 

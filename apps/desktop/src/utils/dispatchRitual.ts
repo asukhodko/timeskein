@@ -17,21 +17,22 @@ export const DEFAULT_DISPATCH_RITUAL_MODE: DispatchRitualMode = 'day_entry'
 
 const DISPATCH_RITUAL_MODES = Object.keys(DISPATCH_RITUAL_MODE_LABELS) as DispatchRitualMode[]
 const DISPATCH_RITUAL_DRAFT_STORAGE_PREFIX = 'timeskein.dispatch-ritual-draft.v1.'
+const DISPATCH_RITUAL_CONTRACT_STORAGE_PREFIX = 'timeskein.dispatch-ritual-contract.v1.'
 
 export function formatDispatchRitualEvent(draft: DispatchRitualDraft) {
   const normalized = normalizeDispatchRitualDraft(draft)
   const parts = [
-    ['что в игре', normalized.activeSet],
-    ['первый фокус', normalized.firstFocus],
+    ['активный набор', normalized.activeSet],
+    ['первое дело', normalized.firstFocus],
     ['припарковано', normalized.parked],
-    ['почему достаточно важно', normalized.reason],
+    ['почему сейчас', normalized.reason],
   ]
     .filter(([, value]) => value)
     .map(([label, value]) => `${label}: ${value}`)
 
   if (parts.length === 0) return ''
 
-  return `${DISPATCH_RITUAL_MODE_LABELS[normalized.mode]}: ${parts.join('; ')}`
+  return `${DISPATCH_RITUAL_MODE_LABELS[normalized.mode]} — ${parts.join('; ')}`
 }
 
 export function isDispatchRitualStartReady(draft: DispatchRitualDraft) {
@@ -72,6 +73,16 @@ export function decodeDispatchRitualDraft(raw: string | null | undefined): Dispa
 
 export function dispatchRitualDraftStorageKey(date = new Date()) {
   return `${DISPATCH_RITUAL_DRAFT_STORAGE_PREFIX}${formatLocalDayKey(date)}`
+}
+
+export function dispatchRitualContractStorageKey(date = new Date()) {
+  return `${DISPATCH_RITUAL_CONTRACT_STORAGE_PREFIX}${formatLocalDayKey(date)}`
+}
+
+export function hasDispatchRitualContent(draft: DispatchRitualDraft | null | undefined) {
+  if (!draft) return false
+  const normalized = normalizeDispatchRitualDraft(draft)
+  return Boolean(normalized.activeSet || normalized.firstFocus || normalized.parked || normalized.reason)
 }
 
 export function normalizeDispatchRitualDraft(draft: Partial<DispatchRitualDraft>): DispatchRitualDraft {

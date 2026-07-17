@@ -53,6 +53,7 @@ export function useCreateWorkItem() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.inventory })
       queryClient.invalidateQueries({ queryKey: ['focus'] })
+      queryClient.invalidateQueries({ queryKey: ['operationalReality'] })
     },
   })
 }
@@ -64,6 +65,7 @@ export function useTouchWorkItem() {
     mutationFn: (id: string) => workItemApi.touch(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.inventory })
+      queryClient.invalidateQueries({ queryKey: ['operationalReality'] })
     },
   })
 }
@@ -77,6 +79,7 @@ export function useSetWorkItemState() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.inventory })
       queryClient.invalidateQueries({ queryKey: ['focus'] })
+      queryClient.invalidateQueries({ queryKey: ['operationalReality'] })
     },
   })
 }
@@ -88,6 +91,7 @@ export function useSetWorkItemNote() {
     mutationFn: ({ id, note }: { id: string; note: string }) => workItemApi.setNote(id, note),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.inventory })
+      queryClient.invalidateQueries({ queryKey: ['operationalReality'] })
     },
   })
 }
@@ -100,6 +104,7 @@ export function useAddWorkItemEvent() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.inventory })
       queryClient.invalidateQueries({ queryKey: ['workItemEvents'] })
+      queryClient.invalidateQueries({ queryKey: ['operationalReality'] })
     },
   })
 }
@@ -111,6 +116,7 @@ export function useUpdateWorkItemEvent() {
     mutationFn: (params: WorkItemUpdateEventParams) => workItemApi.updateEvent(params),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['workItemEvents'] })
+      queryClient.invalidateQueries({ queryKey: ['operationalReality'] })
     },
   })
 }
@@ -122,6 +128,7 @@ export function useDeleteWorkItemEvent() {
     mutationFn: (id: string) => workItemApi.deleteEvent(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['workItemEvents'] })
+      queryClient.invalidateQueries({ queryKey: ['operationalReality'] })
     },
   })
 }
@@ -134,6 +141,7 @@ export function useUpdateWorkItem() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.inventory })
       queryClient.invalidateQueries({ queryKey: ['focus'] })
+      queryClient.invalidateQueries({ queryKey: ['operationalReality'] })
     },
   })
 }
@@ -145,6 +153,7 @@ export function useToggleWorkItemPin() {
     mutationFn: (id: string) => workItemApi.togglePin(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.inventory })
+      queryClient.invalidateQueries({ queryKey: ['operationalReality'] })
     },
   })
 }
@@ -157,6 +166,7 @@ export function useDeleteWorkItem() {
       workItemApi.delete(id, mode),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.inventory })
+      queryClient.invalidateQueries({ queryKey: ['operationalReality'] })
     },
   })
 }
@@ -170,6 +180,7 @@ export function useOpenRef() {
       refApi.open(workItemId, refId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.inventory })
+      queryClient.invalidateQueries({ queryKey: ['operationalReality'] })
     },
   })
 }
@@ -182,6 +193,7 @@ export function useAddRef() {
       refApi.add(params),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.inventory })
+      queryClient.invalidateQueries({ queryKey: ['operationalReality'] })
     },
   })
 }
@@ -194,6 +206,7 @@ export function useRemoveRef() {
       refApi.remove(workItemId, refId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.inventory })
+      queryClient.invalidateQueries({ queryKey: ['operationalReality'] })
     },
   })
 }

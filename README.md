@@ -1,6 +1,6 @@
 # Timeskein
 
-**Manual-first, local-first focus and work inventory system.**
+**Manual-first, local-first causal work memory and steering system.**
 
 A desktop application for quickly tracking focus sessions and work items with refs (URLs, files, issue keys), without background monitoring.
 
@@ -15,8 +15,13 @@ A desktop application for quickly tracking focus sessions and work items with re
 | Work Item List | Working baseline | `Recent`, `Today`, `Pinned`, and `All` modes keep a multi-day inventory navigable |
 | Work Item Events | Working baseline | Timestamped notes linked to Work Items and optionally to focus blocks |
 | Day Events | Working baseline | Timestamped day-level notes for buffers, recovery, tracking corrections, and review context |
-| Dispatch Ritual | First slice | Day-entry and post-break panel records `Что в игре`, next focus, parked work, and reason as a coordination Day Event |
-| Period Reports | Working baseline | Read-only Markdown/JSON reports for any date range with daily/item/zone totals, gaps, events, captures, quality warnings, and focus-tuning candidates |
+| Dispatch Ritual | Working baseline | Day-entry and post-break panel narrows the active set, can track coordination time, records the choice, and switches to one first action |
+| Periodic Reflection | Working baseline | Four report profiles, Markdown/JSON period facts, review questions, decision templates, and persistent Reflection Sessions in local SQLite |
+| Tracks and Labels | Working baseline | Hierarchical primary Track, optional cross-cutting Labels, Work Item assignment UI, historical focus/event snapshots, and filtered period reports |
+| Evidence-backed Track story | Working baseline | Typed result/decision/blocker/next-step/observation events, immutable Ref snapshots, and decision follow-ups in Track retrospectives |
+| Causal Work Spine | Working baseline | Append-only intent, state, result, decision, next-action, confirmation, and correction records with provenance and semantic snapshots |
+| Operational Reality | Accepted baseline | Explainable current projection with unknowns, confidence, manual correction, Reflection follow-up, next-action lifecycle, JSON export, and a passed two-real-day gate |
+| North-star architecture | Implemented foundation | Causal Work Memory, user-truth boundaries, risk gates, bounded Context Probe, and long-horizon capability map are defined in ADR-0004, RFC-0009, Roadmap 0005, and opskarta |
 | Dogfood Telemetry | Working baseline | Local app-event journal and CLI metrics for tracking UX friction |
 | Mock Server | Working | Full API implementation for development |
 | Rust Agent | Working | SQLite-backed Local API, embedded in macOS app |
@@ -24,21 +29,25 @@ A desktop application for quickly tracking focus sessions and work items with re
 
 **What works now:** Focus Session tracking, Capture Inbox, and Work Item inventory in browser mock mode and in the macOS `.app` with an embedded Rust agent.
 
-**Current focus:** Daily control and the first in-day structure layer are accepted. The first periodic-reflection slice is also working: `pnpm report:period` builds read-only Markdown or JSON from an arbitrary half-open date range. A real 2026-07-01..2026-07-10 review proved the report can expose effort allocation, old unexplained gaps, sparse context days, mixed zones, broad Work Items, and candidate decisions for the next period. Report profiles, reliable current/finished track state, filters, and saved Reflection Sessions remain later slices. In-day polish such as search normalization, larger notes, light theme, and panel ergonomics stays tracked as follow-up. Windows packaging is deferred.
+**Current focus:** The manual day, period reflection, semantic history, evidence-backed Track story, and `Causal Work Spine + Operational Reality v1` are accepted. The real 15–16 July gate passed with two days, 11 starts from the projection, persistent correction, Reflection follow-up, and a complete intent/result-with-Ref/next-action chain. The next goal will be chosen between Operational Workspace convergence, a Working Memory Bridge, and the bounded Context Capture Probe. Full SourceNodes, sync, private intelligence, and opt-in Evidence Mode remain later capabilities.
 
 See [Current Implementation](docs/current-implementation.md) for the exact state of what runs today.
 Use [Dogfood Day Protocol](docs/dogfood-day.md) when testing Timeskein as a Session replacement for a real workday.
 Use [Dogfood Release Candidate](docs/dogfood-release-candidate.md) as the evidence checklist for deciding whether the current macOS baseline is good enough to replace Session in daily use.
 See [Dogfood Release Baseline](docs/dogfood-release-baseline.md) for the accepted 2026-07-03 verdict and known limitations.
 See [Periodic Report Dogfood](docs/dogfood-periodic-report.md) for the first real multi-day review and its limitations.
+See [Operational Reality Dogfood](docs/dogfood-operational-reality.md) for the accepted two-real-day evidence and reproducible protocol.
+See [Causal Work Spine Acceptance Audit](docs/acceptance-causal-work-spine-v1.md) for requirement-by-requirement implementation and real-use evidence.
 
 The current execution roadmap is maintained as an opskarta v3 plan set:
 [Timeskein opskarta roadmap](docs/roadmap/opskarta.md).
-The current near-term product layer is described in
-[In-Day Structure Roadmap](docs/roadmap/0004-in-day-structure-roadmap.md).
-The broader meaning layer is described in
-[Periodic Reflection Roadmap](docs/roadmap/0003-periodic-reflection-roadmap.md)
-and [RFC-0008](docs/rfc/0008-periodic-reports-and-reflection.md).
+The current strategic route is described in
+[Causal Work Memory Roadmap](docs/roadmap/0005-causal-work-memory-roadmap.md),
+[RFC-0009](docs/rfc/0009-causal-work-memory-and-operational-reality.md), and
+[ADR-0004](docs/adr/0004-user-truth-and-derived-inference.md). The accepted
+[In-Day Structure](docs/roadmap/0004-in-day-structure-roadmap.md) and
+[Periodic Reflection](docs/roadmap/0003-periodic-reflection-roadmap.md) roadmaps
+remain the detailed history of the manual foundation.
 
 ## Project Structure
 
@@ -119,13 +128,107 @@ pnpm report:period -- --from 2026-07-01 --to 2026-07-10 --output timeskein-perio
 pnpm report:period -- --from 2026-07-01 --to 2026-07-10 --format json --output timeskein-period-report-2026-07-01--2026-07-09.json
 ```
 
-The report separates facts, review hypotheses, and next-period decisions. It includes totals by day, Activity Zone and Work Item; focus-block timeline; significant gaps and their recovery/lost-control classification; Day Events; Work Item Events; Capture Inbox outcomes; data-quality warnings; and up to three focus candidates. Candidates are prompts for conscious review, not automatic productivity judgments. Generated period reports are ignored by git by default.
+Choose a review profile and create a decision template:
+
+```bash
+pnpm report:period -- --from 2026-07-01 --to 2026-07-10 \
+  --profile weekly-review \
+  --reflection-template /tmp/timeskein-reflection.json
+```
+
+Build a historically explicit Track retrospective. Track can be an id or an unambiguous title; `--include-child-tracks` expands the selected subtree. Repeat `--label` to require several Labels, and repeat `--zone` to include several Activity Zones:
+
+```bash
+pnpm report:period -- --from 2026-07-01 --to 2026-07-10 \
+  --profile track-retrospective \
+  --track Timeskein \
+  --include-child-tracks \
+  --label dogfood \
+  --zone work \
+  --reflection-template /tmp/timeskein-track-reflection.json
+```
+
+Supported profiles are `weekly-review`, `sprint-review`, `track-retrospective`, and `performance-evidence`. Edit the generated JSON summary, findings, and decisions, then preserve the review:
+
+```bash
+pnpm reflection:save -- --input /tmp/timeskein-reflection.json
+pnpm reflection:list -- --from 2026-07-01 --to 2026-07-10 --profile weekly-review
+```
+
+Decision kinds are `continue`, `done-close`, `park`, `reactive`, `noise`, and `protect-next-focus`. Decisions can target a Work Item or a Track. Re-running the same filtered report includes saved decisions for the selected period and the latest prior review with the same profile and filters.
+
+For `track-retrospective`, Work Item events can be typed as `result`, `decision`, `blocker`, `next_step`, or `observation`. The active-focus journal and Work Item note editor can attach an existing Ref or create a URL, file, issue-key, or custom Ref. The report then adds `Что изменилось`, `Доказательства`, `Решения`, `Блокеры и хвосты`, `Что произошло после прошлых решений`, and `Следующие действия`. A result is confirmed only when it has a captured Ref snapshot; tracked duration remains evidence of effort, not proof of outcome.
+
+Generated reflection templates also expose prior decisions that need follow-up. Save an explicit status with `fulfilled`, `progressed`, `cancelled`, `parked`, `contradicted`, or `no_evidence`; an optional `evidence_event_id` links the judgment to a typed Work Item event.
+
+The real acceptance gate is executable and intentionally strict:
+
+```bash
+pnpm evidence:gate -- --from 2026-07-10 --to 2026-07-11
+```
+
+It builds the same Track slice as JSON and Markdown, then requires at least three captured Timeskein blocks, one result with a historical Ref snapshot, the six evidence-story sections, and explicit follow-up for the saved `protect-next-focus` and `continue` decisions. The 2026-07-10 real database passes this command.
+
+### Using Operational Reality
+
+The `Рабочая реальность` panel is shown above the focus/day controls. It is a
+projection of saved Work Items, Tracks, captures, typed evidence, causal
+records, focus state, and unresolved Reflection decisions. A card explains why
+it is visible, distinguishes confirmed, derived, and legacy state, lists known
+facts and unknowns, and keeps one explicit next action.
+Track cards also show recent results and decisions from related Work Items by
+their captured historical Track path, with captured evidence Refs. Moving the
+current Work Item later does not rewrite that Track history.
+
+The default panel shows the decision queue, not every legacy Work Item. Plain
+unknown legacy state and a missing next action remain inspectable through
+`Показать всё`; attention requires a stronger signal such as an explicit
+waiting/blocked/reactive/stale/meeting-tail state, a Reflection decision, an
+open next action, a capture, a pinned tail, or at least two hours without a
+recorded result.
+
+From the card the user can confirm or correct state, complete or replace the
+next action, inspect captured evidence Refs, follow up a prior Reflection
+decision, resolve a capture, remove an irrelevant point from current attention,
+or start the linked Work Item. Corrections append a new record and keep the replaced
+assertion in history without letting it continue to drive the current
+projection. The implementation passed its two-real-day acceptance gate on
+2026-07-16. Older facts show a date as well as a time, and `Enter` opens the
+Work Item editor even when the item has a URL Ref.
+
+With Timeskein running, export the exact current projection and its grounds as
+JSON:
+
+```bash
+pnpm export:operational-reality
+pnpm export:operational-reality -- --output /tmp/timeskein-operational-reality.json
+pnpm export:operational-reality -- --as-of 2026-07-10T12:00:00+03:00
+```
+
+The accepted two-real-day gate remains reproducible:
+
+```bash
+pnpm operational-reality:gate -- --from 2026-07-15 --to 2026-07-17
+```
+
+It passed with two days and 11 starts from the projection, real attention
+states, one explicit state correction followed by an app restart, three
+Reflection decision follow-ups, one causal chain from intent through a result
+with a Ref to a next action, and normal day closure on both days.
+
+Focus corrections cannot create overlapping stopped blocks. Existing
+historical overlaps block final day closure and appear as an explicit period
+report warning; Timeskein does not silently rewrite them.
+
+The report separates facts, observations, data-quality warnings, profile-specific evidence, and decisions. It includes totals by day, Activity Zone and Work Item; semantic coverage; focus-block timeline; significant gaps; Day Events; Work Item Events; Capture Inbox outcomes; current linked refs; open Track tails; and up to three focus candidates. Candidates are prompts for conscious review, not automatic productivity judgments. Generated period reports and decision templates are ignored by git by default.
 
 ### Starting a Timeskein Day on macOS
 
 ```bash
 pnpm dogfood:start
 ```
+
+`dogfood:start` — быстрый ежедневный вход: он проверяет состояние реальной базы и открывает уже проверенную сборку без полного набора тестов. После изменений кода один раз используй `pnpm dogfood:start:verified`: команда выполнит полный preflight, пересоберёт приложение и только затем откроет его.
 
 The start check first reads the real local SQLite database for active sessions, active Work Items, duplicate titles, and existing blocks for today. If the real day is clean, it checks that no old `timeskein-desktop` process is running, runs the dogfood preflight, opens `Timeskein.app`, and waits for the embedded agent to respond.
 It refuses to open the app if `timeskein-desktop` is already running, so the Timeskein day does not accidentally reuse an older process after a rebuild.
@@ -213,7 +316,7 @@ To inspect the closure check without re-saving the day report, rerun the evidenc
 pnpm dogfood:rc-check:save
 ```
 
-The closure check exits with code 1 for red items such as active state, duplicate Work Item titles, or an empty day. Its Russian `Сводка доказательств` includes total tracked time, working occupancy (`Work + Coordination`), executive work (`Work`), non-work tracked time, Activity Zone coverage, Work Item notes/events, accepted review decisions, Capture Inbox coverage, typed entry, selected/list continuation, and dispatch-ritual start evidence, correction telemetry, measured day-closure duration, window telemetry including both show and hide request evidence, and product-friction counters. It also includes a `Проверка закрытия дня` table that maps the current day to the accepted daily-control gate. The Work Item totals check row is marked for review when touched-item time was not explicitly accepted from the UI checklist. The Activity Zone row expects either two in-day `Учёл зоны` glances or an explicit evening `Зоны верны` acceptance; Capture usage, entry path, and window-entrypoint rows can be cleared by real evidence or by explicit accepted review telemetry. The day-closure row is marked for review when closure was not measured or took more than 10 minutes. The Today report button starts the closure timer, then stays on `Закрыть проверки` until the report is final and review-clean; CLI draft exports remain diagnostic evidence, but they do not complete measured closure. The gaps/captures row is marked for review when captures are missing, not linked to active focus, left open without a `capture_followup_reviewed` event, or when significant gaps lack Day Event explanations. Review items still require human judgment against the closure criteria.
+The closure check exits with code 1 for red items such as active state, duplicate Work Item titles, or an empty day. Its Russian `Сводка доказательств` includes total tracked time, working occupancy (`Work + Coordination`), executive work (`Work`), non-work tracked time, Activity Zone coverage, Work Item notes/events, accepted review decisions, Capture Inbox coverage, typed entry, selected/list continuation, and dispatch-ritual start evidence, correction telemetry, measured day-closure duration, window telemetry including both show and hide request evidence, and product-friction counters. It also includes a `Проверка закрытия дня` table that maps the current day to the accepted daily-control gate. The Work Item totals check row is marked for review when touched-item time was not explicitly accepted from the UI checklist. The Activity Zone row expects either two in-day explicit zone-distribution views through `Отметить просмотр` or an explicit evening `Зоны верны` acceptance; Capture usage, entry path, and window-entrypoint rows can be cleared by real evidence or by explicit accepted review telemetry. The day-closure row is marked for review when closure was not measured or took more than 10 minutes. The Today report button starts the closure timer, then stays on `Закрыть проверки` until the report is final and review-clean; CLI draft exports remain diagnostic evidence, but they do not complete measured closure. The gaps/captures row is marked for review when captures are missing, not linked to active focus, left open without a `capture_followup_reviewed` event, or when significant gaps lack Day Event explanations. Review items still require human judgment against the closure criteria.
 Before marking the daily-control goal complete, run the final check after `pnpm dogfood:finish:save`. For the real local database it first checks that both saved evidence files exist, that the saved report status is final, that the saved report includes `Короткое закрытие` with `Статус закрытия`, `Данным можно доверять: да`, and `Закрытие уложилось в 10 минут: да`, that it uses the grouped `Проверка перед отчётом` checklist with `Ближайшее действие` and `Сводка`, and that the final command includes the explicit `--no-codex-guidance` confirmation; then it runs `pnpm test`, `pnpm dogfood:preflight`, and the strict closure check on the same code. If the saved evidence is missing or still draft, the command stops early with `Финальная проверка пока не готова`, repeats the saved report next action when available, and avoids a JavaScript stack trace:
 
 ```bash
@@ -294,6 +397,7 @@ pnpm smoke:focus-api
 pnpm smoke:corrections-api
 pnpm smoke:capture-api
 pnpm smoke:day-events-api
+pnpm smoke:operational-reality-api
 ```
 
 Against a running Rust agent or desktop app:
@@ -303,6 +407,7 @@ TIMESKEIN_API_URL=http://127.0.0.1:<port>/api pnpm smoke:focus-api
 TIMESKEIN_API_URL=http://127.0.0.1:<port>/api pnpm smoke:corrections-api
 TIMESKEIN_API_URL=http://127.0.0.1:<port>/api pnpm smoke:capture-api
 TIMESKEIN_API_URL=http://127.0.0.1:<port>/api pnpm smoke:day-events-api
+TIMESKEIN_API_URL=http://127.0.0.1:<port>/api pnpm smoke:operational-reality-api
 ```
 
 The smoke refuses to run if there is already an active focus session.
@@ -370,7 +475,7 @@ If macOS rejects all three, use the macOS menu bar item or normal app switching.
 - Running focus session restored from SQLite after frontend/app restart
 - Focus sessions are linked to Work Items; typed titles reuse existing Work Items instead of creating duplicates
 - Setting a Work Item to `active` starts or switches the linked focus session; stopping it clears `active`
-- Day panel with focus blocks, total tracked time, working occupancy, executive work, non-work tracked time, entrance count, live zone totals, a `Учёл зоны` action that logs an in-day zone check, and gaps
+- Day panel with focus blocks, total tracked time, working occupancy, executive work, non-work tracked time, entrance count, live zone totals, an explicit `Отметить просмотр` action with a two-views-per-day reference point, and gaps
 - Open gap warning when no focus block is running and the time since the last stopped block is significant
 - Day totals count the part of each focus block that overlaps the selected local day
 - Russian review checklist in Today and copied dogfood reports: active-state red items, open captures, significant gaps, open gap, Activity Zone coverage, non-work tracking, capture coverage, Work Item context coverage, current closure stage, elapsed closure time, compact summary of already-clean checks, `Объяснить` / `Управляемость` / `Восстановление` actions for gap Day Events, direct `Добавить блок` for missing tracking intervals, and specific accept-as-is actions for optional checks: `Зоны верны`, `Инбокс проверен`, `Пути проверены`, `Окно проверено`, `Трекинг верен`, `Время верно`, `Контекст не нужен`, and `Оставить как хвост`; open captures stay a separate conscious decision and are not hidden behind the bulk `Всё проверено` action. Missing day/item context can either stage a short note through `Добавить контекст` or record an explicit `Контекст не нужен` review when the report is already understandable. Before `Начать закрытие дня`, Today keeps the checklist compact and does not show the full evening queue as daytime background pressure, the report button starts closure, then says `Закрыть проверки` until a final report is possible, `Ближайшее действие` names the exact button or gesture for the current red item, review item, or final report copy, `Сводка` separates remaining red items, fix-ups, and accept-as-is checks, every unresolved checklist row repeats its action hint in the UI and copied/CLI Markdown, and an active focus block is not duplicated as a separate active-item red item until the focus has actually stopped
@@ -378,12 +483,16 @@ If macOS rejects all three, use the macOS menu bar item or normal app switching.
 - macOS menu bar item shows the active focus duration as a short `12 мин в фокусе` status while a block is running, and today's total when no block is active
 - Work item states: active, waiting, blocked, done, someday, unknown
 - Work Item activity zones: work, coordination, recovery, idle, personal; focus blocks keep their own zone snapshot for report correction
+- One optional hierarchical Track and several optional Labels per Work Item; the `#` header action manages the taxonomy, while create/edit dialogs assign it without adding a mandatory start step
+- Explainable `Рабочая реальность` with active/waiting/blocked/parked/reactive/completed/stale-important/meeting-tail/unknown states, provenance, confidence, facts, unknowns, next actions, corrections, Track cards, captures, and Reflection follow-up
+- Append-only causal records keep `occurred_at` separate from `recorded_at`, preserve replaced assertions, and snapshot current Track/Labels for historical honesty
+- Focus blocks and Work Item Events keep immutable Track/Label snapshots; period reports distinguish captured history, legacy current-Work-Item inference, and `Unclassified` data
 - Work Item list shows Russian last-touched time like `5 мин назад` plus day/total tracked time when available
 - Work Item list can be narrowed to `Recent`, `Today`, `Pinned`, or `All`; typed search scans the matching inventory regardless of the current mode
-- Today list height can be resized by dragging the divider above the Work Item search and reset with a double-click
+- The complete work area above inventory can be resized by dragging the divider above Work Item search and reset with a double-click
 - Refs: URLs, file paths, issue keys with conflict detection
 - Pin items to keep them at top of list
-- Search by title/note
+- Unicode-case-insensitive search by title/note, including common Cyrillic/Latin homoglyphs
 - Keyboard-first navigation with mouse support
 - macOS app opener refuses to reuse an already running `timeskein-desktop` process during dogfood start
 - macOS app recovers from stale embedded-agent lock/port files on startup
@@ -399,16 +508,21 @@ If macOS rejects all three, use the macOS menu bar item or normal app switching.
 - **Day Events are basic** - user-authored day-level notes can be added, re-zoned, edited, deleted, and reported; there is no separate day journal screen yet
 - **Work Item notes remain mutable descriptions** - timestamped observations should use Work Item Events instead
 - **Activity zone correction is basic** - new focus blocks snapshot the Work Item zone and stopped blocks can be corrected, but there is no bulk zone editor yet
+- **Semantic classification is intentionally optional** - unclassified work remains visible; old rows created before semantic snapshots are clearly reported as restored from the Work Item's current classification
+- **Taxonomy UI is minimal** - Tracks and Labels can be created, renamed, archived, and assigned, but there is no drag tree, bulk classifier, merge action, or automatic LLM classification
 - **macOS window restore and menu bar counter are newly fixed** - the packaged app now avoids always-on-top/task-switcher hiding, handles macOS reopen, and updates the menu bar title from the native shell; 2026-07-06 and later dogfood days produced non-zero show/hide request telemetry, but further polish is still possible
 - **macOS packaging produces `.app` only** - DMG packaging is deferred
 - **Windows packaging deferred** - current recovery baseline targets browser and macOS first
 - **Automated e2e tests are not implemented yet** - current validation is manual smoke plus build/type checks
+- **Operational Reality still has integration polish** - the accepted projection, dispatch ritual, and full inventory remain separate surfaces; Cmd+Tab restore, light theme, artifact events, and a chronological thought workspace are backlog items
 
 ## Documentation
 
 - [Project Overview](docs/00_project_overview.md) - architecture and principles
 - [Current Implementation](docs/current-implementation.md) - what runs today
 - [Dogfood Day Protocol](docs/dogfood-day.md) - one-day Session replacement trial
+- [Operational Reality Dogfood](docs/dogfood-operational-reality.md) - accepted two-day gate for the explainable current projection
+- [Causal Work Spine Acceptance Audit](docs/acceptance-causal-work-spine-v1.md) - implementation and real-use proof
 - [opskarta Roadmap](docs/roadmap/opskarta.md) - current machine-checkable roadmap
 - [In-Day Structure Roadmap](docs/roadmap/0004-in-day-structure-roadmap.md) - in-day thoughts, stages, live zone balance, dispatching, and recovery/lost-control gap classification
 - [Periodic Reflection Roadmap](docs/roadmap/0003-periodic-reflection-roadmap.md) - arbitrary-period reports and reflection loops

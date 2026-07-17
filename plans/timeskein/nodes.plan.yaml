@@ -5,10 +5,436 @@ nodes:
     title: Timeskein
     kind: product
     status: in_progress
-    notes: Manual-first, local-first work inventory. The macOS Session replacement baseline and daily-control closure gate are accepted; current work is the in-day structure layer before arbitrary-period reflection reports.
+    notes: Local-first causal work memory and steering system. The accepted manual foundation already covers daily control, in-day structure, arbitrary-period reflection, semantic Tracks/Labels, and evidence-backed Track stories. The strategic route now backcasts from Operational Reality, explainable context, private intelligence, multi-device continuity, and opt-in Evidence Mode.
     x:
       ops:
         attention_class: overview
+      strategy:
+        horizon: north-star
+        capability: product
+        architecture_layer: all
+        success_signal: The user can connect intention, action, change, evidence, decision, and next action across days and Tracks.
+        privacy_class: mixed
+
+  ts.causal_memory:
+    title: Causal Work Memory
+    kind: capability
+    parent: ts
+    status: in_progress
+    notes: Establish the shared causal spine for manual facts, observations, outcomes, decisions, next actions, projections, and future sources without rewriting the whole database.
+    x:
+      ops:
+        attention_class: now
+      strategy:
+        horizon: now
+        capability: causal-memory
+        architecture_layer: canonical
+        success_signal: Existing and new facts can explain what changed and what should happen next without inventing missing links.
+        privacy_class: mixed
+  ts.causal_memory.architecture_gate:
+    title: Fix the causal model and truth boundaries
+    kind: milestone
+    parent: ts.causal_memory
+    status: done
+    milestone: true
+    effort: 1
+    deps:
+      - id: ts.periodic_reflection.context_links
+    notes: ADR-0004, RFC-0009, and Roadmap 0005 define user-authoritative state, canonical observations, derived interpretations, ephemeral artifacts, provenance, incremental migration, and the bounded context probe.
+    x:
+      ops:
+        attention_class: done
+      strategy:
+        horizon: now
+        capability: causal-memory
+        architecture_layer: control
+        success_signal: Canonical, derived, ephemeral, and control data have explicit boundaries.
+        privacy_class: mixed
+        dogfood_gate: documentation-and-opskarta-validation
+  ts.causal_memory.provenance_contract:
+    title: Add shared provenance and observation contracts
+    kind: task
+    parent: ts.causal_memory
+    status: in_progress
+    effort: 3
+    deps:
+      - id: ts.causal_memory.architecture_gate
+    notes: "The manual causal slice now stores source/device, occurred/recorded time, schema version, confidence, correlation, and provenance. Sensitivity and derivation metadata remain for the future observation contract and bounded context probe."
+    x:
+      ops:
+        attention_class: now
+      strategy:
+        horizon: now
+        capability: causal-memory
+        architecture_layer: canonical
+        success_signal: Manual and machine-originated facts can be distinguished and traced.
+        privacy_class: mixed
+  ts.causal_memory.transition_history:
+    title: Preserve manual state and next-action transitions
+    kind: task
+    parent: ts.causal_memory
+    status: done
+    effort: 3
+    deps:
+      - id: ts.causal_memory.architecture_gate
+    notes: "Done for v1. Migration 012 stores append-only intent, state assertion, result, decision, next action, confirmation, and correction records. Corrections supersede rather than overwrite, and current tables/APIs remain the operational baseline."
+    x:
+      ops:
+        attention_class: now
+      strategy:
+        horizon: now
+        capability: causal-memory
+        architecture_layer: canonical
+        success_signal: Operational Reality can explain when and why current state changed.
+        privacy_class: ordinary
+  ts.causal_memory.timeline_integrity:
+    title: Keep focus time non-overlapping and auditable
+    kind: task
+    parent: ts.causal_memory
+    status: done
+    effort: 2
+    deps:
+      - id: ts.causal_memory.transition_history
+    notes: "Accepted after the 2026-07-16 dogfood exposed a 9:05 overlap. Rust create/update rejects overlapping stopped intervals, touching boundaries remain valid, day closure and RC checks block on legacy overlaps, and period reports emit an explicit data-trust warning without silently rewriting history."
+    x:
+      ops:
+        attention_class: done
+      strategy:
+        horizon: now
+        capability: causal-memory
+        architecture_layer: canonical
+        success_signal: Tracked duration cannot be accepted while the underlying timeline double-counts time.
+        privacy_class: ordinary
+  ts.causal_memory.spine_gate:
+    title: Causal work spine is queryable and historically honest
+    kind: milestone
+    parent: ts.causal_memory
+    status: done
+    milestone: true
+    effort: 1
+    deps:
+      - id: ts.causal_memory.provenance_contract
+      - id: ts.causal_memory.transition_history
+      - id: ts.causal_memory.timeline_integrity
+    notes: "Accepted 2026-07-16. Synthetic, migration/restart, historical as_of, semantic snapshots, evidence Ref, correction, Reflection follow-up, mock, packaged macOS, and period-report gates pass. Real 15–16 July use preserved a complete intent -> result with Ref -> next-action chain and exposed/fixed the timeline-overlap trust boundary."
+    x:
+      ops:
+        attention_class: done
+      strategy:
+        horizon: now
+        capability: causal-memory
+        architecture_layer: canonical
+        success_signal: A real Track history separates user facts, observations, inference, and unknowns.
+        privacy_class: mixed
+        dogfood_gate: real-track-causal-history
+
+  ts.causal_memory.working_memory_bridge:
+    title: Build a chronological working-memory bridge
+    kind: epic
+    parent: ts.causal_memory
+    status: planned
+    effort: 5
+    deps:
+      - id: ts.causal_memory.spine_gate
+    notes: "Candidate after M1. Provide a persistent chronological thought stream, a first-class artifact/material record, comfortable long-note review, optional Work Item stages, and explicit action -> change capture. Dogfood showed that long work can be well timed while its decisions and outcomes remain too thin."
+    x:
+      ops:
+        attention_class: next
+      strategy:
+        horizon: next
+        capability: causal-memory
+        architecture_layer: canonical
+        success_signal: Long focus blocks leave enough structured change evidence to resume and review without an external notebook.
+        privacy_class: mixed
+
+  ts.steering:
+    title: Current-State Steering
+    kind: capability
+    parent: ts
+    status: in_progress
+    notes: Turn causal history into a live, correctable answer about what is active, waiting, blocked, parked, reactive, stale-important, completed, or still an unresolved tail.
+    x:
+      ops:
+        attention_class: now
+      strategy:
+        horizon: now
+        capability: steering
+        architecture_layer: derived
+        success_signal: Opening Timeskein is enough to choose a justified next action without external archaeology.
+        privacy_class: mixed
+  ts.steering.manual_correction:
+    title: Confirm and correct operational state
+    kind: task
+    parent: ts.steering
+    status: done
+    effort: 3
+    deps:
+      - id: ts.periodic_reflection.operational_reality
+    notes: "Implemented in the Operational Reality panel and Local API. The user can confirm or explain a correction, close, wait, block, park, mark reactive/meeting-tail/stale, dismiss or complete a next action, and the causal record preserves the prior assertion."
+    x:
+      ops:
+        attention_class: now
+      strategy:
+        horizon: now
+        capability: steering
+        architecture_layer: control
+        success_signal: A machine suggestion never silently replaces user state.
+        privacy_class: ordinary
+  ts.steering.operational_reality_gate:
+    title: Operational Reality selects the next justified action
+    kind: milestone
+    parent: ts.steering
+    status: done
+    milestone: true
+    effort: 1
+    deps:
+      - id: ts.periodic_reflection.operational_reality
+      - id: ts.steering.manual_correction
+    notes: "Accepted 2026-07-16. The strict 15–16 July gate passed with 2/2 real days, 11/3 starts through `Начать отсюда`, meeting-tail/stale-important/waiting/reactive states, one correction surviving restart, three Reflection follow-ups, one full intent -> result with Ref -> next-action chain, and 2/2 normal closures."
+    x:
+      ops:
+        attention_class: done
+      strategy:
+        horizon: now
+        capability: steering
+        architecture_layer: derived
+        success_signal: The next action is selected without rebuilding the current work inventory elsewhere.
+        privacy_class: mixed
+        dogfood_gate: real-day-operational-reality
+
+  ts.steering.workspace_convergence:
+    title: Converge Operational Reality, day contract, and inventory
+    kind: epic
+    parent: ts.steering
+    status: planned
+    effort: 5
+    deps:
+      - id: ts.steering.operational_reality_gate
+    notes: "Candidate after M1. Operational Reality should remain the source of truth; dispatching should choose 2–3 existing Work Items/Tracks from it into a visible day contract, and the full inventory should serve search, maintenance, deduplication, and hierarchy rather than compete for attention. Keep free text for why-now and parking rationale."
+    x:
+      ops:
+        attention_class: next
+      strategy:
+        horizon: next
+        capability: steering
+        architecture_layer: derived
+        success_signal: The user can form and follow the day contract without maintaining three competing representations of current work.
+        privacy_class: ordinary
+
+  ts.trust:
+    title: Trust, Privacy, and Retention
+    kind: capability
+    parent: ts
+    status: planned
+    notes: Cross-cutting control plane for source permissions, sensitivity, pause, purge, revocation, redaction, TTL, storage budget, and audit.
+    x:
+      ops:
+        attention_class: next
+      strategy:
+        horizon: now-next
+        capability: trust
+        architecture_layer: control
+        success_signal: Every collected datum has an understandable policy and a reliable deletion path.
+        privacy_class: high
+  ts.trust.minimum_policy_gate:
+    title: Define minimum policy controls for a context probe
+    kind: milestone
+    parent: ts.trust
+    status: planned
+    milestone: true
+    effort: 2
+    deps:
+      - id: ts.causal_memory.architecture_gate
+    notes: Before automatic observation, implement a visible indicator, pause, local-only storage, sensitivity, TTL, purge, and audit for the bounded source.
+    x:
+      ops:
+        attention_class: next
+      strategy:
+        horizon: next
+        capability: trust
+        architecture_layer: control
+        success_signal: The bounded probe can be stopped and purged without hidden residue.
+        privacy_class: high
+        dogfood_gate: privacy-control-smoke
+
+  ts.context_fabric:
+    title: Context Fabric
+    kind: capability
+    parent: ts
+    status: planned
+    notes: Validate automatic context early through a bounded focus-scoped probe, then generalize only proven value into SourceNodes and explicit connectors.
+    x:
+      ops:
+        attention_class: next
+      strategy:
+        horizon: next
+        capability: context
+        architecture_layer: canonical
+        success_signal: Context sources reduce re-entry cost while remaining explainable, optional, and revocable.
+        privacy_class: high
+  ts.context_fabric.observation_envelope:
+    title: Implement one source observation envelope
+    kind: task
+    parent: ts.context_fabric
+    status: planned
+    effort: 3
+    deps:
+      - id: ts.causal_memory.provenance_contract
+      - id: ts.trust.minimum_policy_gate
+    notes: Support one idempotent source with provenance, sensitivity, timestamps, correlation to an active Focus Session, and an explicit retention policy.
+    x:
+      ops:
+        attention_class: next
+      strategy:
+        horizon: next
+        capability: context
+        architecture_layer: canonical
+        success_signal: One machine observation can be ingested, traced, corrected, and revoked.
+        privacy_class: high
+  ts.context_fabric.bounded_probe:
+    title: Run a bounded active-app and browser-context probe
+    kind: experiment
+    parent: ts.context_fabric
+    status: planned
+    effort: 5
+    deps:
+      - id: ts.context_fabric.observation_envelope
+    notes: Collect only during a manually active Focus Session, start with one source, keep a visible indicator, cap raw TTL at 72 hours, distill refs/context, and compare re-entry and Track-review value against the manual trace.
+    x:
+      ops:
+        attention_class: next
+      strategy:
+        horizon: next
+        capability: context
+        architecture_layer: ephemeral
+        assumption: Automatic context provides more re-entry or evidence value than noise and privacy cost.
+        success_signal: Re-entry time or evidence quality improves with an acceptable correction rate.
+        privacy_class: high
+  ts.context_fabric.bounded_probe_gate:
+    title: Automatic context proves value and trust
+    kind: milestone
+    parent: ts.context_fabric
+    status: planned
+    milestone: true
+    effort: 1
+    deps:
+      - id: ts.context_fabric.bounded_probe
+    notes: Decide whether to build Context Fabric, narrow the probe, or stop the branch. Code completion alone does not pass this gate.
+    x:
+      ops:
+        attention_class: next
+      strategy:
+        horizon: next
+        capability: context
+        architecture_layer: derived
+        assumption: The user trusts the source and uses its distilled output.
+        success_signal: Useful distilled facts per raw observation are positive, privacy failures are zero, and manual correction remains manageable.
+        privacy_class: high
+        dogfood_gate: bounded-context-real-work
+
+  ts.intelligence:
+    title: Explainable Episodes and Private Intelligence
+    kind: capability
+    parent: ts
+    status: deferred
+    notes: Build correctable Episodes and Threads, in-app reflection, redacted LLM packs, and cited interpretations only after causal and context gates are meaningful.
+    x:
+      ops:
+        attention_class: later
+      strategy:
+        horizon: later
+        capability: intelligence
+        architecture_layer: derived
+        success_signal: Machine assistance improves decisions while every conclusion remains inspectable and optional.
+        privacy_class: mixed
+  ts.intelligence.episodes:
+    title: Derive explainable work Episodes
+    kind: epic
+    parent: ts.intelligence
+    status: deferred
+    effort: 8
+    deps:
+      - id: ts.steering.operational_reality_gate
+      - id: ts.context_fabric.bounded_probe_gate
+    notes: Combine manual Focus Sessions and observations into correctable Episodes with source explanations and confidence.
+    x:
+      ops:
+        attention_class: later
+      strategy:
+        horizon: later
+        capability: intelligence
+        architecture_layer: derived
+        assumption: Derived episodes are accurate enough to reduce re-entry cost.
+        success_signal: Re-entry improves after 1, 3, and 7 days and the correction rate is acceptable.
+        privacy_class: mixed
+  ts.intelligence.threads:
+    title: Connect Episodes into semantic Threads
+    kind: epic
+    parent: ts.intelligence
+    status: deferred
+    effort: 8
+    deps:
+      - id: ts.intelligence.episodes
+    notes: Keep user-authored Track separate from machine-derived Thread; show and correct why Episodes are connected.
+    x:
+      ops:
+        attention_class: later
+      strategy:
+        horizon: later
+        capability: intelligence
+        architecture_layer: derived
+        success_signal: Long-running work can be reconstructed without hiding uncertainty.
+        privacy_class: mixed
+
+  ts.continuity:
+    title: Multi-device Continuity
+    kind: capability
+    parent: ts
+    status: deferred
+    notes: Preserve a complete local mode while making canonical facts portable and eventually synchronized across macOS, Windows, and Android surfaces.
+    x:
+      ops:
+        attention_class: later
+      strategy:
+        horizon: later
+        capability: continuity
+        architecture_layer: canonical
+        success_signal: The same causal history remains available across devices without mandatory cloud dependence.
+        privacy_class: mixed
+  ts.continuity.sync_readiness:
+    title: Keep new canonical facts sync-ready
+    kind: task
+    parent: ts.continuity
+    status: planned
+    effort: 3
+    deps:
+      - id: ts.causal_memory.provenance_contract
+    notes: Stable UUIDs, device provenance, idempotent ingest, schema version, and separate observed/recorded time. Do not build Hub or CRDT yet.
+    x:
+      ops:
+        attention_class: next
+      strategy:
+        horizon: now-next
+        capability: continuity
+        architecture_layer: canonical
+        success_signal: New data does not create an avoidable future sync migration.
+        privacy_class: mixed
+
+  ts.full_context:
+    title: Opt-in Full Context and Evidence Mode
+    kind: capability
+    parent: ts
+    status: deferred
+    notes: Expand only a proven Context Fabric into screen evidence, broader sources, distillation, semantic reconstruction, and strict storage/privacy control.
+    x:
+      ops:
+        attention_class: later
+      strategy:
+        horizon: later
+        capability: full-context
+        architecture_layer: ephemeral
+        success_signal: Missing context can be reconstructed without turning Timeskein into a life recorder.
+        privacy_class: high
 
   ts.baseline:
     title: Recovery baseline
@@ -538,8 +964,8 @@ nodes:
     title: In-day structure and self-coordination
     kind: phase
     parent: ts
-    status: in_progress
-    notes: "Current product layer after the 2026-07-08 closure gate. Turn Timeskein from a timer plus evening report into a day-structuring tool. Dogfood days 2026-07-07 through 2026-07-09 showed that work becomes easier after one focus is selected, while the expensive part is rebuilding manageability after breaks and choosing one legitimate next action without external pressure. The implemented slices added live Activity Zone totals with explicit in-day glance evidence, separated working occupancy from executive work, added a cheap focus/day journal, classified explained gaps by interval, added a compact day-entry/post-break dispatch ritual, and made dispatch-ritual starts visible in dogfood telemetry and closure checks. The 2026-07-09 dogfood day proved useful in-day structure reports and exposed follow-up polish: clearer dispatch wording, free day thoughts without active focus, tolerant gap matching, search normalization, and richer note review."
+    status: done
+    notes: "Accepted manual product layer. Dogfood days 2026-07-07 through 2026-07-09 proved live Activity Zone totals, a cheap focus/day journal, classified gaps, and a compact dispatch ritual. Richer notes, explicit stages, visible causality, search normalization, and readability now support the causal-memory route rather than keeping this phase open."
     x:
       ops:
         attention_class: done
@@ -571,7 +997,7 @@ nodes:
   ts.in_day_structure.work_item_stages:
     title: Track stages inside a Work Item
     kind: task
-    parent: ts.in_day_structure
+    parent: ts.causal_memory
     status: planned
     effort: 5
     deps:
@@ -579,7 +1005,13 @@ nodes:
     notes: "Allow a Work Item such as '1x1 + preparation + post-analysis' to have explicit stages. Focus blocks should optionally attach to a stage, reports should show time by stage, and stage changes should not require splitting the Work Item into fake separate tasks."
     x:
       ops:
-        attention_class: future
+        attention_class: next
+      strategy:
+        horizon: next
+        capability: causal-memory
+        architecture_layer: canonical
+        success_signal: Multi-stage work can be resumed without fake duplicate Work Items.
+        privacy_class: ordinary
   ts.in_day_structure.zone_dashboard:
     title: Show Activity Zone totals during the day
     kind: task
@@ -602,7 +1034,7 @@ nodes:
       - id: ts.in_day_structure.day_observation_log
       - id: ts.in_day_structure.active_work_journal
       - id: ts.in_day_structure.zone_dashboard
-    notes: "First UI and evidence slice added on 2026-07-08 and clarified after dogfood on 2026-07-09. When no focus block is active, the focus panel shows `Диспетчеризация`: `Что в игре`, one first focus, parked work, and why this is important enough now. The panel now has a compact `?` with field examples. Saving writes a Coordination Day Event; starting writes the event and starts the chosen focus. Dogfood telemetry, reports, and closure checks count dispatch-ritual starts separately from typed and selected/list entries. Further dogfood can tune wording, but the first implementation is in place."
+    notes: "First UI and evidence slice added on 2026-07-08, clarified after dogfood on 2026-07-09, and corrected after the 2026-07-10 pre-gate day. The panel now asks for a 2–3-direction active set, one observable first action, 2–3 parked competitors, and one why-now sentence. It can start a tracked Coordination block without hiding the form; save-only and save-and-switch actions state their effects. Dogfood telemetry, reports, and closure checks count dispatch starts separately from typed and selected/list entries."
     x:
       ops:
         attention_class: done
@@ -628,7 +1060,7 @@ nodes:
     deps:
       - id: ts.day_review.day_events
       - id: ts.daily_control.goal_check
-    notes: "Done as a first slice on 2026-07-08 and tightened after 2026-07-09 dogfood. Gap explanation remains stored as a Day Event, but closed gaps now match a displayed interval instead of a loose count of gap-like notes. A small end-time tolerance keeps an open-gap explanation attached when the gap closes a minute or two later. Today and Markdown reports show a classification label next to explained gaps: recovery, loss of manageability, idle, or explained. A dedicated gaps table remains future work if period reports need richer filtering."
+    notes: "Done as a first slice on 2026-07-08 and tightened after 2026-07-09 dogfood. Gap explanation remains stored as a Day Event, but closed gaps now match a displayed interval instead of a loose count of gap-like notes. A small end-time tolerance keeps an open-gap explanation attached when the gap closes a minute or two later. Today and Markdown reports show a classification label next to explained gaps. Dogfood 2026-07-15 proved that competing explanations can still survive for one interval; a dedicated gap entity with superseding classification remains future work."
     x:
       ops:
         attention_class: done
@@ -653,15 +1085,21 @@ nodes:
   ts.in_day_structure.rich_note_review:
     title: Review larger day and work notes calmly
     kind: task
-    parent: ts.in_day_structure
+    parent: ts.causal_memory
     status: planned
     effort: 3
     deps:
       - id: ts.in_day_structure.dogfood_gate
-    notes: "Support larger multi-line notes as working artifacts, with comfortable view/edit/export. The 2026-07-09 dogfood day proved timestamped events are useful but also showed that longer thoughts need better handling than a compact row and a long evening list."
+    notes: "Support larger multi-line notes as working artifacts, with comfortable view/edit/export. Dogfood through 2026-07-16 showed that a permanent chronological panel must remain useful even without active focus and should include an explicit artifact/material kind; the external notebook still wins on overview today."
     x:
       ops:
-        attention_class: future
+        attention_class: next
+      strategy:
+        horizon: next
+        capability: causal-memory
+        architecture_layer: canonical
+        success_signal: Longer thoughts remain usable as working artifacts and report evidence.
+        privacy_class: mixed
   ts.in_day_structure.search_normalization:
     title: Normalize search for Cyrillic and Latin lookalikes
     kind: task
@@ -682,32 +1120,38 @@ nodes:
     effort: 3
     deps:
       - id: ts.in_day_structure.dogfood_gate
-    notes: "Dogfood asks for a light theme, clearer explanation of collapsed review checks, and a more reliable upper/lower resize experience. Keep this as polish after the in-day structure gate, unless daily use shows that one item blocks trust."
+    notes: "Dogfood asks for a light theme, clearer explanation of collapsed review checks and Reflection follow-up eligibility, normal Cmd+Tab restoration of a hidden macOS window, and calmer navigation as the main screen grows. Resize and text-overlap defects were fixed; keep the remaining work as polish unless it blocks trust."
     x:
       ops:
         attention_class: future
   ts.in_day_structure.visible_causality:
     title: Make small action outcomes visible
     kind: task
-    parent: ts.in_day_structure
+    parent: ts.causal_memory
     status: planned
     effort: 3
     deps:
-      - id: ts.in_day_structure.dogfood_gate
+      - id: ts.causal_memory.transition_history
     notes: "Support the practice `I did X -> state changed as Y` after a focus block or during review. The 2026-07-09 dogfood day showed that loss of perceived causality raises entry cost: action feels too small against the scale of accumulated problems."
     x:
       ops:
-        attention_class: future
+        attention_class: next
+      strategy:
+        horizon: next
+        capability: causal-memory
+        architecture_layer: canonical
+        success_signal: Each meaningful block can state what changed without requiring praise or inferred value.
+        privacy_class: mixed
 
   ts.periodic_reflection:
     title: Periodic reflection and meaning reports
     kind: phase
     parent: ts
-    status: in_progress
-    notes: "P0 arbitrary-period export is accepted on real 2026-07-01..2026-07-10 data. Continue toward reports that answer what the user got from the period: real focus, active tracks, noise, recovery, open loops, and performance-review evidence. Later slices should add scale-specific profiles, saved reflection decisions, and filters by Activity Zone, Track, parent Track/project, and Labels. Keep the layer outcome-first and based on existing manual data before automated context collection."
+    status: done
+    notes: "Accepted manual reflection layer. Period export, four profiles, persistent Reflection Sessions, semantic Tracks/Labels, and the evidence-backed Track story passed real gates on 2026-07-10. Operational Reality is promoted to Current-State Steering; period-review UI and private LLM analysis belong to Explainable Episodes and Private Intelligence."
     x:
       ops:
-        attention_class: current
+        attention_class: done
   ts.periodic_reflection.period_export:
     title: Export arbitrary-period reports from existing data
     kind: task
@@ -724,83 +1168,148 @@ nodes:
     title: Add weekly, sprint, track, and performance report profiles
     kind: task
     parent: ts.periodic_reflection
-    status: planned
+    status: done
     effort: 3
     deps:
       - id: ts.periodic_reflection.period_export
-    notes: "Different periods should answer different questions: week tunes the next focus, sprint compares intention to flow, track retrospective reconstructs one project, and quarter-performance separates facts from contribution wording."
+    notes: "Done. Four profiles now have distinct purposes, questions, output emphasis, evidence slices, and explicit limitations: weekly-review, sprint-review, track-retrospective, and performance-evidence. Markdown and JSON identify the profile and keep facts, observations, warnings, and decisions separate."
     x:
       ops:
-        attention_class: current
-  ts.periodic_reflection.context_links:
-    title: Preserve external artifacts and user thoughts as report evidence
-    kind: task
-    parent: ts.periodic_reflection
-    status: planned
-    effort: 3
-    deps:
-      - id: ts.periodic_reflection.period_export
-    notes: Make refs, Work Item Events, Day Events, capture origin, and manually recorded thoughts visible as evidence for state, result, blocker, or next action. Prefer meaning reconstruction over raw context collection.
-    x:
-      ops:
-        attention_class: future
+        attention_class: done
   ts.periodic_reflection.tracks_labels:
     title: Introduce Tracks, Labels, and historical snapshots
     kind: task
     parent: ts.periodic_reflection
-    status: planned
+    status: done
     effort: 5
     deps:
       - id: ts.periodic_reflection.report_profiles
-      - id: ts.periodic_reflection.context_links
-    notes: Add Track as the main long-lived meaning container, Labels as cross-cutting slices, and snapshots on focus blocks/events so old reports remain historically honest after taxonomy changes.
+    notes: "Done 2026-07-10. Hierarchical Tracks, optional multi-Labels, taxonomy management, Work Item assignment, focus/event snapshots, captured/inferred-current/Unclassified provenance, Track/descendant/Label/Zone report filters, and Track-scoped Reflection decisions are implemented and tested. Real Track `Личные проекты / Timeskein` was dogfooded conservatively without classifying an ambiguous multi-project item."
     x:
       ops:
-        attention_class: future
+        attention_class: done
+  ts.periodic_reflection.semantic_dogfood_gate:
+    title: Prove semantic history on fresh dogfood data
+    kind: milestone
+    parent: ts.periodic_reflection
+    status: done
+    milestone: true
+    effort: 2
+    deps:
+      - id: ts.periodic_reflection.tracks_labels
+    notes: "Passed 2026-07-10. The real primary database contains three fresh captured Timeskein blocks, four typed evidence entries, one confirmed result with an immutable Ref snapshot, a repeated Track retrospective, protect-next-focus=fulfilled, and continue=progressed. `pnpm evidence:gate -- --from 2026-07-10 --to 2026-07-11` is green."
+    x:
+      ops:
+        attention_class: done
+  ts.periodic_reflection.context_links:
+    title: Build an evidence-backed Track story
+    kind: task
+    parent: ts.periodic_reflection
+    status: done
+    effort: 3
+    deps:
+      - id: ts.periodic_reflection.semantic_dogfood_gate
+    notes: "Accepted 2026-07-10. Migration 011, Local API, active-focus and post-block UI, Markdown/JSON evidence_story, immutable Ref snapshots, missing-evidence warnings, and explicit prior-decision follow-ups answer what changed, why it is credible, and what should happen next without background collection or timer friction. Browser, native macOS, synthetic, and real-data gates pass."
+    x:
+      ops:
+        attention_class: done
   ts.periodic_reflection.operational_reality:
     title: Build operational reality panel
     kind: task
-    parent: ts.periodic_reflection
+    parent: ts.steering
+    status: done
+    effort: 5
+    deps:
+      - id: ts.causal_memory.spine_gate
+      - id: ts.periodic_reflection.semantic_dogfood_gate
+    notes: "Implemented 2026-07-10 and accepted 2026-07-16. Deterministic Rust projection, migration 012, Local API, browser mock, React panel, JSON export, user correction, next-action lifecycle, captures, historical Track evidence, Reflection follow-up, and real two-day use pass. A migrated copy of the real 44-Work-Item database retained all 46 projected items while the default queue narrowed to 8."
+    x:
+      ops:
+        attention_class: done
+      strategy:
+        horizon: now
+        capability: steering
+        architecture_layer: derived
+        assumption: A live explainable state reduces the cost of choosing and resuming work.
+        success_signal: The user can choose the next justified action without external work-list reconstruction.
+        privacy_class: mixed
+  ts.periodic_reflection.causal_period_story:
+    title: Carry causal outcomes into period reports
+    kind: task
+    parent: ts.causal_memory
+    status: planned
+    effort: 3
+    deps:
+      - id: ts.causal_memory.spine_gate
+      - id: ts.periodic_reflection.context_links
+    notes: "Period reports already preserve typed evidence, but the accepted Operational Reality gate exposed a gap between the causal chain visible to the gate and the summary emphasis of ordinary weekly reports. Make confirmed changes, decisions, next actions, and unresolved commitments first-class period evidence."
+    x:
+      ops:
+        attention_class: next
+      strategy:
+        horizon: next
+        capability: intelligence
+        architecture_layer: derived
+        success_signal: A period review explains what changed and what remains without reconstructing causal chains from raw event tables.
+        privacy_class: mixed
+  ts.periodic_reflection.period_review_ui:
+    title: Run period reviews inside the app
+    kind: epic
+    parent: ts.intelligence
     status: planned
     effort: 5
     deps:
-      - id: ts.periodic_reflection.tracks_labels
-    notes: Show what is currently active, waiting, blocked, stale-but-important, or a meeting tail, with confidence, last touched time, evidence, and next action when honest.
+      - id: ts.periodic_reflection.reflection_sessions
+      - id: ts.steering.operational_reality_gate
+    notes: "Let the user choose a range, profile, Track, Labels, and Activity Zones; inspect facts, projections, evidence, and warnings; record decisions; and rerun the same review without CLI commands. Build after the current-state projection is trusted."
     x:
       ops:
-        attention_class: future
+        attention_class: later
+      strategy:
+        horizon: later
+        capability: intelligence
+        architecture_layer: derived
+        success_signal: A period review changes the next active set without CLI or external notes.
+        privacy_class: mixed
   ts.periodic_reflection.reflection_sessions:
     title: Save period conclusions as Reflection Sessions
     kind: task
     parent: ts.periodic_reflection
-    status: planned
+    status: done
     effort: 3
     deps:
       - id: ts.periodic_reflection.report_profiles
-    notes: Store findings, decisions, next focus points, and links to created or updated Work Items so a review changes the working system instead of becoming a lost chat artifact.
+    notes: "Done for the CLI baseline. report:period can write an editable decision template; reflection:save persists summary, findings, Work Item or Track scope, and continue/done-close/park/reactive/noise/protect-next-focus decisions in SQLite; reflection:list and repeated reports read them back. Real weekly and Timeskein Track reviews preserved and reloaded their decisions."
     x:
       ops:
-        attention_class: future
+        attention_class: done
   ts.periodic_reflection.llm_pack:
     title: Export LLM packs with redaction controls
     kind: epic
-    parent: ts.periodic_reflection
+    parent: ts.intelligence
     status: deferred
     effort: 5
     deps:
-      - id: ts.periodic_reflection.period_export
-      - id: ts.periodic_reflection.context_links
-    notes: Prepare structured Markdown/JSON packages, questions, warnings, and redaction modes for local or explicit remote LLM analysis.
+      - id: ts.periodic_reflection.period_review_ui
+      - id: ts.intelligence.episodes
+    notes: Prepare structured Markdown/JSON packages, questions, warnings, redaction modes, cited conclusions, and accept/reject flow for local or explicit remote LLM analysis.
     x:
       ops:
-        attention_class: future
+        attention_class: later
+      strategy:
+        horizon: later
+        capability: intelligence
+        architecture_layer: derived
+        assumption: Cited LLM analysis improves decisions beyond a structured manual report.
+        success_signal: Accepted conclusions produce follow-up decisions that are checked later.
+        privacy_class: high
 
   ts.future:
-    title: Future directions
+    title: Maintenance and deferred polish
     kind: phase
     parent: ts
     status: deferred
-    notes: Important, but intentionally not decomposed before the Focus Session slice proves useful.
+    notes: Product polish and broader manual inventory work that should not dominate the north-star capability map unless dogfood shows a trust blocker.
     x:
       ops:
         attention_class: future
@@ -817,59 +1326,197 @@ nodes:
   ts.future.windows:
     title: Windows packaging and tray behavior
     kind: epic
-    parent: ts.future
+    parent: ts.continuity
     status: deferred
     effort: 8
     x:
       ops:
-        attention_class: future
+        attention_class: later
+      strategy:
+        horizon: later
+        capability: continuity
+        architecture_layer: control
+        success_signal: The Windows surface preserves the same local causal history and trust controls.
+        privacy_class: mixed
   ts.future.android:
     title: Android client path
     kind: epic
-    parent: ts.future
+    parent: ts.continuity
     status: deferred
     effort: 8
     x:
       ops:
-        attention_class: future
+        attention_class: later
+      strategy:
+        horizon: later
+        capability: continuity
+        architecture_layer: control
+        success_signal: Mobile capture and review extend continuity without weakening local control.
+        privacy_class: mixed
   ts.future.sync:
     title: Sync and multi-device continuity
     kind: epic
-    parent: ts.future
+    parent: ts.continuity
     status: deferred
     effort: 13
+    deps:
+      - id: ts.continuity.sync_readiness
+      - id: ts.causal_memory.spine_gate
     x:
       ops:
-        attention_class: future
+        attention_class: later
+      strategy:
+        horizon: later
+        capability: continuity
+        architecture_layer: canonical
+        assumption: Cross-device continuity is valuable enough to justify conflict and infrastructure complexity.
+        success_signal: Canonical facts converge across devices and remain exportable without mandatory cloud lock-in.
+        privacy_class: high
   ts.future.context_capture:
     title: Explicit context capture and SourceNodes
     kind: epic
-    parent: ts.future
-    status: deferred
+    parent: ts.context_fabric
+    status: planned
     effort: 13
+    deps:
+      - id: ts.context_fabric.bounded_probe_gate
     x:
       ops:
-        attention_class: future
+        attention_class: later
+      strategy:
+        horizon: next-later
+        capability: context
+        architecture_layer: canonical
+        success_signal: Proven source types share pairing, policy, ingest, provenance, health, and revocation.
+        privacy_class: high
   ts.future.evidence:
     title: Evidence Mode
     kind: epic
-    parent: ts.future
+    parent: ts.full_context
     status: deferred
     effort: 20
-    notes: Keep opt-in and post-MVP.
+    deps:
+      - id: ts.future.context_capture
+      - id: ts.context_fabric.bounded_probe_gate
+    notes: Expand a proven bounded probe into opt-in screen evidence chunks, distillation, presentation, and cleanup with explicit privacy controls.
     x:
       ops:
-        attention_class: future
+        attention_class: later
+      strategy:
+        horizon: later
+        capability: full-context
+        architecture_layer: ephemeral
+        assumption: Broader evidence reconstructs missing context without unacceptable surveillance cost.
+        success_signal: Distilled value survives raw TTL while user control and trust remain intact.
+        privacy_class: high
   ts.future.active_window:
     title: Activity Evidence Layer experiments
     kind: epic
-    parent: ts.future
-    status: deferred
+    parent: ts.context_fabric
+    status: planned
     effort: 8
-    notes: Explore only after the manual timer, day closure, in-day structure, and period-report loop are reliable. Future sources include active apps, browser tabs and URLs, messenger channels/chats, screenshots or screen chunks, and AI-assisted interpretation of activity, all behind explicit opt-in privacy controls. This is recorded as a future evidence layer, not as the next product goal.
+    deps:
+      - id: ts.context_fabric.bounded_probe_gate
+    notes: Expand only sources proven useful by the bounded probe. Candidate sources include active apps, browser tabs and URLs, messenger context, and explicit context snapshots; screenshots remain under Full Context.
     x:
       ops:
-        attention_class: future
+        attention_class: later
+      strategy:
+        horizon: next-later
+        capability: context
+        architecture_layer: canonical
+        success_signal: Each added source has a measured re-entry or evidence benefit.
+        privacy_class: high
+  ts.context_fabric.source_node_gate:
+    title: Context Fabric supports one explicit external source
+    kind: milestone
+    parent: ts.context_fabric
+    status: deferred
+    milestone: true
+    effort: 1
+    deps:
+      - id: ts.future.context_capture
+      - id: ts.future.active_window
+    notes: One explicit source and one passive-but-opt-in source share pairing, policy, ingest, provenance, health, correction, and revocation.
+    x:
+      ops:
+        attention_class: later
+      strategy:
+        horizon: next-later
+        capability: context
+        architecture_layer: control
+        success_signal: A second source can be added without inventing a parallel privacy or event model.
+        privacy_class: high
+        dogfood_gate: source-node-real-work
+  ts.intelligence.private_intelligence_gate:
+    title: Private intelligence improves a real reflection decision
+    kind: milestone
+    parent: ts.intelligence
+    status: deferred
+    milestone: true
+    effort: 1
+    deps:
+      - id: ts.periodic_reflection.period_review_ui
+      - id: ts.periodic_reflection.llm_pack
+      - id: ts.intelligence.threads
+    notes: A cited interpretation is consciously accepted or rejected, saved into Reflection Session, and checked in a later review.
+    x:
+      ops:
+        attention_class: later
+      strategy:
+        horizon: later
+        capability: intelligence
+        architecture_layer: derived
+        assumption: Private machine analysis changes decisions rather than merely producing more text.
+        success_signal: At least one accepted decision has evidence-backed follow-up; unsupported conclusions remain warnings.
+        privacy_class: high
+        dogfood_gate: cited-reflection-follow-up
+  ts.continuity.multi_device_gate:
+    title: Canonical history survives multi-device use
+    kind: milestone
+    parent: ts.continuity
+    status: deferred
+    milestone: true
+    effort: 1
+    deps:
+      - id: ts.future.sync
+      - id: ts.future.windows
+      - id: ts.future.android
+    notes: A real cross-device flow preserves user decisions, provenance, corrections, exportability, and local operation through conflicts and offline periods.
+    x:
+      ops:
+        attention_class: later
+      strategy:
+        horizon: later
+        capability: continuity
+        architecture_layer: canonical
+        assumption: Multi-device continuity justifies its operational complexity.
+        success_signal: Canonical facts converge without silent data loss or mandatory cloud dependence.
+        privacy_class: high
+        dogfood_gate: multi-device-offline-conflict
+  ts.full_context.full_context_gate:
+    title: Full Context reconstructs work without becoming surveillance
+    kind: milestone
+    parent: ts.full_context
+    status: deferred
+    milestone: true
+    effort: 1
+    deps:
+      - id: ts.future.evidence
+      - id: ts.context_fabric.source_node_gate
+      - id: ts.trust.minimum_policy_gate
+    notes: Real opt-in use proves that distilled Episodes and refs improve re-entry and long-horizon reflection, raw evidence expires, purge/revocation work, and manual truth stays authoritative.
+    x:
+      ops:
+        attention_class: later
+      strategy:
+        horizon: later
+        capability: full-context
+        architecture_layer: ephemeral
+        assumption: Rich context can be useful without creating a life recorder.
+        success_signal: Context reconstruction improves while privacy failures remain zero and raw retention stays bounded.
+        privacy_class: high
+        dogfood_gate: full-context-privacy-and-value
   ts.future.pause_resume:
     title: Pause, resume, and cancel focus sessions
     kind: epic

@@ -4,9 +4,13 @@ mod app_events;
 mod captures;
 mod connection;
 mod day_events;
+mod evidence;
 mod focus_sessions;
+mod operational_reality;
 mod refs;
+mod semantics;
 mod settings;
 mod work_items;
 
 pub use connection::Database;
+pub use operational_reality::causal_record_views;

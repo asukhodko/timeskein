@@ -12,6 +12,8 @@ import {
   type AppEventKind,
   type AppEventSource,
   type ActivityZone,
+  type OperationalState,
+  type OperationalSubjectKind,
 } from "@timeskein/contracts";
 import { MockDataStore } from "./fixtures";
 
@@ -106,6 +108,18 @@ const APP_EVENT_KINDS = new Set<string>([
 
 const APP_EVENT_SOURCES = new Set<string>(["ui", "agent", "script", "system"]);
 const ACTIVITY_ZONES = new Set<string>(["work", "coordination", "recovery", "idle", "personal"]);
+const OPERATIONAL_SUBJECT_KINDS = new Set<string>(["work_item", "track", "capture"]);
+const OPERATIONAL_STATES = new Set<string>([
+  "active",
+  "waiting",
+  "blocked",
+  "parked",
+  "reactive",
+  "completed",
+  "stale-important",
+  "meeting-tail",
+  "unknown",
+]);
 
 function isAppEventKind(value: unknown): value is AppEventKind {
   return typeof value === "string" && APP_EVENT_KINDS.has(value);
@@ -117,6 +131,14 @@ function isAppEventSource(value: unknown): value is AppEventSource {
 
 function isActivityZone(value: unknown): value is ActivityZone {
   return typeof value === "string" && ACTIVITY_ZONES.has(value);
+}
+
+function isOperationalSubjectKind(value: unknown): value is OperationalSubjectKind {
+  return typeof value === "string" && OPERATIONAL_SUBJECT_KINDS.has(value);
+}
+
+function isOperationalState(value: unknown): value is OperationalState {
+  return typeof value === "string" && OPERATIONAL_STATES.has(value);
 }
 
 // -----------------------------------------------------------------------------
@@ -403,6 +425,55 @@ function handleMethod(
       return successResponse(requestId, { success: true, id });
     }
 
+    case "taxonomy.list":
+      return successResponse(requestId, store.listTaxonomy(Boolean(params.include_archived)));
+
+    case "track.create": {
+      const title = typeof params.title === "string" ? params.title.trim() : "";
+      if (!title) return errorResponse(requestId, "validation_error", "Title is required");
+      return successResponse(requestId, store.createTrack(title, params.parent_track_id as string | undefined));
+    }
+
+    case "track.update": {
+      const id = params.id as string;
+      const track = store.updateTrack(id, {
+        title: typeof params.title === "string" ? params.title : undefined,
+        parent_track_id: params.parent_track_id as string | null | undefined,
+      });
+      return track
+        ? successResponse(requestId, track)
+        : errorResponse(requestId, "not_found", "Track not found");
+    }
+
+    case "track.archive": {
+      const track = store.archiveTrack(params.id as string, params.archived !== false);
+      return track
+        ? successResponse(requestId, track)
+        : errorResponse(requestId, "not_found", "Track not found");
+    }
+
+    case "label.create": {
+      const title = typeof params.title === "string" ? params.title.trim() : "";
+      if (!title) return errorResponse(requestId, "validation_error", "Title is required");
+      return successResponse(requestId, store.createLabel(title));
+    }
+
+    case "label.update": {
+      const title = typeof params.title === "string" ? params.title.trim() : "";
+      if (!title) return errorResponse(requestId, "validation_error", "Title is required");
+      const label = store.updateLabel(params.id as string, title);
+      return label
+        ? successResponse(requestId, label)
+        : errorResponse(requestId, "not_found", "Label not found");
+    }
+
+    case "label.archive": {
+      const label = store.archiveLabel(params.id as string, params.archived !== false);
+      return label
+        ? successResponse(requestId, label)
+        : errorResponse(requestId, "not_found", "Label not found");
+    }
+
     // Inventory methods
     case "inventory.list": {
       const search = params.filter && typeof params.filter === "object"
@@ -447,7 +518,9 @@ function handleMethod(
         params.type as "task" | "project" | "question" | undefined,
         params.state as WorkItemState | undefined,
         params.activity_zone as ActivityZone | undefined,
-        params.note as string | undefined
+        params.note as string | undefined,
+        params.track_id as string | null | undefined,
+        params.label_ids as string[] | undefined
       );
       return successResponse(requestId, {
         id: item.id,
@@ -511,6 +584,9 @@ function handleMethod(
         id,
         text,
         focus_session_id: params.focus_session_id as string | undefined,
+        evidence_kind: params.evidence_kind as import("@timeskein/contracts").EvidenceKind | undefined,
+        ref_ids: params.ref_ids as string[] | undefined,
+        new_ref: params.new_ref as import("@timeskein/contracts").WorkItemAddEventParams["new_ref"],
       });
       if (!event) {
         return errorResponse(requestId, "not_found", "Work item not found");
@@ -541,7 +617,11 @@ function handleMethod(
         return errorResponse(requestId, "validation_error", "Event text is required");
       }
 
-      const event = store.updateWorkItemEvent(id, text);
+      const event = store.updateWorkItemEvent(
+        id,
+        text,
+        params.evidence_kind as import("@timeskein/contracts").EvidenceKind | undefined,
+      );
       if (!event) {
         return errorResponse(requestId, "not_found", "Editable Work item event not found");
       }
@@ -581,11 +661,24 @@ function handleMethod(
         type: params.type as "task" | "project" | "question" | null | undefined,
         activity_zone: params.activity_zone as ActivityZone | undefined,
         note: params.note as string | null | undefined,
+        track_id: params.track_id as string | null | undefined,
+        label_ids: params.label_ids as string[] | undefined,
       });
       if (!item) {
         return errorResponse(requestId, "not_found", "Work item not found");
       }
       return successResponse(requestId, item);
+    }
+
+    case "work_item.set_semantics": {
+      const semantics = store.setWorkItemSemantics(
+        params.id as string,
+        params.track_id as string | null | undefined,
+        params.label_ids as string[] | undefined
+      );
+      return semantics
+        ? successResponse(requestId, semantics)
+        : errorResponse(requestId, "not_found", "Work item not found");
     }
 
     case "work_item.toggle_pin": {
@@ -632,6 +725,7 @@ function handleMethod(
       const result = store.startFocusSession({
         title: title?.trim(),
         work_item_id: workItemId,
+        activity_zone: params.activity_zone as ActivityZone | undefined,
         target_seconds: params.target_seconds as number | undefined,
       });
 
@@ -825,6 +919,99 @@ function handleMethod(
       });
     }
 
+    case "causal_record.list": {
+      if ((params.subject_kind && !params.subject_id) || (!params.subject_kind && params.subject_id)) {
+        return errorResponse(requestId, "validation_error", "subject_kind and subject_id must be provided together");
+      }
+      if (params.subject_kind && !isOperationalSubjectKind(params.subject_kind)) {
+        return errorResponse(requestId, "validation_error", "Valid subject kind is required");
+      }
+      const records = store.listCausalRecords({
+        subject_kind: params.subject_kind as OperationalSubjectKind | undefined,
+        subject_id: params.subject_id as string | undefined,
+        from: params.from as string | undefined,
+        to: params.to as string | undefined,
+      });
+      return successResponse(requestId, {
+        records,
+        total: records.length,
+        updated_at: new Date().toISOString(),
+      });
+    }
+
+    case "operational_reality.list":
+      return successResponse(
+        requestId,
+        store.getOperationalReality((params.as_of as string | undefined) ?? new Date().toISOString())
+      );
+
+    case "operational_reality.set_state": {
+      if (!isOperationalSubjectKind(params.subject_kind) || typeof params.subject_id !== "string") {
+        return errorResponse(requestId, "validation_error", "Valid operational subject is required");
+      }
+      if (!isOperationalState(params.state)) {
+        return errorResponse(requestId, "validation_error", "Valid operational state is required");
+      }
+      if (!store.hasOperationalSubject(params.subject_kind, params.subject_id)) {
+        return errorResponse(requestId, "not_found", "Operational Reality subject not found");
+      }
+      try {
+        const record = store.setOperationalState({
+          subject_kind: params.subject_kind,
+          subject_id: params.subject_id,
+          state: params.state,
+          reason: params.reason as string | undefined,
+          confirmation: params.confirmation as boolean | undefined,
+          occurred_at: params.occurred_at as string | undefined,
+        });
+        return successResponse(requestId, { record, reality: store.getOperationalReality() });
+      } catch (error) {
+        return errorResponse(
+          requestId,
+          "validation_error",
+          error instanceof Error ? error.message : "Operational state update failed"
+        );
+      }
+    }
+
+    case "operational_reality.set_next_action": {
+      if (!isOperationalSubjectKind(params.subject_kind) || typeof params.subject_id !== "string") {
+        return errorResponse(requestId, "validation_error", "Valid operational subject is required");
+      }
+      if (!store.hasOperationalSubject(params.subject_kind, params.subject_id)) {
+        return errorResponse(requestId, "not_found", "Operational Reality subject not found");
+      }
+      if (!(["set", "complete", "dismiss"] as unknown[]).includes(params.action)) {
+        return errorResponse(requestId, "validation_error", "Next action operation must be set, complete, or dismiss");
+      }
+      try {
+        const record = store.setOperationalNextAction({
+          subject_kind: params.subject_kind,
+          subject_id: params.subject_id,
+          action: params.action as "set" | "complete" | "dismiss",
+          text: params.text as string | undefined,
+          occurred_at: params.occurred_at as string | undefined,
+        });
+        return successResponse(requestId, { record, reality: store.getOperationalReality() });
+      } catch (error) {
+        return errorResponse(
+          requestId,
+          "validation_error",
+          error instanceof Error ? error.message : "Next action update failed"
+        );
+      }
+    }
+
+    case "operational_reality.follow_up_decision": {
+      if (typeof params.decision_id !== "string" || typeof params.status !== "string") {
+        return errorResponse(requestId, "validation_error", "Decision ID and follow-up status are required");
+      }
+      return successResponse(requestId, {
+        followup_id: uuidv4(),
+        reality: store.getOperationalReality(),
+      });
+    }
+
     // Settings methods
     case "settings.get":
       return successResponse(requestId, {
@@ -883,9 +1070,11 @@ app.listen(PORT, () => {
   console.log("  inventory.list, inventory.get");
   console.log("  capture.create, capture.list, capture.resolve, capture.update, capture.delete, capture.convert_to_work_item");
   console.log("  day_event.add, day_event.list, day_event.update, day_event.delete");
-  console.log("  work_item.create, work_item.touch, work_item.set_state, work_item.set_note, work_item.update, work_item.toggle_pin, work_item.delete");
+  console.log("  taxonomy.list, track.create, track.update, track.archive, label.create, label.update, label.archive");
+  console.log("  work_item.create, work_item.touch, work_item.set_state, work_item.set_note, work_item.update, work_item.set_semantics, work_item.toggle_pin, work_item.delete");
   console.log("  focus.current, focus.start, focus.stop, focus.update, focus.create_stopped, focus.split, focus.list");
   console.log("  ref.add, ref.remove, ref.open, ref.check_conflict");
+  console.log("  causal_record.list, operational_reality.list, operational_reality.set_state, operational_reality.set_next_action, operational_reality.follow_up_decision");
   console.log("  settings.get, settings.set, settings.get_denylist, settings.add_to_denylist, settings.remove_from_denylist");
 });
 

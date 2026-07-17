@@ -6,6 +6,7 @@ import { writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join, resolve } from "node:path";
 import { promisify } from "node:util";
+import { findFocusSessionOverlaps, formatFocusOverlap } from "./lib/focus-overlaps.mjs";
 
 const execFileAsync = promisify(execFile);
 const SIGNIFICANT_GAP_SECONDS = 20 * 60;
@@ -134,6 +135,7 @@ async function loadEvidence(path, from, to, now) {
   const workingOccupancySeconds = workFocusSeconds + coordinationSeconds;
   const nonWorkSeconds = Math.max(totalFocusSeconds - workingOccupancySeconds, 0);
   const gaps = gapsBetweenSessions(sessions).filter((gap) => gap.seconds >= SIGNIFICANT_GAP_SECONDS);
+  const focusOverlaps = findFocusSessionOverlaps(sessions, { from, to, now });
   const gapExplanationEvents = dayEvents.filter((event) => isGapExplanationText(event.text)).length;
   const unexplainedGapCount = Math.max(gaps.length - gapExplanationEvents, 0);
   const capturesDuringActiveFocus = capturesCreatedToday.filter((capture) => capture.focus_session_id).length;
@@ -166,6 +168,7 @@ async function loadEvidence(path, from, to, now) {
     workItemNoteCount,
     activityZoneTotals,
     gaps,
+    focusOverlaps,
     gapExplanationEvents,
     unexplainedGapCount,
     telemetry,
@@ -427,6 +430,12 @@ function assessEvidence(evidence, minFocusSeconds) {
     hardBlockers.push(`Дублируется название дела: ${duplicate.titles}`);
   }
 
+  for (const overlap of evidence.focusOverlaps) {
+    hardBlockers.push(
+      `Пересекаются фокус-блоки: ${formatFocusOverlap(overlap, formatClockTime, formatDuration)}. Исправь границы перед закрытием дня.`
+    );
+  }
+
   if (evidence.totalFocusSeconds < minFocusSeconds && evidence.sessions.length > 0) {
     reviewItems.push(
       `Всего учтено ${formatDuration(evidence.totalFocusSeconds)}, меньше порога проверки ${formatDuration(minFocusSeconds)}. Подтверди, что это всё равно был полноценный рабочий день.`
@@ -442,7 +451,7 @@ function assessEvidence(evidence, minFocusSeconds) {
   }
 
   if (evidence.sessions.length > 0 && evidence.telemetry.activityZoneGlances < 2 && evidence.telemetry.activityZoneReviews === 0) {
-    reviewItems.push("Нет двух дневных просмотров зон активности. В течение dogfood-дня нажми «Учёл зоны» хотя бы утром и после значимого переключения, либо явно прими проверку зон вечером.");
+    reviewItems.push("Нет двух дневных просмотров зон активности. Утром и после значимого переключения посмотри распределение зон и нажми «Отметить просмотр», либо вечером явно прими проверку зон.");
   }
 
   if (

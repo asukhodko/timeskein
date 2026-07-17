@@ -45,6 +45,8 @@ try {
 
   if (!options.skipPreflight) {
     await run("pnpm", ["dogfood:preflight"]);
+  } else {
+    console.log("\nБыстрый ежедневный старт: полный preflight пропущен. После изменения кода используй `pnpm dogfood:start:verified`.");
   }
 
   if (options.dryRun) {
@@ -109,7 +111,7 @@ function printHelp() {
 1. при --reset-db готовит резервный сброс локальной базы;
 2. проверяет готовность реальной локальной базы в режиме start или continue;
 3. проверяет, не запущено ли приложение;
-4. запускает dogfood preflight, если не передан --skip-preflight;
+4. запускает dogfood preflight, если не передан --skip-preflight; пакетная команда dogfood:start использует быстрый ежедневный режим, а dogfood:start:verified — полный;
 5. открывает macOS-приложение, если не передан --dry-run;
 6. ждёт ответа встроенного агента.
 

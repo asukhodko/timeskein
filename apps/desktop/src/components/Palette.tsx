@@ -22,7 +22,9 @@ import NoteEditor from './NoteEditor'
 import WorkItemEditor from './WorkItemEditor'
 import RefsPanel from './RefsPanel'
 import ConfirmDialog from './ConfirmDialog'
-import type { WorkItemState } from '@timeskein/contracts'
+import TaxonomyManager from './TaxonomyManager'
+import OperationalRealityPanel from './OperationalRealityPanel'
+import type { WorkItemAddEventParams, WorkItemState } from '@timeskein/contracts'
 import { useCurrentFocusSession, useStartFocusSession } from '../hooks/useFocusSessions'
 import {
   countInventoryModes,
@@ -35,23 +37,27 @@ import {
 import { formatWorkItemStateLabel } from '../utils/workItemLabels'
 import { ITEM_UI_LABELS } from '../utils/itemUiLabels'
 import { APP_UI_LABELS } from '../utils/appUiLabels'
+import {
+  MIN_WORK_AREA_HEIGHT_PX,
+  clampWorkAreaHeight,
+  defaultWorkAreaHeight,
+} from '../utils/workAreaLayout'
+import { resolveWorkItemOpenAction } from '../utils/workItemOpenAction'
 
-const todayListHeightStorageKey = 'timeskein.todayListHeightPx'
-const defaultTodayListHeightPx = 288
-const minTodayListHeightPx = 120
-const maxTodayListHeightPx = 520
+const workAreaHeightStorageKey = 'timeskein.workAreaHeightPx'
 
 export default function Palette() {
   const [search, setSearch] = useState('')
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [inventoryMode, setInventoryMode] = useState<InventoryMode>('recent')
-  const [todayListHeightPx, setTodayListHeightPx] = useState(readTodayListHeight)
+  const [workAreaHeightPx, setWorkAreaHeightPx] = useState(readWorkAreaHeight)
   const [showCreate, setShowCreate] = useState(false)
   const [showStateMenu, setShowStateMenu] = useState(false)
   const [showNoteEditor, setShowNoteEditor] = useState(false)
   const [showWorkItemEditor, setShowWorkItemEditor] = useState(false)
   const [showRefsPanel, setShowRefsPanel] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [showTaxonomyManager, setShowTaxonomyManager] = useState(false)
 
   const { data, isLoading, error } = useInventory(search || undefined)
   const items = data?.items ?? []
@@ -114,21 +120,21 @@ export default function Palette() {
     }
   }
 
-  const handleStartTodayResize = (event: MouseEvent<HTMLButtonElement>) => {
+  const handleStartWorkAreaResize = (event: MouseEvent<HTMLButtonElement>) => {
     if (event.button !== 0) return
 
     event.preventDefault()
     const startY = event.clientY
-    const startHeight = todayListHeightPx
+    const startHeight = workAreaHeightPx
 
     const handleMouseMove = (moveEvent: globalThis.MouseEvent) => {
-      setTodayListHeightPx(clampTodayListHeight(startHeight + moveEvent.clientY - startY))
+      setWorkAreaHeightPx(clampWorkAreaHeight(startHeight + moveEvent.clientY - startY, window.innerHeight))
     }
 
     const handleMouseUp = (upEvent: globalThis.MouseEvent) => {
-      const nextHeight = clampTodayListHeight(startHeight + upEvent.clientY - startY)
-      setTodayListHeightPx(nextHeight)
-      writeTodayListHeight(nextHeight)
+      const nextHeight = clampWorkAreaHeight(startHeight + upEvent.clientY - startY, window.innerHeight)
+      setWorkAreaHeightPx(nextHeight)
+      writeWorkAreaHeight(nextHeight)
       document.removeEventListener('mousemove', handleMouseMove)
       document.removeEventListener('mouseup', handleMouseUp)
     }
@@ -137,9 +143,10 @@ export default function Palette() {
     document.addEventListener('mouseup', handleMouseUp)
   }
 
-  const resetTodayHeight = () => {
-    setTodayListHeightPx(defaultTodayListHeightPx)
-    writeTodayListHeight(defaultTodayListHeightPx)
+  const resetWorkAreaHeight = () => {
+    const height = defaultWorkAreaHeight(window.innerHeight)
+    setWorkAreaHeightPx(height)
+    writeWorkAreaHeight(height)
   }
 
   // Action handlers for clickable shortcuts
@@ -209,13 +216,9 @@ export default function Palette() {
     }
   }
 
-  const handleOpenPrimaryRef = () => {
-    if (selectedItem?.refs?.length) {
-      const primaryRef = selectedItem.refs.find(r => r.is_primary) || selectedItem.refs[0]
-      if (primaryRef.kind === 'url') {
-        window.open(primaryRef.value, '_blank')
-      }
-    } else if (selectedItem) {
+  const handleEditSelected = () => {
+    const action = resolveWorkItemOpenAction(selectedItem)
+    if (action.kind === 'edit') {
       setShowWorkItemEditor(true)
     }
   }
@@ -237,7 +240,7 @@ export default function Palette() {
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       // Ignore if any modal is open
-      if (showCreate || showStateMenu || showNoteEditor || showWorkItemEditor || showRefsPanel || showDeleteConfirm) return
+      if (showCreate || showStateMenu || showNoteEditor || showWorkItemEditor || showRefsPanel || showDeleteConfirm || showTaxonomyManager) return
 
       // Ignore item shortcuts while typing in a field.
       const isInput = isEditableElement(e.target)
@@ -275,13 +278,11 @@ export default function Palette() {
           break
         case 'Enter':
           e.preventDefault()
-          if (selectedItem && selectedItem.refs && selectedItem.refs.length > 0) {
-            const primaryRef = selectedItem.refs.find(r => r.is_primary) || selectedItem.refs[0]
-            if (primaryRef.kind === 'url') {
-              window.open(primaryRef.value, '_blank')
+          {
+            const action = resolveWorkItemOpenAction(selectedItem)
+            if (action.kind === 'edit') {
+              setShowWorkItemEditor(true)
             }
-          } else if (selectedItem) {
-            setShowWorkItemEditor(true)
           }
           break
         case 'Space':
@@ -312,7 +313,7 @@ export default function Palette() {
           break
       }
     },
-    [visibleItems.length, selectedItem, showCreate, showStateMenu, showNoteEditor, showWorkItemEditor, showRefsPanel, showDeleteConfirm, handleFocusSelected]
+    [visibleItems.length, selectedItem, showCreate, showStateMenu, showNoteEditor, showWorkItemEditor, showRefsPanel, showDeleteConfirm, showTaxonomyManager, handleFocusSelected]
   )
 
   useEffect(() => {
@@ -332,12 +333,12 @@ export default function Palette() {
     }
   }
 
-  const handleAppendEvent = async (text: string) => {
+  const handleAppendEvent = async (params: Omit<WorkItemAddEventParams, 'id' | 'focus_session_id'>) => {
     if (!selectedItem) return
 
     await eventMutation.mutateAsync({
       id: selectedItem.id,
-      text,
+      ...params,
       focus_session_id: currentFocus?.work_item_id === selectedItem.id ? currentFocus.id : undefined,
     })
   }
@@ -381,6 +382,15 @@ export default function Palette() {
           </span>
           <button
             data-no-drag
+            onClick={() => setShowTaxonomyManager(true)}
+            className="flex h-6 w-6 items-center justify-center rounded bg-gray-800 text-sm font-bold text-cyan-300 transition-colors hover:bg-gray-700"
+            title="Направления и метки"
+            aria-label="Направления и метки"
+          >
+            #
+          </button>
+          <button
+            data-no-drag
             onClick={handleHideWindow}
             className="w-6 h-6 flex items-center justify-center rounded bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm font-bold transition-colors"
             title="Скрыть окно (Esc)"
@@ -398,15 +408,22 @@ export default function Palette() {
         </div>
       </div>
 
-      <FocusPanel selectedItem={selectedItem} todayListMaxHeightPx={todayListHeightPx} />
+      <div
+        className="min-h-0 shrink-0 overflow-y-auto"
+        style={{ height: `${workAreaHeightPx}px` }}
+      >
+        <OperationalRealityPanel />
+        <FocusPanel selectedItem={selectedItem} />
+      </div>
 
       <button
         type="button"
         data-no-drag
-        onMouseDown={handleStartTodayResize}
-        onDoubleClick={resetTodayHeight}
+        onMouseDown={handleStartWorkAreaResize}
+        onDoubleClick={resetWorkAreaHeight}
         className="group flex h-2 cursor-row-resize items-center justify-center border-b border-gray-700 bg-gray-950/80 hover:bg-gray-800/80"
-        title="Потяни, чтобы изменить высоту дневного журнала. Двойной клик сбросит высоту."
+        title="Потяни, чтобы изменить соотношение рабочего контура и списка дел. Двойной клик сбросит высоту."
+        aria-label="Изменить высоту рабочего контура"
       >
         <span className="h-0.5 w-12 rounded bg-gray-700 transition-colors group-hover:bg-blue-500/70" />
       </button>
@@ -475,11 +492,8 @@ export default function Palette() {
           <button onClick={() => setShowCreate(true)} className="flex items-center gap-1 hover:text-gray-300 transition-colors" title="Создать дело">
             <kbd className="px-1 bg-gray-700 rounded">C</kbd><span>создать</span>
           </button>
-          <button onClick={handleOpenPrimaryRef} className="flex items-center gap-1 hover:text-gray-300 transition-colors" title="Открыть основную ссылку">
-            <kbd className="px-1 bg-gray-700 rounded">Enter</kbd><span>открыть</span>
-          </button>
-          <button onClick={() => selectedItem && setShowWorkItemEditor(true)} className="flex items-center gap-1 hover:text-gray-300 transition-colors" title="Править дело">
-            <kbd className="px-1 bg-gray-700 rounded">E</kbd><span>править</span>
+          <button onClick={handleEditSelected} className="flex items-center gap-1 hover:text-gray-300 transition-colors" title="Открыть редактор дела; ссылки доступны через R">
+            <kbd className="px-1 bg-gray-700 rounded">Enter</kbd><span>править</span>
           </button>
           <button onClick={handleFocusSelected} className="flex items-center gap-1 hover:text-emerald-300 transition-colors" title="Начать или переключить фокус на выбранное дело">
             <kbd className="px-1 bg-gray-700 rounded">Space</kbd><span>фокус</span>
@@ -548,6 +562,7 @@ export default function Palette() {
           itemId={selectedItem.id}
           itemTitle={selectedItem.title}
           currentNote={selectedItem.note || null}
+          itemRefs={selectedItem.refs}
           onSave={handleNoteSave}
           onAppendEvent={handleAppendEvent}
           appendPending={eventMutation.isPending}
@@ -588,6 +603,10 @@ export default function Palette() {
           onCancel={() => setShowDeleteConfirm(false)}
         />
       )}
+
+      {showTaxonomyManager && (
+        <TaxonomyManager onClose={() => setShowTaxonomyManager(false)} />
+      )}
     </div>
   )
 }
@@ -600,26 +619,27 @@ function createTelemetryActionId() {
   return globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`
 }
 
-function readTodayListHeight() {
-  if (typeof window === 'undefined') return defaultTodayListHeightPx
+function readWorkAreaHeight() {
+  if (typeof window === 'undefined') return MIN_WORK_AREA_HEIGHT_PX
 
-  const stored = window.localStorage.getItem(todayListHeightStorageKey)
-  if (!stored) return defaultTodayListHeightPx
+  const stored = window.localStorage.getItem(workAreaHeightStorageKey)
+  if (!stored) return defaultWorkAreaHeight(window.innerHeight)
 
   const parsed = Number.parseInt(stored, 10)
-  return Number.isFinite(parsed) ? clampTodayListHeight(parsed) : defaultTodayListHeightPx
+  return Number.isFinite(parsed)
+    ? clampWorkAreaHeight(parsed, window.innerHeight)
+    : defaultWorkAreaHeight(window.innerHeight)
 }
 
-function writeTodayListHeight(height: number) {
+function writeWorkAreaHeight(height: number) {
   try {
-    window.localStorage.setItem(todayListHeightStorageKey, String(clampTodayListHeight(height)))
+    window.localStorage.setItem(
+      workAreaHeightStorageKey,
+      String(clampWorkAreaHeight(height, window.innerHeight))
+    )
   } catch {
     // localStorage can be unavailable in some browser shells.
   }
-}
-
-function clampTodayListHeight(height: number) {
-  return Math.max(minTodayListHeightPx, Math.min(maxTodayListHeightPx, Math.round(height)))
 }
 
 function formatItemCounter(visible: number, total: number) {

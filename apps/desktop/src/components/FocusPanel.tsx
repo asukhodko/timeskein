@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type RefObject } from 'react'
-import type { ActivityZone, AppEventKind, AppEventSummary, CaptureView, DayEventView, FocusSessionView, WorkItemEventView, WorkItemView } from '@timeskein/contracts'
+import type { ActivityZone, AppEventKind, AppEventSummary, CaptureView, DayEventView, FocusSessionView, RefKind, WorkItemEventView, WorkItemView } from '@timeskein/contracts'
 import {
   useCurrentFocusSession,
   useStartFocusSession,
@@ -18,23 +18,29 @@ import {
 } from '../utils/activityZones'
 import {
   ACTIVE_FOCUS_JOURNAL_KIND_LABELS,
+  ACTIVE_FOCUS_JOURNAL_NEW_REF,
   ACTIVE_FOCUS_JOURNAL_TARGET_LABELS,
   DEFAULT_ACTIVE_FOCUS_JOURNAL_KIND,
+  DEFAULT_ACTIVE_FOCUS_JOURNAL_REF_KIND,
   DEFAULT_ACTIVE_FOCUS_JOURNAL_TARGET,
   activeFocusJournalDraftStorageKey,
   decodeActiveFocusJournalDraft,
   encodeActiveFocusJournalDraft,
+  evidenceKindForJournalKind,
   formatActiveFocusJournalText,
+  type ActiveFocusJournalDraft,
   type ActiveFocusJournalKind,
   type ActiveFocusJournalTarget,
 } from '../utils/activeFocusJournal'
 import {
   DEFAULT_DISPATCH_RITUAL_MODE,
   DISPATCH_RITUAL_MODE_LABELS,
+  dispatchRitualContractStorageKey,
   dispatchRitualDraftStorageKey,
   decodeDispatchRitualDraft,
   encodeDispatchRitualDraft,
   formatDispatchRitualEvent,
+  hasDispatchRitualContent,
   isDispatchRitualStartReady,
   type DispatchRitualDraft,
   type DispatchRitualMode,
@@ -51,13 +57,13 @@ import {
   type DayClosureStage,
 } from '../utils/dayClosure'
 import { formatActivityZoneBadge } from '../utils/workItemLabels'
+import { findFocusSessionOverlaps } from '../utils/focusSessionOverlaps'
 import CaptureInbox from './CaptureInbox'
 import FocusCorrectionDialog from './FocusCorrectionDialog'
 import MissedFocusBlockDialog from './MissedFocusBlockDialog'
 
 interface FocusPanelProps {
   selectedItem?: WorkItemView
-  todayListMaxHeightPx?: number
 }
 
 const SIGNIFICANT_GAP_SECONDS = 20 * 60
@@ -73,7 +79,7 @@ const EMPTY_DISPATCH_RITUAL_DRAFT: DispatchRitualDraft = {
   reason: '',
 }
 
-export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }: FocusPanelProps) {
+export default function FocusPanel({ selectedItem }: FocusPanelProps) {
   const [title, setTitle] = useState('')
   const [note, setNote] = useState('')
   const [now, setNow] = useState(() => new Date())
@@ -87,7 +93,11 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
   const [activeJournalText, setActiveJournalText] = useState('')
   const [activeJournalKind, setActiveJournalKind] = useState<ActiveFocusJournalKind>(DEFAULT_ACTIVE_FOCUS_JOURNAL_KIND)
   const [activeJournalTarget, setActiveJournalTarget] = useState<ActiveFocusJournalTarget>(DEFAULT_ACTIVE_FOCUS_JOURNAL_TARGET)
+  const [activeJournalRefChoice, setActiveJournalRefChoice] = useState('')
+  const [activeJournalNewRefKind, setActiveJournalNewRefKind] = useState<RefKind>(DEFAULT_ACTIVE_FOCUS_JOURNAL_REF_KIND)
+  const [activeJournalNewRefValue, setActiveJournalNewRefValue] = useState('')
   const [dispatchDraft, setDispatchDraft] = useState<DispatchRitualDraft>(EMPTY_DISPATCH_RITUAL_DRAFT)
+  const [dispatchContract, setDispatchContract] = useState<DispatchRitualDraft | null>(null)
   const [appEventSummary, setAppEventSummary] = useState<AppEventSummary | null>(null)
   const [dayClosureStartedAt, setDayClosureStartedAt] = useState<Date | null>(null)
   const titleInputRef = useRef<HTMLInputElement>(null)
@@ -126,12 +136,17 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
   const current = currentQuery.data?.session
   const currentId = current?.id
   const dispatchDraftKey = useMemo(() => dispatchRitualDraftStorageKey(now), [localDayKey])
+  const dispatchContractKey = useMemo(() => dispatchRitualContractStorageKey(now), [localDayKey])
   const activeJournalDraftKey = useMemo(
     () => activeFocusJournalDraftStorageKey(current ? current.work_item_id ?? current.id : 'day', now),
     [current?.id, current?.work_item_id, localDayKey]
   )
   const sessions = todayQuery.data?.sessions ?? []
   const inventoryItems = useMemo(() => inventoryQuery.data?.items ?? [], [inventoryQuery.data?.items])
+  const currentWorkItem = useMemo(
+    () => inventoryItems.find((item) => item.id === current?.work_item_id),
+    [inventoryItems, current?.work_item_id]
+  )
   const activeWorkItems = useMemo(
     () => inventoryItems.filter((item) => item.state === 'active'),
     [inventoryItems]
@@ -254,6 +269,10 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
   }, [dispatchDraftKey])
 
   useEffect(() => {
+    setDispatchContract(readDispatchRitualContract(dispatchContractKey))
+  }, [dispatchContractKey])
+
+  useEffect(() => {
     if (dispatchDraftLoadedKeyRef.current !== dispatchDraftKey) return
 
     writeDispatchRitualDraft(dispatchDraftKey, dispatchDraft)
@@ -265,6 +284,9 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
       setActiveJournalText('')
       setActiveJournalKind(DEFAULT_ACTIVE_FOCUS_JOURNAL_KIND)
       setActiveJournalTarget(DEFAULT_ACTIVE_FOCUS_JOURNAL_TARGET)
+      setActiveJournalRefChoice('')
+      setActiveJournalNewRefKind(DEFAULT_ACTIVE_FOCUS_JOURNAL_REF_KIND)
+      setActiveJournalNewRefValue('')
       return
     }
 
@@ -273,6 +295,9 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
     setActiveJournalText(draft.text)
     setActiveJournalKind(draft.kind)
     setActiveJournalTarget(current.work_item_id ? draft.target : 'day')
+    setActiveJournalRefChoice(draft.refChoice)
+    setActiveJournalNewRefKind(draft.newRefKind)
+    setActiveJournalNewRefValue(draft.newRefValue)
   }, [activeJournalDraftKey, current?.work_item_id])
 
   useEffect(() => {
@@ -282,8 +307,11 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
       text: activeJournalText,
       kind: activeJournalKind,
       target: current?.work_item_id ? activeJournalTarget : 'day',
+      refChoice: activeJournalRefChoice,
+      newRefKind: activeJournalNewRefKind,
+      newRefValue: activeJournalNewRefValue,
     })
-  }, [activeJournalDraftKey, activeJournalText, activeJournalKind, activeJournalTarget, current?.work_item_id])
+  }, [activeJournalDraftKey, activeJournalText, activeJournalKind, activeJournalTarget, activeJournalRefChoice, activeJournalNewRefKind, activeJournalNewRefValue, current?.work_item_id])
 
   useEffect(() => {
     const handleWindowFocus = () => {
@@ -366,7 +394,12 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
     }
   }, [dayWindow])
 
-  const startSessionByTitle = (rawTitle: string, control: string, onSuccess?: () => void) => {
+  const startSessionByTitle = (
+    rawTitle: string,
+    control: string,
+    onSuccess?: () => void,
+    activityZone?: ActivityZone
+  ) => {
     const trimmed = rawTitle.trim()
     if (!trimmed || startMutation.isPending) return
 
@@ -382,7 +415,7 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
     })
 
     startMutation.mutate(
-      { title: trimmed, target_seconds: 25 * 60, telemetry_action_id: actionId },
+      { title: trimmed, activity_zone: activityZone, target_seconds: 25 * 60, telemetry_action_id: actionId },
       {
         onSuccess: (session) => {
           setTitle('')
@@ -419,6 +452,22 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
     startSessionByTitle(title, 'typed')
   }
 
+  const dispatchTrackingActive = Boolean(
+    current &&
+    current.activity_zone === 'coordination' &&
+    Object.values(DISPATCH_RITUAL_MODE_LABELS).some((label) => label === current.title)
+  )
+
+  const startDispatchTracking = () => {
+    if (current || startMutation.isPending) return
+    startSessionByTitle(
+      DISPATCH_RITUAL_MODE_LABELS[dispatchDraft.mode],
+      'dispatch_ritual',
+      undefined,
+      'coordination'
+    )
+  }
+
   const saveDispatchEvent = async () => {
     const text = formatDispatchRitualEvent(dispatchDraft)
     if (!text || addDayEventMutation.isPending) return false
@@ -434,6 +483,8 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
     try {
       const eventSaved = await saveDispatchEvent()
       if (eventSaved) {
+        rememberDispatchRitualContract(dispatchContractKey, dispatchDraft)
+        setDispatchContract(dispatchDraft)
         clearDispatchRitualDraft(dispatchDraftKey)
         setDispatchDraft(EMPTY_DISPATCH_RITUAL_DRAFT)
       }
@@ -453,6 +504,9 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
       return
     }
     if (!eventSaved) return
+
+    rememberDispatchRitualContract(dispatchContractKey, dispatchDraft)
+    setDispatchContract(dispatchDraft)
 
     startSessionByTitle(dispatchDraft.firstFocus, 'dispatch_ritual', () => {
       clearDispatchRitualDraft(dispatchDraftKey)
@@ -762,22 +816,38 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
   }
 
   const addActiveJournalEvent = () => {
-    const text = formatActiveFocusJournalText(activeJournalKind, activeJournalText)
-    if (!text || addWorkItemEventMutation.isPending || addDayEventMutation.isPending) return
+    const rawText = activeJournalText.trim()
+    if (!rawText || addWorkItemEventMutation.isPending || addDayEventMutation.isPending) return
 
     const target = current?.work_item_id && activeJournalTarget === 'work_item' ? 'work_item' : 'day'
     const clearDraft = () => {
       if (activeJournalDraftKey) clearActiveFocusJournalDraft(activeJournalDraftKey)
       setActiveJournalText('')
+      setActiveJournalRefChoice('')
+      setActiveJournalNewRefKind(DEFAULT_ACTIVE_FOCUS_JOURNAL_REF_KIND)
+      setActiveJournalNewRefValue('')
       window.requestAnimationFrame(() => activeJournalInputRef.current?.focus())
     }
 
     if (target === 'work_item' && current?.work_item_id) {
+      const selectedRefIds = activeJournalRefChoice && activeJournalRefChoice !== ACTIVE_FOCUS_JOURNAL_NEW_REF
+        ? [activeJournalRefChoice]
+        : []
+      const newRef = activeJournalRefChoice === ACTIVE_FOCUS_JOURNAL_NEW_REF && activeJournalNewRefValue.trim()
+        ? { kind: activeJournalNewRefKind, value: activeJournalNewRefValue.trim() }
+        : undefined
+      const evidenceKind = evidenceKindForJournalKind(activeJournalKind)
+      const evidenceText = activeJournalKind === evidenceKind
+        ? rawText
+        : formatActiveFocusJournalText(activeJournalKind, rawText)
       addWorkItemEventMutation.mutate(
         {
           id: current.work_item_id,
-          text,
+          text: evidenceText,
           focus_session_id: current.id,
+          evidence_kind: evidenceKind,
+          ref_ids: selectedRefIds,
+          new_ref: newRef,
         },
         { onSuccess: clearDraft }
       )
@@ -786,7 +856,7 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
 
     addDayEventMutation.mutate(
       {
-        text,
+        text: formatActiveFocusJournalText(activeJournalKind, rawText),
         focus_session_id: current?.id,
         activity_zone: current?.activity_zone || selectedItem?.activity_zone,
       },
@@ -917,11 +987,18 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
           kind={activeJournalKind}
           target={current?.work_item_id ? activeJournalTarget : 'day'}
           hasWorkItem={Boolean(current?.work_item_id)}
+          refs={currentWorkItem?.refs ?? []}
+          refChoice={activeJournalRefChoice}
+          newRefKind={activeJournalNewRefKind}
+          newRefValue={activeJournalNewRefValue}
           pending={addWorkItemEventMutation.isPending || addDayEventMutation.isPending}
           placeholder={current ? 'Мысль, решение, вопрос или следующий шаг...' : 'Свободная мысль дня, решение, вопрос или следующий шаг...'}
           onTextChange={setActiveJournalText}
           onKindChange={setActiveJournalKind}
           onTargetChange={setActiveJournalTarget}
+          onRefChoiceChange={setActiveJournalRefChoice}
+          onNewRefKindChange={setActiveJournalNewRefKind}
+          onNewRefValueChange={setActiveJournalNewRefValue}
           onSubmit={addActiveJournalEvent}
         />
 
@@ -972,17 +1049,26 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
           )}
         </div>
 
-        {!current && (
+        {(!current || dispatchTrackingActive) && (
           <DispatchRitualPanel
             draft={dispatchDraft}
             pending={addDayEventMutation.isPending || startMutation.isPending}
+            tracking={dispatchTrackingActive}
             onChange={setDispatchDraft}
+            onStartTracking={startDispatchTracking}
             onSave={() => {
               void saveDispatchOnly()
             }}
             onStart={() => {
               void startDispatchFocus()
             }}
+          />
+        )}
+
+        {dispatchContract && (
+          <DispatchDayContract
+            contract={dispatchContract}
+            onReview={() => setDispatchDraft(dispatchContract)}
           />
         )}
 
@@ -1140,10 +1226,7 @@ export default function FocusPanel({ selectedItem, todayListMaxHeightPx = 288 }:
         ) : sessionsWithGaps.length === 0 ? (
           <div className="text-xs text-gray-500">Сегодня ещё нет фокус-блоков</div>
         ) : (
-          <div
-            className="grid gap-1.5 overflow-auto pr-1"
-            style={{ maxHeight: `${todayListMaxHeightPx}px` }}
-          >
+          <div className="grid gap-1.5 pr-1">
             {openGap && (
               <OpenGapRow
                 gap={openGap}
@@ -1333,6 +1416,22 @@ function clearDispatchRitualDraft(key: string) {
   getLocalStorage()?.removeItem(key)
 }
 
+function readDispatchRitualContract(key: string) {
+  const storage = getLocalStorage()
+  if (!storage) return null
+
+  const contract = decodeDispatchRitualDraft(storage.getItem(key))
+  return hasDispatchRitualContent(contract) ? contract : null
+}
+
+function rememberDispatchRitualContract(key: string, contract: DispatchRitualDraft) {
+  const storage = getLocalStorage()
+  if (!storage) return
+
+  const encoded = encodeDispatchRitualDraft(contract)
+  if (encoded) storage.setItem(key, encoded)
+}
+
 function readActiveFocusJournalDraft(key: string) {
   const storage = getLocalStorage()
   if (!storage) {
@@ -1340,17 +1439,16 @@ function readActiveFocusJournalDraft(key: string) {
       text: '',
       kind: DEFAULT_ACTIVE_FOCUS_JOURNAL_KIND,
       target: DEFAULT_ACTIVE_FOCUS_JOURNAL_TARGET,
+      refChoice: '',
+      newRefKind: DEFAULT_ACTIVE_FOCUS_JOURNAL_REF_KIND,
+      newRefValue: '',
     }
   }
 
   return decodeActiveFocusJournalDraft(storage.getItem(key))
 }
 
-function writeActiveFocusJournalDraft(key: string, draft: {
-  text: string
-  kind: ActiveFocusJournalKind
-  target: ActiveFocusJournalTarget
-}) {
+function writeActiveFocusJournalDraft(key: string, draft: ActiveFocusJournalDraft) {
   const storage = getLocalStorage()
   if (!storage) return
 
@@ -1912,9 +2010,9 @@ function ActivityZoneDashboard({
             type="button"
             onClick={onMarkGlanced}
             className="rounded border border-gray-700 px-1.5 py-0.5 text-gray-300 hover:border-cyan-700 hover:text-cyan-200"
-            title="Отметить, что распределение зон повлияло на текущую калибровку дня"
+            title="Нажми после осознанного просмотра распределения зон. Дневной ориентир — два просмотра."
           >
-            Учёл зоны{glanceCount > 0 ? ` ${glanceCount}` : ''}
+            Отметить просмотр · {glanceCount}/2
           </button>
         </span>
       </div>
@@ -1988,6 +2086,7 @@ function buildDayReviewItems({
 }): DayReviewItem[] {
   const items: DayReviewItem[] = []
   const gaps = gapsBetweenSessions(sessions).filter((gap) => gap.seconds >= SIGNIFICANT_GAP_SECONDS)
+  const overlaps = findFocusSessionOverlaps(sessions)
   const zoneTotals = aggregateActivityZoneTotals(sessions)
   const activeSecondsTotal = sessions.reduce((sum, session) => sum + session.active_seconds, 0)
   const nonWorkSeconds = summarizeActivityZones(zoneTotals, activeSecondsTotal).nonWorkTrackedSeconds
@@ -2017,6 +2116,17 @@ function buildDayReviewItems({
       title: 'Clear active Work Item state',
       detail: `${formatCount(activeWorkItems.length, 'дело', 'дела', 'дел')} с активным статусом`,
       action: 'clear_active_work_items',
+    })
+  }
+
+  if (overlaps.length > 0) {
+    const overlap = overlaps[0]
+    const firstTitle = overlap.first.work_item_title ?? overlap.first.title
+    const secondTitle = overlap.second.work_item_title ?? overlap.second.title
+    items.push({
+      level: 'blocker',
+      title: 'Resolve overlapping focus blocks',
+      detail: `${formatCount(overlaps.length, 'пересечение', 'пересечения', 'пересечений')}; «${firstTitle}» и «${secondTitle}» одновременно ${formatClockTime(overlap.from.toISOString())}-${formatClockTime(overlap.to.toISOString())} (${formatDuration(overlap.seconds)})`,
     })
   }
 
@@ -2072,7 +2182,7 @@ function buildDayReviewItems({
     items.push({
       level: 'review',
       title: 'Check zones during the day',
-      detail: `${activityZoneGlances}/2 отметок «Учёл зоны»`,
+      detail: `распределение зон просмотрено ${activityZoneGlances} раз; дневной ориентир — 2`,
       action: 'accept_activity_zones',
     })
   }
@@ -2299,7 +2409,7 @@ function DayReviewPanel({
         <CompactAcceptReviewGroup items={acceptReviews} onAcceptAll={acceptAllReviews} canAccept={Boolean(onAction)} />
       )}
       {showReviewDetails && acceptReviews.length > 0 && !compactAcceptReviews && (
-        <DayReviewGroup title="Осознанно проверить" items={acceptReviews} onAction={onAction} />
+        <DayReviewGroup title="Проверить качество данных" items={acceptReviews} onAction={onAction} />
       )}
       {showReviewDetails && summarizedReadyItems && (
         <div className="text-[11px] text-gray-500">
@@ -2322,14 +2432,14 @@ function CompactAcceptReviewGroup({
   onAcceptAll: () => Promise<void>
   canAccept: boolean
 }) {
-  const labels = items.map((item) => formatDayReviewItem(item).title)
+  const labels = items.map((item) => formatDayReviewItem(item))
 
   return (
     <div className="rounded border border-amber-900/60 bg-amber-950/10 px-2 py-1 text-[11px] text-amber-100">
       <div className="flex items-center justify-between gap-2">
         <span>
-          <span className="font-medium">Осознанно проверить:</span>{' '}
-          осталось {items.length} {pluralRu(items.length, 'пункт', 'пункта', 'пунктов')}. Если данные уже честные, закрой их одним действием.
+          <span className="font-medium">Проверить качество данных:</span>{' '}
+          это {items.length} {pluralRu(items.length, 'контрольный пункт', 'контрольных пункта', 'контрольных пунктов')}, а не найденные ошибки дня.
         </span>
         <button
           type="button"
@@ -2339,12 +2449,20 @@ function CompactAcceptReviewGroup({
           disabled={!canAccept}
           className="shrink-0 rounded border border-amber-800 px-1.5 py-0.5 text-[11px] font-medium text-amber-100 hover:border-amber-500 disabled:cursor-not-allowed disabled:border-gray-800 disabled:text-gray-500"
         >
-          Всё проверено
+          Подтвердить все {items.length}
         </button>
       </div>
-      <div className="mt-1 truncate text-gray-500">
-        Пункты: {labels.join(' · ')}
-      </div>
+      <ul className="mt-1 grid gap-0.5 text-gray-400">
+        {labels.map((label) => (
+          <li key={`${label.title}:${label.detail ?? ''}`} className="flex gap-1.5">
+            <span aria-hidden>•</span>
+            <span>
+              <span className="text-gray-300">{label.title}</span>
+              {label.detail && <span className="text-gray-500"> — {label.detail}</span>}
+            </span>
+          </li>
+        ))}
+      </ul>
     </div>
   )
 }
@@ -2542,9 +2660,9 @@ function formatDayReviewDetail(detail?: string) {
     return `${formatCount(count, 'дело было', 'дела были', 'дел было')} в работе сегодня`
   }
 
-  const zoneGlanceMatch = detail.match(/^(\d+)\/2 отметок «Учёл зоны»$/)
+  const zoneGlanceMatch = detail.match(/^распределение зон просмотрено (\d+) раз; дневной ориентир — 2$/)
   if (zoneGlanceMatch) {
-    return `${zoneGlanceMatch[1]}/2 отметок «Учёл зоны»`
+    return `распределение зон просмотрено ${zoneGlanceMatch[1]} раз; дневной ориентир — 2`
   }
 
   const entryPathMatch = detail.match(/^(\d+) вводом, (\d+) из списка, (?:(\d+) через диспетчеризацию, )?(\d+) остановок$/)
@@ -2600,6 +2718,7 @@ function formatGapInterval(gap: Gap) {
 const REVIEW_TITLE_LABELS: Record<string, string> = {
   'Stop the active focus block': 'Остановить активный фокус-блок',
   'Clear active Work Item state': 'Снять активный статус с дела',
+  'Resolve overlapping focus blocks': 'Исправить пересекающиеся фокус-блоки',
   'Resolve, convert, or accept open captures': 'Разобрать открытые отвлечения',
   'Classify significant gaps': 'Объяснить большие разрывы',
   'Explain current open gap': 'Объяснить текущий открытый разрыв',
@@ -3089,7 +3208,7 @@ function formatDailyControlGoalAuditMarkdown({
     },
     {
       requirement: 'Hard blockers absent',
-      status: activeFocus || activeWorkItems.length > 0 ? 'block' : 'pass',
+      status: reviewItems.some((item) => item.level === 'blocker') ? 'block' : 'pass',
       evidence: formatCount(reviewItems.filter((item) => item.level === 'blocker').length, 'красный пункт', 'красных пункта', 'красных пунктов'),
     },
   ]
@@ -3519,6 +3638,11 @@ function WorkItemEventsPanel({
                 <span className="font-mono text-gray-500">{formatClockTime(event.ts)}</span>
                 <span className="min-w-0 truncate">
                   <span className="font-medium text-gray-200">{truncate(formatEventWorkItemTitle(event, workItemsById, sessionsById), 40)}</span>
+                  {event.evidence && (
+                    <span className="ml-2 rounded border border-emerald-800/80 px-1 py-0.5 text-[10px] uppercase text-emerald-300">
+                      {formatEvidenceKindLabel(event.evidence.kind)}
+                    </span>
+                  )}
                   <span className="text-gray-500"> · </span>
                   <span>{truncate(event.text ?? '', 80)}</span>
                 </span>
@@ -3542,6 +3666,12 @@ function WorkItemEventsPanel({
                   </button>
                 </span>
               </div>
+
+              {(event.evidence?.refs.length ?? 0) > 0 && (
+                <div className="truncate pl-14 text-[11px] text-cyan-300">
+                  evidence: {event.evidence?.refs.map((ref) => `${ref.kind}: ${ref.value}`).join(' · ')}
+                </div>
+              )}
 
               {isEditing && (
                 <div className="grid gap-1">
@@ -3972,10 +4102,11 @@ function appendWorkItemEvents(
 
   const workItemsById = new Map(workItems.map((item) => [item.id, item]))
   const sessionsById = new Map(sessions.map((session) => [session.id, session]))
-  lines.push('', '## Work Item Events', '', '| Time | Work Item | During | Event |', '| --- | --- | --- | --- |')
+  lines.push('', '## Work Item Events', '', '| Time | Work Item | During | Type | Event | Evidence |', '| --- | --- | --- | --- | --- | --- |')
   for (const event of noteEvents) {
+    const refs = event.evidence?.refs.map((ref) => `${ref.kind}: ${ref.value}`).join('; ') ?? ''
     lines.push(
-      `| ${escapeMarkdownTable(formatClockTime(event.ts))} | ${escapeMarkdownTable(formatEventWorkItemTitle(event, workItemsById, sessionsById))} | ${escapeMarkdownTable(formatEventDuring(event, sessionsById))} | ${escapeMarkdownTable(event.text ?? '')} |`
+      `| ${escapeMarkdownTable(formatClockTime(event.ts))} | ${escapeMarkdownTable(formatEventWorkItemTitle(event, workItemsById, sessionsById))} | ${escapeMarkdownTable(formatEventDuring(event, sessionsById))} | ${escapeMarkdownTable(event.evidence ? formatEvidenceKindLabel(event.evidence.kind) : 'legacy')} | ${escapeMarkdownTable(event.text ?? '')} | ${escapeMarkdownTable(refs)} |`
     )
   }
 }
@@ -3998,6 +4129,16 @@ function formatEventWorkItemTitle(
     ?? (event.focus_session_id ? sessionsById.get(event.focus_session_id)?.work_item_title : undefined)
     ?? (event.focus_session_id ? sessionsById.get(event.focus_session_id)?.title : undefined)
     ?? 'неизвестное дело'
+}
+
+function formatEvidenceKindLabel(kind: string) {
+  return {
+    result: 'результат',
+    decision: 'решение',
+    blocker: 'блокер',
+    next_step: 'следующий шаг',
+    observation: 'наблюдение',
+  }[kind] ?? kind
 }
 
 function formatEventDuring(event: WorkItemEventView, sessionsById: Map<string, FocusSessionView>) {
@@ -4132,13 +4273,17 @@ function formatTrayDuration(totalSeconds: number) {
 function DispatchRitualPanel({
   draft,
   pending,
+  tracking,
   onChange,
+  onStartTracking,
   onSave,
   onStart,
 }: {
   draft: DispatchRitualDraft
   pending: boolean
+  tracking: boolean
   onChange: (draft: DispatchRitualDraft) => void
+  onStartTracking: () => void
   onSave: () => void
   onStart: () => void
 }) {
@@ -4151,7 +4296,9 @@ function DispatchRitualPanel({
       <div className="flex items-center justify-between gap-2">
         <div className="min-w-0">
           <div className="font-medium text-cyan-100">Диспетчеризация</div>
-          <div className="text-[11px] text-cyan-100/60">Собрать контуры, выбрать первое дело, припарковать остальное.</div>
+          <div className="text-[11px] text-cyan-100/60">
+            Сузить портфель до 2–3 контуров и выдать себе одно исполнимое назначение.
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <details className="relative">
@@ -4160,10 +4307,13 @@ function DispatchRitualPanel({
             </summary>
             <div className="absolute right-0 z-20 mt-1 w-80 rounded-md border border-cyan-900 bg-gray-950 p-3 text-[11px] leading-relaxed text-cyan-50 shadow-xl">
               <div className="mb-1 font-semibold text-cyan-100">Как заполнять</div>
-              <div><b>Что в игре:</b> какие контуры сейчас тянут внимание. Например: цели команды, 1x1, срочный чат.</div>
-              <div><b>Первое дело:</b> одно достаточно хорошее действие на ближайший блок. Например: открыть черновик целей.</div>
-              <div><b>Припарковать:</b> что сознательно не делаю сейчас. Например: личные проекты, мелкие сообщения.</div>
-              <div><b>Почему сейчас:</b> почему выбранного достаточно. Например: это снижает неопределённость перед встречей.</div>
+              <div><b>Активный набор:</b> 2–3 направления через точку с запятой. Это не полный реестр обязательств.</div>
+              <div><b>Первое дело:</b> ровно одно наблюдаемое действие на ближайший блок. Например: открыть черновик целей и выписать три пробела.</div>
+              <div><b>Припарковать:</b> 2–3 главных конкурента внимания, которые сознательно не делаю сейчас.</div>
+              <div><b>Почему сейчас:</b> одно предложение, которое делает выбор легитимным.</div>
+              <div className="mt-2 border-t border-cyan-900/60 pt-2 text-cyan-100/70">
+                «Начать учёт координации» запускает таймер диспетчеризации. «Сохранить без старта» только сохраняет выбор. «Сохранить и начать первое дело» сохраняет выбор и переключает таймер на первое дело.
+              </div>
             </div>
           </details>
           <select
@@ -4183,40 +4333,55 @@ function DispatchRitualPanel({
 
       <div className="grid gap-2 md:grid-cols-2">
         <DispatchRitualInput
-          label="Что в игре"
-          placeholder="Что сегодня/сейчас реально в игре..."
+          label="Активный набор (2–3 направления)"
+          placeholder="РБ/Jenkins; командное ретро; командные цели"
           value={draft.activeSet}
           onChange={(value) => updateDraft({ activeSet: value })}
+          multiline
         />
         <DispatchRitualInput
-          label="Первое дело"
-          placeholder="Одно достаточно хорошее следующее дело..."
+          label="Первое дело (одно действие)"
+          placeholder="Проверить состояние РБ-учётки и записать следующий шаг"
           value={draft.firstFocus}
           onChange={(value) => updateDraft({ firstFocus: value })}
           onEnter={onStart}
         />
         <DispatchRitualInput
-          label="Припарковать"
-          placeholder="Что сейчас не делаю и отпускаю..."
+          label="Припарковать (2–3 конкурента)"
+          placeholder="Направление А; направление Б; курс до завершения ретро"
           value={draft.parked}
           onChange={(value) => updateDraft({ parked: value })}
+          multiline
         />
         <DispatchRitualInput
-          label="Почему сейчас"
-          placeholder="Почему выбранного достаточно на ближайшие 25 минут..."
+          label="Почему сейчас (одно предложение)"
+          placeholder="Доступ блокирует срочную работу, а за 25 минут можно получить сигнал"
           value={draft.reason}
           onChange={(value) => updateDraft({ reason: value })}
         />
       </div>
 
-      <div className="flex items-center justify-end gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        {tracking ? (
+          <span className="text-[11px] font-medium text-emerald-300">Время диспетчеризации учитывается как координация</span>
+        ) : (
+          <button
+            type="button"
+            onClick={onStartTracking}
+            disabled={pending}
+            className="rounded border border-emerald-800 px-2 py-1 text-[11px] font-medium text-emerald-200 hover:border-emerald-500 disabled:cursor-not-allowed disabled:border-gray-800 disabled:text-gray-600"
+          >
+            Начать учёт координации
+          </button>
+        )}
+        <div className="flex items-center justify-end gap-2">
         <button
           type="button"
           onClick={onSave}
           disabled={!canSave || pending}
           className="rounded border border-cyan-800 px-2 py-1 text-[11px] font-medium text-cyan-200 hover:border-cyan-500 hover:text-cyan-100 disabled:cursor-not-allowed disabled:border-gray-800 disabled:text-gray-600"
         >
-          Сохранить выбор
+          Сохранить без старта
         </button>
         <button
           type="button"
@@ -4224,10 +4389,54 @@ function DispatchRitualPanel({
           disabled={!canStart || pending}
           className="rounded bg-cyan-700 px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-cyan-600 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-500"
         >
-          Начать выбранное
+          Сохранить и начать первое дело
         </button>
+        </div>
       </div>
     </div>
+  )
+}
+
+function DispatchDayContract({
+  contract,
+  onReview,
+}: {
+  contract: DispatchRitualDraft
+  onReview: () => void
+}) {
+  const fields = [
+    ['Активный набор', contract.activeSet],
+    ['Первое дело', contract.firstFocus],
+    ['Припарковано', contract.parked],
+    ['Почему сейчас', contract.reason],
+  ].filter(([, value]) => value)
+
+  return (
+    <details open className="rounded-md border border-cyan-900/45 bg-cyan-950/10 px-3 py-2 text-xs">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-3">
+        <span className="min-w-0 font-medium text-cyan-100">
+          Договор на день · {DISPATCH_RITUAL_MODE_LABELS[contract.mode]}
+        </span>
+        <button
+          type="button"
+          onClick={(event) => {
+            event.preventDefault()
+            onReview()
+          }}
+          className="shrink-0 rounded border border-cyan-900/70 px-2 py-1 text-[11px] text-cyan-200 hover:border-cyan-500"
+        >
+          Пересмотреть
+        </button>
+      </summary>
+      <div className="mt-2 grid gap-2 md:grid-cols-2 xl:grid-cols-4">
+        {fields.map(([label, value]) => (
+          <div key={label} className="min-w-0 rounded border border-gray-800/80 bg-gray-950/35 px-2 py-1.5">
+            <div className="text-[10px] uppercase text-cyan-100/50">{label}</div>
+            <div className="mt-0.5 whitespace-pre-wrap break-words text-gray-300">{value}</div>
+          </div>
+        ))}
+      </div>
+    </details>
   )
 }
 
@@ -4237,28 +4446,42 @@ function DispatchRitualInput({
   value,
   onChange,
   onEnter,
+  multiline = false,
 }: {
   label: string
   placeholder: string
   value: string
   onChange: (value: string) => void
   onEnter?: () => void
+  multiline?: boolean
 }) {
+  const className = 'min-w-0 rounded border border-cyan-950 bg-gray-950 px-2 py-1.5 text-xs text-gray-100 placeholder-gray-600 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500'
+
   return (
     <label className="grid gap-1">
       <span className="text-[10px] uppercase tracking-wide text-cyan-100/55">{label}</span>
-      <input
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        onKeyDown={(event) => {
-          if (event.key === 'Enter' && onEnter) {
-            event.preventDefault()
-            onEnter()
-          }
-        }}
-        placeholder={placeholder}
-        className="min-w-0 rounded border border-cyan-950 bg-gray-950 px-2 py-1.5 text-xs text-gray-100 placeholder-gray-600 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500"
-      />
+      {multiline ? (
+        <textarea
+          rows={2}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          placeholder={placeholder}
+          className={`${className} resize-y`}
+        />
+      ) : (
+        <input
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' && onEnter) {
+              event.preventDefault()
+              onEnter()
+            }
+          }}
+          placeholder={placeholder}
+          className={className}
+        />
+      )}
     </label>
   )
 }
@@ -4269,11 +4492,18 @@ function ActiveFocusJournal({
   kind,
   target,
   hasWorkItem,
+  refs,
+  refChoice,
+  newRefKind,
+  newRefValue,
   pending,
   placeholder,
   onTextChange,
   onKindChange,
   onTargetChange,
+  onRefChoiceChange,
+  onNewRefKindChange,
+  onNewRefValueChange,
   onSubmit,
 }: {
   inputRef: RefObject<HTMLInputElement>
@@ -4281,61 +4511,107 @@ function ActiveFocusJournal({
   kind: ActiveFocusJournalKind
   target: ActiveFocusJournalTarget
   hasWorkItem: boolean
+  refs: WorkItemView['refs']
+  refChoice: string
+  newRefKind: RefKind
+  newRefValue: string
   pending: boolean
   placeholder: string
   onTextChange: (value: string) => void
   onKindChange: (value: ActiveFocusJournalKind) => void
   onTargetChange: (value: ActiveFocusJournalTarget) => void
+  onRefChoiceChange: (value: string) => void
+  onNewRefKindChange: (value: RefKind) => void
+  onNewRefValueChange: (value: string) => void
   onSubmit: () => void
 }) {
   return (
-    <div className="flex items-center gap-2 rounded-md border border-emerald-900/70 bg-emerald-950/20 px-3 py-2">
-      <input
-        ref={inputRef}
-        value={text}
-        onChange={(event) => onTextChange(event.target.value)}
-        onKeyDown={(event) => {
-          if (event.key === 'Enter') {
-            event.preventDefault()
-            onSubmit()
-          }
-        }}
-        placeholder={placeholder}
-        className="min-w-0 flex-1 rounded border border-emerald-900/70 bg-gray-950 px-2 py-1.5 text-xs text-gray-100 placeholder-gray-600 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
-      />
-      <select
-        value={kind}
-        onChange={(event) => onKindChange(event.target.value as ActiveFocusJournalKind)}
-        className="w-32 rounded border border-emerald-900/70 bg-gray-950 px-2 py-1.5 text-xs text-gray-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
-        title="Тип записи"
-      >
-        {Object.entries(ACTIVE_FOCUS_JOURNAL_KIND_LABELS).map(([value, label]) => (
-          <option key={value} value={value}>
-            {label}
-          </option>
-        ))}
-      </select>
-      <select
-        value={target}
-        onChange={(event) => onTargetChange(event.target.value as ActiveFocusJournalTarget)}
-        disabled={!hasWorkItem}
-        className="w-24 rounded border border-emerald-900/70 bg-gray-950 px-2 py-1.5 text-xs text-gray-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 disabled:cursor-not-allowed disabled:border-gray-800 disabled:text-gray-600"
-        title="Куда сохранить"
-      >
-        {Object.entries(ACTIVE_FOCUS_JOURNAL_TARGET_LABELS).map(([value, label]) => (
-          <option key={value} value={value}>
-            {label}
-          </option>
-        ))}
-      </select>
-      <button
-        type="button"
-        onClick={onSubmit}
-        disabled={!text.trim() || pending}
-        className="rounded border border-emerald-700 px-2 py-1.5 text-xs font-medium text-emerald-200 hover:border-emerald-400 hover:text-emerald-100 disabled:cursor-not-allowed disabled:border-gray-800 disabled:text-gray-600"
-      >
-        Записать
-      </button>
+    <div className="grid gap-2 rounded-md border border-emerald-900/70 bg-emerald-950/20 px-3 py-2">
+      <div className="flex items-center gap-2">
+        <input
+          ref={inputRef}
+          value={text}
+          onChange={(event) => onTextChange(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') {
+              event.preventDefault()
+              onSubmit()
+            }
+          }}
+          placeholder={placeholder}
+          className="min-w-0 flex-1 rounded border border-emerald-900/70 bg-gray-950 px-2 py-1.5 text-xs text-gray-100 placeholder-gray-600 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+        />
+        <select
+          value={kind}
+          onChange={(event) => onKindChange(event.target.value as ActiveFocusJournalKind)}
+          className="w-32 rounded border border-emerald-900/70 bg-gray-950 px-2 py-1.5 text-xs text-gray-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+          title="Тип записи"
+        >
+          {Object.entries(ACTIVE_FOCUS_JOURNAL_KIND_LABELS).map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
+        </select>
+        <select
+          value={target}
+          onChange={(event) => onTargetChange(event.target.value as ActiveFocusJournalTarget)}
+          disabled={!hasWorkItem}
+          className="w-24 rounded border border-emerald-900/70 bg-gray-950 px-2 py-1.5 text-xs text-gray-200 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 disabled:cursor-not-allowed disabled:border-gray-800 disabled:text-gray-600"
+          title="Куда сохранить"
+        >
+          {Object.entries(ACTIVE_FOCUS_JOURNAL_TARGET_LABELS).map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
+        </select>
+        <button
+          type="button"
+          onClick={onSubmit}
+          disabled={!text.trim() || pending}
+          className="rounded border border-emerald-700 px-2 py-1.5 text-xs font-medium text-emerald-200 hover:border-emerald-400 hover:text-emerald-100 disabled:cursor-not-allowed disabled:border-gray-800 disabled:text-gray-600"
+        >
+          Записать
+        </button>
+      </div>
+      {hasWorkItem && target === 'work_item' && (
+        <div className="flex items-center gap-2 text-xs">
+          <span className="shrink-0 text-gray-500">Подтверждение</span>
+          <select
+            value={refChoice}
+            onChange={(event) => onRefChoiceChange(event.target.value)}
+            className="min-w-0 flex-1 rounded border border-emerald-950 bg-gray-950 px-2 py-1 text-gray-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+          >
+            <option value="">Без Ref</option>
+            {refs.map((ref) => (
+              <option key={ref.id} value={ref.id}>{ref.kind}: {ref.value}</option>
+            ))}
+            <option value={ACTIVE_FOCUS_JOURNAL_NEW_REF}>Новый Ref...</option>
+          </select>
+          {refChoice === ACTIVE_FOCUS_JOURNAL_NEW_REF && (
+            <>
+              <select
+                value={newRefKind}
+                onChange={(event) => onNewRefKindChange(event.target.value as RefKind)}
+                className="w-28 rounded border border-emerald-950 bg-gray-950 px-2 py-1 text-gray-300 focus:border-emerald-500"
+                title="Тип нового Ref"
+              >
+                <option value="url">URL</option>
+                <option value="file_path">Файл</option>
+                <option value="issue_key">Ключ задачи</option>
+                <option value="custom">Другое</option>
+              </select>
+              <input
+                value={newRefValue}
+                onChange={(event) => onNewRefValueChange(event.target.value)}
+                placeholder="URL, путь или ключ"
+                className="min-w-0 flex-[2] rounded border border-emerald-950 bg-gray-950 px-2 py-1 text-gray-200 placeholder-gray-600 focus:border-emerald-500"
+              />
+            </>
+          )}
+        </div>
+      )}
     </div>
   )
 }

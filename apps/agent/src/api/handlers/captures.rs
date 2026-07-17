@@ -222,6 +222,13 @@ pub async fn handle_capture_convert_to_work_item(
     state.db.log_event(&event).await.map_err(|error| {
         RpcResponse::error(request_id.to_string(), "internal_error", &error.to_string())
     })?;
+    state
+        .db
+        .snapshot_work_item_event_semantics(event.id, item.id)
+        .await
+        .map_err(|error| {
+            RpcResponse::error(request_id.to_string(), "internal_error", &error.to_string())
+        })?;
 
     capture.convert_to_work_item(item.id);
     state.db.update_capture(&capture).await.map_err(|error| {
@@ -283,6 +290,13 @@ pub async fn handle_capture_append_to_work_item_event(
     state.db.log_event(&event).await.map_err(|error| {
         RpcResponse::error(request_id.to_string(), "internal_error", &error.to_string())
     })?;
+    state
+        .db
+        .snapshot_work_item_event_semantics(event.id, work_item_id)
+        .await
+        .map_err(|error| {
+            RpcResponse::error(request_id.to_string(), "internal_error", &error.to_string())
+        })?;
 
     capture.convert_to_work_item(work_item_id);
     state.db.update_capture(&capture).await.map_err(|error| {

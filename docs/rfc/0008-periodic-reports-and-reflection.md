@@ -4,13 +4,13 @@
 
 ## Статус
 
-**P0 реализован и принят 2026-07-09.** Более широкая модель профилей, Tracks/Labels, Reflection Sessions и LLM Pack остаётся Draft.
+**P0-P4 реализованы и приняты 2026-07-10.** Произвольный экспорт, четыре профиля, иерархические Tracks, Labels, исторические снимки классификации, ручной evidence-слой и сохранение Reflection Session работают через CLI, интерфейс и локальную SQLite. Реальный Timeskein gate подтвердил captured history, Ref snapshots и проверку прежних решений. UI Report Builder, LLM Pack и автоматический сбор evidence остаются Draft.
 
 ## Уровень зрелости
 
 **Level 0+ / Level 2+**.
 
-Базовые отчёты по ручным фокус-блокам, Work Items, Activity Zones, captures и событиям относятся к Level 0+. Автоматическая дистилляция, LLM-разбор, умные нити и evidence-слой относятся к Level 2+ и выше.
+Базовые отчёты и ручная связь утверждения с Ref относятся к Level 0+. Автоматическая дистилляция, LLM-разбор, умные нити и фоновый evidence-сбор относятся к Level 2+ и выше.
 
 ## Связанные документы
 
@@ -297,7 +297,7 @@ Labels отвечают на вопрос:
 
 > Какие поперечные признаки есть у активности?
 
-У Work Item, события или фокус-блока может быть несколько labels.
+У Work Item может быть несколько labels. Фокус-блок и Work Item Event получают снимок текущих labels в момент записи.
 
 Примеры:
 
@@ -422,20 +422,11 @@ Labels удобны для поперечных срезов, которые н�
 
 Разметка меняется. Work Item сегодня может быть перенесён в другой Track, переименован или получить новые labels. Это не должно молча переписывать прошлые отчёты.
 
-Для исторической честности фокус-блоки и события должны хранить снимки важных признаков на момент записи:
+Реализованный слой хранит снимки `track_id`, полного пути Track и Labels для нового фокус-блока и Work Item Event. Activity Zone уже хранится непосредственно на фокус-блоке. Изменение текущего Work Item не меняет эти снимки.
 
-- `work_item_title_snapshot`;
-- `activity_zone_snapshot`;
-- `track_id_snapshot`;
-- `track_title_snapshot`;
-- `labels_snapshot`.
+Для старых строк, созданных до миграции, отчёт использует текущую классификацию Work Item и ставит provenance `inferred-current`. Новая строка без Track получает исторический снимок `Unclassified`, поэтому она не смешивается с legacy-данными. Markdown и JSON показывают покрытие всего периода и выбранного среза: captured, inferred-current и Unclassified.
 
-При отчёте пользователь может выбрать режим:
-
-1. **Исторический режим.** Использовать снимки на момент активности. Это режим по умолчанию для ревью периода.
-2. **Текущая классификация.** Пересчитать отчёт по актуальным Track/Labels. Это полезно после наведения порядка в таксономии.
-
-Если система показывает пересчитанный отчёт, она должна явно писать, что данные сгруппированы по текущей классификации, а не по историческим снимкам.
+Исторический снимок названия Work Item пока не хранится. Отчёт явно сообщает, что название и mutable note берутся из текущего Work Item. Режим принудительного пересчёта новых снимков по текущей классификации не реализован: для ревью по умолчанию важнее историческая честность.
 
 ---
 
@@ -810,21 +801,26 @@ LLM Pack должен поддерживать режимы приватност
 
 ## 16. Local API
 
-Будущие методы Local API:
+Реализованные методы Local API:
 
 ```text
+taxonomy.list
 track.create
 track.update
-track.list
-track.delete
+track.archive
 
 label.create
 label.update
-label.list
-label.delete
+label.archive
 
-work_item.set_track
-work_item.set_labels
+work_item.set_semantics
+work_item.create({ track_id, label_ids })
+work_item.update({ track_id, label_ids })
+```
+
+Tracks и Labels архивируются, а не удаляются: исторические снимки и решения обзора должны оставаться читаемыми. Отчётный CLI пока читает SQLite напрямую и остаётся вне Local API. Будущие методы:
+
+```text
 
 report.period
 report.export
@@ -853,7 +849,17 @@ report.period({
 
 ## 17. UI
 
-### 17.1. Report Builder
+### 17.1. Taxonomy and assignment
+
+Минимальный полный путь реализован в основном интерфейсе:
+
+- кнопка `#` открывает управление Tracks и Labels;
+- Track/Label можно создать, переименовать, архивировать и вернуть из архива;
+- create/edit Work Item позволяет выбрать один Track и несколько Labels;
+- список Work Items показывает текущую классификацию;
+- поля необязательны и не добавляют шаг к быстрому старту фокус-блока.
+
+### 17.2. Report Builder
 
 Экран отчёта должен позволять:
 
@@ -867,7 +873,7 @@ report.period({
 - увидеть предупреждения о неполноте данных;
 - сохранить preset.
 
-### 17.2. Presets
+### 17.3. Presets
 
 Нужны быстрые пресеты:
 
@@ -884,7 +890,7 @@ report.period({
 - Track retrospective;
 - Performance review pack.
 
-### 17.3. Review Flow
+### 17.4. Review Flow
 
 Для недельного и более крупного обзора UI должен вести пользователя по шагам:
 
@@ -901,17 +907,18 @@ report.period({
 
 ## 18. CLI
 
-P0 реализован командой `pnpm report:period`. Диапазон полуоткрытый: `--from` включается, `--to` не включается. Первый слой поддерживает профиль `weekly-review`, форматы `md` и `json`, вывод в stdout или `--output PATH`.
+CLI реализован командой `pnpm report:period`. Диапазон полуоткрытый: `--from` включается, `--to` не включается. Поддерживаются профили `weekly-review`, `sprint-review`, `track-retrospective`, `performance-evidence`, форматы `md` и `json`, вывод в stdout или `--output PATH`.
 
 Команды:
 
 ```bash
 pnpm report:period -- --from 2026-07-01 --to 2026-07-08 --profile weekly-review
-pnpm report:period -- --preset current-week --format md
-pnpm report:period -- --track timeskein --from 2026-07-01 --to 2026-07-31
-pnpm report:period -- --profile quarter-performance --format llm-pack
-pnpm report:period -- --label performance-review --format json
+pnpm report:period -- --from 2026-07-01 --to 2026-07-31 --profile track-retrospective --track Timeskein
+pnpm report:period -- --from 2026-07-01 --to 2026-07-31 --track Работа --include-child-tracks
+pnpm report:period -- --from 2026-07-01 --to 2026-07-31 --label performance-review --zone work --format json
 ```
+
+`--label` и `--zone` можно повторять. Несколько Labels образуют пересечение требований, несколько Activity Zones — объединение допустимых зон. `track-retrospective` без `--track` отклоняется.
 
 На первом этапе CLI важнее полноценного UI: он быстрее даст проверяемый экспорт и позволит использовать отчёты в Obsidian/LLM.
 
@@ -983,34 +990,60 @@ pnpm report:period -- --label performance-review --format json
 
 ### P1: report profiles
 
+**Статус: реализовано и проверено на временной и реальной базах 2026-07-09.**
+
 - `weekly-review`;
 - `sprint-review`;
 - `track-retrospective`;
-- `quarter-performance`;
-- LLM question blocks.
+- `performance-evidence`;
+- разные вопросы, профильный срез и честные ограничения модели в Markdown и JSON.
 
 ### P2: context links and user thoughts
 
-- улучшить refs на Work Items и событиях;
-- явно показывать внешние артефакты в отчётах;
-- добавить экспорт пользовательских мыслей как отдельного слоя;
-- сохранить origin event при превращении capture в Work Item или Work Item Event;
-- сделать "последний контакт с реальностью" видимым в отчёте.
+**Статус: реализовано и принято на временной и реальной базах 2026-07-10.**
+
+- смысловые Work Item Events типизируются как `result`, `decision`, `blocker`, `next_step` или `observation`;
+- к записи можно приложить существующий Ref или создать URL, файл, ключ задачи либо custom Ref;
+- Ref и Track/Label сохраняются историческими snapshots;
+- `track-retrospective` показывает изменение, подтверждение, решения, блокеры, хвосты и следующие шаги;
+- результат без Ref остаётся неподтверждённым, а длительность не превращается в результат;
+- origin event при превращении capture сохраняется как Work Item Event;
+- legacy notes и current Work Item refs имеют отдельный provenance.
+
+Автоматическое чтение содержимого Ref и фоновый сбор артефактов в этот слой не входят.
+
+Реальный Track `Личные проекты / Timeskein` дал три fresh captured-блока, четыре typed evidence-записи и один подтверждённый результат. Повторный обзор сохранил `fulfilled` для прежнего `protect-next-focus` и `progressed` для `continue`; обе проверки связаны с captured result event. Строгий `pnpm evidence:gate -- --from 2026-07-10 --to 2026-07-11` прошёл.
 
 ### P3: Tracks and Labels
 
+**Статус: реализовано и проверено на временной и реальной базах 2026-07-10.**
+
 - таблицы `tracks`, `labels`;
 - назначение Track на Work Item;
-- labels на Work Item / событие / фокус-блок;
-- снимки Track/Labels на фокус-блоках;
-- фильтры по Track/Labels.
+- labels на Work Item;
+- снимки Track/Labels на фокус-блоках и Work Item Events;
+- фильтры по Track, дочерним Tracks, Labels и Activity Zones;
+- Track-scoped Reflection decisions;
+- UI управления и назначения без обязательной классификации.
+
+Реальная проверка создала Track `Личные проекты / Timeskein` и Label `dogfood`, размечала только два однозначных Work Item и оставила смешанный Work Item Unclassified. Ретроспектива за 1–9 июля сохранила два Track-решения; повторный отчёт прочитал их. Старые входы помечены `inferred-current`, новые будут использовать immutable snapshots.
+
+Track-отчёт также выводит текущие refs связанных Work Items и незакрытые Work Item/Capture tails. Текущая связь Ref имеет отдельный provenance и не выдаётся за исторический снимок. Историческим подтверждением считается только `evidence_ref_snapshot`, созданный вместе с типизированной записью.
 
 ### P4: Reflection Sessions
 
-- сохранение выводов обзора;
-- next focus points;
-- связь выводов с созданными Work Items;
-- экспорт истории обзоров.
+**Статус: первый CLI-слой реализован и проверен 2026-07-09.**
+
+- JSON-заготовка решений из `report:period --reflection-template`;
+- сохранение summary, findings и решений в SQLite;
+- связь решения с Work Item, если он выбран;
+- решения `continue`, `done-close`, `park`, `reactive`, `noise`, `protect-next-focus`;
+- просмотр истории через `reflection:list`;
+- включение решений того же и последнего предыдущего периода в повторный отчёт.
+- явная проверка прежнего решения со статусом `fulfilled`, `progressed`, `cancelled`, `parked`, `contradicted` или `no_evidence`;
+- необязательная связь проверки с последующим evidence event.
+
+UI, связь с созданными Work Items и расширенная история остаются следующими слоями.
 
 ### P5: UI Report Builder
 
@@ -1046,6 +1079,8 @@ pnpm report:period -- --label performance-review --format json
 11. Отчёт явно отделяет факты, интерпретации и следующие решения.
 12. Для ключевых актуальных треков виден последний контакт с реальностью и evidence.
 13. Пользователь может получить результат обзора без включения автоматического evidence-сбора.
+
+Пункты 1, 2, 4, 6–8, 10–11 и 13 подтверждены. Track-слой отдельно подтвердил исторические снимки, явный legacy fallback, Unclassified coverage и повторное чтение Track-решений. Пункты про полноценный sprint intent, квартальную фактуру и Operational Reality остаются следующими слоями.
 
 ---
 
@@ -1098,31 +1133,22 @@ Report Builder может стать слишком большим.
 
 ## 24. Открытые вопросы
 
-1. Должен ли Work Item иметь ровно один Track или несколько?
-2. Нужны ли отдельные сущности `Project`, `Area`, `Person`, или достаточно `Track.kind`?
-3. Как удобно редактировать Track/Labels задним числом?
-4. Нужно ли хранить generated reports как файлы, как записи в SQLite, или только как ReflectionSession metadata?
-5. Какой redaction-профиль нужен первым: скрывать URL, имена людей, внутренние ключи, все названия Work Items?
-6. Должен ли performance-review отчёт иметь специальный режим "только факты без интерпретаций"?
-7. Как отличать "важное, требующее усилий" от "заняло много времени" без ручной оценки impact?
-8. Какие LLM prompts должны стать встроенными шаблонами?
-9. Где граница между Track, Thread и Project в пользовательском интерфейсе?
-10. Должна ли панель актуальности показывать inferred status или только ручной статус с evidence?
-11. Какие внешние артефакты можно хранить как ссылки, а какие стоит локально дистиллировать?
+1. Нужны ли отдельные сущности `Project`, `Area`, `Person`, или достаточно иерархического Track без kind?
+2. Нужны ли bulk reassignment и merge для наведения порядка в старой таксономии?
+3. Нужно ли хранить generated reports как файлы, как записи в SQLite, или только как ReflectionSession metadata?
+4. Какой redaction-профиль нужен первым: скрывать URL, имена людей, внутренние ключи, все названия Work Items?
+5. Должен ли performance-review отчёт иметь специальный режим "только факты без интерпретаций"?
+6. Как отличать "важное, требующее усилий" от "заняло много времени" без ручной оценки impact?
+7. Какие LLM prompts должны стать встроенными шаблонами?
+8. Должна ли панель актуальности показывать inferred status или только ручной статус с evidence?
+9. Какие внешние артефакты можно хранить как ссылки, а какие стоит локально дистиллировать?
+
+Принятое решение: Work Item имеет не более одного основного Track и любое число Labels. Track задаёт устойчивую область ретроспективы; Labels дают поперечные срезы.
 
 ---
 
 ## 25. Рекомендуемый ближайший шаг
 
-Не начинать с полной таксономии.
+Семантический слой подтверждён 2026-07-10 тестами и консервативной ретроспективой legacy-данных. Ближайшая проверка — накопить минимум три новых Timeskein-блока с captured snapshots и повторить Track-ретроспективу, чтобы сопоставить сохранённые решения с последующей фактурой. Gate считается пройденным, если новые блоки не требуют `inferred-current`, повторный отчёт видит прежние Track-решения и пользователь может сказать, что произошло после них.
 
-Сначала сделать простой `report:period` поверх уже существующих данных:
-
-- произвольный диапазон;
-- Markdown;
-- JSON;
-- группировки по дням, Work Items и Activity Zones;
-- включение Day Events, Work Item Events, captures и gaps;
-- предупреждения качества.
-
-После этого провести недельный dogfood-обзор и проверить, каких фильтров не хватает на реальном материале. Только потом добавлять Tracks, Labels и Reflection Sessions.
+После gate возможны четыре осмысленные цели: refs и внешние артефакты для подтверждения результата; минимальная Operational Reality для active/completed/reactive/waiting/parked; более удобный внутридневной рабочий журнал; интерфейс периодического обзора. Рекомендуемый первый большой шаг — evidence-backed Track story, потому что текущий Track-отчёт уже умеет ограничивать область, но ещё слабо доказывает изменение состояния. Report Builder, LLM Pack и автоматический evidence-сбор не должны опережать этот контур.

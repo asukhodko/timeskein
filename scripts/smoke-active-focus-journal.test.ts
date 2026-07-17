@@ -6,6 +6,7 @@ import {
   activeFocusJournalDraftStorageKey,
   decodeActiveFocusJournalDraft,
   encodeActiveFocusJournalDraft,
+  evidenceKindForJournalKind,
   formatActiveFocusJournalText,
 } from '../apps/desktop/src/utils/activeFocusJournal'
 
@@ -16,6 +17,9 @@ test('active focus journal prefixes user thoughts with a calm Russian kind', () 
   assert.equal(formatActiveFocusJournalText('next_step', 'написать Диме'), 'Следующий шаг: написать Диме')
   assert.equal(formatActiveFocusJournalText('milestone', 'черновик готов'), 'Веха: черновик готов')
   assert.equal(formatActiveFocusJournalText('interruption', 'написали в мессенджер'), 'Отвлечение: написали в мессенджер')
+  assert.equal(evidenceKindForJournalKind('result'), 'result')
+  assert.equal(evidenceKindForJournalKind('blocker'), 'blocker')
+  assert.equal(evidenceKindForJournalKind('thought'), 'observation')
   assert.equal(formatActiveFocusJournalText('thought', '   '), '')
 
   const labels = Object.values(ACTIVE_FOCUS_JOURNAL_KIND_LABELS).join('\n')
@@ -27,24 +31,36 @@ test('active focus journal draft survives reloads without unsafe values', () => 
     text: 'Нужно записать решение',
     kind: 'decision',
     target: 'work_item',
+    refChoice: 'ref-1',
+    newRefKind: 'issue_key',
+    newRefValue: '',
   })
 
   assert.deepEqual(decodeActiveFocusJournalDraft(encoded), {
     text: 'Нужно записать решение',
     kind: 'decision',
     target: 'work_item',
+    refChoice: 'ref-1',
+    newRefKind: 'issue_key',
+    newRefValue: '',
   })
 
   assert.deepEqual(decodeActiveFocusJournalDraft('{"text":"x","kind":"bad","target":"bad"}'), {
     text: 'x',
     kind: 'thought',
     target: 'work_item',
+    refChoice: '',
+    newRefKind: 'url',
+    newRefValue: '',
   })
 
   assert.deepEqual(decodeActiveFocusJournalDraft('not json'), {
     text: '',
     kind: 'thought',
     target: 'work_item',
+    refChoice: '',
+    newRefKind: 'url',
+    newRefValue: '',
   })
 })
 

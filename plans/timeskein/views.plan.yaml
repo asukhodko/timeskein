@@ -2,71 +2,110 @@ version: 3
 
 views:
   current:
-    title: Current Timeskein work
+    title: Timeskein now
     where:
       x_ops_attention_class:
+        - now
         - current
       status:
         - in_progress
         - planned
         - blocked
     order_by: status
-  backlog:
-    title: Deferred Timeskein work
+  next:
+    title: Timeskein next risk-reduction work
     where:
       x_ops_attention_class:
+        - next
+      status:
+        - in_progress
+        - planned
+        - blocked
+    order_by: status
+  north-star:
+    title: Timeskein north-star capability map
+    where:
+      x_ops_attention_class:
+        - overview
+        - now
+        - next
+        - later
+    order_by: title
+  risk-gates:
+    title: Timeskein strategic dogfood gates
+    where:
+      kind:
+        - milestone
+      x_ops_attention_class:
+        - now
+        - next
+        - later
+    order_by: title
+  backlog:
+    title: Timeskein later and maintenance work
+    where:
+      x_ops_attention_class:
+        - later
         - future
     order_by: title
   current-gantt:
-    title: Timeskein current product path
+    title: Timeskein accepted history and committed work
     where:
       has_schedule: true
     window_start: "2026-06-30"
-    window_finish: "2026-08-14"
+    window_finish: "2026-07-18"
     date_format: YYYY-MM-DD
     axis_format: "%d.%m"
     lanes:
-      app-entry:
-        title: App entry UX
+      accepted-manual:
+        title: Accepted manual gates
         nodes:
-          - ts.ux_entry
-        expand_descendants: leaves
-      focus-core:
-        title: Focus Session core
+          - ts.baseline.docs
+          - ts.focus_core.dogfood_gate
+          - ts.day_review.analysis_gate
+          - ts.hardening.dogfood_release
+          - ts.daily_control.goal_check
+      accepted-meaning:
+        title: Accepted meaning gates
         nodes:
-          - ts.focus_core
-        expand_descendants: leaves
-      day-review:
-        title: Day review
+          - ts.in_day_structure.dogfood_gate
+          - ts.periodic_reflection.reflection_sessions
+          - ts.periodic_reflection.semantic_dogfood_gate
+          - ts.periodic_reflection.context_links
+      causal-memory:
+        title: North-star architecture
         nodes:
-          - ts.day_review
-        expand_descendants: leaves
-      capture:
-        title: Capture Inbox
-        nodes:
-          - ts.capture
-        expand_descendants: leaves
-      hardening:
-        title: Dogfood hardening
-        nodes:
-          - ts.hardening
-        expand_descendants: leaves
-      daily-control:
-        title: Daily Control Gate
-        nodes:
-          - ts.daily_control
-        expand_descendants: leaves
-      in-day-structure:
-        title: In-day structure
-        nodes:
-          - ts.in_day_structure
-        expand_descendants: leaves
+          - ts.causal_memory.architecture_gate
+          - ts.causal_memory.provenance_contract
+          - ts.causal_memory.transition_history
+          - ts.periodic_reflection.operational_reality
+          - ts.steering.manual_correction
+          - ts.steering.operational_reality_gate
 
 x:
+  strategy:
+    north_star: Connect intention, work episode, context, change, evidence, decision, and next action into one local and historically honest causal memory.
+    planning_mode: backcasting-with-risk-gates
+    horizons:
+      now:
+        outcome: Establish the causal spine and prove explainable Operational Reality on real work.
+      next:
+        outcome: Test bounded automatic context before committing to a SourceNode platform.
+      later:
+        outcome: Build explainable Episodes, private intelligence, multi-device continuity, and opt-in Full Context.
+    invariants:
+      - Manual mode remains fully useful.
+      - User-confirmed state and decisions are authoritative.
+      - Observations and machine interpretations keep explicit provenance.
+      - Raw sensitive artifacts are ephemeral and revocable.
+      - Duration is evidence of effort, not proof of result.
+      - Far work is not scheduled before its preceding risk gate passes.
   exec:
     program:
-      committed_date: "2026-06-30"
-      note: The Session replacement baseline and cheap evening-closure gate are accepted. The current product proof is in-day structure and self-coordination before broad period reports.
+      committed_date: "2026-07-16"
+      nearest_goal: Choose the first post-M1 result from Operational Workspace convergence, Working Memory Bridge, or Bounded Context Capture Probe.
+      success_by_next_sync: One successor has a bounded user result, explicit exclusions, and a real dogfood gate; the other candidates remain visible without accidental commitment.
+      note: Causal Work Spine and Operational Reality v1 passed real use on 15–16 July. Timeline integrity is hardened after the gate exposed a 9:05 overlap. The next decision is integration/evidence quality versus early automatic-context risk reduction.
     defaults:
       weight_strategy: effort_effective
       status_progress:
@@ -76,139 +115,166 @@ x:
         deferred: 0.0
         blocked: 0.0
     blocks:
-      recovered-baseline:
-        title: Recovered baseline
+      accepted-foundation:
+        title: Accepted manual foundation
         scope_nodes:
           - ts.baseline
-        target_gate: ts.baseline.docs
-        mgmt:
-          health: green
-          owner: a.sukhodko
-          sync_note: Browser and macOS are usable enough for the next slice.
-      app-entry-ux:
-        title: App entry UX
-        scope_nodes:
           - ts.ux_entry
-        target_gate: ts.ux_entry.fast_track_flow
-        mgmt:
-          health: green
-          owner: a.sukhodko
-          sync_note: Entry and return paths are implemented; the daily-control gate will verify their real-day cost through show and hide request telemetry.
-      focus-session-core:
-        title: Focus Session core
-        scope_nodes:
           - ts.focus_core
-        target_gate: ts.focus_core.dogfood_gate
-        mgmt:
-          health: green
-          owner: a.sukhodko
-          sync_note: Manual start, switch, stop, restore, overflow, and stop notes are accepted as the Session replacement baseline. Pause/resume/cancel are deferred.
-      day-review-export:
-        title: Day review and export
-        scope_nodes:
           - ts.day_review
-        target_gate: ts.day_review.analysis_gate
-        mgmt:
-          health: green
-          owner: a.sukhodko
-          sync_note: Dogfood days produced usable focus data without Session; missed/stopped blocks can now be added, corrected, or split before copying the final report.
-      capture-inbox:
-        title: Capture Inbox
-        scope_nodes:
           - ts.capture
-        target_gate: ts.capture.review_flow
-        mgmt:
-          health: green
-          owner: a.sukhodko
-          sync_note: 2026-07-03 dogfood created four captures during active focus; resolve/convert/report flow worked with zero capture failures.
-      dogfood-hardening:
-        title: Dogfood hardening
-        scope_nodes:
           - ts.hardening
-        target_gate: ts.hardening.dogfood_release
-        mgmt:
-          health: green
-          owner: a.sukhodko
-          sync_note: macOS Session replacement dogfood baseline accepted on 2026-07-03; post-factum correction covers missed-block creation, edit, and split, window request telemetry is ready for the next entry-polish dogfood gate, and dogfood:continue now reopens an existing day through the guarded launch path.
-      daily-control-gate:
-        title: Daily Control Gate
-        scope_nodes:
           - ts.daily_control
-        target_gate: ts.daily_control.goal_check
-        progress_override: 1.0
-        mgmt:
-          health: green
-          owner: a.sukhodko
-          sync_note: Closed on 2026-07-08. Measured closure took 2:32, saved evidence was final, and strict dogfood:goal-check passed with --no-codex-guidance after test, preflight, and strict RC evidence.
-      in-day-structure:
-        title: In-day Structure
-        scope_nodes:
           - ts.in_day_structure
-        target_gate: ts.in_day_structure.dogfood_gate
+          - ts.periodic_reflection
+        target_gate: ts.periodic_reflection.context_links
         progress_override: 1.0
         mgmt:
           health: green
           owner: a.sukhodko
-          sync_note: "Accepted after the 2026-07-09 dogfood day. The report carried day/work observations, live-zone evidence, classified recovery gaps, and strict goal-check evidence. Follow-up polish is tracked separately: larger notes, search normalization, light theme, and panel ergonomics."
-      periodic-reflection:
-        title: Periodic Reflection
+          sync_note: Daily control, in-day structure, Tracks, period reviews, evidence, and decision follow-up are accepted as the Manual Source foundation.
+      architecture-gate:
+        title: North-star architecture gate
         scope_nodes:
-          - ts.periodic_reflection
-        target_gate: ts.periodic_reflection.report_profiles
+          - ts.causal_memory.architecture_gate
+        target_gate: ts.causal_memory.architecture_gate
+        progress_override: 1.0
         mgmt:
-          health: yellow
+          health: green
           owner: a.sukhodko
-          next_sync_goal: "Turn the accepted P0 range export into distinct weekly, sprint and performance-review profiles, then save the chosen focus decisions. Use the real report finding that invested effort alone cannot tell a completed meeting from an active track before designing Tracks/Labels or passive evidence collection."
-      future-directions:
-        title: Future directions
+          sync_note: ADR-0004, RFC-0009, Roadmap 0005, and opskarta define causal truth boundaries, horizons, and risk gates.
+      causal-memory:
+        title: Causal Work Memory
         scope_nodes:
-          - ts.future
+          - ts.causal_memory
+        mgmt:
+          health: green
+          owner: a.sukhodko
+          sync_note: The manual causal spine, evidence chain, historical correction, and non-overlapping timeline baseline are accepted. Working Memory Bridge remains an optional next candidate; broader observation provenance belongs to the context probe.
+      current-steering:
+        title: Current-State Steering
+        scope_nodes:
+          - ts.steering
+        mgmt:
+          health: green
+          owner: a.sukhodko
+          sync_note: Operational Reality passed the 15–16 July real-use gate with 11 starts, persistent correction, Reflection follow-up, and a complete causal chain. Workspace convergence is the optional next integration candidate.
+      trust-controls:
+        title: Trust and privacy controls
+        scope_nodes:
+          - ts.trust
         mgmt:
           health: neutral
           owner: a.sukhodko
-          sync_note: Keep broad ideas visible without pretending they are ready to schedule.
+          sync_note: Pull forward only the controls required before any automatic context probe.
+      bounded-context-probe:
+        title: Bounded context probe
+        scope_nodes:
+          - ts.context_fabric.observation_envelope
+          - ts.context_fabric.bounded_probe
+          - ts.context_fabric.bounded_probe_gate
+        mgmt:
+          health: neutral
+          owner: a.sukhodko
+          sync_note: Risk-first alternative candidate. Collect only during manual focus and decide from measured re-entry/evidence value.
+      context-fabric:
+        title: Context Fabric
+        scope_nodes:
+          - ts.context_fabric
+        mgmt:
+          health: neutral
+          owner: a.sukhodko
+          sync_note: Generalize sources only after the bounded probe passes its value and trust gate.
+      private-intelligence:
+        title: Explainable private intelligence
+        scope_nodes:
+          - ts.intelligence
+        mgmt:
+          health: neutral
+          owner: a.sukhodko
+          sync_note: Episodes, Threads, in-app reflection, and cited LLM analysis remain after causal and context gates.
+      continuity:
+        title: Multi-device continuity
+        scope_nodes:
+          - ts.continuity
+        mgmt:
+          health: neutral
+          owner: a.sukhodko
+          sync_note: Keep new canonical facts sync-ready; defer Hub and platform expansion until evidence of multi-device value.
+      full-context:
+        title: Opt-in Full Context
+        scope_nodes:
+          - ts.full_context
+        mgmt:
+          health: neutral
+          owner: a.sukhodko
+          sync_note: Expand Evidence Mode only from a proven Context Fabric with working TTL, purge, revocation, and manual authority.
+      maintenance:
+        title: Maintenance and polish
+        scope_nodes:
+          - ts.future
+          - ts.in_day_structure.search_normalization
+          - ts.in_day_structure.ui_readability_polish
+        mgmt:
+          health: neutral
+          owner: a.sukhodko
+          sync_note: Pull a polish item forward only when dogfood shows it blocks trust or the selected goal.
     edges:
-      - from: recovered-baseline
-        to: app-entry-ux
+      - from: accepted-foundation
+        to: architecture-gate
         type: required
-      - from: app-entry-ux
-        to: focus-session-core
+      - from: architecture-gate
+        to: causal-memory
         type: required
-      - from: focus-session-core
-        to: day-review-export
+      - from: causal-memory
+        to: current-steering
         type: required
-      - from: day-review-export
-        to: capture-inbox
+      - from: architecture-gate
+        to: trust-controls
         type: required
-      - from: capture-inbox
-        to: dogfood-hardening
+      - from: causal-memory
+        to: bounded-context-probe
         type: required
-      - from: dogfood-hardening
-        to: daily-control-gate
+      - from: trust-controls
+        to: bounded-context-probe
         type: required
-      - from: daily-control-gate
-        to: in-day-structure
+      - from: bounded-context-probe
+        to: context-fabric
         type: required
-      - from: in-day-structure
-        to: periodic-reflection
+      - from: current-steering
+        to: private-intelligence
         type: required
-      - from: periodic-reflection
-        to: future-directions
+      - from: context-fabric
+        to: private-intelligence
+        type: required
+      - from: causal-memory
+        to: continuity
         type: context
-        label: later
+        label: sync-ready first
+      - from: context-fabric
+        to: full-context
+        type: required
+      - from: private-intelligence
+        to: full-context
+        type: context
+        label: derived meaning
+      - from: continuity
+        to: full-context
+        type: context
+        label: multi-device sources
     views:
       exec-top:
         blocks:
-          - recovered-baseline
-          - app-entry-ux
-          - focus-session-core
-          - day-review-export
-          - capture-inbox
-          - dogfood-hardening
-          - daily-control-gate
-          - in-day-structure
-          - periodic-reflection
-          - future-directions
+          - accepted-foundation
+          - architecture-gate
+          - causal-memory
+          - current-steering
+          - trust-controls
+          - bounded-context-probe
+          - context-fabric
+          - private-intelligence
+          - continuity
+          - full-context
         direction: LR
         color_mode: mgmt_hybrid
         highlight_current: true
@@ -217,15 +283,14 @@ x:
         show_owner: false
         wrap_title_lines: 2
         reduce_transitive_required_edges: true
-        caption: "Near-term plan should stay narrow: make Timeskein structure the day in progress before reopening sync, Evidence Mode, or platform expansion."
+        caption: "The accepted manual foundation now includes Causal Work Spine and Operational Reality v1. The next decision is whether to converge the operational workspace, strengthen manual working memory, or test bounded automatic context before broader Context Fabric, private intelligence, continuity, and opt-in Full Context."
       exec-active-tracks:
         blocks:
-          - app-entry-ux
-          - day-review-export
-          - capture-inbox
-          - dogfood-hardening
-          - daily-control-gate
-          - in-day-structure
+          - architecture-gate
+          - causal-memory
+          - current-steering
+          - trust-controls
+          - bounded-context-probe
         direction: TD
         color_mode: mgmt_hybrid
         highlight_current: true

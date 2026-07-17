@@ -6,6 +6,11 @@
 
 **Draft**.
 
+Стратегическое уточнение 2026-07-10: minimum policy gate, raw TTL, pause и
+purge нужны уже для bounded Context Probe из [Roadmap 0005](../roadmap/0005-causal-work-memory-roadmap.md).
+Полная storage-budget и distillation инфраструктура остаётся после доказанной
+пользы автоматического контекста.
+
 ## Уровень зрелости
 
 **Level 2+** (не входит в MVP)
@@ -16,6 +21,7 @@
 - [RFC-0005: Event Ingest + SourceNode](0005-event-ingest-source-nodes.md)
 - [RFC-0007: Screen Evidence Source Node](0007-evidence-mode-screen-evidence-source-node.md) (Level 3)
 - [ADR-0003: Evidence-Mode Opt-in](../adr/0003-evidence-mode-opt-in.md) (Level 3)
+- [RFC-0009: Causal Work Memory and Operational Reality](0009-causal-work-memory-and-operational-reality.md)
 - [Глоссарий](../glossary.md)
 
 ---

@@ -2,7 +2,7 @@
 
 ## Status
 
-Last updated: 2026-07-09.
+Last updated: 2026-07-16.
 
 This document describes what the repository actually runs today. Target architecture and future plans remain in RFCs and roadmap documents.
 
@@ -100,6 +100,8 @@ pnpm smoke:focus-api
 pnpm smoke:corrections-api
 pnpm smoke:capture-api
 pnpm smoke:day-events-api
+pnpm smoke:semantic-api
+pnpm smoke:operational-reality-api
 pnpm smoke:mock-api
 pnpm --filter @timeskein/desktop build
 pnpm smoke:macos-app
@@ -107,6 +109,9 @@ pnpm smoke:export-focus-day
 pnpm smoke:period-report
 pnpm smoke:app-events
 pnpm smoke:dogfood-report
+pnpm smoke:focus-session-overlaps
+pnpm smoke:format-time
+pnpm smoke:work-item-open-action
 pnpm smoke:dogfood-finish
 pnpm smoke:dogfood-status
 pnpm smoke:dogfood-ready
@@ -131,10 +136,14 @@ Runtime smoke on macOS:
 - `pnpm smoke:macos-app` also verifies post-factum focus correction: missed stopped block creation, stopped block update, split, Work Item reassignment, Work Item edit, and day-list reflection
 - `pnpm smoke:macos-app` also verifies Capture Inbox create/update/delete/resolve/convert/append-event while ensuring capture actions do not interrupt the active focus session
 - `pnpm smoke:macos-app` also verifies Work Item Event add/update/delete/list against the packaged SQLite-backed app
+- `pnpm smoke:macos-app` also verifies typed result capture with a newly created Ref snapshot and proves that the action does not interrupt the packaged app's active focus session; `TIMESKEIN_APP_BINARY` can point the smoke at an isolated bundle
 - `pnpm smoke:macos-app` also verifies Day Event add/update/delete/list against the packaged SQLite-backed app while ensuring day notes do not interrupt the active focus session
 - `pnpm smoke:macos-app` also verifies startup normalization of legacy active Work Items, orphan active focus sessions, stale `agent.lock` / `agent.port` recovery, and migration of older `app_events` kind constraints
 - `pnpm smoke:export-focus-day` verifies the Russian fallback Markdown export, the raw `--internal` format used by scripts, Day Events, Work Item notes, timestamped Work Item Events for touched items, and legacy focus-session schemas without Activity Zone columns, against temporary SQLite databases
-- `pnpm smoke:period-report` verifies half-open arbitrary date ranges, Markdown/JSON parity, daily/item/zone totals, significant gap classification, captures, Day Events, Work Item Events, required data-quality warnings, focus candidates, explicit file output, and exclusion of the upper date boundary against a temporary SQLite database
+- `pnpm smoke:semantic-api` verifies hierarchical Track and Label creation, rename/archive, Work Item assignment, and taxonomy reads through the Local API; it runs as part of `pnpm smoke:mock-api`
+- `pnpm smoke:evidence-api` verifies typed evidence with a newly created Ref through the mock Local API and proves that recording the event does not stop or switch the active focus block; it runs as part of `pnpm smoke:mock-api`
+- `pnpm smoke:period-report` verifies half-open arbitrary date ranges, Markdown/JSON parity, Track/descendant/Label/Activity Zone filters, historical classification snapshots, explicit legacy inference and Unclassified coverage, typed evidence, immutable Ref snapshots, honest missing-evidence warnings, significant gaps, events, captures, file output, and exclusion of the upper date boundary
+- `pnpm smoke:reflection-session` verifies all four report profiles, Track-scoped decision persistence, explicit facts/observations/warnings/decisions, decision-template generation, decision follow-ups linked to later evidence, Markdown/JSON history, repeated filtered-report recall, and rejection of unknown decision or follow-up kinds
 - `pnpm smoke:app-events` verifies the local app-event migration, metrics summary, and Markdown export against a temporary SQLite database, including in-day Activity Zone glance telemetry
 - `pnpm smoke:dogfood-report` verifies the evening dogfood report wrapper, Russian focus-data labels, Russian review checklist, Russian daily-closure check, Activity Zone evidence warnings and in-day glance evidence, entry-path evidence prompts, Work Item time review prompts, correction evidence prompts, accepted correction review, accepted open-capture review, Day Events, Work Item notes, Work Item Events, interruption history, open captures, analysis prompts, and human-readable app telemetry section, including typed, selected/list, dispatch-ritual entry, and both window show and hide request evidence
 - `pnpm smoke:dogfood-finish` verifies the end-of-day gate: no active focus session, no active Work Item, at least one focus block, and `--save` writing both the day report and closure check
@@ -149,7 +158,7 @@ Runtime smoke on macOS:
 
 Dogfood launch helper:
 
-- `pnpm dogfood:start` checks the real local database and running-process guard first, then runs preflight, opens the macOS app when all checks pass, and waits for the embedded agent to respond
+- `pnpm dogfood:start` is the fast daily route: it checks the real local database and running-process guard, opens the already verified macOS bundle, and waits for the embedded agent; `pnpm dogfood:start:verified` additionally runs the full preflight and rebuild before opening the app
 - `pnpm dogfood:continue` runs the same guarded app-opening path with readiness continue mode, so an already started Timeskein day can be reopened without resetting the database or bypassing duplicate-title and active-state checks
 - `pnpm dogfood:start:clean` moves the current local SQLite files aside through the same guarded reset path, then runs the normal start check; `pnpm dogfood:start:clean:preview` prints the reset plan and checks non-mutating guards
 - `pnpm dogfood:status` waits for the local embedded-agent port file and verifies `agent.status`
@@ -247,7 +256,8 @@ Third real dogfood day and release baseline:
 - Dogfood reports include a `Заметки дел` section for touched Work Items that have non-empty notes
 - Dogfood reports include a `События дня` section for timestamped notes that belong to the day rather than one Work Item
 - Dogfood reports include a `События дел` section for timestamped Work Item observations created during the selected day
-- When no focus block is active, the focus panel shows a compact `Диспетчеризация` ritual. It records `Что в игре`, one good-enough next focus, parked work, and the reason this focus is important enough now. The panel includes a compact `?` help block with examples for the four fields. `Сохранить выбор` stores this as a Day Event in the `Координация` zone; `Начать выбранное` stores the same coordination event and starts the chosen focus title. The draft is stored per local day in `localStorage` and is cleared after a successful start. This is the first UI slice for `Вход в день` and `Возврат после перерыва`.
+- When no focus block is active, the focus panel shows `Диспетчеризация`. It asks for an active set of 2–3 directions, exactly one observable first action, 2–3 parked competitors, and one reason for choosing now. `Начать учёт координации` starts or reuses the current dispatch Work Item in the `coordination` zone and leaves the form available; `Сохранить без старта` stores the structured Day Event, while `Сохранить и начать первое дело` stores it and switches the running timer to the first action. The `?` help explains both field cardinality and button effects. The draft remains local-day scoped in `localStorage`.
+- When several safe accept-as-is checks remain during closure, the compact quality group lists every exact check and its evidence. The count is explicitly described as control points rather than detected day errors, and the bulk action names how many confirmations it will record.
 - The UI and CLI label the report as a draft while a focus block or Work Item is still active, or while review checks remain open. Active-state red items still add an explicit warning section to the Markdown
 - Capture Inbox for incoming events that should not interrupt the current focus block
 - Captures link to the active focus session when one exists
@@ -257,9 +267,9 @@ Third real dogfood day and release baseline:
 - The dogfood report shows a Russian interruption-history table for captures created during the day, including captures that were already resolved or converted
 - Open captures appear separately in the UI and CLI dogfood report for evening review
 - Manual Work Item inventory UI
-- Search
+- Unicode-case-insensitive search over title and note; common Cyrillic/Latin homoglyphs are normalized so mixed-script titles remain findable and duplicate-title reuse follows the same rule
 - `Недавние`, `Сегодня`, `Закреплённые`, and `Все` Work Item list modes for a multi-day inventory, with `Alt+1..4` shortcuts
-- Resizable divider between the Today list and Work Item inventory search/list area
+- Resizable divider between the complete upper work area and Work Item inventory; the upper area scrolls independently, its height is persisted, and double-click restores a viewport-relative default
 - Create Work Item
 - Edit Work Item title, type, Activity Zone, and note
 - Add timestamped Work Item Events from the note editor
@@ -285,6 +295,7 @@ Third real dogfood day and release baseline:
 - Focus input is refocused when the window becomes visible and no block is active
 - SQLite storage through the embedded Rust agent
 - Local app-event telemetry for dogfood analysis: app start, agent start/reuse/recovery, window show/hide/drag, window show/hide requests, focus start/switch/stop, dispatch-ritual starts, in-day Activity Zone glances, Capture Inbox create/update/delete/resolve/convert, accepted review decisions, report copy, manual copy fallback, and API errors
+- Hierarchical Tracks and cross-cutting Labels with create/rename/archive management, optional Work Item assignment, inventory badges, and immutable focus/event classification snapshots
 - Mock server for browser development
 
 ## Focus Session Data
@@ -300,18 +311,18 @@ The first Focus Session baseline is intentionally small. It stores manual contac
 
 The Rust agent stores focus sessions in SQLite. Partial unique indexes enforce at most one active focus session and at most one active Work Item. Work Item `active` is treated as the UI marker for the currently timed item: switching it stops the old focus block and starts a new linked block, while stopping a linked focus block clears `active` from Work Items. On startup, the agent normalizes old active Work Item rows and stops an active focus session if its linked Work Item is missing or deleted. Starting focus from typed text first searches for an existing Work Item with the same normalized title; if none exists, it creates one.
 
-Post-factum correction is implemented for stopped focus sessions. `focus.create_stopped` adds a missed stopped block without starting an active timer. `focus.update` edits the block title/Work Item, start, stop, target, and note. `focus.split` cuts one stopped block into left/right blocks at a timestamp; the right side can be assigned to another Work Item by title. This covers common tracking mistakes by adding a missed interval, splitting around the wrong interval, and updating the resulting block. The mock server exposes the same focus correction methods for browser development.
+Post-factum correction is implemented for stopped focus sessions. `focus.create_stopped` adds a missed stopped block without starting an active timer. `focus.update` edits the block title/Work Item, start, stop, target, and note. `focus.split` cuts one stopped block into left/right blocks at a timestamp; the right side can be assigned to another Work Item by title. The Rust API rejects create/update operations whose closed interval overlaps another focus block; touching boundaries remain valid. Existing historical overlaps are not rewritten silently: Today/CLI closure reports treat them as a blocking data-integrity check, the RC check fails, and period JSON adds `overlapping_focus_sessions`. This covers common tracking mistakes without allowing double-counted time to pass as trusted data. The mock server exposes the same correction methods for browser development.
 
 ## Period Reports
 
-The first periodic-reflection slice is implemented as a read-only CLI over the existing SQLite data:
+The periodic-reflection baseline is implemented as a read-only report CLI plus persistent review decisions and semantic taxonomy in local SQLite:
 
 ```bash
 pnpm report:period -- --from 2026-07-01 --to 2026-07-10
 pnpm report:period -- --from 2026-07-01 --to 2026-07-10 --format json
 ```
 
-The range is half-open: `--from` is included and `--to` is excluded. `--output` writes the rendered report to an explicit path; without it, the command prints to stdout. The default and only P0 profile is `weekly-review`.
+The range is half-open: `--from` is included and `--to` is excluded. `--output` writes the rendered report to an explicit path; without it, the command prints to stdout. Supported profiles are `weekly-review`, `sprint-review`, `track-retrospective`, and `performance-evidence`. Each profile has its own purpose, review questions, output emphasis, and explicit model limitations. Filters support one Track, optional descendants, repeated Labels, and repeated Activity Zones. `track-retrospective` requires an explicit Track.
 
 Both formats come from one report model and include:
 
@@ -322,17 +333,152 @@ Both formats come from one report model and include:
 - Day Events and all Work Item Events, with user note text preserved;
 - Capture Inbox lifecycle events created, resolved, or converted in the period;
 - warnings for unexplained gaps, sparse contextual events, open captures, questionable zone use, and structurally broad Work Items;
+- an explicit data-trust warning when focus blocks overlap in the selected period;
 - observations about protected blocks, fragmentation, gap classifications, and capture outcomes;
 - up to three evidence-backed candidates for the next period plus process-tuning questions;
+- an explicit profile-specific evidence slice for week, sprint, track, or performance review;
+- saved decisions for the selected period and the latest previous review of the same profile;
+- request boundaries and semantic-filter coverage, including excluded and Unclassified source data;
+- immutable Track/Label snapshots for new focus blocks and Work Item Events, with explicit `inferred-current` provenance for legacy rows;
+- current refs linked to Work Items in the selected semantic slice, explicitly marked as current links rather than historical snapshots;
+- typed evidence entries and immutable historical Ref snapshots for result, decision, blocker, next-step, and observation records;
+- an explicit quality warning when a Track has no recorded result, or when a result has no captured Ref;
+- prior Reflection Decision follow-ups with explicit status and an optional linked evidence event;
+- open Work Item/Capture tails in `track-retrospective`;
 - provenance and explicit limitations.
 
-The CLI never writes to SQLite. Generated period-report Markdown and JSON are ignored by git. Current Work Item titles are used because historical title snapshots are not stored yet. Focus candidates are review prompts rather than automatic value judgments; the first real report proved that a completed meeting can still rank highly when its Work Item state does not express semantic completion.
+`report:period` remains read-only. With `--reflection-template PATH`, it additionally writes an editable JSON decision template. `pnpm reflection:save -- --input PATH` validates and stores one Reflection Session plus its decisions in `reflection_sessions` and `reflection_decisions`; Track scope is preserved in `reflection_decision_tracks`. The same template can record follow-up statuses `fulfilled`, `progressed`, `cancelled`, `parked`, `contradicted`, or `no_evidence` for decisions from an earlier review. An optional `evidence_event_id` ties the follow-up to later fact. `pnpm reflection:list` reads decisions and follow-ups as Markdown or JSON. Supported decisions are continue, done/close, park, reactive, noise, and protect-next-focus. Generated period-report Markdown/JSON and templates are ignored by git. Current Work Item titles are still used because historical title snapshots are not stored yet. Focus candidates are review prompts rather than automatic value judgments.
 
 The real P0 review is recorded in [Periodic Report Dogfood](dogfood-periodic-report.md).
+
+The first real saved review covers 2026-07-01 through 2026-07-09. It preserved three decisions in the primary database: protect the next substantive block for team goals, treat corporate messenger processing as bounded reactive work, and park personal-project checking outside the working active set. A repeated weekly report loaded those decisions back.
+
+The first semantic proof uses the real primary database. It created `Личные проекты / Timeskein`, assigned two unambiguous Timeskein Work Items, left the mixed MurmurMark/Timeskein/Engfaflow item unclassified, and built a 1–9 July Track retrospective. The report showed 10:49 in two legacy-inferred blocks, 103 Unclassified source entrances outside the slice, and two saved Track decisions. A repeated report loaded both decisions. This is deliberately conservative: semantic completeness is not fabricated from ambiguous titles.
+
+The evidence proof then used the same primary database on 2026-07-10. One explicitly classified Timeskein Work Item produced three fresh captured focus blocks, four typed evidence entries, and one confirmed result with a file-path Ref snapshot. The repeated retrospective kept seven unrelated day entrances outside the Track as Unclassified. It marked the earlier `protect-next-focus` decision `fulfilled` and `continue` decision `progressed`, linking both follow-ups to the confirmed result event. `pnpm evidence:gate -- --from 2026-07-10 --to 2026-07-11` passed every JSON, Markdown, provenance, result, and follow-up check.
+
+## Semantic Tracks and Labels
+
+Migration `010_semantic_tracks.sql` adds:
+
+- `tracks` with optional `parent_track_id` and archive timestamps;
+- `labels` with archive timestamps;
+- current Work Item assignments in `work_item_tracks` and `work_item_labels`;
+- immutable `focus_session_semantic_snapshots` and `work_item_event_semantic_snapshots`;
+- `reflection_decision_tracks` for Track-scoped review decisions.
+
+The Local API exposes `taxonomy.list`, Track/Label create/update/archive methods, and `work_item.set_semantics`. Work Item create/update accepts `track_id` and `label_ids`, so classification can be saved in the same request when the user chooses it. Track cycles are rejected. Archived taxonomy entries remain available to historical snapshots and can be restored.
+
+The UI keeps classification optional. The `#` header action opens the taxonomy manager; create/edit Work Item dialogs provide a Track select and Label toggles; cards show compact classification badges. Starting a typed focus remains a one-step action and creates an Unclassified Work Item when no taxonomy is provided.
+
+Every new focus block and user-authored Work Item Event captures the current Track path and Labels. Focus correction and split refresh the snapshot for the corrected/new block. A later Work Item reassignment does not rewrite these rows. Legacy rows without a snapshot are resolved from the current Work Item only for reporting and carry `inferred-current`; newly captured rows with no Track remain historically `Unclassified`.
+
+## Evidence-backed Track Story
+
+Migration `011_evidence_story.sql` adds a manual, historical evidence layer without background observation:
+
+- `evidence_entries` types a Work Item Event as `result`, `decision`, `blocker`, `next_step`, or `observation` and optionally links it to the active Focus Session;
+- `evidence_ref_snapshots` stores the Ref kind and value at capture time, so later unlinking or changing the Work Item does not rewrite the report;
+- `reflection_decision_followups` records what happened after an earlier Reflection Decision, with an optional evidence-event link.
+
+The active-focus journal records evidence without stopping or switching the timer. It can attach a Ref already linked to the Work Item or create a URL, file-path, issue-key, or custom Ref in the same action. The Work Item note editor provides the same path after a focus block. Evidence remains optional: ordinary thoughts and focus start/stop continue to work without a type or Ref.
+
+`track-retrospective` uses the typed layer to render:
+
+- `Что изменилось`;
+- `Доказательства`;
+- `Решения`;
+- `Блокеры и хвосты`;
+- `Что произошло после прошлых решений`;
+- `Следующие действия`.
+
+The JSON `evidence_story` contains the same entries, links, provenance, and follow-up state. A typed result with a captured Ref snapshot is a confirmed change. A result without Ref remains an unconfirmed user statement; tracked duration is only evidence of effort. Current Work Item refs and legacy notes stay visible with different provenance and are not promoted to historical proof.
+
+`pnpm evidence:gate -- --from YYYY-MM-DD --to YYYY-MM-DD` runs the strict real-data acceptance check for Track `Timeskein`. It builds JSON and Markdown from the same slice and requires three captured blocks, one confirmed change, captured classification for typed evidence, the six evidence-story headings, explicit follow-up for `protect-next-focus` and `continue`, and at least one follow-up linked to an evidence event. The command does not mutate the database.
+
+## Causal Work Spine and Operational Reality
+
+Migration `012_causal_work_spine.sql` adds append-only `causal_records`. New
+records have a stable UUID, subject, kind, `occurred_at`, `recorded_at`, source,
+provenance, confidence, schema/device/correlation fields, optional links to
+Work Item, Track, capture, Focus Session, evidence, and Reflection decision,
+plus immutable Track/Label snapshots. A correction points to the record it
+supersedes; it does not update or delete that assertion.
+
+The Rust agent and browser mock expose:
+
+- `operational_reality.list` with an optional `as_of`;
+- `causal_record.list` with subject and time filters;
+- `operational_reality.set_state` for confirmation and explained correction;
+- `operational_reality.set_next_action` for set/replace, complete, and dismiss;
+- `operational_reality.follow_up_decision` for Reflection follow-up.
+
+The deterministic projection combines current Work Items, Focus Sessions,
+captures, typed evidence, Reflection decisions, semantic classification, and
+causal history. It shows `why_visible`, facts, unknowns, provenance, confidence,
+last significant change, captured Ref snapshots for evidence, and one open next action. Old rows without causal
+provenance remain `legacy_current`; limited rules such as a pinned item without
+movement are `derived`; user assertions and corrections are `confirmed`.
+Track cards aggregate recent result and decision facts from related Work Items
+using their immutable historical Track paths, including captured Ref snapshots.
+The same fact can therefore explain both its leaf Track and a parent direction
+without being reassigned when the current Work Item classification changes.
+The default attention view is deliberately narrower than the complete
+projection. An ordinary legacy Work Item is still available through `Показать
+всё`, but unknown legacy state or a missing next action alone no longer turns it
+into a decision request. The main queue uses explicit attention states, open
+next actions, unresolved Reflection decisions, pinned items without a next
+action, captures, and at least two tracked hours without a recorded result.
+Running the migrated projection against a backup of the real 44-Work-Item
+database reduced the default queue from 46 to 8 while keeping all 46 items in
+the explainable projection.
+Superseded facts remain in `causal_record.list` but no longer drive the current
+projection. Reclassifying or deleting typed evidence writes an explicit
+correction; event deletion and correction are committed atomically. A follow-up
+to a migrated Reflection decision supersedes its active causal decision, while
+an earlier `as_of` projection still shows the unresolved decision.
+
+The React `Рабочая реальность` panel provides the minimal complete path:
+inspect a card and its grounds, confirm or correct its state, manage the next
+action, follow up a prior review decision, resolve a capture, and start a linked
+Work Item. A point can also be removed from the current attention set as
+irrelevant without deleting its history. `pnpm export:operational-reality` prints the same projection as
+machine-readable JSON. Tests cover migration/restart behavior, superseding
+corrections, evidence reclassification/deletion, all v1 states, historical
+`as_of`, semantic snapshots, evidence de-duplication and Ref visibility,
+historical Work Item result aggregation into child and parent Track cards,
+Reflection follow-up including migrated decisions, mock/API parity, and
+period-report stability after later current-state corrections.
+
+Operational Reality v1 was accepted on 2026-07-16 after real use on 15 and 16
+July. `pnpm operational-reality:gate -- --from 2026-07-15 --to 2026-07-17`
+passed with two days, 11 starts from the panel, real `meeting-tail`,
+`stale-important`, `waiting`, and `reactive` states, a persistent correction
+followed by app restart, three Reflection follow-ups, one complete
+intent/result-with-Ref/next-action chain, and normal closure on both days.
+
+The accepted causal path was recorded for an anonymized real merge-request
+inquiry: the panel start created intent automatically, successive next steps
+reduced uncertainty, a result captured why the MR had stalled, and the final
+result linked the sent response as URL evidence. Old facts in the panel now
+include a date when they are not from today. `Enter` consistently opens the Work
+Item editor; URL refs are separate actions rather than an alternative meaning
+of the same key.
 
 ## Dogfood Findings
 
 The 2026-07-01, 2026-07-02, and 2026-07-03 dogfood days showed that the core timer loop works, and that Capture Inbox can preserve incoming events without switching away from the current focus. The first post-baseline slice added post-factum correction, entry/window fixes, Day Events, Work Item Events, Activity Zones, explicit Work Item time review evidence, and strict report evidence. The 2026-07-06 dogfood day produced a strong daily-control trace in real use: 7:30:36 tracked, 19 entrances, Activity Zones, Day Events, Work Item Events, Capture Inbox conversion, Work Item day/total time evidence, and zero API/copy/start-stop failures. The 2026-07-07 dogfood day produced useful in-day structure evidence: zones, day events, Work Item events, and a clear long post-break loss of manageability. The 2026-07-08 dogfood day closed the daily-control goal: final saved evidence was clean, measured evening closure took 2:32, and strict `pnpm dogfood:goal-check -- --date 2026-07-08 --no-codex-guidance` passed after `pnpm test`, `pnpm dogfood:preflight`, and strict RC evidence. The 2026-07-09 dogfood day proved the first in-day structure layer on a harder day: 4:31:02 tracked, 13 entrances, 15 Day Events, 12 Work Item Events, four explained recovery gaps, no app/API/copy/start-stop failures, and a final saved report. Strict `pnpm dogfood:goal-check -- --date 2026-07-09 --no-codex-guidance` passed. The same day exposed three follow-up fixes: dispatch wording needed examples, free day thoughts needed an input even without active focus, and gap explanations needed tolerance when an open gap closed a minute later. The first real period report then reviewed 1–9 July as one dataset: 39:53:26 tracked, 105 entrances, 28 Day Events, 16 contextual Work Item Events, 5 captures, and 19 significant gaps. It exposed nine old unexplained gaps, sparse-context days, mixed zones, broad Work Items, and the limits of selecting future focus without semantic completion state.
+
+The 15–16 July gate accepted Operational Reality on real work. On 15 July the
+projection was used five times, exposed `meeting-tail`, carried Reflection
+follow-up, and preserved a full evidence-backed causal story for an anonymized
+real merge-request inquiry.
+On 16 July the day contract narrowed work to the Rome growth track and PPP;
+coordination fell to 7:18 while the selected directions received more than five
+hours. Across both days the strict gate found 11 panel starts and all required
+evidence. The same run found a 9:05 overlap between two historical blocks;
+Timeskein now refuses that state for new corrections and refuses to call old
+overlapping data trustworthy.
 
 High-signal findings:
 
@@ -462,11 +608,26 @@ On multi-monitor macOS setups, the tray/status item is controlled by the system 
 - Settings UI is not implemented yet.
 - Agent lifecycle is minimal: embedded startup works, but production-grade diagnostics/restart handling are not done.
 - Sync, SourceNodes, Context Capture, and Evidence-Mode are future levels, not current functionality.
+- A hidden macOS window still cannot reliably be restored through `Cmd+Tab`; the menu-bar item remains the dependable entrypoint.
+- The UI is dark-only. A light theme remains planned polish.
+- The journal lacks a dedicated `artifact/material` evidence kind and a permanent chronological thought workspace.
+- Dispatching and Operational Reality are both useful but still separate: dispatching uses free text rather than selecting Work Items/Tracks from the projection.
+- Reflection follow-up is shown only for points with an unresolved review decision; the UI does not yet explain this eligibility or re-open the latest saved follow-up.
+- Gap explanations are stored as Day Events and can still produce competing classifications instead of a single corrected gap entity.
 
 ## Next Engineering Steps
 
-1. Use the accepted P0 report to define distinct weekly, sprint, and performance-review profiles. Keep facts, interpretations, and decisions separate in every profile.
-2. Add a saved Reflection Session or equivalent decision artifact so selected focus points and dismissed candidates survive the report conversation.
-3. Decide the smallest semantic model needed to distinguish active, completed, reactive, and parked tracks. Add filters and Tracks/Labels only from the concrete slices exposed by the real report.
-4. Keep in-day structure polish in the backlog: larger multi-line note artifacts, calmer review of many observations, clearer distinction between quick timestamped events and longer working notes.
-5. Improve navigation polish exposed by dogfood when it starts blocking trust: search normalization for mixed Cyrillic/Latin lookalikes such as `sync` / `сynс`, light theme, and a more reliable upper/lower panel resizing experience.
+The semantic-history, evidence-backed Track story, Causal Work Spine, and
+Operational Reality v1 gates are accepted. The next goal has not been selected
+yet.
+
+Dogfood leaves three credible candidates: converge Operational Reality with the
+day contract and inventory; build a Working Memory Bridge for chronological
+thoughts, artifacts, stages, and explicit outcomes; or run the bounded Context
+Capture Probe to test whether automatic context improves re-entry enough to
+justify its privacy and noise cost. The choice should be made from the accepted
+M1 evidence rather than from architecture alone.
+
+After those gates, the planned capabilities are Context Fabric, explainable Episodes/Threads, in-app reflection and cited private intelligence, multi-device continuity, and opt-in Full Context. [Roadmap 0005](roadmap/0005-causal-work-memory-roadmap.md) and [RFC-0009](rfc/0009-causal-work-memory-and-operational-reality.md) are the current source of direction.
+
+Navigation polish remains backlog work unless it blocks daily trust: mixed Cyrillic/Latin search normalization such as `sync` / `сynс`, light theme, and more reliable upper/lower panel resizing.

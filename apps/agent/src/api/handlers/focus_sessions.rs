@@ -8,8 +8,8 @@ use uuid::Uuid;
 
 use crate::api::handlers::RpcResponse;
 use crate::domain::{
-    ActivityZone, AppEvent, AppEventKind, AppEventSource, FocusSession, FocusSessionState,
-    FocusSessionView, WorkItem, WorkItemState, WorkItemType,
+    ActivityZone, AppEvent, AppEventKind, AppEventSource, CausalRecordKind, FocusSession,
+    FocusSessionState, FocusSessionView, NewCausalRecord, WorkItem, WorkItemState, WorkItemType,
 };
 use crate::AppState;
 
@@ -40,6 +40,17 @@ pub async fn handle_focus_start(
     request_id: &str,
 ) -> Result<serde_json::Value, RpcResponse> {
     let requested_work_item_id = parse_optional_uuid(params.get("work_item_id"), request_id)?;
+    let requested_activity_zone = match params.get("activity_zone").and_then(|value| value.as_str())
+    {
+        Some(value) => Some(ActivityZone::from_str(value).ok_or_else(|| {
+            RpcResponse::error(
+                request_id.to_string(),
+                "validation_error",
+                "Invalid activity zone",
+            )
+        })?),
+        None => None,
+    };
     let target_seconds = params
         .get("target_seconds")
         .and_then(|value| value.as_i64())
@@ -61,7 +72,7 @@ pub async fn handle_focus_start(
     let state = state.write().await;
 
     let mut reused_work_item = false;
-    let linked_work_item = if let Some(work_item_id) = requested_work_item_id {
+    let mut linked_work_item = if let Some(work_item_id) = requested_work_item_id {
         state
             .db
             .get_work_item(work_item_id)
@@ -90,7 +101,7 @@ pub async fn handle_focus_start(
             let item = WorkItem::new(
                 title.clone(),
                 Some(WorkItemType::Task),
-                Some(ActivityZone::Work),
+                Some(requested_activity_zone.unwrap_or(ActivityZone::Work)),
                 Some(WorkItemState::Unknown),
                 None,
             );
@@ -100,6 +111,20 @@ pub async fn handle_focus_start(
             item
         }
     };
+    if let Some(activity_zone) = requested_activity_zone {
+        if linked_work_item.activity_zone != activity_zone {
+            linked_work_item.activity_zone = activity_zone;
+            linked_work_item.updated_at = Utc::now();
+            state
+                .db
+                .update_work_item(&linked_work_item)
+                .await
+                .map_err(|e| {
+                    RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
+                })?;
+        }
+    }
+
     let work_item_id = Some(linked_work_item.id);
     let work_item_title = Some(linked_work_item.title.clone());
     let activity_zone = linked_work_item.activity_zone;
@@ -161,6 +186,23 @@ pub async fn handle_focus_start(
 
     let session = FocusSession::new(title, work_item_id, activity_zone, target_seconds);
     state.db.create_focus_session(&session).await.map_err(|e| {
+        RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
+    })?;
+    state
+        .db
+        .snapshot_focus_session_semantics(session.id, work_item_id)
+        .await
+        .map_err(|e| {
+            RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
+        })?;
+    let mut causal = NewCausalRecord::for_work_item(linked_work_item.id, CausalRecordKind::Intent);
+    causal.text = Some(format!("Начат фокус: {}", linked_work_item.title));
+    causal.focus_session_id = Some(session.id);
+    causal.correlation_id = telemetry_action_id
+        .clone()
+        .or_else(|| Some(session.id.to_string()));
+    causal.payload = serde_json::json!({ "origin": "focus.start" });
+    state.db.create_causal_record(causal).await.map_err(|e| {
         RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
     })?;
 
@@ -314,6 +356,29 @@ pub async fn handle_focus_update(
         ));
     }
 
+    if let Some(started_at) = requested_started_at {
+        session.started_at = started_at;
+    }
+    if let Some(stopped_at) = requested_stopped_at {
+        session.stopped_at = Some(stopped_at);
+    }
+    let stopped_at = session.stopped_at.ok_or_else(|| {
+        RpcResponse::error(
+            request_id.to_string(),
+            "validation_error",
+            "Stopped focus session must have stopped_at",
+        )
+    })?;
+    validate_focus_interval(session.started_at, stopped_at, request_id)?;
+    validate_no_focus_overlap(
+        &state,
+        session.started_at,
+        stopped_at,
+        Some(session.id),
+        request_id,
+    )
+    .await?;
+
     let (title, work_item_id, updated_work_item_title, assignment_activity_zone) =
         resolve_focus_assignment(
             &state,
@@ -336,26 +401,18 @@ pub async fn handle_focus_update(
     if let Some(note) = requested_note {
         session.note = note;
     }
-    if let Some(started_at) = requested_started_at {
-        session.started_at = started_at;
-    }
-    if let Some(stopped_at) = requested_stopped_at {
-        session.stopped_at = Some(stopped_at);
-    }
-
-    let stopped_at = session.stopped_at.ok_or_else(|| {
-        RpcResponse::error(
-            request_id.to_string(),
-            "validation_error",
-            "Stopped focus session must have stopped_at",
-        )
-    })?;
-    validate_focus_interval(session.started_at, stopped_at, request_id)?;
     session.updated_at = Utc::now();
 
     state.db.update_focus_session(&session).await.map_err(|e| {
         RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
     })?;
+    state
+        .db
+        .snapshot_focus_session_semantics(session.id, session.work_item_id)
+        .await
+        .map_err(|e| {
+            RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
+        })?;
 
     let view = FocusSessionView::from_session(&session, updated_work_item_title, Utc::now());
     Ok(serde_json::to_value(view).unwrap())
@@ -389,6 +446,7 @@ pub async fn handle_focus_create_stopped(
     let requested_note = parse_nullable_note(params.get("note"), request_id)?;
 
     let state = state.write().await;
+    validate_no_focus_overlap(&state, started_at, stopped_at, None, request_id).await?;
     let (title, work_item_id, work_item_title, assignment_activity_zone) =
         resolve_focus_assignment(
             &state,
@@ -419,6 +477,26 @@ pub async fn handle_focus_create_stopped(
     state.db.create_focus_session(&session).await.map_err(|e| {
         RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
     })?;
+    if let Some(work_item_id) = session.work_item_id {
+        let mut causal = NewCausalRecord::for_work_item(work_item_id, CausalRecordKind::Intent);
+        causal.text = Some(format!("Добавлен фокус-блок: {}", session.title));
+        causal.focus_session_id = Some(session.id);
+        causal.occurred_at = session.started_at;
+        causal.payload = serde_json::json!({
+            "origin": "focus.create_stopped",
+            "post_factum": true,
+        });
+        state.db.create_causal_record(causal).await.map_err(|e| {
+            RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
+        })?;
+    }
+    state
+        .db
+        .snapshot_focus_session_semantics(session.id, session.work_item_id)
+        .await
+        .map_err(|e| {
+            RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
+        })?;
 
     let view = FocusSessionView::from_session(&session, work_item_title, now);
     Ok(serde_json::to_value(view).unwrap())
@@ -510,6 +588,20 @@ pub async fn handle_focus_split(
     state.db.create_focus_session(&right).await.map_err(|e| {
         RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
     })?;
+    state
+        .db
+        .snapshot_focus_session_semantics(left.id, left.work_item_id)
+        .await
+        .map_err(|e| {
+            RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
+        })?;
+    state
+        .db
+        .snapshot_focus_session_semantics(right.id, right.work_item_id)
+        .await
+        .map_err(|e| {
+            RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
+        })?;
 
     Ok(serde_json::json!({
         "left": FocusSessionView::from_session(&left, left_work_item_title, now),
@@ -731,6 +823,35 @@ fn validate_focus_interval(
             request_id.to_string(),
             "validation_error",
             "Focus block end must be after start",
+        ));
+    }
+
+    Ok(())
+}
+
+async fn validate_no_focus_overlap(
+    state: &AppState,
+    started_at: DateTime<Utc>,
+    stopped_at: DateTime<Utc>,
+    exclude_id: Option<Uuid>,
+    request_id: &str,
+) -> Result<(), RpcResponse> {
+    let overlap = state
+        .db
+        .find_overlapping_focus_session(started_at, stopped_at, exclude_id, Utc::now())
+        .await
+        .map_err(|e| {
+            RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
+        })?;
+
+    if let Some((session, work_item_title)) = overlap {
+        let title = work_item_title.unwrap_or(session.title);
+        return Err(RpcResponse::error(
+            request_id.to_string(),
+            "validation_error",
+            &format!(
+                "Интервал пересекается с фокус-блоком «{title}». Сначала исправь границы существующего блока."
+            ),
         ));
     }
 

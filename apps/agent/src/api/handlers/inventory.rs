@@ -71,11 +71,17 @@ pub async fn handle_inventory_list(
             .get_refs_for_work_item(item.id)
             .await
             .unwrap_or_default();
-        views.push(WorkItemView::from_work_item_with_stats(
+        let semantics = state
+            .db
+            .get_work_item_semantics(item.id)
+            .await
+            .unwrap_or_default();
+        views.push(WorkItemView::from_work_item_with_stats_and_semantics(
             item,
             refs,
             *today_totals.get(&item.id).unwrap_or(&0),
             *total_totals.get(&item.id).unwrap_or(&0),
+            semantics,
         ));
     }
 
@@ -124,8 +130,13 @@ pub async fn handle_inventory_get(
         .get_refs_for_work_item(item.id)
         .await
         .unwrap_or_default();
+    let semantics = state
+        .db
+        .get_work_item_semantics(item.id)
+        .await
+        .unwrap_or_default();
 
-    let view = WorkItemView::from_work_item(&item, refs);
+    let view = WorkItemView::from_work_item_with_stats_and_semantics(&item, refs, 0, 0, semantics);
     Ok(serde_json::to_value(view).unwrap())
 }
 

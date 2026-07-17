@@ -11,6 +11,7 @@ The system answers questions like:
 - "How much active focus time did I actually have today?"
 - "What tried to interrupt me, and did I handle it later?"
 - "Where did the tracking tool itself create friction today?"
+- "What changed after my action, why do I trust that, and what should happen next?"
 
 ### Core Principles
 
@@ -37,14 +38,17 @@ The system answers questions like:
 4. **[Dogfood Release Candidate](dogfood-release-candidate.md)** - Gate for deciding whether Timeskein can replace Session in daily use
 5. **[Dogfood Release Baseline](dogfood-release-baseline.md)** - Accepted 2026-07-03 dogfood baseline and known limitations
 6. **[Periodic Report Dogfood](dogfood-periodic-report.md)** - First real multi-day report and evidence for the P0 periodic-reflection slice
-7. **[Glossary](glossary.md)** - Definitions of all terms used
-8. **[Architecture Decision Records](adr/README.md)** - Key architectural choices
-9. **[Technical Specifications (RFC)](rfc/README.md)** - Detailed technical designs
-10. **[MVP User Stories](mvp/README.md)** - Features and acceptance criteria
-11. **[opskarta Roadmap](roadmap/opskarta.md)** - Current machine-checkable execution plan
-12. **[In-Day Structure Roadmap](roadmap/0004-in-day-structure-roadmap.md)** - Accepted in-day thoughts, day observations, zone visibility, dispatching, and gap classification layer
-13. **[Periodic Reflection Roadmap](roadmap/0003-periodic-reflection-roadmap.md)** - Active arbitrary-period reports and reflection loop
-14. **[Roadmap Archive](roadmap/README.md)** - Older roadmap documents and related links
+7. **[Operational Reality Dogfood](dogfood-operational-reality.md)** - Accepted two-day evidence, protocol, and executable gate
+8. **[Causal Work Spine Acceptance Audit](acceptance-causal-work-spine-v1.md)** - Requirement-by-requirement implementation and real-use evidence
+9. **[Glossary](glossary.md)** - Definitions of all terms used
+10. **[Architecture Decision Records](adr/README.md)** - Key architectural choices
+11. **[Technical Specifications (RFC)](rfc/README.md)** - Detailed technical designs
+12. **[MVP User Stories](mvp/README.md)** - Features and acceptance criteria
+13. **[Causal Work Memory Roadmap](roadmap/0005-causal-work-memory-roadmap.md)** - Current north-star route, horizons, assumptions, and risk gates
+14. **[opskarta Roadmap](roadmap/opskarta.md)** - Current machine-checkable capability map
+15. **[In-Day Structure Roadmap](roadmap/0004-in-day-structure-roadmap.md)** - Accepted in-day thoughts, zone visibility, dispatching, and gap classification layer
+16. **[Periodic Reflection Roadmap](roadmap/0003-periodic-reflection-roadmap.md)** - Accepted period reports, semantic history, evidence, and reflection loop
+17. **[Roadmap Index](roadmap/README.md)** - Roadmap status and related links
 
 ---
 
@@ -62,6 +66,8 @@ All documentation below is the **source of truth** for the project.
 | [dogfood-release-candidate.md](dogfood-release-candidate.md) | Release-candidate gate for daily Session replacement |
 | [dogfood-release-baseline.md](dogfood-release-baseline.md) | Accepted 2026-07-03 baseline for daily macOS use and known limitations |
 | [dogfood-periodic-report.md](dogfood-periodic-report.md) | First real 2026-07-01..2026-07-10 period review, decision value, and known P0 limitations |
+| [dogfood-operational-reality.md](dogfood-operational-reality.md) | Accepted two-day Operational Reality evidence, protocol, and executable gate |
+| [acceptance-causal-work-spine-v1.md](acceptance-causal-work-spine-v1.md) | Requirement-by-requirement implementation and real-use audit |
 | [glossary.md](glossary.md) | Definitions of all terms and entities |
 
 ### Architecture Decision Records (ADR)
@@ -71,6 +77,7 @@ All documentation below is the **source of truth** for the project.
 | [ADR-0001](adr/0001-initial-architecture.md) | Accepted | Initial architecture for MVP |
 | [ADR-0002](adr/0002-mvp-manual-first.md) | Accepted | MVP = Manual-first (Level 0) |
 | [ADR-0003](adr/0003-evidence-mode-opt-in.md) | Proposed | Evidence-Mode as opt-in Level 3 |
+| [ADR-0004](adr/0004-user-truth-and-derived-inference.md) | Accepted | User-confirmed state is authoritative; observations and machine interpretations keep provenance and remain correctable |
 
 ### Technical Specifications (RFC)
 
@@ -84,6 +91,7 @@ All documentation below is the **source of truth** for the project.
 | [RFC-0006](rfc/0006-retention-ttl-distillation.md) | Level 2+ | Retention, TTL, Distillation |
 | [RFC-0007](rfc/0007-evidence-mode-screen-evidence-source-node.md) | Level 3 | Screen Evidence Source Node (Evidence-Mode) |
 | [RFC-0008](rfc/0008-periodic-reports-and-reflection.md) | Level 0+ / Level 2+ | Periodic reports, arbitrary-range exports, Track/Label slices, LLM packs, and reflection loops |
+| [RFC-0009](rfc/0009-causal-work-memory-and-operational-reality.md) | Accepted v1 / Level 0+ to Level 3 | Accepted causal spine and Operational Reality v1, plus provenance, incremental migration, and the future bounded context probe |
 
 ### User Stories
 
@@ -104,6 +112,7 @@ All documentation below is the **source of truth** for the project.
 | [0002-level3-evidence-mode-roadmap.md](roadmap/0002-level3-evidence-mode-roadmap.md) | Level 3 Evidence-Mode roadmap (post-MVP) |
 | [0003-periodic-reflection-roadmap.md](roadmap/0003-periodic-reflection-roadmap.md) | Periodic reports, Track/Label slices, Reflection Sessions, and performance-review evidence |
 | [0004-in-day-structure-roadmap.md](roadmap/0004-in-day-structure-roadmap.md) | Active in-day thoughts, day observations, live zone balance, dispatching, and gap classification |
+| [0005-causal-work-memory-roadmap.md](roadmap/0005-causal-work-memory-roadmap.md) | Current north-star route from accepted manual foundation to causal steering, context fabric, private intelligence, continuity, and opt-in Full Context |
 
 ---
 

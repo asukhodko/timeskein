@@ -12,6 +12,9 @@
 - [ADR-0001: Начальная архитектура](adr/0001-initial-architecture.md)
 - [ADR-0002: MVP = Manual-first](adr/0002-mvp-manual-first.md)
 - [ADR-0003: Evidence-Mode Opt-in](adr/0003-evidence-mode-opt-in.md) (Level 3)
+- [ADR-0004: Ручная истина и производные выводы](adr/0004-user-truth-and-derived-inference.md)
+- [RFC-0009: Causal Work Memory and Operational Reality](rfc/0009-causal-work-memory-and-operational-reality.md)
+- [Roadmap 0005: Causal Work Memory](roadmap/0005-causal-work-memory-roadmap.md)
 - [User Story: Ручной инвентарь](mvp/02_user_story_manual_inventory.md)
 - [Current Implementation](current-implementation.md)
 
@@ -19,12 +22,16 @@
 
 ## Текущее состояние реализации
 
-По состоянию на 2026-06-30 в репозитории есть рабочий baseline для:
+По состоянию на 2026-07-10 в репозитории есть рабочий baseline для:
 
 - browser development mode: React UI + mock server;
 - macOS desktop mode: Tauri `.app` со встроенным Rust agent;
 - SQLite-хранилища в `~/Library/Application Support/Timeskein/`;
 - Local API на динамическом `127.0.0.1:<port>/api`, который фронтенд получает через Tauri-команду `get_api_url`.
+- дневного контроля, внутридневной самокоординации и исправления таймлайна;
+- произвольных периодических отчётов и сохраняемых Reflection Sessions;
+- Tracks/Labels с историческими снимками;
+- typed evidence и проверки последствий прежних решений Track.
 
 Windows packaging, Android, sync, SourceNodes, Context Capture и Evidence-Mode пока не реализованы.
 
@@ -40,6 +47,30 @@ Windows packaging, Android, sync, SourceNodes, Context Capture и Evidence-Mode 
 - "Какие темы/проекты доминируют и какие хвосты не закрываются?"
 
 Название — метафора мотка нитей: активность запутана во времени и смыслах, а Timeskein помогает этот моток **распутывать**.
+
+## Текущая северная звезда
+
+Timeskein развивается в локальную причинную память работы:
+
+```text
+намерение -> эпизод работы -> контекст -> изменение
+           -> доказательство -> решение -> следующий шаг
+```
+
+Manual-first слой является первым источником этой памяти. Operational Reality
+уже даёт первую текущую проекцию, периодические отчёты являются временной
+проекцией, будущие SourceNodes заполнят наблюдаемые пробелы, а ИИ сможет строить
+только объяснимые и исправляемые производные выводы.
+
+Маршрут строится обратным проектированием от дальней цели. Privacy,
+provenance, историческая честность и ручная коррекция проектируются до
+автоматического сбора. Сам риск автоматического контекста проверяется ранним
+bounded probe внутри ручного Focus Session, а полная SourceNode-платформа и
+Evidence Mode появляются только после доказанной пользы.
+
+См. [ADR-0004](adr/0004-user-truth-and-derived-inference.md),
+[RFC-0009](rfc/0009-causal-work-memory-and-operational-reality.md) и
+[Roadmap 0005](roadmap/0005-causal-work-memory-roadmap.md).
 
 ## Зачем это нужно
 
@@ -95,6 +126,12 @@ Timeskein проектируется как система, которая:
 
 **Принцип:** ручное состояние (`state`, `note`) остаётся источником истины пользователя на всех уровнях.
 
+Уровни зрелости остаются архитектурной картой, но больше не задают строго
+линейный порядок разработки. Небольшой Context Probe может появиться раньше
+полной Sync или SourceNode-платформы, чтобы проверить риск дальней концепции.
+Дальний слой не считается принятым, пока его пользовательская ценность и
+privacy-инварианты не прошли отдельный gate.
+
 ## Модель мира (целевое состояние)
 
 ### Основные сущности
@@ -104,6 +141,10 @@ Timeskein проектируется как система, которая:
 - **Event** — атом наблюдения:
   - **WorkItemEvent** — изменение Work Item (Level 0+)
   - **ContextEvent** — событие внешнего контекста (Level 2+)
+- **Observation** — утверждение о том, что источник видел в конкретное время;
+  не является утверждением о намерении, ценности или результате.
+- **Machine Interpretation** — пересчитываемый вывод с provenance, confidence,
+  версией и возможностью ручной коррекции.
 - **Artifact** — вложение к событию (скриншот, текст, транскрипт) — опционально (Level 3).
 - **Evidence Artifact** — chunk screen evidence с TTL (Level 3, opt-in). Канонический тип = chunk.
 - **Episode** — интервал с единым контекстом (производное, Level 2+).
@@ -113,6 +154,8 @@ Timeskein проектируется как система, которая:
 - **Distraction Mark** — авто-mark для классификации off-task активности (Level 3).
 - **Track** — долгий смысловой контейнер для отчётов по проекту, инициативе, роли или человеку.
 - **Reflection Session** — сохранённый обзор периода: выводы, решения и следующие точки фокуса.
+- **Operational Reality** — объяснимая текущая проекция обязательств, фактов,
+  решений и следующих действий; не отдельный список задач.
 
 ### Capture Profile
 
@@ -164,6 +207,8 @@ Timeskein проектируется как система, которая:
 - **Canonical** — события/журналы (append-only, объяснимые).
 - **Derived** — эпизоды/нити/индексы (пересчитываемые).
 - **Ephemeral** — тяжёлые артефакты (с TTL).
+- **Control** — разрешения, политики, pairing, pause/purge/revocation и
+  настройки локальной/внешней обработки.
 
 ### Плоскости системы
 
@@ -218,7 +263,13 @@ MVP ориентирован на одну функцию:
 
 В текущей macOS-реализации TS-AGENT встроен в Tauri-процесс, но сохраняет отдельный crate, SQLite-хранилище и Local API boundary. Это MVP-допущение; целевая архитектура допускает вынос агента в отдельный процесс.
 
-## Дальнейшее расширение (после MVP)
+## Дальнейшее расширение (архитектурные уровни)
+
+Уровни ниже описывают способности, а не обязательную очередь. Текущий порядок
+задаёт [Roadmap 0005](roadmap/0005-causal-work-memory-roadmap.md): причинный
+стержень и Operational Reality, затем ранний bounded probe, после него
+Context Fabric, объяснимые Episodes/Threads, private intelligence и только по
+реальной потребности sync и Full Context.
 
 ### Level 1: Sync
 - Синхронизация между устройствами
@@ -248,3 +299,4 @@ MVP ориентирован на одну функцию:
 - RFC-0006: Retention/TTL + Distillation
 - RFC-0007: Screen Evidence Source Node (Evidence-Mode)
 - RFC-0008: Periodic Reports and Reflection Loops
+- RFC-0009: Causal Work Memory and Operational Reality

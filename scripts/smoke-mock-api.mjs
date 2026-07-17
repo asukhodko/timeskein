@@ -43,6 +43,18 @@ try {
     ...process.env,
     TIMESKEIN_API_URL: apiUrl,
   });
+  await run("node", ["scripts/smoke-semantic-api.mjs"], {
+    ...process.env,
+    TIMESKEIN_API_URL: apiUrl,
+  });
+  await run("node", ["scripts/smoke-evidence-api.mjs"], {
+    ...process.env,
+    TIMESKEIN_API_URL: apiUrl,
+  });
+  await run("node", ["scripts/smoke-operational-reality-api.mjs"], {
+    ...process.env,
+    TIMESKEIN_API_URL: apiUrl,
+  });
 
   console.log(
     JSON.stringify(

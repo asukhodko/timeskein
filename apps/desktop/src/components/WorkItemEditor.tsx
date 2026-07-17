@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import type { ActivityZone, WorkItemType, WorkItemView } from '@timeskein/contracts'
 import { useUpdateWorkItem } from '../hooks/useInventory'
+import SemanticFields from './SemanticFields'
 
 interface WorkItemEditorProps {
   item: WorkItemView
@@ -28,6 +29,8 @@ export default function WorkItemEditor({ item, onClose }: WorkItemEditorProps) {
   const [type, setType] = useState<WorkItemType>(item.type ?? 'task')
   const [activityZone, setActivityZone] = useState<ActivityZone>(item.activity_zone)
   const [note, setNote] = useState(item.note ?? '')
+  const [trackId, setTrackId] = useState(item.track?.id ?? '')
+  const [labelIds, setLabelIds] = useState(item.labels?.map((label) => label.id) ?? [])
   const updateMutation = useUpdateWorkItem()
 
   const handleSubmit = (event: FormEvent) => {
@@ -42,6 +45,8 @@ export default function WorkItemEditor({ item, onClose }: WorkItemEditorProps) {
         type,
         activity_zone: activityZone,
         note: note.trim() || null,
+        track_id: trackId || null,
+        label_ids: labelIds,
       },
       {
         onSuccess: onClose,
@@ -56,7 +61,7 @@ export default function WorkItemEditor({ item, onClose }: WorkItemEditorProps) {
       onClick={onClose}
     >
       <form
-        className="w-full max-w-lg rounded-lg border border-gray-700 bg-gray-800 p-5 shadow-xl"
+        className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-lg border border-gray-700 bg-gray-800 p-5 shadow-xl"
         onClick={(event) => event.stopPropagation()}
         onSubmit={handleSubmit}
       >
@@ -101,6 +106,15 @@ export default function WorkItemEditor({ item, onClose }: WorkItemEditorProps) {
             ))}
           </select>
         </label>
+
+        <div className="mb-4">
+          <SemanticFields
+            trackId={trackId}
+            labelIds={labelIds}
+            onTrackChange={setTrackId}
+            onLabelsChange={setLabelIds}
+          />
+        </div>
 
         <label className="mb-4 grid gap-1 text-sm text-gray-300">
           <span>Заметка</span>

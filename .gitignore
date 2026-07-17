@@ -54,6 +54,7 @@ timeskein-dogfood-report-*.md
 timeskein-dogfood-rc-check-*.md
 timeskein-period-report-*.md
 timeskein-period-report-*.json
+timeskein-reflection-*.json
 
 # Database files (local development)
 *.db

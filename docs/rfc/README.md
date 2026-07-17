@@ -19,6 +19,7 @@ An RFC is a detailed technical specification for a feature or system component. 
 | [RFC-0006](0006-retention-ttl-distillation.md) | Draft | Level 2+ | Retention, TTL, Distillation |
 | [RFC-0007](0007-evidence-mode-screen-evidence-source-node.md) | Draft | Level 3 | Screen Evidence Source Node (Evidence-Mode) |
 | [RFC-0008](0008-periodic-reports-and-reflection.md) | Draft | Level 0+ / Level 2+ | Periodic Reports and Reflection Loops |
+| [RFC-0009](0009-causal-work-memory-and-operational-reality.md) | Implemented | Strategic / Level 0+ to Level 3 | Accepted Causal Work Memory v1, Operational Reality, provenance, incremental migration, and bounded Context Probe |
 
 ## Maturity Levels
 

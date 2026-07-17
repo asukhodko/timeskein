@@ -86,6 +86,25 @@ export default function WorkItemCard({
             >
               {formatActivityZoneBadge(item.activity_zone)}
             </span>
+            {item.track && (
+              <span
+                className="max-w-48 truncate rounded border border-cyan-700/50 bg-cyan-950/30 px-1.5 py-0.5 text-cyan-300"
+                title={item.track.path.map((node) => node.title).join(' / ')}
+              >
+                {item.track.title}
+              </span>
+            )}
+            {(item.labels ?? []).slice(0, 2).map((label) => (
+              <span
+                key={label.id}
+                className="rounded border border-fuchsia-800/50 px-1.5 py-0.5 text-fuchsia-300"
+              >
+                #{label.title}
+              </span>
+            ))}
+            {(item.labels?.length ?? 0) > 2 && (
+              <span className="text-gray-500">+{(item.labels?.length ?? 0) - 2}</span>
+            )}
             {timeBadges.map((badge) => (
               <span
                 key={badge.kind}

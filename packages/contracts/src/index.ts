@@ -27,10 +27,187 @@ export type WorkItemType = "task" | "project" | "question";
  */
 export type ActivityZone = "work" | "coordination" | "recovery" | "idle" | "personal";
 
+export interface TrackPathNode {
+  id: string;
+  title: string;
+}
+
+export interface TrackView {
+  id: string;
+  title: string;
+  parent_track_id?: string;
+  path: TrackPathNode[];
+  archived: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface LabelView {
+  id: string;
+  title: string;
+  archived: boolean;
+}
+
+export interface WorkItemSemanticsView {
+  track?: TrackView;
+  labels: LabelView[];
+}
+
+export interface TaxonomyListResponse {
+  tracks: TrackView[];
+  labels: LabelView[];
+  updated_at: string;
+}
+
 /**
  * Type of reference attached to a work item
  */
 export type RefKind = "url" | "file_path" | "issue_key" | "custom";
+
+export type EvidenceKind = "result" | "decision" | "blocker" | "next_step" | "observation";
+
+export interface EvidenceRefSnapshotView {
+  id: string;
+  ref_id?: string;
+  kind: RefKind;
+  value: string;
+  captured_at: string;
+  provenance: "captured";
+}
+
+export interface EvidenceEntryView {
+  kind: EvidenceKind;
+  focus_session_id?: string;
+  refs: EvidenceRefSnapshotView[];
+  captured_at: string;
+  provenance: "captured";
+}
+
+export type OperationalSubjectKind = "work_item" | "track" | "capture";
+export type OperationalState =
+  | "active"
+  | "waiting"
+  | "blocked"
+  | "parked"
+  | "reactive"
+  | "completed"
+  | "stale-important"
+  | "meeting-tail"
+  | "unknown";
+export type CausalRecordKind =
+  | "intent"
+  | "state_assertion"
+  | "result"
+  | "decision"
+  | "next_action"
+  | "confirmation"
+  | "correction";
+export type CausalSource = "user" | "system" | "reflection" | "legacy";
+export type CausalProvenance = "confirmed" | "observed" | "derived" | "legacy_current";
+export type NextActionStatus = "open" | "completed" | "replaced" | "dismissed";
+
+export interface CausalRecordView {
+  id: string;
+  subject_kind: OperationalSubjectKind;
+  subject_id: string;
+  work_item_id?: string;
+  track_id?: string;
+  capture_id?: string;
+  kind: CausalRecordKind;
+  operational_state?: OperationalState;
+  next_action_status?: NextActionStatus;
+  text?: string;
+  occurred_at: string;
+  recorded_at: string;
+  source: CausalSource;
+  provenance: CausalProvenance;
+  confidence: number;
+  schema_version: number;
+  device_id: string;
+  correlation_id?: string;
+  supersedes_id?: string;
+  focus_session_id?: string;
+  evidence_event_id?: string;
+  reflection_decision_id?: string;
+  track_snapshot: TrackPathNode[];
+  labels_snapshot: LabelView[];
+  payload: Record<string, unknown>;
+}
+
+export interface OperationalRealityBasisView {
+  kind: string;
+  summary: string;
+  occurred_at: string;
+  source: CausalSource | "user";
+  provenance: CausalProvenance;
+  confidence: number;
+  refs: EvidenceRefSnapshotView[];
+  causal_record_id?: string;
+  evidence_event_id?: string;
+  reflection_decision_id?: string;
+}
+
+export interface OperationalNextActionView {
+  record_id: string;
+  text: string;
+  status: NextActionStatus;
+  occurred_at: string;
+  provenance: CausalProvenance;
+  confidence: number;
+}
+
+export interface OperationalRealityItemView {
+  id: string;
+  subject_kind: OperationalSubjectKind;
+  subject_id: string;
+  title: string;
+  work_item_id?: string;
+  track_id?: string;
+  capture_id?: string;
+  state: OperationalState;
+  state_provenance: CausalProvenance;
+  state_confirmed: boolean;
+  confidence: number;
+  state_record_id?: string;
+  why_visible: string[];
+  facts: OperationalRealityBasisView[];
+  unknowns: string[];
+  last_significant_change?: OperationalRealityBasisView;
+  next_action?: OperationalNextActionView;
+  track_path: TrackPathNode[];
+  labels: LabelView[];
+  can_start_focus: boolean;
+  requires_attention: boolean;
+  last_touched_at: string;
+}
+
+export interface OperationalRealitySummaryView {
+  total: number;
+  requiring_attention: number;
+  confirmed: number;
+  derived: number;
+  legacy_current: number;
+  without_next_action: number;
+  by_state: Record<string, number>;
+}
+
+export interface OperationalRealityView {
+  as_of: string;
+  items: OperationalRealityItemView[];
+  summary: OperationalRealitySummaryView;
+  updated_at: string;
+}
+
+export interface CausalRecordListResponse {
+  records: CausalRecordView[];
+  total: number;
+  updated_at: string;
+}
+
+export interface OperationalRealityMutationResponse {
+  record: CausalRecordView;
+  reality: OperationalRealityView;
+}
 
 /**
  * Work item view returned by the API
@@ -47,6 +224,8 @@ export interface WorkItemView {
   refs: RefView[];
   today_active_seconds: number;
   total_active_seconds: number;
+  track?: TrackView;
+  labels?: LabelView[];
   created_at: string;  // ISO 8601
   updated_at: string;  // ISO 8601
   last_seen_at?: string;  // ISO 8601
@@ -74,6 +253,7 @@ export interface WorkItemEventView {
   text?: string;
   focus_session_id?: string;
   payload?: Record<string, unknown>;
+  evidence?: EvidenceEntryView;
 }
 
 export type DayEventKind = "note_added";
@@ -449,6 +629,8 @@ export interface WorkItemCreateParams {
   activity_zone?: ActivityZone;
   state?: WorkItemState;
   note?: string;
+  track_id?: string | null;
+  label_ids?: string[];
 }
 
 export interface WorkItemCreateResponse {
@@ -469,17 +651,53 @@ export interface WorkItemUpdateParams {
   type?: WorkItemType;
   activity_zone?: ActivityZone;
   note?: string | null;
+  track_id?: string | null;
+  label_ids?: string[];
+}
+
+export interface WorkItemSetSemanticsParams {
+  id: string;
+  track_id?: string | null;
+  label_ids: string[];
+}
+
+export interface TrackCreateParams {
+  title: string;
+  parent_track_id?: string;
+}
+
+export interface TrackUpdateParams {
+  id: string;
+  title?: string;
+  parent_track_id?: string | null;
+}
+
+export interface LabelCreateParams {
+  title: string;
+}
+
+export interface LabelUpdateParams {
+  id: string;
+  title: string;
 }
 
 export interface WorkItemAddEventParams {
   id: string;
   text: string;
   focus_session_id?: string;
+  evidence_kind?: EvidenceKind;
+  ref_ids?: string[];
+  new_ref?: {
+    kind: RefKind;
+    value: string;
+    is_primary?: boolean;
+  };
 }
 
 export interface WorkItemUpdateEventParams {
   id: string;
   text: string;
+  evidence_kind?: EvidenceKind;
 }
 
 export interface WorkItemDeleteEventResponse {
@@ -497,6 +715,41 @@ export interface WorkItemEventsResponse {
   events: WorkItemEventView[];
   total: number;
   updated_at: string;
+}
+
+export interface OperationalRealityListParams {
+  as_of?: string;
+}
+
+export interface CausalRecordListParams {
+  subject_kind?: OperationalSubjectKind;
+  subject_id?: string;
+  from?: string;
+  to?: string;
+}
+
+export interface OperationalRealitySetStateParams {
+  subject_kind: OperationalSubjectKind;
+  subject_id: string;
+  state: OperationalState;
+  reason?: string;
+  confirmation?: boolean;
+  occurred_at?: string;
+}
+
+export interface OperationalRealitySetNextActionParams {
+  subject_kind: OperationalSubjectKind;
+  subject_id: string;
+  action: "set" | "complete" | "dismiss";
+  text?: string;
+  occurred_at?: string;
+}
+
+export interface OperationalRealityFollowUpDecisionParams {
+  decision_id: string;
+  status: "fulfilled" | "progressed" | "cancelled" | "parked" | "contradicted" | "no_evidence";
+  note?: string;
+  evidence_event_id?: string;
 }
 
 export interface DayEventAddParams {
@@ -531,6 +784,7 @@ export interface DayEventListResponse {
 export interface FocusStartParams {
   title: string;
   work_item_id?: string;
+  activity_zone?: ActivityZone;
   target_seconds?: number;
   telemetry_action_id?: string;
 }

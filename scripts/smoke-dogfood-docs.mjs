@@ -12,13 +12,17 @@ const checkedFiles = [
   "docs/dogfood-release-candidate.md",
   "docs/dogfood-release-baseline.md",
   "docs/dogfood-periodic-report.md",
+  "docs/dogfood-operational-reality.md",
+  "docs/acceptance-causal-work-spine-v1.md",
   "docs/roadmap/README.md",
   "docs/roadmap/0003-periodic-reflection-roadmap.md",
   "docs/roadmap/0004-in-day-structure-roadmap.md",
+  "docs/roadmap/0005-causal-work-memory-roadmap.md",
+  "docs/adr/0004-user-truth-and-derived-inference.md",
+  "docs/rfc/0009-causal-work-memory-and-operational-reality.md",
 ];
 
 const forbiddenPatterns = [
-  /\bblockers?\b/iu,
   /\bhard blockers?\b/iu,
   /\boptional review items?\b/iu,
   /\bReview before report\b/u,
@@ -54,15 +58,20 @@ for (const file of checkedFiles) {
   ) {
     failures.push(`${file}: dogfood protocol does not mention Work Item event draft recovery`);
   }
-  if (file === "docs/index.md" && !text.includes("In-Day Structure Roadmap")) {
-    failures.push(`${file}: documentation index does not link the in-day structure roadmap`);
+  if (
+    file === "docs/index.md" &&
+    (!text.includes("In-Day Structure Roadmap") || !text.includes("Causal Work Memory Roadmap"))
+  ) {
+    failures.push(`${file}: documentation index does not link the accepted and north-star roadmaps`);
   }
   if (
     file === "README.md" &&
     (!text.includes("pnpm report:period -- --from 2026-07-01 --to 2026-07-10") ||
-      !text.includes("Candidates are prompts for conscious review"))
+      !text.includes("Candidates are prompts for conscious review") ||
+      !text.includes("pnpm reflection:save") ||
+      !text.includes("pnpm reflection:list"))
   ) {
-    failures.push(`${file}: period report command or interpretation boundary is missing`);
+    failures.push(`${file}: period report/reflection command or interpretation boundary is missing`);
   }
   if (
     file === "docs/current-implementation.md" &&
@@ -72,11 +81,16 @@ for (const file of checkedFiles) {
   }
   if (
     file === "docs/roadmap/README.md" &&
-    (!text.includes("Keep the accepted daily-control gate green") ||
-      !text.includes("Keep the accepted in-day structure layer useful") ||
-      !text.includes("Continue the active periodic-reflection layer"))
+    (!text.includes("Keep the accepted manual foundation green") ||
+      !text.includes("Use the accepted architecture gate") ||
+      !text.includes("Build on the accepted causal steering layer") ||
+      !text.includes("Operational Workspace convergence") ||
+      !text.includes("Bounded Context Capture Probe") ||
+      !text.includes("Working Memory Bridge") ||
+      !text.includes("no successor is") ||
+      !text.includes("silently committed"))
   ) {
-    failures.push(`${file}: roadmap README does not preserve the current product order`);
+    failures.push(`${file}: roadmap README does not preserve the north-star product order`);
   }
   if (
     file === "docs/roadmap/0003-periodic-reflection-roadmap.md" &&
@@ -95,12 +109,56 @@ for (const file of checkedFiles) {
     failures.push(`${file}: real period dogfood evidence or known limitation is missing`);
   }
   if (
+    file === "docs/dogfood-operational-reality.md" &&
+    (!text.includes("pnpm operational-reality:gate") ||
+      !text.includes("намерение -> результат с Ref -> следующий шаг") ||
+      !text.includes("Не нужно искусственно использовать все состояния"))
+  ) {
+    failures.push(`${file}: Operational Reality dogfood path or interpretation boundary is missing`);
+  }
+  if (
+    file === "docs/acceptance-causal-work-spine-v1.md" &&
+    (!text.includes("**Принято 2026-07-16.**") ||
+      !text.includes("11/3") ||
+      !text.includes("overlapping_focus_sessions") ||
+      !text.includes("superseded result") ||
+      !text.includes("последний пользовательский критерий остаётся смысловым"))
+  ) {
+    failures.push(`${file}: acceptance audit does not preserve the accepted real-use gate and trust boundary`);
+  }
+  if (
     file === "docs/roadmap/0004-in-day-structure-roadmap.md" &&
     (!text.includes("без параллельной заметки \"Timeskein, день N\"") ||
       !text.includes("потеря управляемости") ||
       !text.includes("уже закрыто: дешёвое закрытие дня"))
   ) {
     failures.push(`${file}: in-day structure roadmap does not preserve the next-layer acceptance criteria`);
+  }
+  if (
+    file === "docs/roadmap/0005-causal-work-memory-roadmap.md" &&
+    (!text.includes("## Северная звезда") ||
+      !text.includes("M1. Causal Work Spine and Operational Reality v1") ||
+      !text.includes("M2. Bounded Context Capture Probe") ||
+      !text.includes("## Риск-гейты") ||
+      !text.includes("не переписывать всю базу на event sourcing"))
+  ) {
+    failures.push(`${file}: north-star roadmap is missing the causal route or risk gates`);
+  }
+  if (
+    file === "docs/adr/0004-user-truth-and-derived-inference.md" &&
+    (!text.includes("Пользовательское состояние остаётся авторитетным") ||
+      !text.includes("Машинная интерпретация является производной"))
+  ) {
+    failures.push(`${file}: user-truth boundary is missing`);
+  }
+  if (
+    file === "docs/rfc/0009-causal-work-memory-and-operational-reality.md" &&
+    (!text.includes("## Причинная цепочка") ||
+      !text.includes("## Operational Reality") ||
+      !text.includes("## Ограниченный Context Probe") ||
+      !text.includes("## Инкрементальная миграция"))
+  ) {
+    failures.push(`${file}: causal model or bounded probe contract is missing`);
   }
   const lines = text.split("\n");
   for (const [index, line] of lines.entries()) {

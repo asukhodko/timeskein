@@ -2,14 +2,17 @@ use std::sync::Arc;
 
 use chrono::{Duration, Utc};
 use serde_json::json;
+use sqlx::Row;
 use tempfile::tempdir;
 use timeskein_agent::api::{
     handle_capture_append_to_work_item_event, handle_capture_convert_to_work_item,
     handle_capture_create, handle_capture_delete, handle_capture_update, handle_day_event_add,
     handle_day_event_delete, handle_day_event_list, handle_day_event_update,
     handle_focus_create_stopped, handle_focus_list, handle_focus_split, handle_focus_start,
-    handle_focus_stop, handle_focus_update, handle_inventory_list, handle_work_item_add_event,
-    handle_work_item_delete_event, handle_work_item_events, handle_work_item_update,
+    handle_focus_stop, handle_focus_update, handle_inventory_list, handle_label_create,
+    handle_ref_remove, handle_taxonomy_list, handle_track_create, handle_track_update,
+    handle_work_item_add_event, handle_work_item_create, handle_work_item_delete_event,
+    handle_work_item_events, handle_work_item_set_semantics, handle_work_item_update,
     handle_work_item_update_event,
 };
 use timeskein_agent::{db::Database, AppState};
@@ -28,6 +31,256 @@ async fn test_state() -> Arc<RwLock<AppState>> {
         db,
         start_time: std::time::Instant::now(),
     }))
+}
+
+#[tokio::test]
+async fn semantic_taxonomy_api_assigns_and_snapshots_focus_history() {
+    let state = test_state().await;
+    let root = handle_track_create(&state, json!({ "title": "Work" }), "root")
+        .await
+        .expect("root track");
+    let root_id = root["id"].as_str().unwrap().to_string();
+    let child = handle_track_create(
+        &state,
+        json!({ "title": "Timeskein", "parent_track_id": root_id }),
+        "child",
+    )
+    .await
+    .expect("child track");
+    let child_id = child["id"].as_str().unwrap().to_string();
+    let label = handle_label_create(&state, json!({ "title": "dogfood" }), "label")
+        .await
+        .expect("label");
+    let label_id = label["id"].as_str().unwrap().to_string();
+
+    let created = handle_work_item_create(
+        &state,
+        json!({
+            "title": "Semantic API Work",
+            "type": "task",
+            "state": "active",
+            "track_id": child_id,
+            "label_ids": [label_id],
+        }),
+        "create-item",
+    )
+    .await
+    .expect("create classified item");
+    let work_item_id = created["id"].as_str().unwrap().to_string();
+    let focus_session_id = created["focus_session_id"].as_str().unwrap().to_string();
+
+    let inventory = handle_inventory_list(&state, json!({}), "inventory")
+        .await
+        .expect("inventory");
+    let item = inventory["items"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|item| item["id"].as_str() == Some(work_item_id.as_str()))
+        .unwrap();
+    assert_eq!(item["track"]["id"].as_str(), Some(child_id.as_str()));
+    assert_eq!(item["labels"][0]["id"].as_str(), Some(label_id.as_str()));
+
+    handle_work_item_set_semantics(
+        &state,
+        json!({ "id": work_item_id, "track_id": root_id, "label_ids": [] }),
+        "reassign",
+    )
+    .await
+    .expect("reassign");
+
+    let snapshot_row = {
+        let state = state.read().await;
+        sqlx::query(
+            "SELECT track_id, track_path_json FROM focus_session_semantic_snapshots WHERE focus_session_id = ?1",
+        )
+        .bind(&focus_session_id)
+        .fetch_one(state.db.pool())
+        .await
+        .unwrap()
+    };
+    assert_eq!(snapshot_row.get::<String, _>("track_id"), child_id);
+    assert!(snapshot_row
+        .get::<String, _>("track_path_json")
+        .contains("Timeskein"));
+
+    let created_event_snapshot = {
+        let state = state.read().await;
+        sqlx::query(
+            "SELECT s.track_id, s.track_path_json
+             FROM work_item_events e
+             JOIN work_item_event_semantic_snapshots s ON s.work_item_event_id = e.id
+             WHERE e.work_item_id = ?1 AND e.kind = 'created'",
+        )
+        .bind(&work_item_id)
+        .fetch_one(state.db.pool())
+        .await
+        .unwrap()
+    };
+    assert_eq!(
+        created_event_snapshot.get::<String, _>("track_id"),
+        child_id
+    );
+    assert!(created_event_snapshot
+        .get::<String, _>("track_path_json")
+        .contains("Timeskein"));
+
+    let taxonomy = handle_taxonomy_list(&state, json!({}), "taxonomy")
+        .await
+        .expect("taxonomy");
+    assert_eq!(taxonomy["tracks"].as_array().unwrap().len(), 2);
+
+    let cycle = handle_track_update(
+        &state,
+        json!({ "id": root_id, "parent_track_id": child_id }),
+        "cycle",
+    )
+    .await;
+    assert!(cycle.is_err());
+
+    handle_focus_stop(&state, json!({}), "stop")
+        .await
+        .expect("stop");
+}
+
+#[tokio::test]
+async fn typed_evidence_keeps_ref_and_track_snapshots_after_current_links_change() {
+    let state = test_state().await;
+    let root = handle_track_create(&state, json!({ "title": "Personal Projects" }), "root")
+        .await
+        .expect("root track");
+    let root_id = root["id"].as_str().unwrap().to_string();
+    let child = handle_track_create(
+        &state,
+        json!({ "title": "Timeskein", "parent_track_id": root_id }),
+        "child",
+    )
+    .await
+    .expect("child track");
+    let child_id = child["id"].as_str().unwrap().to_string();
+    let created = handle_work_item_create(
+        &state,
+        json!({
+            "title": "Evidence-backed Track story",
+            "type": "project",
+            "state": "active",
+            "track_id": child_id,
+        }),
+        "create-item",
+    )
+    .await
+    .expect("create classified item");
+    let work_item_id = created["id"].as_str().unwrap().to_string();
+    let focus_session_id = created["focus_session_id"].as_str().unwrap().to_string();
+
+    let evidence = handle_work_item_add_event(
+        &state,
+        json!({
+            "id": work_item_id,
+            "text": "Track report now links the result to a stable artifact",
+            "focus_session_id": focus_session_id,
+            "evidence_kind": "result",
+            "new_ref": {
+                "kind": "issue_key",
+                "value": "time-42"
+            }
+        }),
+        "evidence",
+    )
+    .await
+    .expect("typed evidence");
+    let event_id = evidence["id"].as_str().unwrap().to_string();
+    let ref_id = evidence["evidence"]["refs"][0]["ref_id"]
+        .as_str()
+        .unwrap()
+        .to_string();
+    assert_eq!(evidence["evidence"]["kind"].as_str(), Some("result"));
+    assert_eq!(
+        evidence["evidence"]["focus_session_id"].as_str(),
+        Some(focus_session_id.as_str())
+    );
+    assert_eq!(
+        evidence["evidence"]["refs"][0]["value"].as_str(),
+        Some("time-42")
+    );
+
+    let decision = handle_work_item_add_event(
+        &state,
+        json!({
+            "id": work_item_id,
+            "text": "Use the same artifact for the rollout decision",
+            "focus_session_id": focus_session_id,
+            "evidence_kind": "decision",
+            "ref_ids": [ref_id]
+        }),
+        "decision-evidence",
+    )
+    .await
+    .expect("evidence with existing ref");
+    assert_eq!(decision["evidence"]["kind"].as_str(), Some("decision"));
+    assert_eq!(
+        decision["evidence"]["refs"][0]["ref_id"].as_str(),
+        Some(ref_id.as_str())
+    );
+    let current = timeskein_agent::api::handle_focus_current(&state, json!({}), "current")
+        .await
+        .expect("current focus after evidence");
+    assert_eq!(
+        current["session"]["id"].as_str(),
+        Some(focus_session_id.as_str()),
+        "recording evidence stopped or switched the active focus"
+    );
+
+    handle_work_item_set_semantics(
+        &state,
+        json!({ "id": work_item_id, "track_id": root_id, "label_ids": [] }),
+        "reassign",
+    )
+    .await
+    .expect("reassign item");
+    handle_ref_remove(
+        &state,
+        json!({ "work_item_id": work_item_id, "ref_id": ref_id }),
+        "remove-ref",
+    )
+    .await
+    .expect("remove current ref");
+
+    let listed = handle_work_item_events(&state, json!({ "id": work_item_id }), "list-evidence")
+        .await
+        .expect("list evidence");
+    let event = listed["events"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|event| event["id"].as_str() == Some(event_id.as_str()))
+        .expect("evidence event");
+    assert_eq!(event["evidence"]["kind"].as_str(), Some("result"));
+    assert_eq!(
+        event["evidence"]["refs"][0]["value"].as_str(),
+        Some("time-42")
+    );
+    assert!(event["evidence"]["refs"][0]["ref_id"].is_null());
+
+    let state_guard = state.read().await;
+    let semantic = sqlx::query(
+        "SELECT track_id, track_path_json
+           FROM work_item_event_semantic_snapshots
+          WHERE work_item_event_id = ?1",
+    )
+    .bind(&event_id)
+    .fetch_one(state_guard.db.pool())
+    .await
+    .expect("semantic snapshot");
+    assert_eq!(semantic.get::<String, _>("track_id"), child_id);
+    assert!(semantic
+        .get::<String, _>("track_path_json")
+        .contains("Timeskein"));
+    drop(state_guard);
+
+    handle_focus_stop(&state, json!({}), "stop")
+        .await
+        .expect("stop focus");
 }
 
 #[tokio::test]
@@ -810,4 +1063,156 @@ async fn stopped_focus_block_can_be_updated_split_and_reported_correctly() {
 
     assert_eq!(right_item["today_active_seconds"].as_i64(), Some(120));
     assert_eq!(right_item["total_active_seconds"].as_i64(), Some(120));
+}
+
+#[tokio::test]
+async fn stopped_focus_blocks_cannot_overlap() {
+    let state = test_state().await;
+    let start = Utc::now() - Duration::hours(2);
+    let middle = start + Duration::minutes(30);
+    let end = start + Duration::hours(1);
+
+    let first = handle_focus_create_stopped(
+        &state,
+        json!({
+            "title": "Overlap Guard First",
+            "started_at": start.to_rfc3339(),
+            "stopped_at": middle.to_rfc3339(),
+        }),
+        "create-first",
+    )
+    .await
+    .expect("create first block");
+
+    let touching = handle_focus_create_stopped(
+        &state,
+        json!({
+            "title": "Overlap Guard Touching",
+            "started_at": middle.to_rfc3339(),
+            "stopped_at": end.to_rfc3339(),
+        }),
+        "create-touching",
+    )
+    .await
+    .expect("touching boundaries are valid");
+
+    let overlapping_create = handle_focus_create_stopped(
+        &state,
+        json!({
+            "title": "Overlap Guard Rejected",
+            "started_at": (start + Duration::minutes(20)).to_rfc3339(),
+            "stopped_at": (middle + Duration::minutes(10)).to_rfc3339(),
+        }),
+        "create-overlap",
+    )
+    .await;
+    assert!(
+        overlapping_create.is_err(),
+        "overlapping missed block was accepted"
+    );
+
+    let overlapping_update = handle_focus_update(
+        &state,
+        json!({
+            "id": touching["id"].as_str().expect("touching id"),
+            "started_at": (middle - Duration::minutes(1)).to_rfc3339(),
+        }),
+        "update-overlap",
+    )
+    .await;
+    assert!(
+        overlapping_update.is_err(),
+        "overlapping correction was accepted"
+    );
+
+    let unchanged = {
+        let state = state.read().await;
+        state
+            .db
+            .get_focus_session(
+                uuid::Uuid::parse_str(first["id"].as_str().expect("first id")).expect("uuid"),
+            )
+            .await
+            .expect("read first")
+            .expect("first exists")
+            .0
+    };
+    assert_eq!(unchanged.started_at, start);
+    assert_eq!(unchanged.stopped_at, Some(middle));
+}
+
+#[tokio::test]
+async fn unicode_search_reuses_titles_and_dispatch_can_create_coordination_work() {
+    let state = test_state().await;
+
+    let created = handle_work_item_create(
+        &state,
+        json!({
+            "title": "Проект Альфа",
+            "type": "task",
+            "state": "unknown",
+        }),
+        "create-rb",
+    )
+    .await
+    .expect("create Cyrillic item");
+    let work_item_id = created["id"].as_str().unwrap().to_string();
+
+    let search = handle_inventory_list(
+        &state,
+        json!({ "filter": { "search": "проект альфа" } }),
+        "search-lowercase",
+    )
+    .await
+    .expect("Unicode search");
+    assert_eq!(search["items"].as_array().unwrap().len(), 1);
+    assert_eq!(
+        search["items"][0]["id"].as_str(),
+        Some(work_item_id.as_str())
+    );
+
+    let reused = handle_focus_start(&state, json!({ "title": "ПРОЕКТ АЛЬФА" }), "reuse-uppercase")
+        .await
+        .expect("reuse case-insensitive title");
+    assert_eq!(reused["work_item_id"].as_str(), Some(work_item_id.as_str()));
+    handle_focus_stop(&state, json!({}), "stop-rb")
+        .await
+        .expect("stop reused item");
+
+    let dispatch = handle_focus_start(
+        &state,
+        json!({
+            "title": "Возврат после перерыва",
+            "activity_zone": "coordination",
+        }),
+        "start-dispatch",
+    )
+    .await
+    .expect("start tracked dispatch");
+    assert_eq!(dispatch["activity_zone"].as_str(), Some("coordination"));
+
+    let mixed = handle_work_item_create(
+        &state,
+        json!({
+            "title": "spirit-сode-daily-synс",
+            "type": "task",
+            "state": "unknown",
+        }),
+        "create-mixed-script",
+    )
+    .await
+    .expect("create mixed-script item");
+    let mixed_id = mixed["id"].as_str().unwrap();
+    let mixed_search = handle_inventory_list(
+        &state,
+        json!({ "filter": { "search": "spirit-code-daily-sync" } }),
+        "search-mixed-script",
+    )
+    .await
+    .expect("homoglyph-tolerant search");
+    assert!(mixed_search["items"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|item| item["id"].as_str() == Some(mixed_id)));
 }

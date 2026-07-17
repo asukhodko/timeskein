@@ -54,3 +54,18 @@ export function formatClockTime(isoDate: string | undefined): string {
     hour12: false,
   })
 }
+
+export function formatContextTimestamp(isoDate: string | undefined, now = new Date()): string {
+  if (!isoDate) return 'сейчас'
+
+  const date = new Date(isoDate)
+  const sameDay = date.getFullYear() === now.getFullYear()
+    && date.getMonth() === now.getMonth()
+    && date.getDate() === now.getDate()
+  if (sameDay) return formatClockTime(isoDate)
+
+  const day = String(date.getDate()).padStart(2, '0')
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const year = date.getFullYear() === now.getFullYear() ? '' : `.${date.getFullYear()}`
+  return `${day}.${month}${year} · ${formatClockTime(isoDate)}`
+}

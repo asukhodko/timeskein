@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useCreateWorkItem } from '../hooks/useInventory'
 import type { ActivityZone, WorkItemState, WorkItemType } from '@timeskein/contracts'
 import { ITEM_UI_LABELS, formatCreateItemError } from '../utils/itemUiLabels'
+import SemanticFields from './SemanticFields'
 
 interface CreateDialogProps {
   onClose: () => void
@@ -14,6 +15,8 @@ export default function CreateDialog({ onClose, initialTitle = '' }: CreateDialo
   const [state, setState] = useState<WorkItemState>('unknown')
   const [type, setType] = useState<WorkItemType>('task')
   const [activityZone, setActivityZone] = useState<ActivityZone>('work')
+  const [trackId, setTrackId] = useState('')
+  const [labelIds, setLabelIds] = useState<string[]>([])
   const [error, setError] = useState<string | null>(null)
   
   const titleRef = useRef<HTMLInputElement>(null)
@@ -37,6 +40,8 @@ export default function CreateDialog({ onClose, initialTitle = '' }: CreateDialo
         activity_zone: activityZone,
         state,
         note: note.trim() || undefined,
+        track_id: trackId || null,
+        label_ids: labelIds,
       })
       onClose()
     } catch (error) {
@@ -59,7 +64,7 @@ export default function CreateDialog({ onClose, initialTitle = '' }: CreateDialo
       onKeyDown={handleKeyDown}
     >
       <div
-        className="bg-gray-800 rounded-lg border border-gray-700 p-4 w-96 shadow-xl"
+        className="max-h-[90vh] w-96 overflow-y-auto rounded-lg border border-gray-700 bg-gray-800 p-4 shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="text-lg font-semibold text-gray-200 mb-4">{ITEM_UI_LABELS.createTitle}</h2>
@@ -129,6 +134,13 @@ export default function CreateDialog({ onClose, initialTitle = '' }: CreateDialo
               <option value="personal">Личное</option>
             </select>
           </div>
+
+          <SemanticFields
+            trackId={trackId}
+            labelIds={labelIds}
+            onTrackChange={setTrackId}
+            onLabelsChange={setLabelIds}
+          />
 
           {/* Note */}
           <div>

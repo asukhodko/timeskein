@@ -6,7 +6,9 @@ mod captures;
 mod day_events;
 mod focus_sessions;
 mod inventory;
+mod operational_reality;
 mod refs;
+mod semantics;
 mod settings;
 mod work_items;
 
@@ -25,7 +27,9 @@ pub use captures::*;
 pub use day_events::*;
 pub use focus_sessions::*;
 pub use inventory::*;
+pub use operational_reality::*;
 pub use refs::*;
+pub use semantics::*;
 pub use settings::*;
 pub use work_items::*;
 
@@ -183,6 +187,30 @@ async fn dispatch_method(
         "inventory.list" => handle_inventory_list(state, params, request_id).await,
         "inventory.get" => handle_inventory_get(state, params, request_id).await,
 
+        // Semantic taxonomy methods
+        "taxonomy.list" => handle_taxonomy_list(state, params, request_id).await,
+        "track.create" => handle_track_create(state, params, request_id).await,
+        "track.update" => handle_track_update(state, params, request_id).await,
+        "track.archive" => handle_track_archive(state, params, request_id).await,
+        "label.create" => handle_label_create(state, params, request_id).await,
+        "label.update" => handle_label_update(state, params, request_id).await,
+        "label.archive" => handle_label_archive(state, params, request_id).await,
+
+        // Causal work spine and current projection
+        "causal_record.list" => handle_causal_record_list(state, params, request_id).await,
+        "operational_reality.list" => {
+            handle_operational_reality_list(state, params, request_id).await
+        }
+        "operational_reality.set_state" => {
+            handle_operational_reality_set_state(state, params, request_id).await
+        }
+        "operational_reality.set_next_action" => {
+            handle_operational_reality_set_next_action(state, params, request_id).await
+        }
+        "operational_reality.follow_up_decision" => {
+            handle_operational_reality_follow_up_decision(state, params, request_id).await
+        }
+
         // Work item methods
         "work_item.create" => handle_work_item_create(state, params, request_id).await,
         "work_item.touch" => handle_work_item_touch(state, params, request_id).await,
@@ -193,6 +221,9 @@ async fn dispatch_method(
         "work_item.update_event" => handle_work_item_update_event(state, params, request_id).await,
         "work_item.delete_event" => handle_work_item_delete_event(state, params, request_id).await,
         "work_item.update" => handle_work_item_update(state, params, request_id).await,
+        "work_item.set_semantics" => {
+            handle_work_item_set_semantics(state, params, request_id).await
+        }
         "work_item.toggle_pin" => handle_work_item_toggle_pin(state, params, request_id).await,
         "work_item.delete" => handle_work_item_delete(state, params, request_id).await,
 

@@ -2,9 +2,11 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import {
   decodeDispatchRitualDraft,
+  dispatchRitualContractStorageKey,
   dispatchRitualDraftStorageKey,
   encodeDispatchRitualDraft,
   formatDispatchRitualEvent,
+  hasDispatchRitualContent,
   isDispatchRitualStartReady,
 } from '../apps/desktop/src/utils/dispatchRitual'
 
@@ -19,7 +21,7 @@ test('dispatch ritual event records what is in play, first focus, parking and re
 
   assert.equal(
     event,
-    'Вход в день: что в игре: входящие, цели команды, синк; первый фокус: Подготовить цели команды; припарковано: личные проекты, мелкие чаты; почему достаточно важно: это главный внешний дедлайн'
+    'Вход в день — активный набор: входящие, цели команды, синк; первое дело: Подготовить цели команды; припарковано: личные проекты, мелкие чаты; почему сейчас: это главный внешний дедлайн'
   )
 })
 
@@ -72,4 +74,19 @@ test('dispatch ritual draft key is local-day scoped', () => {
     dispatchRitualDraftStorageKey(new Date('2026-07-08T21:00:00+03:00')),
     'timeskein.dispatch-ritual-draft.v1.2026-07-08'
   )
+  assert.equal(
+    dispatchRitualContractStorageKey(new Date('2026-07-08T21:00:00+03:00')),
+    'timeskein.dispatch-ritual-contract.v1.2026-07-08'
+  )
+})
+
+test('saved day contract requires at least one meaningful field', () => {
+  assert.equal(hasDispatchRitualContent(decodeDispatchRitualDraft(null)), false)
+  assert.equal(hasDispatchRitualContent({
+    mode: 'day_entry',
+    activeSet: 'Командные цели',
+    firstFocus: '',
+    parked: '',
+    reason: '',
+  }), true)
 })

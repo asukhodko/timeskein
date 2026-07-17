@@ -420,8 +420,13 @@ fn main() {
 
             // Create tray menu
             let quit = MenuItem::with_id(app, "quit", "Выйти", true, None::<&str>)?;
-            let toggle =
-                MenuItem::with_id(app, "toggle", "Показать/скрыть Timeskein", true, None::<&str>)?;
+            let toggle = MenuItem::with_id(
+                app,
+                "toggle",
+                "Показать/скрыть Timeskein",
+                true,
+                None::<&str>,
+            )?;
 
             let menu = Menu::with_items(app, &[&toggle, &quit])?;
 

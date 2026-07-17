@@ -23,11 +23,6 @@ impl Database {
              WHERE deleted_at IS NULL"
         );
 
-        // Add search filter
-        if search.is_some() {
-            sql.push_str(" AND (title LIKE '%' || ?1 || '%' OR note LIKE '%' || ?1 || '%')");
-        }
-
         // Add state filter
         if let Some(states) = state_filter {
             if !states.is_empty() {
@@ -51,18 +46,24 @@ impl Database {
                 COALESCE(last_seen_at, '1970-01-01') DESC",
         );
 
-        let rows = if let Some(search_term) = search {
-            sqlx::query(&sql)
-                .bind(search_term)
-                .fetch_all(self.pool())
-                .await?
-        } else {
-            sqlx::query(&sql).fetch_all(self.pool()).await?
-        };
+        let rows = sqlx::query(&sql).fetch_all(self.pool()).await?;
+        let normalized_search = search
+            .map(normalize_search_text)
+            .filter(|value| !value.is_empty());
 
         let mut items = Vec::new();
         for row in rows {
-            items.push(work_item_from_row(&row)?);
+            let item = work_item_from_row(&row)?;
+            let matches_search = normalized_search.as_ref().is_none_or(|needle| {
+                normalize_search_text(&item.title).contains(needle)
+                    || item
+                        .note
+                        .as_deref()
+                        .is_some_and(|note| normalize_search_text(note).contains(needle))
+            });
+            if matches_search {
+                items.push(item);
+            }
         }
 
         Ok(items)
@@ -92,26 +93,28 @@ impl Database {
             return Ok(None);
         }
 
-        let row = sqlx::query(
+        let rows = sqlx::query(
             "SELECT id, title, type, activity_zone, state, pinned, note, created_at, updated_at, last_seen_at, deleted_at
              FROM work_items
              WHERE deleted_at IS NULL
-               AND lower(trim(title)) = lower(trim(?1))
-             ORDER BY updated_at DESC
-             LIMIT 1",
+             ORDER BY updated_at DESC",
         )
-        .bind(title)
-        .fetch_optional(self.pool())
+        .fetch_all(self.pool())
         .await?;
 
-        match row {
-            Some(row) => Ok(Some(work_item_from_row(&row)?)),
-            None => Ok(None),
+        let normalized_title = normalize_search_text(title);
+        for row in rows {
+            let item = work_item_from_row(&row)?;
+            if normalize_search_text(&item.title) == normalized_title {
+                return Ok(Some(item));
+            }
         }
+
+        Ok(None)
     }
 
     /// Create a new work item
-    pub async fn create_work_item(&self, item: &WorkItem) -> Result<()> {
+    pub async fn create_work_item(&self, item: &WorkItem) -> Result<Uuid> {
         sqlx::query(
             "INSERT INTO work_items (id, title, type, activity_zone, state, pinned, note, created_at, updated_at, last_seen_at, deleted_at)
              VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)"
@@ -131,14 +134,10 @@ impl Database {
         .await?;
 
         // Log event
-        self.log_event(&WorkItemEvent::new(
-            item.id,
-            WorkItemEventKind::Created,
-            None,
-        ))
-        .await?;
+        let event = WorkItemEvent::new(item.id, WorkItemEventKind::Created, None);
+        self.log_event(&event).await?;
 
-        Ok(())
+        Ok(event.id)
     }
 
     /// Update a work item
@@ -304,6 +303,9 @@ impl Database {
         .execute(self.pool())
         .await?;
 
+        self.snapshot_work_item_event_semantics(event.id, event.work_item_id)
+            .await?;
+
         Ok(())
     }
 
@@ -387,6 +389,52 @@ impl Database {
             .await?;
 
         Ok(result.rows_affected() > 0)
+    }
+}
+
+fn normalize_search_text(value: &str) -> String {
+    value
+        .trim()
+        .chars()
+        .flat_map(char::to_lowercase)
+        .map(|character| match character {
+            // Canonicalize common Cyrillic/Latin homoglyphs. This makes titles
+            // such as `sync` and `synс` searchable as the same text.
+            'а' => 'a',
+            'в' => 'b',
+            'е' => 'e',
+            'к' => 'k',
+            'м' => 'm',
+            'н' => 'h',
+            'о' => 'o',
+            'р' => 'p',
+            'с' => 'c',
+            'т' => 't',
+            'у' => 'y',
+            'х' => 'x',
+            other => other,
+        })
+        .collect()
+}
+
+#[cfg(test)]
+mod search_tests {
+    use super::normalize_search_text;
+
+    #[test]
+    fn search_normalization_is_unicode_case_insensitive() {
+        assert_eq!(
+            normalize_search_text("Проект Альфа"),
+            normalize_search_text("проект альфа")
+        );
+    }
+
+    #[test]
+    fn search_normalization_tolerates_cyrillic_latin_homoglyphs() {
+        assert_eq!(
+            normalize_search_text("spirit-code-daily-sync"),
+            normalize_search_text("spirit-сode-daily-synс")
+        );
     }
 }
 

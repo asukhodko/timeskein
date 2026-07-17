@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { focusApi } from '../api/client'
 import { queryKeys } from './useInventory'
-import type { FocusCreateStoppedParams, FocusSplitParams, FocusUpdateParams } from '@timeskein/contracts'
+import type { ActivityZone, FocusCreateStoppedParams, FocusSplitParams, FocusUpdateParams } from '@timeskein/contracts'
 
 export const focusQueryKeys = {
   current: ['focus', 'current'] as const,
@@ -41,12 +41,13 @@ export function useStartFocusSession() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (params: { title: string; work_item_id?: string; target_seconds?: number; telemetry_action_id?: string }) =>
+    mutationFn: (params: { title: string; work_item_id?: string; activity_zone?: ActivityZone; target_seconds?: number; telemetry_action_id?: string }) =>
       focusApi.start(params),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: focusQueryKeys.current })
       queryClient.invalidateQueries({ queryKey: focusQueryKeys.today })
       queryClient.invalidateQueries({ queryKey: queryKeys.inventory })
+      queryClient.invalidateQueries({ queryKey: ['operationalReality'] })
     },
   })
 }
@@ -60,6 +61,7 @@ export function useStopFocusSession() {
       queryClient.invalidateQueries({ queryKey: focusQueryKeys.current })
       queryClient.invalidateQueries({ queryKey: focusQueryKeys.today })
       queryClient.invalidateQueries({ queryKey: queryKeys.inventory })
+      queryClient.invalidateQueries({ queryKey: ['operationalReality'] })
     },
   })
 }
@@ -73,6 +75,7 @@ export function useUpdateFocusSession() {
       queryClient.invalidateQueries({ queryKey: focusQueryKeys.current })
       queryClient.invalidateQueries({ queryKey: focusQueryKeys.today })
       queryClient.invalidateQueries({ queryKey: queryKeys.inventory })
+      queryClient.invalidateQueries({ queryKey: ['operationalReality'] })
     },
   })
 }
@@ -86,6 +89,7 @@ export function useCreateStoppedFocusSession() {
       queryClient.invalidateQueries({ queryKey: focusQueryKeys.current })
       queryClient.invalidateQueries({ queryKey: focusQueryKeys.today })
       queryClient.invalidateQueries({ queryKey: queryKeys.inventory })
+      queryClient.invalidateQueries({ queryKey: ['operationalReality'] })
     },
   })
 }
@@ -99,6 +103,7 @@ export function useSplitFocusSession() {
       queryClient.invalidateQueries({ queryKey: focusQueryKeys.current })
       queryClient.invalidateQueries({ queryKey: focusQueryKeys.today })
       queryClient.invalidateQueries({ queryKey: queryKeys.inventory })
+      queryClient.invalidateQueries({ queryKey: ['operationalReality'] })
     },
   })
 }

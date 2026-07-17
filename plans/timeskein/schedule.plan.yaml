@@ -101,8 +101,6 @@ schedule:
     ts.in_day_structure.day_observation_log:
       start: "2026-07-09"
       duration: 1d
-    ts.in_day_structure.work_item_stages:
-      duration: 3d
     ts.in_day_structure.zone_dashboard:
       start: "2026-07-08"
       duration: 1d
@@ -120,5 +118,39 @@ schedule:
       start: "2026-07-09"
       duration: 3d
     ts.periodic_reflection.report_profiles:
+      start: "2026-07-09"
+      duration: 1d
+    ts.periodic_reflection.reflection_sessions:
+      start: "2026-07-09"
+      duration: 1d
+    ts.periodic_reflection.context_links:
       start: "2026-07-10"
-      duration: 3d
+      duration: 1d
+    ts.periodic_reflection.tracks_labels:
+      start: "2026-07-10"
+      duration: 1d
+    ts.periodic_reflection.semantic_dogfood_gate:
+      start: "2026-07-10"
+      duration: 1d
+
+    ts.causal_memory.architecture_gate:
+      start: "2026-07-10"
+      duration: 1d
+    ts.causal_memory.provenance_contract:
+      start: "2026-07-10"
+      duration: 1d
+    ts.causal_memory.transition_history:
+      start: "2026-07-10"
+      duration: 1d
+    ts.causal_memory.timeline_integrity:
+      start: "2026-07-16"
+      duration: 1d
+    ts.periodic_reflection.operational_reality:
+      start: "2026-07-10"
+      duration: 1d
+    ts.steering.manual_correction:
+      start: "2026-07-10"
+      duration: 1d
+    ts.steering.operational_reality_gate:
+      start: "2026-07-15"
+      duration: 2d

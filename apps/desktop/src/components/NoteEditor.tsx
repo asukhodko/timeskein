@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import type { EvidenceKind, RefKind, RefView, WorkItemAddEventParams } from '@timeskein/contracts'
 import {
   appendTimestampedEventDraft,
   decodeTimestampedEventDraft,
@@ -12,7 +13,8 @@ interface NoteEditorProps {
   itemTitle: string
   currentNote: string | null
   onSave: (note: string) => void
-  onAppendEvent?: (text: string) => Promise<void> | void
+  itemRefs?: RefView[]
+  onAppendEvent?: (params: Omit<WorkItemAddEventParams, 'id' | 'focus_session_id'>) => Promise<void> | void
   appendPending?: boolean
   appendError?: string | null
   onClose: () => void
@@ -23,6 +25,7 @@ export default function NoteEditor({
   itemTitle,
   currentNote,
   onSave,
+  itemRefs = [],
   onAppendEvent,
   appendPending = false,
   appendError,
@@ -30,6 +33,10 @@ export default function NoteEditor({
 }: NoteEditorProps) {
   const [note, setNote] = useState(currentNote || '')
   const [eventText, setEventText] = useState('')
+  const [evidenceKind, setEvidenceKind] = useState<EvidenceKind>('observation')
+  const [refChoice, setRefChoice] = useState('')
+  const [newRefKind, setNewRefKind] = useState<RefKind>('url')
+  const [newRefValue, setNewRefValue] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const modalRef = useRef<HTMLDivElement>(null)
   const eventDraftStorageKey = timestampedEventDraftStorageKey(itemId)
@@ -82,9 +89,23 @@ export default function NoteEditor({
     const trimmed = eventText.trim()
     if (!trimmed || !onAppendEvent || appendPending) return
 
-    const result = await appendTimestampedEventDraft(eventText, onAppendEvent, appendPending)
+    const result = await appendTimestampedEventDraft(
+      eventText,
+      (text) => onAppendEvent({
+        text,
+        evidence_kind: evidenceKind,
+        ref_ids: refChoice && refChoice !== '__new__' ? [refChoice] : [],
+        new_ref: refChoice === '__new__' && newRefValue.trim()
+          ? { kind: newRefKind, value: newRefValue.trim() }
+          : undefined,
+      }),
+      appendPending,
+    )
     if (result.ok) {
       clearTimestampedEventDraft(eventDraftStorageKey)
+      setRefChoice('')
+      setNewRefKind('url')
+      setNewRefValue('')
     }
     setEventText(result.nextDraft)
   }
@@ -132,6 +153,52 @@ export default function NoteEditor({
                          text-gray-200 placeholder-gray-500 resize-none
                          focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
             />
+            <div className="grid grid-cols-[140px_minmax(0,1fr)] gap-2">
+              <select
+                value={evidenceKind}
+                onChange={(event) => setEvidenceKind(event.target.value as EvidenceKind)}
+                className="rounded border border-gray-600 bg-gray-900 px-2 py-1.5 text-sm text-gray-200 focus:border-emerald-500"
+                title="Тип смысловой записи"
+              >
+                <option value="result">Результат</option>
+                <option value="decision">Решение</option>
+                <option value="blocker">Блокер</option>
+                <option value="next_step">Следующий шаг</option>
+                <option value="observation">Наблюдение</option>
+              </select>
+              <select
+                value={refChoice}
+                onChange={(event) => setRefChoice(event.target.value)}
+                className="min-w-0 rounded border border-gray-600 bg-gray-900 px-2 py-1.5 text-sm text-gray-200 focus:border-emerald-500"
+                title="Подтверждающий Ref"
+              >
+                <option value="">Без Ref</option>
+                {itemRefs.map((ref) => (
+                  <option key={ref.id} value={ref.id}>{ref.kind}: {ref.value}</option>
+                ))}
+                <option value="__new__">Новый Ref...</option>
+              </select>
+            </div>
+            {refChoice === '__new__' && (
+              <div className="grid grid-cols-[140px_minmax(0,1fr)] gap-2">
+                <select
+                  value={newRefKind}
+                  onChange={(event) => setNewRefKind(event.target.value as RefKind)}
+                  className="rounded border border-gray-600 bg-gray-900 px-2 py-1.5 text-sm text-gray-200 focus:border-emerald-500"
+                >
+                  <option value="url">URL</option>
+                  <option value="file_path">Файл</option>
+                  <option value="issue_key">Ключ задачи</option>
+                  <option value="custom">Другое</option>
+                </select>
+                <input
+                  value={newRefValue}
+                  onChange={(event) => setNewRefValue(event.target.value)}
+                  placeholder="URL, путь или ключ"
+                  className="min-w-0 rounded border border-gray-600 bg-gray-900 px-2 py-1.5 text-sm text-gray-200 placeholder-gray-500 focus:border-emerald-500"
+                />
+              </div>
+            )}
             {appendError && (
               <div className="text-xs text-red-300">{appendError}</div>
             )}

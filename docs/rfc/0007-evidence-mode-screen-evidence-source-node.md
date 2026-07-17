@@ -6,6 +6,11 @@
 
 **Draft**.
 
+Стратегическое уточнение 2026-07-10: Full Evidence Mode остаётся дальним
+opt-in слоем. Ранний bounded Context Probe из [Roadmap 0005](../roadmap/0005-causal-work-memory-roadmap.md)
+может проверить активное приложение и URL внутри ручного Focus Session, но не
+считается реализацией этого RFC и не разрешает always-on screen capture.
+
 ## Уровень зрелости
 
 **Level 3** (строго opt-in, не входит в MVP)
@@ -15,6 +20,7 @@
 - [RFC-0005: Event Ingest + SourceNode](0005-event-ingest-source-nodes.md) — формат манифеста SourceNode
 - [RFC-0006: Retention, TTL и Distillation](0006-retention-ttl-distillation.md) — политики retention, purge, revocation
 - [ADR-0003: Evidence-Mode Opt-in](../adr/0003-evidence-mode-opt-in.md) — решение о Evidence-Mode как строго opt-in
+- [RFC-0009: Causal Work Memory and Operational Reality](0009-causal-work-memory-and-operational-reality.md)
 - [Глоссарий](../glossary.md)
 
 ---

@@ -5,6 +5,7 @@ import { existsSync } from "node:fs";
 import { homedir } from "node:os";
 import { join, resolve } from "node:path";
 import { promisify } from "node:util";
+import { findFocusSessionOverlaps, formatFocusOverlap } from "./lib/focus-overlaps.mjs";
 
 const execFileAsync = promisify(execFile);
 const repoRoot = resolve(import.meta.dirname, "..");
@@ -21,6 +22,7 @@ const metricsArgs = [resolve(repoRoot, "scripts/dogfood-metrics.mjs"), "--db", d
 const REVIEW_TITLE_LABELS = {
   "Stop the active focus block": "Остановить активный фокус-блок",
   "Clear active Work Item state": "Снять активный статус с дела",
+  "Resolve overlapping focus blocks": "Исправить пересекающиеся фокус-блоки",
   "Resolve, convert, or accept open captures": "Разобрать открытые отвлечения",
   "Classify significant gaps": "Объяснить большие разрывы",
   "Explain current open gap": "Объяснить текущий открытый разрыв",
@@ -151,7 +153,7 @@ if (options.date) {
 
 const activeSummary = existsSync(dbPath)
   ? await loadActiveSummary(dbPath, from, to)
-  : { activeFocus: undefined, activeWorkItems: [], openCaptures: [], captureActivity: [] };
+  : { activeFocus: undefined, activeWorkItems: [], openCaptures: [], captureActivity: [], focusOverlaps: [] };
 const { stdout: dayMarkdown } = await execFileAsync(process.execPath, exportArgs, {
   cwd: repoRoot,
   maxBuffer: 10 * 1024 * 1024,
@@ -170,7 +172,8 @@ process.stdout.write(
     activeSummary.activeWorkItems,
     activeSummary.openCaptures,
     activeSummary.captureActivity,
-    dayMarkdown
+    dayMarkdown,
+    activeSummary.focusOverlaps
   )
 );
 
@@ -230,7 +233,7 @@ function nextLocalDay(date) {
 }
 
 async function loadActiveSummary(path, from, to) {
-  const [activeFocusRows, activeWorkItems, openCaptures, captureActivity] = await Promise.all([
+  const [activeFocusRows, activeWorkItems, openCaptures, captureActivity, focusRows] = await Promise.all([
     queryJson(path, `
       SELECT
         fs.title,
@@ -250,11 +253,21 @@ async function loadActiveSummary(path, from, to) {
     `),
     loadOpenCaptures(path),
     loadCaptureActivity(path, from, to),
+    queryJson(path, `
+      SELECT fs.id, fs.title, fs.work_item_id, wi.title AS work_item_title, fs.started_at, fs.stopped_at
+      FROM focus_sessions fs
+      LEFT JOIN work_items wi ON wi.id = fs.work_item_id
+      WHERE datetime(COALESCE(fs.stopped_at, ${sqlString(new Date().toISOString())})) > datetime(${sqlString(from.toISOString())})
+        AND datetime(fs.started_at) < datetime(${sqlString(to.toISOString())})
+      ORDER BY datetime(fs.started_at) ASC
+    `),
   ]);
+
+  const focusOverlaps = findFocusSessionOverlaps(focusRows, { from, to });
 
   const row = activeFocusRows[0];
   if (!row) {
-    return { activeFocus: undefined, activeWorkItems, openCaptures, captureActivity };
+    return { activeFocus: undefined, activeWorkItems, openCaptures, captureActivity, focusOverlaps };
   }
 
   const activeSeconds = Math.max(
@@ -271,6 +284,7 @@ async function loadActiveSummary(path, from, to) {
     activeWorkItems,
     openCaptures,
     captureActivity,
+    focusOverlaps,
   };
 }
 
@@ -345,7 +359,8 @@ function buildDogfoodReport(
   activeWorkItems,
   openCaptures = [],
   captureActivity = [],
-  focusMarkdown = dayMarkdown
+  focusMarkdown = dayMarkdown,
+  focusOverlaps = []
 ) {
   const hasActiveWorkItems = activeWorkItems.length > 0;
   const humanFocusMarkdown = formatFocusMarkdownForReport(dayMarkdown);
@@ -357,6 +372,7 @@ function buildDogfoodReport(
     captureActivity,
     focusMarkdown,
     telemetryMarkdown,
+    focusOverlaps,
   });
   const pendingReviewItemCount = countPendingReviewItems(reviewItems);
   const reportState = formatDogfoodReportState({
@@ -618,6 +634,7 @@ function buildReviewChecklistItems({
   captureActivity,
   focusMarkdown,
   telemetryMarkdown = "",
+  focusOverlaps = [],
 }) {
   const items = [];
 
@@ -634,6 +651,14 @@ function buildReviewChecklistItems({
       level: "blocker",
       title: "Clear active Work Item state",
       detail: `${activeWorkItems.length} Work Item с активным статусом`,
+    });
+  }
+
+  if (focusOverlaps.length > 0) {
+    items.push({
+      level: "blocker",
+      title: "Resolve overlapping focus blocks",
+      detail: `${formatCount(focusOverlaps.length, "пересечение", "пересечения", "пересечений")}; ${formatFocusOverlap(focusOverlaps[0], formatClockTime, formatDuration)}`,
     });
   }
 
@@ -686,7 +711,7 @@ function buildReviewChecklistItems({
     items.push({
       level: "review",
       title: "Check zones during the day",
-      detail: `${activityZoneGlances}/2 отметок «Учёл зоны»`,
+      detail: `распределение зон просмотрено ${activityZoneGlances} раз; дневной ориентир — 2`,
     });
   }
 
@@ -985,7 +1010,7 @@ function formatDailyControlGoalAuditMarkdown({
     },
     {
       requirement: "Hard blockers absent",
-      status: activeFocus || activeWorkItems.length > 0 ? "block" : "pass",
+      status: reviewItems.some((item) => item.level === "blocker") ? "block" : "pass",
       evidence: formatCount(reviewItems.filter((item) => item.level === "blocker").length, "красный пункт", "красных пункта", "красных пунктов"),
     },
   ];
@@ -1351,7 +1376,7 @@ function formatDayReviewDetail(detail) {
     return `${formatCount(count, "дело было", "дела были", "дел было")} в работе сегодня`;
   }
 
-  const activityZoneGlanceMatch = detail.match(/^(\d+)\/2 отметок «Учёл зоны»$/);
+  const activityZoneGlanceMatch = detail.match(/^распределение зон просмотрено (\d+) раз; дневной ориентир — 2$/);
   if (activityZoneGlanceMatch) {
     const count = Number(activityZoneGlanceMatch[1]);
     return `${count}/2 дневных просмотров зон активности`;

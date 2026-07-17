@@ -77,6 +77,32 @@ impl Database {
         rows.iter().map(focus_session_from_row).collect()
     }
 
+    /// Return the first focus session that overlaps the requested interval.
+    pub async fn find_overlapping_focus_session(
+        &self,
+        started_at: DateTime<Utc>,
+        stopped_at: DateTime<Utc>,
+        exclude_id: Option<Uuid>,
+        now: DateTime<Utc>,
+    ) -> Result<Option<(FocusSession, Option<String>)>> {
+        let sql = focus_session_select_sql(
+            "WHERE (?3 IS NULL OR fs.id <> ?3)
+             AND julianday(fs.started_at) < julianday(?2)
+             AND julianday(COALESCE(fs.stopped_at, ?4)) > julianday(?1)
+             ORDER BY fs.started_at ASC
+             LIMIT 1",
+        );
+        let row = sqlx::query(&sql)
+            .bind(started_at.to_rfc3339())
+            .bind(stopped_at.to_rfc3339())
+            .bind(exclude_id.map(|id| id.to_string()))
+            .bind(now.to_rfc3339())
+            .fetch_optional(self.pool())
+            .await?;
+
+        row.map(|row| focus_session_from_row(&row)).transpose()
+    }
+
     /// Persist a stopped focus session.
     pub async fn update_focus_session(&self, session: &FocusSession) -> Result<()> {
         sqlx::query(

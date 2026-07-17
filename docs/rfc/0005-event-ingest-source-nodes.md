@@ -6,6 +6,11 @@
 
 **Draft**.
 
+Стратегическое уточнение 2026-07-10: полная SourceNode-платформа не является
+следующим обязательным слоем. Сначала [Roadmap 0005](../roadmap/0005-causal-work-memory-roadmap.md)
+проверяет один focus-scoped источник через bounded Context Probe. Этот RFC
+становится контрактом обобщения только после прохождения value/trust gate.
+
 ## Уровень зрелости
 
 **Level 2+** (не входит в MVP)
@@ -17,6 +22,7 @@
 - [RFC-0007: Screen Evidence Source Node](0007-evidence-mode-screen-evidence-source-node.md) — детальная спецификация Screen Evidence SourceNode (Level 3)
 - [ADR-0002: MVP = Manual-first](../adr/0002-mvp-manual-first.md)
 - [ADR-0003: Evidence-Mode Opt-in](../adr/0003-evidence-mode-opt-in.md) — решение о Evidence-Mode как строго opt-in Level 3
+- [RFC-0009: Causal Work Memory and Operational Reality](0009-causal-work-memory-and-operational-reality.md)
 - [Глоссарий](../glossary.md)
 
 ---

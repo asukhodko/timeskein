@@ -524,6 +524,32 @@ try {
   );
 
   await runSql(`
+    INSERT INTO focus_sessions (id, title, work_item_id, state, target_seconds, note, started_at, stopped_at, updated_at)
+    VALUES ('s_overlap', 'Meetings', 'w2', 'stopped', 1500, NULL, '2026-06-30T07:20:00Z', '2026-06-30T07:25:00Z', '2026-06-30T07:25:00Z');
+  `);
+
+  const { stdout: overlapDraftStdout } = await execFileAsync(
+    "node",
+    [join(repoRoot, "scripts/dogfood-report.mjs"), "--db", dbPath, "--date", "2026-06-30"],
+    { cwd: repoRoot }
+  );
+
+  assert(
+    overlapDraftStdout.includes("Статус отчёта: черновик — осталось 1 проверка перед финальным отчётом"),
+    "overlapping focus blocks should prevent a final report"
+  );
+  assert(
+    overlapDraftStdout.includes("Исправить пересекающиеся фокус-блоки") && overlapDraftStdout.includes("Meetings"),
+    "overlap blocker should identify the affected blocks"
+  );
+  assert(
+    overlapDraftStdout.includes("| Красных пунктов нет | красный пункт | 1 красный пункт |"),
+    "daily-control audit should not pass while focus blocks overlap"
+  );
+
+  await runSql("DELETE FROM focus_sessions WHERE id = 's_overlap';");
+
+  await runSql(`
     INSERT INTO work_items (id, title, type, state, pinned, created_at, updated_at, last_seen_at)
     VALUES ('w3', 'Stuck Active Item', 'task', 'active', 0, '2026-06-30T08:00:00Z', '2026-06-30T08:00:00Z', '2026-06-30T08:00:00Z');
 

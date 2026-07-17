@@ -21,6 +21,15 @@ import {
   type WorkItemCreateResponse,
   type WorkItemDeleteEventResponse,
   type WorkItemDeleteResponse,
+  type WorkItemSemanticsView,
+  type WorkItemSetSemanticsParams,
+  type TaxonomyListResponse,
+  type TrackCreateParams,
+  type TrackUpdateParams,
+  type TrackView,
+  type LabelCreateParams,
+  type LabelUpdateParams,
+  type LabelView,
   type AgentStatus,
   type Settings,
   type DenylistRule,
@@ -31,6 +40,7 @@ import {
   type FocusSplitParams,
   type FocusSplitResponse,
   type FocusUpdateParams,
+  type ActivityZone,
   type CaptureConvertResponse,
   type CaptureAppendEventResponse,
   type CaptureDeleteResponse,
@@ -42,6 +52,14 @@ import {
   type AppEventSource,
   type AppEventSummary,
   type AppEventView,
+  type CausalRecordListParams,
+  type CausalRecordListResponse,
+  type OperationalRealityFollowUpDecisionParams,
+  type OperationalRealityListParams,
+  type OperationalRealityMutationResponse,
+  type OperationalRealitySetNextActionParams,
+  type OperationalRealitySetStateParams,
+  type OperationalRealityView,
   isApiError,
 } from '@timeskein/contracts'
 
@@ -159,6 +177,41 @@ export const workItemApi = {
     rpc<{ success: boolean; pinned: boolean }>('work_item.toggle_pin', { id }),
   delete: (id: string, mode?: 'soft' | 'hard') =>
     rpc<WorkItemDeleteResponse>('work_item.delete', { id, mode }),
+  setSemantics: (params: WorkItemSetSemanticsParams) =>
+    rpc<WorkItemSemanticsView>('work_item.set_semantics', params),
+}
+
+export const taxonomyApi = {
+  list: (includeArchived = false) =>
+    rpc<TaxonomyListResponse>('taxonomy.list', { include_archived: includeArchived }),
+  createTrack: (params: TrackCreateParams) =>
+    rpc<TrackView>('track.create', params),
+  updateTrack: (params: TrackUpdateParams) =>
+    rpc<TrackView>('track.update', params),
+  archiveTrack: (id: string, archived = true) =>
+    rpc<TrackView>('track.archive', { id, archived }),
+  createLabel: (params: LabelCreateParams) =>
+    rpc<LabelView>('label.create', params),
+  updateLabel: (params: LabelUpdateParams) =>
+    rpc<LabelView>('label.update', params),
+  archiveLabel: (id: string, archived = true) =>
+    rpc<LabelView>('label.archive', { id, archived }),
+}
+
+export const operationalRealityApi = {
+  list: (params?: OperationalRealityListParams) =>
+    rpc<OperationalRealityView>('operational_reality.list', params),
+  records: (params?: CausalRecordListParams) =>
+    rpc<CausalRecordListResponse>('causal_record.list', params),
+  setState: (params: OperationalRealitySetStateParams) =>
+    rpc<OperationalRealityMutationResponse>('operational_reality.set_state', params),
+  setNextAction: (params: OperationalRealitySetNextActionParams) =>
+    rpc<OperationalRealityMutationResponse>('operational_reality.set_next_action', params),
+  followUpDecision: (params: OperationalRealityFollowUpDecisionParams) =>
+    rpc<{ followup_id: string; reality: OperationalRealityView }>(
+      'operational_reality.follow_up_decision',
+      params
+    ),
 }
 
 export const dayEventApi = {
@@ -176,7 +229,7 @@ export const dayEventApi = {
 export const focusApi = {
   current: () => rpc<FocusCurrentResponse>('focus.current'),
   list: (params?: { from?: string; to?: string }) => rpc<FocusListResponse>('focus.list', params),
-  start: (params: { title: string; work_item_id?: string; target_seconds?: number; telemetry_action_id?: string }) =>
+  start: (params: { title: string; work_item_id?: string; activity_zone?: ActivityZone; target_seconds?: number; telemetry_action_id?: string }) =>
     rpc<FocusSessionView>('focus.start', params),
   stop: (params?: { id?: string; note?: string; telemetry_action_id?: string }) =>
     rpc<FocusSessionView>('focus.stop', params),

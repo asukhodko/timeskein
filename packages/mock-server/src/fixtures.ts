@@ -13,6 +13,19 @@ import type {
   ActivityZone,
   WorkItemEventView,
   DayEventView,
+  EvidenceKind,
+  CausalRecordKind,
+  CausalRecordView,
+  NextActionStatus,
+  OperationalRealityBasisView,
+  OperationalRealityItemView,
+  OperationalRealityView,
+  OperationalState,
+  OperationalSubjectKind,
+  LabelView,
+  RefKind,
+  TrackView,
+  WorkItemSemanticsView,
 } from "@timeskein/contracts";
 import { v4 as uuidv4 } from "uuid";
 
@@ -176,6 +189,9 @@ export class MockDataStore {
   private appEvents: Map<string, AppEventView>;
   private workItemEvents: Map<string, WorkItemEventView>;
   private dayEvents: Map<string, DayEventView>;
+  private tracks: Map<string, TrackView>;
+  private labels: Map<string, LabelView>;
+  private causalRecords: Map<string, CausalRecordView>;
   private startTime: number;
 
   constructor() {
@@ -187,6 +203,9 @@ export class MockDataStore {
     this.appEvents = new Map();
     this.workItemEvents = new Map();
     this.dayEvents = new Map();
+    this.tracks = new Map();
+    this.labels = new Map();
+    this.causalRecords = new Map();
     this.startTime = Date.now();
 
     // Initialize with mock data
@@ -198,6 +217,494 @@ export class MockDataStore {
     }
     for (const rule of mockDenylist) {
       this.denylist.set(rule.id, { ...rule });
+    }
+
+    const track: TrackView = {
+      id: "track-timeskein",
+      title: "Timeskein",
+      path: [{ id: "track-timeskein", title: "Timeskein" }],
+      archived: false,
+      created_at: weekAgo,
+      updated_at: now,
+    };
+    const label: LabelView = { id: "label-dogfood", title: "dogfood", archived: false };
+    this.tracks.set(track.id, track);
+    this.labels.set(label.id, label);
+    const firstItem = this.workItems.get("item-1");
+    if (firstItem) {
+      firstItem.track = track;
+      firstItem.labels = [label];
+    }
+  }
+
+  listTaxonomy(includeArchived = false) {
+    return {
+      tracks: Array.from(this.tracks.values()).filter((track) => includeArchived || !track.archived),
+      labels: Array.from(this.labels.values()).filter((label) => includeArchived || !label.archived),
+      updated_at: new Date().toISOString(),
+    };
+  }
+
+  createTrack(title: string, parentTrackId?: string): TrackView {
+    const now = new Date().toISOString();
+    const track: TrackView = {
+      id: uuidv4(),
+      title: title.trim(),
+      parent_track_id: parentTrackId,
+      path: [],
+      archived: false,
+      created_at: now,
+      updated_at: now,
+    };
+    this.tracks.set(track.id, track);
+    this.refreshTrackPaths();
+    return this.tracks.get(track.id)!;
+  }
+
+  updateTrack(id: string, params: { title?: string; parent_track_id?: string | null }): TrackView | undefined {
+    const track = this.tracks.get(id);
+    if (!track) return undefined;
+    if (params.title !== undefined) track.title = params.title.trim();
+    if (params.parent_track_id !== undefined) track.parent_track_id = params.parent_track_id || undefined;
+    track.updated_at = new Date().toISOString();
+    this.refreshTrackPaths();
+    this.refreshAssignedSemantics();
+    return this.tracks.get(id);
+  }
+
+  archiveTrack(id: string, archived: boolean): TrackView | undefined {
+    const track = this.tracks.get(id);
+    if (!track) return undefined;
+    track.archived = archived;
+    track.updated_at = new Date().toISOString();
+    this.refreshAssignedSemantics();
+    return track;
+  }
+
+  createLabel(title: string): LabelView {
+    const label = { id: uuidv4(), title: title.trim(), archived: false };
+    this.labels.set(label.id, label);
+    return label;
+  }
+
+  updateLabel(id: string, title: string): LabelView | undefined {
+    const label = this.labels.get(id);
+    if (!label) return undefined;
+    label.title = title.trim();
+    this.refreshAssignedSemantics();
+    return label;
+  }
+
+  archiveLabel(id: string, archived: boolean): LabelView | undefined {
+    const label = this.labels.get(id);
+    if (!label) return undefined;
+    label.archived = archived;
+    this.refreshAssignedSemantics();
+    return label;
+  }
+
+  setWorkItemSemantics(id: string, trackId?: string | null, labelIds: string[] = []): WorkItemSemanticsView | undefined {
+    const item = this.workItems.get(id);
+    if (!item) return undefined;
+    item.track = trackId ? this.tracks.get(trackId) : undefined;
+    item.labels = labelIds.map((labelId) => this.labels.get(labelId)).filter((label): label is LabelView => Boolean(label));
+    item.updated_at = new Date().toISOString();
+    return { track: item.track, labels: item.labels };
+  }
+
+  hasOperationalSubject(kind: OperationalSubjectKind, id: string): boolean {
+    if (kind === "work_item") return this.workItems.has(id);
+    if (kind === "track") return this.tracks.has(id);
+    return this.captures.has(id);
+  }
+
+  listCausalRecords(params: {
+    subject_kind?: OperationalSubjectKind;
+    subject_id?: string;
+    from?: string;
+    to?: string;
+  } = {}): CausalRecordView[] {
+    const from = params.from ? new Date(params.from).getTime() : Number.NEGATIVE_INFINITY;
+    const to = params.to ? new Date(params.to).getTime() : Number.POSITIVE_INFINITY;
+    return Array.from(this.causalRecords.values())
+      .filter((record) => {
+        if (params.subject_kind && record.subject_kind !== params.subject_kind) return false;
+        if (params.subject_id && record.subject_id !== params.subject_id) return false;
+        const occurredAt = new Date(record.occurred_at).getTime();
+        return occurredAt >= from && occurredAt <= to;
+      })
+      .sort((left, right) =>
+        left.occurred_at.localeCompare(right.occurred_at) ||
+        left.recorded_at.localeCompare(right.recorded_at) ||
+        left.id.localeCompare(right.id)
+      );
+  }
+
+  setOperationalState(params: {
+    subject_kind: OperationalSubjectKind;
+    subject_id: string;
+    state: OperationalState;
+    reason?: string;
+    confirmation?: boolean;
+    occurred_at?: string;
+  }): CausalRecordView {
+    const asOf = params.occurred_at ?? new Date().toISOString();
+    const previous = this.latestCausalRecord(params.subject_kind, params.subject_id, asOf, (record) =>
+      Boolean(record.operational_state)
+    );
+    const changesKnownState = Boolean(previous && previous.operational_state !== params.state);
+    if (changesKnownState && !params.reason?.trim()) {
+      throw new Error("Reason is required when correcting a known operational state");
+    }
+    const kind: CausalRecordKind = previous?.operational_state === params.state || (params.confirmation && !changesKnownState)
+      ? "confirmation"
+      : previous
+        ? "correction"
+        : "state_assertion";
+    const record = this.createCausalRecord({
+      subject_kind: params.subject_kind,
+      subject_id: params.subject_id,
+      kind,
+      operational_state: params.state,
+      text: params.reason?.trim() || undefined,
+      occurred_at: asOf,
+      supersedes_id: previous?.id,
+      payload: {
+        previous_state: previous?.operational_state,
+        confirmation: params.confirmation ?? false,
+      },
+    });
+
+    if (params.subject_kind === "work_item") {
+      const item = this.workItems.get(params.subject_id);
+      if (item) {
+        item.state = operationalToWorkItemState(params.state);
+        item.updated_at = new Date().toISOString();
+        item.last_seen_at = item.updated_at;
+      }
+    } else if (params.subject_kind === "capture" && params.state === "completed") {
+      this.resolveCapture(params.subject_id);
+    }
+    return record;
+  }
+
+  setOperationalNextAction(params: {
+    subject_kind: OperationalSubjectKind;
+    subject_id: string;
+    action: "set" | "complete" | "dismiss";
+    text?: string;
+    occurred_at?: string;
+  }): CausalRecordView {
+    const asOf = params.occurred_at ?? new Date().toISOString();
+    const previous = this.latestCausalRecord(params.subject_kind, params.subject_id, asOf, (record) =>
+      record.kind === "next_action" && record.next_action_status === "open"
+    );
+    if (params.action === "set" && !params.text?.trim()) throw new Error("Next action text is required");
+    if (params.action !== "set" && !previous) throw new Error("Open next action not found");
+    const status: NextActionStatus = params.action === "set"
+      ? "open"
+      : params.action === "complete"
+        ? "completed"
+        : "dismissed";
+    return this.createCausalRecord({
+      subject_kind: params.subject_kind,
+      subject_id: params.subject_id,
+      kind: "next_action",
+      next_action_status: status,
+      text: params.action === "set" ? params.text!.trim() : previous!.text,
+      occurred_at: asOf,
+      supersedes_id: previous?.id,
+      payload: { operation: params.action },
+    });
+  }
+
+  getOperationalReality(asOf = new Date().toISOString()): OperationalRealityView {
+    const asOfTime = new Date(asOf).getTime();
+    const activeFocus = this.getActiveFocusSession();
+    const items: OperationalRealityItemView[] = [];
+    const focusTotals = this.aggregateWorkItemFocusSeconds(
+      new Date(asOfTime - 14 * 24 * 60 * 60 * 1000).toISOString(),
+      asOf
+    );
+    const allRecords = this.listCausalRecords({ to: asOf });
+    const toBasis = (record: CausalRecordView) => causalBasis(
+      record,
+      record.evidence_event_id
+        ? this.workItemEvents.get(record.evidence_event_id)?.evidence?.refs ?? []
+        : []
+    );
+
+    for (const workItem of this.workItems.values()) {
+      if (workItem.id.startsWith("deleted-")) continue;
+      const records = this.listCausalRecords({
+        subject_kind: "work_item",
+        subject_id: workItem.id,
+        to: asOf,
+      });
+      const stateRecord = latestUnsuperseded(records, (record) => Boolean(record.operational_state));
+      const nextRecord = latestUnsuperseded(records, (record) =>
+        record.kind === "next_action" && record.next_action_status === "open"
+      );
+      const currentRecords = activeCausalRecords(records);
+      const isCurrentActive = activeFocus?.work_item_id === workItem.id && asOfTime >= new Date(activeFocus.started_at).getTime();
+      const state = isCurrentActive
+        ? "active"
+        : stateRecord?.operational_state ?? workItemToOperationalState(workItem.state);
+      const stateProvenance = isCurrentActive ? "confirmed" : stateRecord?.provenance ?? "legacy_current";
+      const stateConfirmed = stateProvenance === "confirmed";
+      const focusSeconds = focusTotals.get(workItem.id) ?? 0;
+      const hasResult = currentRecords.some((record) => record.kind === "result");
+      const highEffortWithoutResult = focusSeconds >= 2 * 60 * 60 && !hasResult;
+      const facts = currentRecords
+        .filter((record) => ["state_assertion", "confirmation", "correction", "result", "decision"].includes(record.kind))
+        .map(toBasis)
+        .sort((left, right) => right.occurred_at.localeCompare(left.occurred_at))
+        .slice(0, 6);
+      const latestIntent = latestUnsuperseded(currentRecords, (record) => record.kind === "intent");
+      if (latestIntent && !facts.some((fact) => fact.causal_record_id === latestIntent.id)) {
+        facts.push(toBasis(latestIntent));
+        facts.sort((left, right) => right.occurred_at.localeCompare(left.occurred_at));
+        facts.splice(6);
+      }
+      const unknowns: string[] = [];
+      if (!stateConfirmed) unknowns.push("Состояние восстановлено или выведено, но не подтверждено пользователем");
+      if (!nextRecord && state !== "completed" && state !== "parked") unknowns.push("Не зафиксировано следующее действие");
+      if (highEffortWithoutResult) unknowns.push("Не зафиксировано, что изменилось после вложенного времени");
+      if (!workItem.track) unknowns.push("Дело не отнесено к долгому направлению");
+      const needsNextAction = !nextRecord && state !== "completed" && state !== "parked";
+      const stateRequiresAttention = ["active", "waiting", "blocked", "reactive", "stale-important", "meeting-tail"].includes(state) ||
+        (state === "unknown" && Boolean(stateRecord));
+      const requiresAttention = stateRequiresAttention || Boolean(nextRecord) || highEffortWithoutResult ||
+        (workItem.pinned && needsNextAction);
+      const whyVisible = [operationalStateReason(state)];
+      if (highEffortWithoutResult) {
+        whyVisible.push(`За 14 дней учтено ${Math.floor(focusSeconds / 60)} мин работы без зафиксированного результата`);
+      }
+      items.push({
+        id: `work_item:${workItem.id}`,
+        subject_kind: "work_item",
+        subject_id: workItem.id,
+        title: workItem.title,
+        work_item_id: workItem.id,
+        track_id: workItem.track?.id,
+        state,
+        state_provenance: stateProvenance,
+        state_confirmed: stateConfirmed,
+        confidence: stateConfirmed ? 1 : 0.7,
+        state_record_id: stateRecord?.id,
+        why_visible: whyVisible,
+        facts,
+        unknowns,
+        last_significant_change: facts[0],
+        next_action: nextRecord ? {
+          record_id: nextRecord.id,
+          text: nextRecord.text ?? "",
+          status: nextRecord.next_action_status ?? "open",
+          occurred_at: nextRecord.occurred_at,
+          provenance: nextRecord.provenance,
+          confidence: nextRecord.confidence,
+        } : undefined,
+        track_path: workItem.track?.path ?? [],
+        labels: workItem.labels ?? [],
+        can_start_focus: state !== "completed",
+        requires_attention: requiresAttention,
+        last_touched_at: workItem.last_seen_at ?? workItem.updated_at,
+      });
+    }
+
+    for (const track of this.tracks.values()) {
+      const records = this.listCausalRecords({ subject_kind: "track", subject_id: track.id, to: asOf });
+      const currentRecords = activeCausalRecords(records);
+      const relatedRecords = activeCausalRecords(allRecords.filter((record) =>
+        record.subject_kind === "work_item" &&
+        ["result", "decision", "correction"].includes(record.kind) &&
+        record.track_snapshot.some((pathNode) => pathNode.id === track.id)
+      ));
+      const stateRecord = latestUnsuperseded(records, (record) => Boolean(record.operational_state));
+      const nextRecord = latestUnsuperseded(records, (record) =>
+        record.kind === "next_action" && record.next_action_status === "open"
+      );
+      const hasCurrentReason = currentRecords.some((record) =>
+        Boolean(record.operational_state) ||
+        record.kind === "decision" ||
+        (record.kind === "next_action" && record.next_action_status === "open")
+      );
+      const recentRelatedCutoff = asOfTime - 14 * 24 * 60 * 60 * 1000;
+      const hasRecentRelatedReason = relatedRecords.some((record) =>
+        new Date(record.occurred_at).getTime() >= recentRelatedCutoff
+      );
+      if (!hasCurrentReason && !hasRecentRelatedReason) continue;
+      const state = stateRecord?.operational_state ?? "unknown";
+      const stateProvenance = stateRecord?.provenance ?? "derived";
+      const stateConfirmed = stateProvenance === "confirmed";
+      const facts = [...currentRecords, ...relatedRecords]
+        .map(toBasis)
+        .sort((left, right) => right.occurred_at.localeCompare(left.occurred_at))
+        .slice(0, 6);
+      const unknowns: string[] = [];
+      if (!stateConfirmed) unknowns.push("Состояние направления ещё не подтверждено");
+      if (!nextRecord) unknowns.push("Не зафиксировано следующее действие по направлению");
+      const whyVisible = [
+        ...(stateRecord ? ["Состояние направления сохранено в причинной истории"] : []),
+        ...(currentRecords.some((record) => record.kind === "decision")
+          ? ["Есть сохранённое решение по направлению"]
+          : []),
+        ...(nextRecord ? ["По направлению зафиксировано следующее действие"] : []),
+        ...(relatedRecords.length > 0
+          ? ["По направлению есть недавние результаты или решения связанных дел"]
+          : []),
+      ];
+      items.push({
+        id: `track:${track.id}`,
+        subject_kind: "track",
+        subject_id: track.id,
+        title: track.title,
+        track_id: track.id,
+        state,
+        state_provenance: stateProvenance,
+        state_confirmed: stateConfirmed,
+        confidence: stateRecord?.confidence ?? 0.75,
+        state_record_id: stateRecord?.id,
+        why_visible: whyVisible,
+        facts,
+        unknowns,
+        last_significant_change: facts[0],
+        next_action: nextRecord ? {
+          record_id: nextRecord.id,
+          text: nextRecord.text ?? "",
+          status: nextRecord.next_action_status ?? "open",
+          occurred_at: nextRecord.occurred_at,
+          provenance: nextRecord.provenance,
+          confidence: nextRecord.confidence,
+        } : undefined,
+        track_path: track.path,
+        labels: [],
+        can_start_focus: false,
+        requires_attention: Boolean(stateRecord) &&
+            ["active", "waiting", "blocked", "reactive", "stale-important", "meeting-tail", "unknown"].includes(state) ||
+          Boolean(nextRecord),
+        last_touched_at: currentRecords
+          .concat(relatedRecords)
+          .map((record) => record.occurred_at)
+          .sort((left, right) => right.localeCompare(left))[0] ?? asOf,
+      });
+    }
+
+    for (const capture of this.captures.values()) {
+      if (capture.state !== "open" || new Date(capture.created_at).getTime() > asOfTime) continue;
+      const records = this.listCausalRecords({ subject_kind: "capture", subject_id: capture.id, to: asOf });
+      const stateRecord = latestUnsuperseded(records, (record) => Boolean(record.operational_state));
+      items.push({
+        id: `capture:${capture.id}`,
+        subject_kind: "capture",
+        subject_id: capture.id,
+        title: capture.text,
+        capture_id: capture.id,
+        state: stateRecord?.operational_state ?? "unknown",
+        state_provenance: stateRecord?.provenance ?? "legacy_current",
+        state_confirmed: stateRecord?.provenance === "confirmed",
+        confidence: stateRecord ? 1 : 0.7,
+        state_record_id: stateRecord?.id,
+        why_visible: ["Запись инбокса ещё не разобрана"],
+        facts: activeCausalRecords(records).map(toBasis),
+        unknowns: ["Нужно закрыть запись или превратить её в дело"],
+        track_path: [],
+        labels: [],
+        can_start_focus: false,
+        requires_attention: true,
+        last_touched_at: capture.updated_at,
+      });
+    }
+
+    items.sort((left, right) => Number(right.requires_attention) - Number(left.requires_attention) || right.last_touched_at.localeCompare(left.last_touched_at));
+    const byState: Record<string, number> = {};
+    for (const item of items) byState[item.state] = (byState[item.state] ?? 0) + 1;
+    return {
+      as_of: asOf,
+      items,
+      summary: {
+        total: items.length,
+        requiring_attention: items.filter((item) => item.requires_attention).length,
+        confirmed: items.filter((item) => item.state_provenance === "confirmed").length,
+        derived: items.filter((item) => item.state_provenance === "derived").length,
+        legacy_current: items.filter((item) => item.state_provenance === "legacy_current").length,
+        without_next_action: items.filter((item) => !item.next_action).length,
+        by_state: byState,
+      },
+      updated_at: new Date().toISOString(),
+    };
+  }
+
+  private createCausalRecord(params: {
+    subject_kind: OperationalSubjectKind;
+    subject_id: string;
+    kind: CausalRecordKind;
+    operational_state?: OperationalState;
+    next_action_status?: NextActionStatus;
+    text?: string;
+    occurred_at: string;
+    supersedes_id?: string;
+    focus_session_id?: string;
+    evidence_event_id?: string;
+    payload?: Record<string, unknown>;
+  }): CausalRecordView {
+    const workItem = params.subject_kind === "work_item" ? this.workItems.get(params.subject_id) : undefined;
+    const track = params.subject_kind === "track" ? this.tracks.get(params.subject_id) : workItem?.track;
+    const record: CausalRecordView = {
+      id: uuidv4(),
+      subject_kind: params.subject_kind,
+      subject_id: params.subject_id,
+      work_item_id: workItem?.id,
+      track_id: track?.id,
+      capture_id: params.subject_kind === "capture" ? params.subject_id : undefined,
+      kind: params.kind,
+      operational_state: params.operational_state,
+      next_action_status: params.next_action_status,
+      text: params.text,
+      occurred_at: params.occurred_at,
+      recorded_at: new Date().toISOString(),
+      source: "user",
+      provenance: "confirmed",
+      confidence: 1,
+      schema_version: 1,
+      device_id: "mock",
+      supersedes_id: params.supersedes_id,
+      focus_session_id: params.focus_session_id,
+      evidence_event_id: params.evidence_event_id,
+      track_snapshot: track?.path ?? [],
+      labels_snapshot: workItem?.labels ?? [],
+      payload: params.payload ?? {},
+    };
+    this.causalRecords.set(record.id, record);
+    return record;
+  }
+
+  private latestCausalRecord(
+    subjectKind: OperationalSubjectKind,
+    subjectId: string,
+    asOf: string,
+    predicate: (record: CausalRecordView) => boolean
+  ): CausalRecordView | undefined {
+    return latestUnsuperseded(
+      this.listCausalRecords({ subject_kind: subjectKind, subject_id: subjectId, to: asOf }),
+      predicate
+    );
+  }
+
+  private refreshTrackPaths() {
+    const buildPath = (track: TrackView, seen = new Set<string>()): TrackView["path"] => {
+      if (seen.has(track.id)) return [{ id: track.id, title: track.title }];
+      seen.add(track.id);
+      const parent = track.parent_track_id ? this.tracks.get(track.parent_track_id) : undefined;
+      return [...(parent ? buildPath(parent, seen) : []), { id: track.id, title: track.title }];
+    };
+    for (const track of this.tracks.values()) track.path = buildPath(track);
+  }
+
+  private refreshAssignedSemantics() {
+    for (const item of this.workItems.values()) {
+      if (item.track) item.track = this.tracks.get(item.track.id);
+      item.labels = (item.labels ?? []).map((label) => this.labels.get(label.id)).filter((label): label is LabelView => Boolean(label));
     }
   }
 
@@ -522,11 +1029,11 @@ export class MockDataStore {
 
     // Apply search filter
     if (search) {
-      const searchLower = search.toLowerCase();
+      const searchLower = normalizeSearchText(search);
       items = items.filter(
         (item) =>
-          item.title.toLowerCase().includes(searchLower) ||
-          (item.note && item.note.toLowerCase().includes(searchLower))
+          normalizeSearchText(item.title).includes(searchLower) ||
+          (item.note && normalizeSearchText(item.note).includes(searchLower))
       );
     }
 
@@ -575,11 +1082,11 @@ export class MockDataStore {
   }
 
   findWorkItemByTitle(title: string): WorkItemView | undefined {
-    const normalized = title.trim().toLocaleLowerCase();
+    const normalized = normalizeSearchText(title);
     if (!normalized) return undefined;
 
     return Array.from(this.workItems.values()).find(
-      (item) => item.title.trim().toLocaleLowerCase() === normalized
+      (item) => normalizeSearchText(item.title) === normalized
     );
   }
 
@@ -589,7 +1096,9 @@ export class MockDataStore {
     type?: "task" | "project" | "question",
     state?: WorkItemState,
     activityZone?: ActivityZone,
-    note?: string
+    note?: string,
+    trackId?: string | null,
+    labelIds: string[] = []
   ): WorkItemView {
     const existing = this.findWorkItemByTitle(title);
     if (existing) {
@@ -612,6 +1121,8 @@ export class MockDataStore {
       refs: [],
       today_active_seconds: 0,
       total_active_seconds: 0,
+      track: trackId ? this.tracks.get(trackId) : undefined,
+      labels: labelIds.map((labelId) => this.labels.get(labelId)).filter((label): label is LabelView => Boolean(label)),
       created_at: now,
       updated_at: now,
       last_seen_at: now,
@@ -685,6 +1196,9 @@ export class MockDataStore {
     focus_session_id?: string;
     source_capture_id?: string;
     origin?: string;
+    evidence_kind?: EvidenceKind;
+    ref_ids?: string[];
+    new_ref?: { kind: RefKind; value: string; is_primary?: boolean };
   }): WorkItemEventView | undefined {
     const item = this.workItems.get(params.id);
     const text = params.text.trim();
@@ -705,6 +1219,26 @@ export class MockDataStore {
       payload.origin = params.origin;
     }
 
+    const evidenceRefs = (params.ref_ids ?? [])
+      .map((refId) => item.refs.find((ref) => ref.id === refId))
+      .filter((ref): ref is RefView => Boolean(ref));
+    if (params.new_ref?.value.trim()) {
+      const value = params.new_ref.value.trim();
+      let ref = item.refs.find((candidate) => candidate.kind === params.new_ref?.kind && candidate.value === value);
+      if (!ref) {
+        ref = {
+          id: uuidv4(),
+          kind: params.new_ref.kind,
+          value,
+          is_primary: params.new_ref.is_primary ?? item.refs.length === 0,
+        };
+        item.refs.push(ref);
+        item.refs_count = item.refs.length;
+        this.refs.set(ref.id, ref);
+      }
+      if (!evidenceRefs.some((candidate) => candidate.id === ref?.id)) evidenceRefs.push(ref);
+    }
+
     const event: WorkItemEventView = {
       id: uuidv4(),
       ts: now,
@@ -713,13 +1247,58 @@ export class MockDataStore {
       text,
       focus_session_id: params.focus_session_id,
       payload,
+      evidence: params.evidence_kind ? {
+        kind: params.evidence_kind,
+        focus_session_id: params.focus_session_id,
+        captured_at: now,
+        provenance: "captured",
+        refs: evidenceRefs.map((ref) => ({
+          id: uuidv4(),
+          ref_id: ref.id,
+          kind: ref.kind,
+          value: ref.value,
+          captured_at: now,
+          provenance: "captured",
+        })),
+      } : undefined,
     };
 
     this.workItemEvents.set(event.id, event);
+    if (params.evidence_kind && params.evidence_kind !== "observation") {
+      const causalKind: CausalRecordKind = params.evidence_kind === "result"
+        ? "result"
+        : params.evidence_kind === "decision"
+          ? "decision"
+          : params.evidence_kind === "next_step"
+            ? "next_action"
+            : "state_assertion";
+      const previous = params.evidence_kind === "next_step"
+        ? this.latestCausalRecord("work_item", item.id, now, (record) =>
+            record.kind === "next_action" && record.next_action_status === "open"
+          )
+        : params.evidence_kind === "blocker"
+          ? this.latestCausalRecord("work_item", item.id, now, (record) =>
+              Boolean(record.operational_state)
+            )
+          : undefined;
+      this.createCausalRecord({
+        subject_kind: "work_item",
+        subject_id: item.id,
+        kind: causalKind,
+        operational_state: params.evidence_kind === "blocker" ? "blocked" : undefined,
+        next_action_status: params.evidence_kind === "next_step" ? "open" : undefined,
+        text,
+        occurred_at: now,
+        supersedes_id: previous?.id,
+        focus_session_id: params.focus_session_id,
+        evidence_event_id: event.id,
+        payload: { origin: "work_item.evidence", evidence_kind: params.evidence_kind },
+      });
+    }
     return event;
   }
 
-  updateWorkItemEvent(id: string, text: string): WorkItemEventView | undefined {
+  updateWorkItemEvent(id: string, text: string, evidenceKind?: EvidenceKind): WorkItemEventView | undefined {
     const event = this.workItemEvents.get(id);
     const trimmed = text.trim();
     if (!event || event.kind !== "note_added" || !trimmed) return undefined;
@@ -729,6 +1308,17 @@ export class MockDataStore {
       ...event,
       text: trimmed,
       payload,
+      evidence: evidenceKind
+        ? event.evidence
+          ? { ...event.evidence, kind: evidenceKind }
+          : {
+              kind: evidenceKind,
+              focus_session_id: event.focus_session_id,
+              captured_at: new Date().toISOString(),
+              provenance: "captured" as const,
+              refs: [],
+            }
+        : event.evidence,
     };
 
     this.workItemEvents.set(id, updated);
@@ -812,7 +1402,7 @@ export class MockDataStore {
 
   updateWorkItem(
     id: string,
-    params: { title?: string; type?: "task" | "project" | "question" | null; activity_zone?: ActivityZone; note?: string | null }
+    params: { title?: string; type?: "task" | "project" | "question" | null; activity_zone?: ActivityZone; note?: string | null; track_id?: string | null; label_ids?: string[] }
   ): WorkItemView | undefined {
     const item = this.workItems.get(id);
     if (!item) return undefined;
@@ -834,6 +1424,10 @@ export class MockDataStore {
     }
     if (params.note !== undefined) {
       item.note = params.note?.trim() || undefined;
+    }
+    if (params.track_id !== undefined || params.label_ids !== undefined) {
+      item.track = params.track_id ? this.tracks.get(params.track_id) : undefined;
+      item.labels = (params.label_ids ?? []).map((labelId) => this.labels.get(labelId)).filter((label): label is LabelView => Boolean(label));
     }
     item.updated_at = now;
     item.last_seen_at = now;
@@ -982,6 +1576,7 @@ export class MockDataStore {
   startFocusSession(params: {
     title: string;
     work_item_id?: string;
+    activity_zone?: ActivityZone;
     target_seconds?: number;
   }): FocusSessionView {
     const title = params.title?.trim();
@@ -993,7 +1588,13 @@ export class MockDataStore {
       if (!title) {
         throw new Error("Title is required");
       }
-      workItem = this.findWorkItemByTitle(title) || this.createWorkItem(title, "task", "unknown", "work");
+      workItem = this.findWorkItemByTitle(title) || this.createWorkItem(title, "task", "unknown", params.activity_zone || "work");
+    }
+
+    if (params.activity_zone && workItem.activity_zone !== params.activity_zone) {
+      workItem.activity_zone = params.activity_zone;
+      workItem.updated_at = new Date().toISOString();
+      this.workItems.set(workItem.id, workItem);
     }
 
     const current = this.getActiveFocusSession();
@@ -1024,6 +1625,14 @@ export class MockDataStore {
     };
 
     this.focusSessions.set(session.id, session);
+    this.createCausalRecord({
+      subject_kind: "work_item",
+      subject_id: workItem.id,
+      kind: "intent",
+      text: `Начат фокус: ${workItem.title}`,
+      occurred_at: now,
+      payload: { origin: "focus.start" },
+    });
 
     workItem.state = "active";
     workItem.updated_at = now;
@@ -1151,6 +1760,16 @@ export class MockDataStore {
       updated_at: now,
     };
     this.focusSessions.set(session.id, session);
+    if (session.work_item_id) {
+      this.createCausalRecord({
+        subject_kind: "work_item",
+        subject_id: session.work_item_id,
+        kind: "intent",
+        text: `Добавлен фокус-блок: ${session.title}`,
+        occurred_at: session.started_at,
+        payload: { origin: "focus.create_stopped", post_factum: true },
+      });
+    }
 
     return this.withLiveTiming(session);
   }
@@ -1328,4 +1947,88 @@ function sanitizePayload(payload?: Record<string, unknown>) {
     }
   }
   return result;
+}
+
+function normalizeSearchText(value: string) {
+  const homoglyphs: Record<string, string> = {
+    'а': 'a',
+    'в': 'b',
+    'е': 'e',
+    'к': 'k',
+    'м': 'm',
+    'н': 'h',
+    'о': 'o',
+    'р': 'p',
+    'с': 'c',
+    'т': 't',
+    'у': 'y',
+    'х': 'x',
+  };
+
+  return Array.from(value.trim().toLocaleLowerCase('ru-RU'))
+    .map((character) => homoglyphs[character] ?? character)
+    .join('');
+}
+
+function latestUnsuperseded(
+  records: CausalRecordView[],
+  predicate: (record: CausalRecordView) => boolean
+): CausalRecordView | undefined {
+  const superseded = new Set(records.map((record) => record.supersedes_id).filter(Boolean));
+  return records
+    .filter((record) => predicate(record) && !superseded.has(record.id))
+    .sort((left, right) =>
+      right.occurred_at.localeCompare(left.occurred_at) ||
+      right.recorded_at.localeCompare(left.recorded_at) ||
+      right.id.localeCompare(left.id)
+    )[0];
+}
+
+function activeCausalRecords(records: CausalRecordView[]): CausalRecordView[] {
+  const superseded = new Set(records.map((record) => record.supersedes_id).filter(Boolean));
+  return records.filter((record) => !superseded.has(record.id));
+}
+
+function causalBasis(
+  record: CausalRecordView,
+  refs: OperationalRealityBasisView["refs"] = []
+): OperationalRealityBasisView {
+  return {
+    kind: record.kind,
+    summary: record.text || record.operational_state || record.kind,
+    occurred_at: record.occurred_at,
+    source: record.source,
+    provenance: record.provenance,
+    confidence: record.confidence,
+    refs,
+    causal_record_id: record.id,
+  };
+}
+
+function workItemToOperationalState(state: WorkItemState): OperationalState {
+  if (state === "done") return "completed";
+  if (state === "someday") return "parked";
+  return state;
+}
+
+function operationalToWorkItemState(state: OperationalState): WorkItemState {
+  if (state === "completed") return "done";
+  if (state === "parked") return "someday";
+  if (state === "active" || state === "waiting" || state === "blocked") return state;
+  return "unknown";
+}
+
+function operationalStateReason(state: OperationalState): string {
+  const reasons: Record<OperationalState, string> = {
+    active: "Сейчас идёт фокус по этому делу",
+    waiting: "Дело ожидает внешнего события",
+    blocked: "Дело явно заблокировано",
+    parked: "Припаркованное дело оставлено в текущем контексте",
+    reactive: "Дело отмечено как реактивная работа",
+    completed: "Недавно завершённое дело оставлено для проверки истории",
+    "stale-important": "Важное дело давно не получало подтверждённого движения",
+    "meeting-tail": "После встречи остался незакрытый хвост",
+    unknown: "Состояние дела ещё не подтверждено",
+  };
+  return reasons[state];
 }

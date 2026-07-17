@@ -436,11 +436,11 @@ execution:
       confidence: 0.95
       note: "Accepted. `operational-reality:gate -- --from 2026-07-15 --to 2026-07-17` passed: 2/2 days, 11/3 projection starts, meeting-tail/stale-important/waiting/reactive states, 1/1 correction plus restart, 3/1 Reflection follow-ups, 1/1 causal chain, and 2/2 normal closures."
     ts.steering.workspace_convergence:
-      progress: 0.8
+      progress: 0.85
       actual_start: "2026-07-17"
-      updated_at: "2026-07-17T10:55:00+03:00"
+      updated_at: "2026-07-17T20:48:00+03:00"
       confidence: 0.9
-      note: "Release candidate implemented and automatically verified. Item-backed contract, one primary workspace, secondary inventory, re-entry path, telemetry, export, and strict gate are ready. Product acceptance remains open until three real days and the manual no-external-active-list verdict."
+      note: "Release candidate implemented and automatically verified; day 1 of 3 passed on 2026-07-17 with a contract-backed start, normal closure, no errors/overlaps, and no external active-work list. Day-1 friction was fixed without invalidating evidence: searchable reality-aware contract selection, stable details, visible work outside the contract, clearer refresh semantics, and plain-text fields."
     ts.steering.workspace_day_contract:
       progress: 1.0
       actual_start: "2026-07-17"
@@ -469,10 +469,11 @@ execution:
       confidence: 0.9
       note: "Done for v1. Actions name start, return, revision, history, and inventory effects; the exact real-use boundary is documented in the three-day dogfood protocol."
     ts.steering.workspace_gate:
-      progress: 0.0
-      updated_at: "2026-07-17T10:55:00+03:00"
+      progress: 0.33
+      actual_start: "2026-07-17"
+      updated_at: "2026-07-17T20:48:00+03:00"
       confidence: 0.9
-      note: "Executable gate and fixtures are ready. Requires three contract/start/closure days, re-entry on two days, one honest revision, clean chains, no errors/overlaps/shadow dispatch starts, and a manual no-external-active-list verdict."
+      note: "Day 1 of 3 accepted: 1 contract, 1 contract start, 1 normal closure, no errors/overlaps/shadow dispatch starts, and no external active-work list. Remaining acceptance: two more full days, re-entry on both, at least one honest revision, final clean gate, and manual verdicts."
     ts.causal_memory.working_memory_bridge:
       progress: 0.0
       updated_at: "2026-07-17T09:30:00+03:00"

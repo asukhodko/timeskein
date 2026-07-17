@@ -130,13 +130,13 @@ Twelve real workdays selected a concrete route: converge the operational workspa
     │   ├── Explicit context capture and SourceNodes [planned] (13 focus-blocks)
     │   ├── Implement one source observation envelope [planned] (3 focus-blocks)
     │   └── Run a bounded active-app and browser-context probe [planned] (5 focus-blocks)
-    ├── Current-State Steering [in_progress] (22 focus-blocks) {89%}
+    ├── Current-State Steering [in_progress] (22 focus-blocks) {90%}
     │   ├── Confirm and correct operational state [done] (3 focus-blocks) {100%}
-    │   └── Converge Operational Reality, day contract, and inventory [in_progress] (13 focus-blocks) {81%}
+    │   └── Converge Operational Reality, day contract, and inventory [in_progress] (13 focus-blocks) {83%}
     │       ├── Build a visible item-backed day contract [done] (3 focus-blocks) {100%}
     │       ├── Make one primary operational surface [done] (4 focus-blocks) {100%}
     │       ├── Make workspace actions and review checks self-explanatory [done] (2 focus-blocks) {100%}
-    │       ├── One operational workspace drives the real day [planned] (1 focus-blocks) {0%}
+    │       ├── One operational workspace drives the real day [in_progress] (1 focus-blocks) {33%}
     │       └── Use the same loop for morning entry and re-entry [in_progress] (3 focus-blocks) {50%}
     ├── Explainable Episodes and Private Intelligence [deferred] (27 focus-blocks)
     │   ├── Connect Episodes into semantic Threads [deferred] (8 focus-blocks)
@@ -170,7 +170,7 @@ Twelve real workdays selected a concrete route: converge the operational workspa
 - Context Fabric supports one explicit external source [deferred] (1 focus-blocks)
 - Define minimum policy controls for a context probe [planned] (2 focus-blocks)
 - Full Context reconstructs work without becoming surveillance [deferred] (1 focus-blocks)
-- One operational workspace drives the real day [planned] (1 focus-blocks) {0%}
+- One operational workspace drives the real day [in_progress] (1 focus-blocks) {33%}
 - Private intelligence improves a real reflection decision [deferred] (1 focus-blocks)
 - Working memory supports multi-day re-entry [planned] (1 focus-blocks)
 <!-- GENERATED:END -->
@@ -214,7 +214,7 @@ gantt
     ✅ Make one primary operational surface  :done, ts_steering_workspace_primary_surface,    2026-07-17, 1d
     🔄 Use the same loop for morning entry and re-entry  :active, ts_steering_workspace_reentry,    2026-07-20, 3d
     ✅ Make workspace actions and review checks self-explanatory  :done, ts_steering_workspace_explainability,    2026-07-17, 1d
-    One operational workspace drives the real day  :milestone, ts_steering_workspace_gate,    2026-07-22, 0d
+    🔄 One operational workspace drives the real day  :milestone, active, ts_steering_workspace_gate,    2026-07-22, 0d
 ```
 
 ## Current work list
@@ -226,10 +226,10 @@ gantt
 -->
 <!-- GENERATED:START -->
 - Causal Work Memory [in_progress] (29 focus-blocks) {38% cov:90%}
-- Current-State Steering [in_progress] (22 focus-blocks) {89%}
-- Converge Operational Reality, day contract, and inventory [in_progress] (13 focus-blocks) {81%}
+- Current-State Steering [in_progress] (22 focus-blocks) {90%}
+- Converge Operational Reality, day contract, and inventory [in_progress] (13 focus-blocks) {83%}
 - Use the same loop for morning entry and re-entry [in_progress] (3 focus-blocks) {50%}
-- One operational workspace drives the real day [planned] (1 focus-blocks) {0%}
+- One operational workspace drives the real day [in_progress] (1 focus-blocks) {33%}
 <!-- GENERATED:END -->
 
 ## Next risk-reduction work

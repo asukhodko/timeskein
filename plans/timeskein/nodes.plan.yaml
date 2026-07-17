@@ -336,14 +336,14 @@ nodes:
     title: One operational workspace drives the real day
     kind: milestone
     parent: ts.steering.workspace_convergence
-    status: planned
+    status: in_progress
     milestone: true
     effort: 1
     deps:
       - id: ts.steering.workspace_primary_surface
       - id: ts.steering.workspace_reentry
       - id: ts.steering.workspace_explainability
-    notes: Candidate ready. Accept only after `pnpm operational-workspace:gate` sees three contract/start/closure days, re-entry on two days, one honest revision, clean chains and no regressions, plus a manual verdict that no external active-work list was needed.
+    notes: Day 1 of 3 accepted on 2026-07-17 with a contract-backed start, normal closure, no errors or overlaps, and no external active-work list. Accept only after two more contract/start/closure days, re-entry on both remaining days, one honest revision, clean chains and no regressions.
     x:
       ops:
         attention_class: now

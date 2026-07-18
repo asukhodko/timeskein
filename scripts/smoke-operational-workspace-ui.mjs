@@ -24,6 +24,10 @@ assert(workspace.includes("normalizeSearchText"), "subject search is not normali
 assert(workspace.includes("candidate.reality?.requires_attention"), "subject picker does not expose Operational Reality priority");
 assert(workspace.includes("outsideContractToday"), "workspace does not detect tracked work outside the current contract");
 assert(workspace.includes("Сегодня вне договора"), "workspace does not surface contract drift");
+assert(workspace.includes("startContractCoordination"), "day-contract editor cannot start tracked coordination");
+assert(workspace.includes("activity_zone: 'coordination'"), "day-contract coordination is not classified as Coordination");
+assert(workspace.includes("control: 'day_contract_coordination'"), "day-contract coordination has no telemetry control");
+assert(workspace.includes("item.activity_zone !== 'coordination'"), "contract coordination can create false outside-contract drift");
 assert(workspace.includes("lg:h-[24rem]"), "workspace details area has no stable desktop height");
 for (const attribute of ["autocorrect", "autocapitalize", "autocomplete", "spellcheck"]) {
   assert(app.includes(`setAttribute('${attribute}', 'off')`) || app.includes(`setAttribute('${attribute}', 'false')`), `plain-text input policy is missing ${attribute}`);
@@ -38,6 +42,9 @@ for (const text of [
   "Вернуться по договору",
   "История договора",
   "Пересобрать состояние",
+  "Начать учёт координации",
+  "Переключить на координацию",
+  "Координация учитывается",
   "lg:grid-cols",
   "min-w-0",
   "break-words",

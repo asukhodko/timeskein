@@ -438,9 +438,9 @@ execution:
     ts.steering.workspace_convergence:
       progress: 0.85
       actual_start: "2026-07-17"
-      updated_at: "2026-07-17T20:48:00+03:00"
+      updated_at: "2026-07-18T12:45:00+03:00"
       confidence: 0.9
-      note: "Release candidate implemented and automatically verified; day 1 of 3 passed on 2026-07-17 with a contract-backed start, normal closure, no errors/overlaps, and no external active-work list. Day-1 friction was fixed without invalidating evidence: searchable reality-aware contract selection, stable details, visible work outside the contract, clearer refresh semantics, and plain-text fields."
+      note: "Release candidate implemented and automatically verified; day 1 of 3 passed on 2026-07-17 with a contract-backed start, normal closure, no errors/overlaps, and no external active-work list. Day-1 friction was fixed without invalidating evidence: searchable reality-aware contract selection, stable details, visible work outside the contract, clearer refresh semantics, plain-text fields, and explicit Coordination tracking while assembling or revising the contract."
     ts.steering.workspace_day_contract:
       progress: 1.0
       actual_start: "2026-07-17"

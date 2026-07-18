@@ -4,6 +4,7 @@ import type {
   DayContractRevisionView,
   DayContractSubjectRef,
   DayContractSubjectSnapshot,
+  FocusSessionView,
   OperationalRealityItemView,
   TrackView,
   WorkItemView,
@@ -60,6 +61,7 @@ export default function OperationalWorkspacePanel() {
   const [showHistory, setShowHistory] = useState(false)
   const [showAttention, setShowAttention] = useState(false)
   const [selectedRealityId, setSelectedRealityId] = useState<string | null>(null)
+  const [coordinationError, setCoordinationError] = useState<string | null>(null)
 
   const workspace = workspaceQuery.data
   const contract = workspace?.current_contract
@@ -88,6 +90,7 @@ export default function OperationalWorkspacePanel() {
     () => contract
       ? workItems
         .filter((item) => item.today_active_seconds > 0 || item.id === currentFocus?.work_item_id)
+        .filter((item) => item.activity_zone !== 'coordination')
         .filter((item) => !workItemCoveredByContract(item, contract))
         .sort((left, right) => right.today_active_seconds - left.today_active_seconds)
       : [],
@@ -116,6 +119,7 @@ export default function OperationalWorkspacePanel() {
   const beginEdit = (kind: DayContractRevisionKind) => {
     setEditingKind(kind)
     setDraft(contract ? draftFromContract(contract) : EMPTY_DRAFT)
+    setCoordinationError(null)
   }
 
   const saveContract = () => {
@@ -141,6 +145,58 @@ export default function OperationalWorkspacePanel() {
           })
         }
         setEditingKind(null)
+      },
+    })
+  }
+
+  const startContractCoordination = (kind: DayContractRevisionKind) => {
+    if (startMutation.isPending || currentFocus?.activity_zone === 'coordination') return
+
+    const actionId = createActionId()
+    const wasSwitch = Boolean(currentFocus)
+    const title = coordinationFocusTitle(kind)
+    setCoordinationError(null)
+    void logAppEvent({
+      source: 'ui',
+      kind: wasSwitch ? 'focus_switch_requested' : 'focus_start_requested',
+      payload: {
+        action_id: actionId,
+        control: 'day_contract_coordination',
+        revision_kind: kind,
+      },
+    })
+    startMutation.mutate({
+      title,
+      activity_zone: 'coordination',
+      target_seconds: 25 * 60,
+      telemetry_action_id: actionId,
+    }, {
+      onSuccess: (session) => {
+        void logAppEvent({
+          source: 'ui',
+          kind: wasSwitch ? 'focus_switched' : 'focus_started',
+          work_item_id: session.work_item_id,
+          focus_session_id: session.id,
+          payload: {
+            action_id: actionId,
+            control: 'day_contract_coordination',
+            revision_kind: kind,
+            already_active: session.id === currentFocus?.id,
+          },
+        })
+      },
+      onError: (error) => {
+        setCoordinationError(error instanceof Error ? error.message : 'Не удалось начать учёт координации')
+        void logAppEvent({
+          source: 'ui',
+          kind: 'focus_start_failed',
+          payload: {
+            action_id: actionId,
+            control: 'day_contract_coordination',
+            revision_kind: kind,
+            error_code: error instanceof Error && 'code' in error ? String(error.code) : 'unknown',
+          },
+        })
       },
     })
   }
@@ -271,7 +327,11 @@ export default function OperationalWorkspacePanel() {
           firstActionCandidates={firstActionCandidates}
           pending={reviseMutation.isPending}
           error={reviseMutation.error instanceof Error ? reviseMutation.error.message : undefined}
+          currentFocus={currentFocus}
+          coordinationPending={startMutation.isPending}
+          coordinationError={coordinationError ?? undefined}
           onChange={setDraft}
+          onStartCoordination={() => startContractCoordination(editingKind)}
           onSave={saveContract}
           onCancel={() => setEditingKind(null)}
         />
@@ -299,7 +359,7 @@ export default function OperationalWorkspacePanel() {
                 <div className="mt-2 flex flex-wrap gap-2">
                   <button
                     type="button"
-                    onClick={() => startFirstAction(!currentFocus && hasTrackedToday)}
+                    onClick={() => startFirstAction(contract.revision_kind === 'reentry' || (!currentFocus && hasTrackedToday))}
                     disabled={startMutation.isPending || currentFocus?.work_item_id === contract.first_action_work_item_id}
                     className={primaryButton}
                   >
@@ -390,7 +450,11 @@ function ContractEditor({
   firstActionCandidates,
   pending,
   error,
+  currentFocus,
+  coordinationPending,
+  coordinationError,
   onChange,
+  onStartCoordination,
   onSave,
   onCancel,
 }: {
@@ -401,7 +465,11 @@ function ContractEditor({
   firstActionCandidates: WorkItemView[]
   pending: boolean
   error?: string
+  currentFocus?: FocusSessionView
+  coordinationPending: boolean
+  coordinationError?: string
   onChange: (draft: ContractDraft) => void
+  onStartCoordination: () => void
   onSave: () => void
   onCancel: () => void
 }) {
@@ -419,6 +487,36 @@ function ContractEditor({
           <div className="text-xs text-gray-500">Выбор делается из существующих дел и направлений; новый список здесь не создаётся.</div>
         </div>
         <button type="button" onClick={onCancel} className={tertiaryButton}>Отмена</button>
+      </div>
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded border border-cyan-900/60 bg-gray-950/45 px-3 py-2 text-xs">
+        <div className="min-w-0">
+          <div className="font-medium text-gray-300">Учёт времени договора</div>
+          {currentFocus?.activity_zone === 'coordination' ? (
+            <div className="mt-0.5 truncate text-cyan-300">
+              Координация учитывается: {currentFocus.title} · {formatDuration(currentFocus.active_seconds)}
+            </div>
+          ) : currentFocus ? (
+            <div className="mt-0.5 text-gray-500">
+              Сейчас учитывается другое дело: {currentFocus.title}. Можно явно переключиться на координацию.
+            </div>
+          ) : (
+            <div className="mt-0.5 text-gray-500">Сбор договора пока не учитывается.</div>
+          )}
+        </div>
+        {currentFocus?.activity_zone !== 'coordination' && (
+          <button
+            type="button"
+            onClick={onStartCoordination}
+            disabled={coordinationPending}
+            className={secondaryButton}
+          >
+            {coordinationPending
+              ? 'Запускаю...'
+              : currentFocus
+                ? 'Переключить на координацию'
+                : 'Начать учёт координации'}
+          </button>
+        )}
       </div>
       <div className="grid gap-3 lg:grid-cols-2">
         <SubjectPicker
@@ -465,9 +563,10 @@ function ContractEditor({
           />
         </label>
       </div>
+      {coordinationError && <div className="text-xs text-red-300">{coordinationError}</div>}
       {error && <div className="text-xs text-red-300">{error}</div>}
       <div className="flex justify-end">
-        <button type="button" onClick={onSave} disabled={!canSave || pending} className={primaryButton}>
+        <button type="button" onClick={onSave} disabled={!canSave || pending || coordinationPending} className={primaryButton}>
           {pending ? 'Сохраняю...' : kind === 'morning' ? 'Сохранить договор' : 'Сохранить новую версию'}
         </button>
       </div>
@@ -768,6 +867,10 @@ function revisionKindLabel(kind: DayContractRevisionKind) {
   if (kind === 'morning') return 'Утренний договор'
   if (kind === 'reentry') return 'Пересмотр для возвращения'
   return 'Корректировка договора'
+}
+
+function coordinationFocusTitle(kind: DayContractRevisionKind) {
+  return kind === 'morning' ? 'Вход в день' : 'Возврат после перерыва'
 }
 
 function stateLabel(state: string) {

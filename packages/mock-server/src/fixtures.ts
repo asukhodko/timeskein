@@ -1033,10 +1033,26 @@ export class MockDataStore {
     let alreadyActiveWithoutAction = 0;
     let windowShownAt: number | undefined;
     let slowWindowToFocusCount = 0;
+    let unreviewedCorrectionFailures = 0;
+    let latestCorrectionFailureAt: string | undefined;
+    let latestCorrectionFailureControl: string | undefined;
+    let latestCorrectionFailureErrorCode: string | undefined;
 
     for (const event of events) {
       byKind[event.kind] = (byKind[event.kind] ?? 0) + 1;
       bySource[event.source] = (bySource[event.source] ?? 0) + 1;
+
+      if (event.kind === "focus_correction_failed") {
+        unreviewedCorrectionFailures += 1;
+        latestCorrectionFailureAt = event.ts;
+        latestCorrectionFailureControl = typeof event.payload?.control === "string" ? event.payload.control : undefined;
+        latestCorrectionFailureErrorCode = typeof event.payload?.error_code === "string" ? event.payload.error_code : undefined;
+      } else if (event.kind === "focus_correction_reviewed") {
+        unreviewedCorrectionFailures = 0;
+        latestCorrectionFailureAt = undefined;
+        latestCorrectionFailureControl = undefined;
+        latestCorrectionFailureErrorCode = undefined;
+      }
 
       if (event.kind === "focus_start_requested" || event.kind === "focus_switch_requested") {
         const actionId = typeof event.payload?.action_id === "string" ? event.payload.action_id : undefined;
@@ -1106,6 +1122,10 @@ export class MockDataStore {
       corrections: count("focus_corrected"),
       correction_reviews: count("focus_correction_reviewed"),
       correction_failures: count("focus_correction_failed"),
+      unreviewed_correction_failures: unreviewedCorrectionFailures,
+      latest_correction_failure_at: latestCorrectionFailureAt,
+      latest_correction_failure_control: latestCorrectionFailureControl,
+      latest_correction_failure_error_code: latestCorrectionFailureErrorCode,
       day_closure_starts: count("day_closure_started"),
       day_closure_completions: count("day_closure_completed"),
       day_contract_created: count("day_contract_created"),

@@ -85,7 +85,8 @@ export default function FocusCorrectionDialog({ session, onClose }: FocusCorrect
             payload: {
               action_id: actionId,
               control: 'edit_block',
-              error_code: error instanceof Error ? 'client_error' : 'unknown',
+              error_code:
+                error instanceof Error && 'code' in error ? String(error.code) : 'unknown',
             },
           })
         },
@@ -133,7 +134,8 @@ export default function FocusCorrectionDialog({ session, onClose }: FocusCorrect
             payload: {
               action_id: actionId,
               control: 'split_block',
-              error_code: error instanceof Error ? 'client_error' : 'unknown',
+              error_code:
+                error instanceof Error && 'code' in error ? String(error.code) : 'unknown',
             },
           })
         },

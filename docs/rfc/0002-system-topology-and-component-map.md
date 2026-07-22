@@ -399,17 +399,17 @@ get_distillation_status() -> DistillationStatus
 | TTL GC | Периодически | Удаление данных с истёкшим TTL |
 | Artifact Cleanup | Периодически | Удаление тяжёлых артефактов (скриншоты) |
 
-**Принцип "Distill before forget":**
+**Policy-aware cleanup:**
 
 Перед удалением данных (TTL GC, Artifact Cleanup):
-1. Проверить, что данные уже дистиллированы в Episodes/Threads
-2. Если нет — запустить дистилляцию
-3. Записать provenance удаления
-4. Удалить сырые данные
+1. Определить retention-режим и разрешение на производную память
+2. Для `expire-and-preserve` проверить или запустить разрешённую дистилляцию
+3. Для `forget-completely` удалить зависимые данные без новой дистилляции
+4. Записать provenance удаления и удалить сырьё
 
 **Работа оффлайн:** все задачи дистилляции выполняются локально на устройстве, не требуют сети.
 
-**Подробности:** см. будущий RFC: Retention/TTL + Distillation.
+**Подробности:** см. [RFC-0006: Retention/TTL + Distillation](0006-retention-ttl-distillation.md).
 
 ---
 

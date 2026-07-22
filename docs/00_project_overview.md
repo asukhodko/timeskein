@@ -13,7 +13,9 @@
 - [ADR-0002: MVP = Manual-first](adr/0002-mvp-manual-first.md)
 - [ADR-0003: Evidence-Mode Opt-in](adr/0003-evidence-mode-opt-in.md) (Level 3)
 - [ADR-0004: Ручная истина и производные выводы](adr/0004-user-truth-and-derived-inference.md)
+- [ADR-0005: Недоверенный контекст и независимая память](adr/0005-untrusted-context-and-consumer-neutral-memory.md)
 - [RFC-0009: Causal Work Memory and Operational Reality](rfc/0009-causal-work-memory-and-operational-reality.md)
+- [RFC-0010: Артефакты, наблюдения и Context Pack](rfc/0010-artifacts-observations-and-context-packs.md)
 - [Roadmap 0005: Causal Work Memory](roadmap/0005-causal-work-memory-roadmap.md)
 - [Dogfood findings](dogfood-learnings.md)
 - [Operational Workspace dogfood](dogfood-operational-workspace.md)
@@ -44,7 +46,7 @@
 Windows packaging, Android, sync, SourceNodes, Context Capture и Evidence-Mode пока не реализованы.
 
 Актуальная техническая сводка живёт в [Current Implementation](current-implementation.md),
-а выводы двенадцати рабочих дней — в [Dogfood findings](dogfood-learnings.md).
+а принятые выводы первых шестнадцати дней — в [Dogfood findings](dogfood-learnings.md).
 
 ## Рабочее название и метафора
 
@@ -71,6 +73,12 @@ Manual-first слой является первым источником это�
 проекцией, будущие SourceNodes заполнят наблюдаемые пробелы, а ИИ сможет строить
 только объяснимые и исправляемые производные выводы.
 
+Внешний текст, OCR и импортированная память считаются недоверенными данными.
+Ручные материалы и будущие наблюдения входят в общий путь `Artifact ->
+Observation -> Derivation -> Accepted Claim`, а UI, отчёты и разные ассистенты
+получают переносимый Context Pack. Ядро Timeskein не зависит от Chronicle,
+конкретной модели или формата памяти одного поставщика.
+
 Маршрут строится обратным проектированием от дальней цели. Privacy,
 provenance, историческая честность и ручная коррекция проектируются до
 автоматического сбора. Operational Reality и договор дня уже сведены в
@@ -80,7 +88,9 @@ provenance, историческая честность и ручная корр
 SourceNode-платформа и Evidence Mode появляются только после доказанной пользы.
 
 См. [ADR-0004](adr/0004-user-truth-and-derived-inference.md),
-[RFC-0009](rfc/0009-causal-work-memory-and-operational-reality.md) и
+[ADR-0005](adr/0005-untrusted-context-and-consumer-neutral-memory.md),
+[RFC-0009](rfc/0009-causal-work-memory-and-operational-reality.md),
+[RFC-0010](rfc/0010-artifacts-observations-and-context-packs.md) и
 [Roadmap 0005](roadmap/0005-causal-work-memory-roadmap.md).
 
 ## Зачем это нужно

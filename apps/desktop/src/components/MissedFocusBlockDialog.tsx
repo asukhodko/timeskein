@@ -80,7 +80,8 @@ export default function MissedFocusBlockDialog({
             payload: {
               action_id: actionId,
               control: 'add_missed_block',
-              error_code: error instanceof Error ? 'client_error' : 'unknown',
+              error_code:
+                error instanceof Error && 'code' in error ? String(error.code) : 'unknown',
             },
           })
         },

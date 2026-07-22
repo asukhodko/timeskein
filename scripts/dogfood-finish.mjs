@@ -277,7 +277,7 @@ function buildMeasuredClosureWarning(date, reportState, reviewNextAction, review
       "- Отчёт сохранён, но закрытие заняло больше 10 минут.",
       ...formatShortClosureStatusWarning(shortClosureStatus),
       ...(shortClosureVerdict ? [`- Короткое закрытие: ${shortClosureVerdict}.`] : []),
-      "- Данные дня можно использовать для разбора, но этот день не доказывает текущую цель.",
+      "- Данные дня можно использовать для разбора, но они не доказывают отдельный критерий короткого закрытия за 10 минут.",
       ...formatReportStateWarning(reportState),
       ...formatReviewNextActionWarning(reviewNextAction),
       ...formatReviewSummaryWarning(reviewSummary),

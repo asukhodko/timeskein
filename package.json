@@ -68,6 +68,7 @@
     "smoke:operational-workspace-api": "node scripts/smoke-operational-workspace-api.mjs",
     "smoke:operational-workspace-gate": "node scripts/smoke-operational-workspace-gate.mjs",
     "smoke:operational-workspace-ui": "node scripts/smoke-operational-workspace-ui.mjs",
+    "smoke:operational-workspace-contract": "tsx --test scripts/smoke-operational-workspace-contract.test.ts",
     "smoke:dogfood-report": "node scripts/smoke-dogfood-report.mjs",
     "smoke:dogfood-finish": "node scripts/smoke-dogfood-finish.mjs",
     "smoke:dogfood-docs": "node scripts/smoke-dogfood-docs.mjs",

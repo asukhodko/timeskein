@@ -21,7 +21,9 @@ const checkedFiles = [
   "docs/roadmap/0004-in-day-structure-roadmap.md",
   "docs/roadmap/0005-causal-work-memory-roadmap.md",
   "docs/adr/0004-user-truth-and-derived-inference.md",
+  "docs/adr/0005-untrusted-context-and-consumer-neutral-memory.md",
   "docs/rfc/0009-causal-work-memory-and-operational-reality.md",
+  "docs/rfc/0010-artifacts-observations-and-context-packs.md",
 ];
 
 const forbiddenPatterns = [
@@ -77,11 +79,11 @@ for (const file of checkedFiles) {
   }
   if (
     file === "README.md" &&
-    (!text.includes("Operational Workspace | Release candidate") ||
+    (!text.includes("Operational Workspace | Accepted baseline") ||
       !text.includes("pnpm operational-workspace:gate") ||
       !text.includes("pnpm export:operational-workspace"))
   ) {
-    failures.push(`${file}: Operational Workspace candidate, gate, or export is missing`);
+    failures.push(`${file}: accepted Operational Workspace baseline, gate, or export is missing`);
   }
   if (
     file === "docs/current-implementation.md" &&
@@ -93,7 +95,7 @@ for (const file of checkedFiles) {
     file === "docs/current-implementation.md" &&
     (!text.includes("## Operational Workspace") ||
       !text.includes("day_contract_revisions") ||
-      !text.includes("three-real-day protocol"))
+      !text.includes("The strict gate passed on 2026-07-22"))
   ) {
     failures.push(`${file}: current Operational Workspace implementation or acceptance boundary is missing`);
   }
@@ -101,19 +103,21 @@ for (const file of checkedFiles) {
     file === "docs/roadmap/README.md" &&
     (!text.includes("Keep the accepted manual foundation green") ||
       !text.includes("Use the accepted architecture gate") ||
-      !text.includes("Accept the operational workspace candidate") ||
+      !text.includes("Preserve the accepted operational workspace") ||
       !text.includes("Close the manual working-memory gap") ||
       !text.includes("Operational Workspace convergence") ||
       !text.includes("Bounded Context Capture Probe") ||
       !text.includes("Working Memory Bridge") ||
       !text.includes("Causal period review") ||
-      !text.includes("Twelve real workdays"))
+      !text.includes("Sixteen real workdays"))
   ) {
     failures.push(`${file}: roadmap README does not preserve the north-star product order`);
   }
   if (
     file === "docs/dogfood-operational-workspace.md" &&
-    (!text.includes("три полных реальных рабочих дня") ||
+    (!text.includes("**Веха принята 2026-07-22.**") ||
+      !text.includes("`4/3` дней с договором") ||
+      !text.includes("`1/1` день с сохранённой ревизией") ||
       !text.includes("Вернуться по договору") ||
       !text.includes("pnpm operational-workspace:gate") ||
       !text.includes("внешний active-list"))
@@ -122,11 +126,11 @@ for (const file of checkedFiles) {
   }
   if (
     file === "docs/dogfood-learnings.md" &&
-    (!text.includes("twelve real workdays") ||
+    (!text.includes("sixteen real workdays") ||
       !text.includes("The difficult part is usually the transition") ||
       !text.includes("Operational Reality is the strongest new direction") ||
       !text.includes("M2: Operational Workspace convergence") ||
-      !text.includes("release candidate now unifies") ||
+      !text.includes("accepted baseline unifies") ||
       !text.includes("M3: Working Memory Bridge") ||
       !text.includes("M5: Bounded Context Capture Probe"))
   ) {
@@ -182,7 +186,8 @@ for (const file of checkedFiles) {
       !text.includes("M3. Working Memory Bridge") ||
       !text.includes("M4. Causal Period Review") ||
       !text.includes("M5. Bounded Context Capture Probe") ||
-      !text.includes("release candidate; ожидает трёх реальных dogfood-дней") ||
+      !text.includes("Статус: **принято 2026-07-22.**") ||
+      !text.includes("`1/1` день с честными ревизиями") ||
       !text.includes("## Риск-гейты") ||
       !text.includes("не переписывать всю базу на event sourcing"))
   ) {
@@ -196,6 +201,14 @@ for (const file of checkedFiles) {
     failures.push(`${file}: user-truth boundary is missing`);
   }
   if (
+    file === "docs/adr/0005-untrusted-context-and-consumer-neutral-memory.md" &&
+    (!text.includes("Внешнее содержимое всегда является недоверенными данными") ||
+      !text.includes("Artifact -> Observation -> Derivation -> Accepted Claim") ||
+      !text.includes("Chronicle является возможным адаптером, но не зависимостью"))
+  ) {
+    failures.push(`${file}: untrusted-content or provider-independence boundary is missing`);
+  }
+  if (
     file === "docs/rfc/0009-causal-work-memory-and-operational-reality.md" &&
     (!text.includes("## Причинная цепочка") ||
       !text.includes("## Operational Reality") ||
@@ -203,6 +216,15 @@ for (const file of checkedFiles) {
       !text.includes("## Инкрементальная миграция"))
   ) {
     failures.push(`${file}: causal model or bounded probe contract is missing`);
+  }
+  if (
+    file === "docs/rfc/0010-artifacts-observations-and-context-packs.md" &&
+    (!text.includes("## 1. Модель записей") ||
+      !text.includes("### 1.5. Context Pack") ||
+      !text.includes("forget-completely") ||
+      !text.includes("screen content не входит в первый probe"))
+  ) {
+    failures.push(`${file}: context contract, deletion boundary, or bounded probe is missing`);
   }
   const lines = text.split("\n");
   for (const [index, line] of lines.entries()) {

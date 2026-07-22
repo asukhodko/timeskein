@@ -193,6 +193,8 @@ function buildTelemetryMarkdown(events, { raw = false } = {}) {
         `Capture updated/deleted: ${summary.captureUpdated}/${summary.captureDeleted}`,
         `Capture failures create/resolve/update/delete/convert: ${summary.captureCreateFailures}/${summary.captureResolveFailures}/${summary.captureUpdateFailures}/${summary.captureDeleteFailures}/${summary.captureConvertFailures}`,
         `Corrections requested/applied/reviewed/failed: ${summary.correctionRequests}/${summary.corrections}/${summary.correctionReviews}/${summary.correctionFailures}`,
+        `Unreviewed correction failures: ${summary.unreviewedCorrectionFailures}`,
+        `Latest correction failure: ${formatLatestCorrectionFailure(summary, true)}`,
         `Day contract created/revised/start requests/starts/failures/reentries: ${summary.dayContractCreated}/${summary.dayContractRevisions}/${summary.dayContractStartRequests}/${summary.dayContractStarts}/${summary.dayContractStartFailures}/${summary.dayContractReentries}`,
         `Day closure started/completed: ${summary.dayClosureStarts}/${summary.dayClosureCompletions}`,
         `Last day closure duration: ${summary.lastDayClosureDurationSeconds == null ? "n/a" : formatDuration(summary.lastDayClosureDurationSeconds)}`,
@@ -227,6 +229,8 @@ function buildTelemetryMarkdown(events, { raw = false } = {}) {
         `Отвлечений исправлено/удалено: ${summary.captureUpdated}/${summary.captureDeleted}`,
         `Ошибок отвлечений создать/закрыть/исправить/удалить/превратить: ${summary.captureCreateFailures}/${summary.captureResolveFailures}/${summary.captureUpdateFailures}/${summary.captureDeleteFailures}/${summary.captureConvertFailures}`,
         `Коррекций запрошено/применено/проверено/ошибок: ${summary.correctionRequests}/${summary.corrections}/${summary.correctionReviews}/${summary.correctionFailures}`,
+        `Непроверенных ошибок коррекции: ${summary.unreviewedCorrectionFailures}`,
+        `Последняя ошибка коррекции: ${formatLatestCorrectionFailure(summary, false)}`,
         `Договор дня создан/пересмотрен/запрошено стартов/стартов/ошибок/возвратов: ${summary.dayContractCreated}/${summary.dayContractRevisions}/${summary.dayContractStartRequests}/${summary.dayContractStarts}/${summary.dayContractStartFailures}/${summary.dayContractReentries}`,
         `Закрытие дня начато/завершено: ${summary.dayClosureStarts}/${summary.dayClosureCompletions}`,
         `Последняя длительность закрытия дня: ${summary.lastDayClosureDurationSeconds == null ? "нет данных" : formatDuration(summary.lastDayClosureDurationSeconds)}`,
@@ -267,9 +271,25 @@ function summarizeEvents(events) {
   let alreadyActiveWithoutAction = 0;
   let windowShownAt;
   let slowWindowToFocusCount = 0;
+  let unreviewedCorrectionFailures = 0;
+  let latestCorrectionFailureAt;
+  let latestCorrectionFailureControl;
+  let latestCorrectionFailureErrorCode;
 
   for (const event of events) {
     byKind[event.kind] = (byKind[event.kind] ?? 0) + 1;
+
+    if (event.kind === "focus_correction_failed") {
+      unreviewedCorrectionFailures += 1;
+      latestCorrectionFailureAt = event.ts;
+      latestCorrectionFailureControl = typeof event.payload?.control === "string" ? event.payload.control : undefined;
+      latestCorrectionFailureErrorCode = typeof event.payload?.error_code === "string" ? event.payload.error_code : undefined;
+    } else if (event.kind === "focus_correction_reviewed") {
+      unreviewedCorrectionFailures = 0;
+      latestCorrectionFailureAt = undefined;
+      latestCorrectionFailureControl = undefined;
+      latestCorrectionFailureErrorCode = undefined;
+    }
 
     if (event.kind === "focus_start_requested" || event.kind === "focus_switch_requested") {
       const actionId = typeof event.payload?.action_id === "string" ? event.payload.action_id : undefined;
@@ -368,6 +388,10 @@ function summarizeEvents(events) {
     corrections: count("focus_corrected"),
     correctionReviews: count("focus_correction_reviewed"),
     correctionFailures: count("focus_correction_failed"),
+    unreviewedCorrectionFailures,
+    latestCorrectionFailureAt,
+    latestCorrectionFailureControl,
+    latestCorrectionFailureErrorCode,
     dayContractCreated: count("day_contract_created"),
     dayContractRevisions: count("day_contract_revised"),
     dayContractStartRequests: count("day_contract_start_requested"),
@@ -383,6 +407,18 @@ function summarizeEvents(events) {
     averageStartLatencyMs,
     slowWindowToFocusCount,
   };
+}
+
+function formatLatestCorrectionFailure(summary, raw) {
+  if (!summary.latestCorrectionFailureAt) return raw ? "n/a" : "нет"
+  const timestamp = raw
+    ? summary.latestCorrectionFailureAt
+    : new Intl.DateTimeFormat("ru-RU", { hour: "2-digit", minute: "2-digit" }).format(new Date(summary.latestCorrectionFailureAt))
+  return [
+    timestamp,
+    summary.latestCorrectionFailureControl ?? "unknown",
+    summary.latestCorrectionFailureErrorCode ?? "unknown",
+  ].join(" · ")
 }
 
 function formatDuration(totalSeconds) {

@@ -117,7 +117,7 @@ export default function NoteEditor({
     >
       <div
         ref={modalRef}
-        className="bg-gray-800 border border-gray-600 rounded-lg p-4 shadow-xl w-[400px] max-w-[90vw]"
+        className="max-h-[90vh] w-[min(48rem,92vw)] overflow-auto rounded-lg border border-gray-600 bg-gray-800 p-4 shadow-xl"
       >
         <div className="text-sm text-gray-400 mb-1">Править заметку для:</div>
         <div className="text-gray-200 font-medium mb-3 truncate">{itemTitle}</div>
@@ -128,9 +128,9 @@ export default function NoteEditor({
           value={note}
           onChange={(e) => setNote(e.target.value)}
           placeholder="Добавить описание..."
-          rows={4}
-          className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg 
-                     text-gray-200 placeholder-gray-500 resize-none
+          rows={8}
+          className="min-h-40 max-h-[55vh] w-full resize-y rounded-lg border border-gray-600 bg-gray-900 px-3 py-2
+                     text-gray-200 placeholder-gray-500
                      focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
         />
 
@@ -149,8 +149,8 @@ export default function NoteEditor({
               }}
               placeholder="Что изменилось или произошло?"
               rows={3}
-              className="w-full px-3 py-2 bg-gray-900 border border-gray-600 rounded-lg
-                         text-gray-200 placeholder-gray-500 resize-none
+              className="min-h-24 max-h-[40vh] w-full resize-y rounded-lg border border-gray-600 bg-gray-900 px-3 py-2
+                         text-gray-200 placeholder-gray-500
                          focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
             />
             <div className="grid grid-cols-[140px_minmax(0,1fr)] gap-2">

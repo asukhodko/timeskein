@@ -5,7 +5,7 @@ nodes:
     title: Timeskein
     kind: product
     status: in_progress
-    notes: Local-first causal work memory and steering system. Twelve real workdays accepted daily control, in-day structure, period reflection, semantic Tracks/Labels, evidence-backed stories, the causal spine, and Operational Reality. The route now converges the operational workspace, closes the manual working-memory gap, promotes causal period review, and only then probes automatic context before broader intelligence, continuity, and opt-in Evidence Mode.
+    notes: Local-first causal work memory and steering system. Sixteen real workdays accepted daily control, in-day structure, period reflection, semantic Tracks/Labels, evidence-backed stories, the causal spine, Operational Reality, and Operational Workspace. The route now closes the manual working-memory gap through consumer-neutral Context Packs, promotes causal period review, and only then probes untrusted automatic context behind privacy and deletion gates.
     x:
       ops:
         attention_class: overview
@@ -20,7 +20,7 @@ nodes:
     title: Causal Work Memory
     kind: capability
     parent: ts
-    status: in_progress
+    status: done
     notes: Establish the shared causal spine for manual facts, observations, outcomes, decisions, next actions, projections, and future sources without rewriting the whole database.
     x:
       ops:
@@ -40,7 +40,7 @@ nodes:
     effort: 1
     deps:
       - id: ts.periodic_reflection.context_links
-    notes: ADR-0004, RFC-0009, and Roadmap 0005 define user-authoritative state, canonical observations, derived interpretations, ephemeral artifacts, provenance, incremental migration, and the bounded context probe.
+    notes: ADR-0004/0005, RFC-0009/0010, and Roadmap 0005 define user-authoritative state, untrusted observations, derived interpretations, ephemeral artifacts, consumer-neutral Context Packs, provenance, incremental migration, deletion intentions, and the bounded context probe.
     x:
       ops:
         attention_class: done
@@ -136,7 +136,7 @@ nodes:
     deps:
       - id: ts.causal_memory.spine_gate
       - id: ts.steering.workspace_gate
-    notes: "Committed after Operational Workspace convergence. Provide a persistent chronological thought stream, first-class artifact/material records, comfortable long-note review, Work Item stages, semantic hygiene, and explicit action -> change capture. Dogfood showed that long work can be timed while its reasoning and outcomes remain split between Timeskein and an external notebook."
+    notes: "Committed after Operational Workspace convergence. Provide a persistent chronological thought stream, first-class artifact/material records, comfortable long-note review, Work Item stages, semantic hygiene, explicit action -> change capture, and consumer-neutral re-entry Context Packs. Dogfood showed that long work can be timed while its reasoning and outcomes remain split between Timeskein and an external notebook."
     x:
       ops:
         attention_class: next
@@ -164,6 +164,24 @@ nodes:
         architecture_layer: canonical
         success_signal: The user no longer needs an external scratchpad to see the reasoning and materials of one long work stream.
         privacy_class: mixed
+  ts.causal_memory.context_pack_v1:
+    title: Build consumer-neutral re-entry Context Packs
+    kind: task
+    parent: ts.causal_memory.working_memory_bridge
+    status: planned
+    effort: 3
+    deps:
+      - id: ts.causal_memory.working_memory_stream
+    notes: Build versioned work-item-reentry and track-reentry projections from manual facts, artifacts, decisions, unknowns, refs, changes, and next actions. The same pack must render as UI, Markdown, and JSON without depending on Codex, Chronicle, or a specific model provider.
+    x:
+      ops:
+        attention_class: next
+      strategy:
+        horizon: next
+        capability: causal-memory
+        architecture_layer: derived
+        success_signal: One re-entry package restores a long work stream for the user and remains portable across consumers.
+        privacy_class: mixed
   ts.causal_memory.working_memory_gate:
     title: Working memory supports multi-day re-entry
     kind: milestone
@@ -173,6 +191,7 @@ nodes:
     effort: 1
     deps:
       - id: ts.causal_memory.working_memory_stream
+      - id: ts.causal_memory.context_pack_v1
       - id: ts.in_day_structure.rich_note_review
       - id: ts.in_day_structure.work_item_stages
       - id: ts.in_day_structure.visible_causality
@@ -250,7 +269,7 @@ nodes:
     status: in_progress
     deps:
       - id: ts.steering.operational_reality_gate
-    notes: "Release candidate implemented on 2026-07-17. Operational Reality remains the state projection; an item-backed 2–3-subject contract, first action, parking, why-now, active focus, and causal grounds now share one primary workspace. Full inventory is secondary. Acceptance still requires three full real days."
+    notes: "Accepted 2026-07-22. The strict gate passed with 4/3 contract/start/closure days, 3/2 re-entry days, 1/1 revised day, intact history, and no unresolved errors or overlaps. The final day preserved six versions and work started from revised contracts without an external active-list. The final audit merged ambiguous edit/re-entry buttons into one state-aware review action. Follow-up needs are visible overflow beyond protected WIP 2–3, Operational Reality context while composing, a concrete daily outcome per direction, direct item creation, and cancelable accidental closure."
     x:
       ops:
         attention_class: now
@@ -300,11 +319,11 @@ nodes:
     title: Use the same loop for morning entry and re-entry
     kind: task
     parent: ts.steering.workspace_convergence
-    status: in_progress
+    status: done
     effort: 3
     deps:
       - id: ts.steering.workspace_day_contract
-    notes: Morning, adjustment, and re-entry code paths reuse or append the same contract and emit dedicated telemetry. Real acceptance still requires re-entry on at least two of three full dogfood days.
+    notes: Morning, adjustment, and re-entry code paths reuse or append the same contract and emit dedicated telemetry. Real re-entry passed on 2026-07-20 and 2026-07-21 (`2/2`). Persisting a changed revision remains the only workspace-gate criterion.
     x:
       ops:
         attention_class: now
@@ -322,7 +341,7 @@ nodes:
     effort: 2
     deps:
       - id: ts.steering.workspace_primary_surface
-    notes: Action labels state start, return, revision, maintenance, and history effects in place. The full three-day protocol is documented; candidate UI passed browser and structural smoke checks.
+    notes: Action labels state start, return, revision, maintenance, and history effects in place. The accepted four-day protocol, browser checks, structural smoke coverage, and real revision history prove the interface boundary.
     x:
       ops:
         attention_class: now
@@ -336,14 +355,14 @@ nodes:
     title: One operational workspace drives the real day
     kind: milestone
     parent: ts.steering.workspace_convergence
-    status: in_progress
+    status: done
     milestone: true
     effort: 1
     deps:
       - id: ts.steering.workspace_primary_surface
       - id: ts.steering.workspace_reentry
       - id: ts.steering.workspace_explainability
-    notes: Day 1 of 3 accepted on 2026-07-17 with a contract-backed start, normal closure, no errors or overlaps, and no external active-work list. Accept only after two more contract/start/closure days, re-entry on both remaining days, one honest revision, clean chains and no regressions.
+    notes: Accepted 2026-07-22. The strict gate passed with 4/3 contract/start/closure days, 3/2 re-entry days, 1/1 revised day, intact chains, and no unresolved errors, overlaps, or legacy dispatch starts. Manual verdicts confirm no external active-list and useful return through the same workspace.
     x:
       ops:
         attention_class: now
@@ -378,8 +397,8 @@ nodes:
     milestone: true
     effort: 2
     deps:
-      - id: ts.causal_memory.architecture_gate
-    notes: Before automatic observation, implement a visible indicator, pause, local-only storage, sensitivity, TTL, purge, and audit for the bounded source.
+      - id: ts.trust.untrusted_content_boundary
+    notes: Before automatic observation, implement encryption at rest with a system-held key, a visible indicator, pause, local-only storage by default, sensitivity, TTL, separate purge-raw/forget-completely/revoke-source paths, cascading derived cleanup, processing-location disclosure, and audit for the bounded source.
     x:
       ops:
         attention_class: later
@@ -387,9 +406,27 @@ nodes:
         horizon: later
         capability: trust
         architecture_layer: control
-        success_signal: The bounded probe can be stopped and purged without hidden residue.
+        success_signal: The bounded probe can be stopped, raw-purged, completely forgotten, or revoked without hidden residue or a newly created summary.
         privacy_class: high
         dogfood_gate: privacy-control-smoke
+  ts.trust.untrusted_content_boundary:
+    title: Enforce untrusted-content and derivation boundaries
+    kind: task
+    parent: ts.trust
+    status: planned
+    effort: 2
+    deps:
+      - id: ts.causal_memory.architecture_gate
+    notes: Treat external text, OCR, imported assistant memory, and model output as untrusted data. Extraction is tool-less and schema-bound; derivations retain input, provider, model, prompt, schema, processing-location, and invalidation provenance; only explicit user acceptance may create a causal claim.
+    x:
+      ops:
+        attention_class: later
+      strategy:
+        horizon: later
+        capability: trust
+        architecture_layer: control
+        success_signal: Source content cannot become an instruction or silently mutate user-authoritative state.
+        privacy_class: high
 
   ts.context_fabric:
     title: Context Fabric
@@ -416,7 +453,7 @@ nodes:
       - id: ts.causal_memory.provenance_contract
       - id: ts.causal_memory.working_memory_gate
       - id: ts.trust.minimum_policy_gate
-    notes: Support one idempotent source with provenance, sensitivity, timestamps, correlation to an active Focus Session, and an explicit retention policy.
+    notes: Support one idempotent source with Artifact and Observation envelopes, provenance, sensitivity, content_trust, temporal precision, timestamps, correlation to an active Focus Session, and an explicit retention/deletion policy.
     x:
       ops:
         attention_class: later
@@ -434,7 +471,7 @@ nodes:
     effort: 5
     deps:
       - id: ts.context_fabric.observation_envelope
-    notes: Collect only during a manually active Focus Session, start with one source, keep a visible indicator, cap raw TTL at 72 hours, distill refs/context, and compare re-entry and Track-review value against the manual trace.
+    notes: Collect only during a manually active Focus Session, start with active app and optional URL from one source, keep a visible indicator, cap raw TTL at 72 hours, exclude screen content, build the same consumer-neutral Context Pack, and compare re-entry and Track-review value against the manual trace.
     x:
       ops:
         attention_class: later
@@ -1431,7 +1468,7 @@ nodes:
     deps:
       - id: ts.periodic_reflection.period_review_ui
       - id: ts.intelligence.episodes
-    notes: Prepare structured Markdown/JSON packages, questions, warnings, redaction modes, cited conclusions, and accept/reject flow for local or explicit remote LLM analysis.
+    notes: Extend the consumer-neutral period-reflection Context Pack with questions, warnings, redaction modes, cited conclusions, and accept/reject flow for local or explicit remote LLM analysis. Raw untrusted source text is not promoted to agent instructions.
     x:
       ops:
         attention_class: later
@@ -1519,6 +1556,7 @@ nodes:
     effort: 13
     deps:
       - id: ts.context_fabric.bounded_probe_gate
+    notes: Generalize only proven sources behind one Artifact/Observation adapter contract. Browser, file, issue/repository, and an optional Chronicle-derived-memory importer must not introduce provider-specific truth, retention, or instruction semantics.
     x:
       ops:
         attention_class: later
@@ -1537,7 +1575,7 @@ nodes:
     deps:
       - id: ts.future.context_capture
       - id: ts.context_fabric.bounded_probe_gate
-    notes: Expand a proven bounded probe into opt-in screen evidence chunks, distillation, presentation, and cleanup with explicit privacy controls.
+    notes: Expand a proven bounded probe into opt-in screen evidence chunks, isolated untrusted-content extraction, presentation, and policy-aware cleanup with encryption, explicit purge-raw/forget-completely/revocation semantics, and no provider lock-in.
     x:
       ops:
         attention_class: later

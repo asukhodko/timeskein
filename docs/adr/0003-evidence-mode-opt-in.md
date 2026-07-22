@@ -76,7 +76,7 @@ Evidence-Mode предоставляет следующие гарантии п�
 | **Explicit Opt-in** | Захват начинается только после явного включения пользователем |
 | **Pause/Resume** | Пользователь может приостановить захват в любой момент без потери настроек |
 | **TTL** | Все Evidence Artifacts имеют ограниченное время жизни (configurable, рекомендуется 72h для privacy-first baseline) |
-| **Purge** | Пользователь может удалить все evidence artifacts по команде; derived Timeline Cards/Episodes сохраняются как Distilled Snapshots |
+| **Purge** | Пользователь выбирает очистку сырья с сохранением разрешённой производной памяти или полное забывание с каскадным удалением |
 | **Revoke** | Пользователь может отозвать доверие к источнику, удалив все данные с его provenance |
 
 ### Purge vs Revocation
@@ -85,8 +85,8 @@ Evidence-Mode предоставляет следующие гарантии п�
 
 **Purge (Очистка evidence)**:
 - Удаляет evidence artifacts (ephemeral) и связанные индексы/пойнтеры
-- Derived Timeline Cards/Episodes **сохраняются** как Distilled Snapshots
-- Distilled Snapshots помечаются "evidence purged"
+- В режиме `purge-raw` уже разрешённые Derived Timeline Cards/Episodes могут сохраниться
+- В режиме `forget-completely` производные записи удаляются или инвалидируются без новой дистилляции
 - Создаёт tombstone event для аудита
 - Используется для освобождения места или удаления чувствительных данных
 
@@ -194,6 +194,8 @@ Evidence-Mode включает следующие механизмы прива�
 ## Связанные решения (ожидаемые будущие ADR/RFC)
 
 - [RFC-0007: Screen Evidence Source Node](../rfc/0007-evidence-mode-screen-evidence-source-node.md) — техническая спецификация
+- [ADR-0005: Недоверенный контекст и независимая память](0005-untrusted-context-and-consumer-neutral-memory.md) — граница доверия и независимость от поставщика
+- [RFC-0010: Артефакты, наблюдения и Context Pack](../rfc/0010-artifacts-observations-and-context-packs.md) — общий контракт данных и удаления
 - ADR: "Provider selection и privacy modes" — выбор AI-провайдера
 - ADR: "Storage Budget и GC policies" — управление хранилищем
 - RFC: "Evidence-Mode API" — API для управления Evidence-Mode

@@ -2,13 +2,13 @@
 
 ## Status
 
-Last updated: 2026-07-17.
+Last updated: 2026-07-22.
 
 This document describes what the repository actually runs today. Target architecture and future plans remain in RFCs and roadmap documents.
 
 ## Product Evidence and Current Boundary
 
-Twelve real workdays established that Timeskein is already a usable local
+Sixteen real workdays established that Timeskein is already a usable local
 replacement for a standalone focus timer. Daily tracking, corrections,
 captures, zones, period reports, semantic history, the causal spine, and
 Operational Reality all produced useful evidence on real work.
@@ -17,8 +17,8 @@ The remaining product boundary is now clearer:
 
 - the main cost is choosing and resuming work after transitions, not keeping a
   timer running once contact has been established;
-- the new Operational Workspace removes the former UI split, but its effect on
-  three complete real days and post-break returns is not accepted yet;
+- the accepted Operational Workspace removes the former UI split and preserves
+  a revisable day contract across starts, breaks, and real context changes;
 - Day and Work Item Events are reportable, but an external notebook remains
   more comfortable for long chronological reasoning and materials;
 - duration is trustworthy only as evidence of contact, while confirmed change,
@@ -26,11 +26,17 @@ The remaining product boundary is now clearer:
 - automatic context collection remains unproven and is intentionally sequenced
   after convergence of the manual operational workspace and working memory.
 
-The current product result is the Operational Workspace release candidate.
-Implementation and automated acceptance checks are complete; three full real
-days remain. See [Operational Workspace Dogfood](dogfood-operational-workspace.md),
+The current product result is the accepted Operational Workspace baseline.
+Its four-day gate passed on 2026-07-22. The next product boundary is Working
+Memory Bridge: keeping thoughts, materials, stages, and concrete daily outcomes
+usable without an external notebook. See
+[Operational Workspace Dogfood](dogfood-operational-workspace.md),
 [Dogfood Findings](dogfood-learnings.md), and
-[Roadmap 0005](roadmap/0005-causal-work-memory-roadmap.md).
+[Roadmap 0005](roadmap/0005-causal-work-memory-roadmap.md). The future source
+boundary is fixed in
+[ADR-0005](adr/0005-untrusted-context-and-consumer-neutral-memory.md) and
+[RFC-0010](rfc/0010-artifacts-observations-and-context-packs.md); neither is
+implemented automatic capture.
 
 ## Runtime Baseline
 
@@ -522,6 +528,15 @@ demand. The old free-text dispatch form is removed from the primary path. The
 full inventory is collapsed by default, persists its disclosure choice, and is
 opened through `Дела` for search and maintenance.
 
+The 2026-07-20 real-use pass tightened the transition path. Opening the
+contract editor without an active focus starts Coordination tracking; an
+existing focus still requires an explicit switch. Removing the previous first
+action selects another eligible item when one exists, and the editor lists
+every missing save condition instead of presenting an unexplained disabled
+button. The current first action shows its live state and always offers
+`Выбрать следующее`. Active focus has a distinct visual surface, and the Work
+Item note editor supports longer resizable text.
+
 Telemetry records contract creation, revision, requested/successful/failed
 start, and reviewed re-entry without storing free-form contract text in event
 payloads. `pnpm export:operational-workspace` exports exact contract history;
@@ -531,11 +546,19 @@ re-entry on two days, at least one revised day, revision-chain integrity, no
 API/start/stop/copy failures, no overlapping focus blocks, and no starts through
 the retired text dispatch path.
 
-The candidate passed TypeScript and Rust checks, unit/API/mock tests, report and
-gate fixtures, a browser interaction scenario, release `.app` build, and the
-packaged-app smoke path. Product acceptance remains pending until the
-three-real-day protocol in
-[Operational Workspace Dogfood](dogfood-operational-workspace.md) passes.
+The implementation passed TypeScript and Rust checks, unit/API/mock tests,
+report and gate fixtures, a browser interaction scenario, release `.app`
+build, and the packaged-app smoke path. Product acceptance is recorded in
+[Operational Workspace Dogfood](dogfood-operational-workspace.md).
+
+The strict gate passed on 2026-07-22 with `4/3` contract/start/normal-closure
+days, `3/2` re-entry days, `1/1` day with saved revisions, intact history, and
+no unresolved errors, overlaps, or legacy dispatch starts. The final day
+preserved six versions: morning, re-entry, changed active set, and changed first
+action. The user did not need a parallel external active-list and could return
+through the same workspace after breaks.
+Command+Tab restore of a hidden macOS window remains a known platform
+integration issue; tray/global-shortcut/reopen paths remain available.
 
 ## Dogfood Findings
 
@@ -683,26 +706,28 @@ On multi-monitor macOS setups, the tray/status item is controlled by the system 
 - A hidden macOS window still cannot reliably be restored through `Cmd+Tab`; the menu-bar item remains the dependable entrypoint.
 - The UI is dark-only. A light theme remains planned polish.
 - The journal lacks a dedicated `artifact/material` evidence kind and a permanent chronological thought workspace.
-- Operational Workspace has not yet passed its three-real-day gate; the code candidate is complete, but its transition and re-entry benefit remains a product hypothesis until dogfood acceptance.
+- Operational Workspace is accepted; remaining issues are follow-up polish around contract composition context, item creation from the picker, WIP overflow visibility, and accidental closure start. The formerly ambiguous edit/re-entry buttons are one `Пересмотреть договор` action; the application records adjustment versus re-entry from the current day state.
 - Reflection follow-up is shown only for points with an unresolved review decision; the UI does not yet explain this eligibility or re-open the latest saved follow-up.
 - Gap explanations are stored as Day Events and can still produce competing classifications instead of a single corrected gap entity.
 
 ## Next Engineering Steps
 
 The semantic-history, evidence-backed Track story, Causal Work Spine, and
-Operational Reality v1 gates are accepted. The Operational Workspace code
-candidate is complete. The immediate engineering task is to keep this build
-unchanged through three full real days, collect morning/start/re-entry/revision
-and closure evidence, run `pnpm operational-workspace:gate`, and record the
-manual verdict about external active-list use and representation reconciliation.
+Operational Reality v1 and Operational Workspace gates are accepted. The
+immediate engineering milestone is Working Memory Bridge: chronological thoughts and
+materials, calm long-note review, stages, explicit `action -> change` records,
+and portable re-entry Context Packs should remove the remaining dependence on
+an external notebook. Causal period review follows working memory. The bounded
+Context Capture Probe then tests whether untrusted automatic observations
+improve re-entry enough to justify their privacy and noise cost.
 
-The Working Memory Bridge follows that gate: chronological thoughts and
-materials, calm long-note review, stages, and explicit `action -> change`
-records should remove the remaining dependence on an external notebook. Causal
-period review follows working memory. The bounded Context Capture Probe then
-tests whether automatic context improves re-entry enough to justify its privacy
-and noise cost.
-
-After those gates, the planned capabilities are Context Fabric, explainable Episodes/Threads, in-app reflection and cited private intelligence, multi-device continuity, and opt-in Full Context. [Dogfood Findings](dogfood-learnings.md), [Roadmap 0005](roadmap/0005-causal-work-memory-roadmap.md), and [RFC-0009](rfc/0009-causal-work-memory-and-operational-reality.md) are the current source of direction.
+After those gates, the planned capabilities are Context Fabric, explainable
+Episodes/Threads, in-app reflection and cited private intelligence,
+multi-device continuity, and opt-in Full Context. [Dogfood
+Findings](dogfood-learnings.md), [Roadmap
+0005](roadmap/0005-causal-work-memory-roadmap.md),
+[RFC-0009](rfc/0009-causal-work-memory-and-operational-reality.md), and
+[RFC-0010](rfc/0010-artifacts-observations-and-context-packs.md) are the current
+source of direction.
 
 Navigation polish remains backlog work unless it blocks daily trust: mixed Cyrillic/Latin search normalization such as `sync` / `сynс`, light theme, and more reliable upper/lower panel resizing.

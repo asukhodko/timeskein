@@ -52,7 +52,7 @@ execution:
       confidence: 0.9
       note: Documentation states that Timeskein creates one macOS status item and macOS controls which menu bar displays it; alternate entrypoints are tray Show/Hide, global shortcut, and normal app switching.
     ts.ux_entry.fast_track_flow:
-      progress: 0.9
+      progress: 0.94
       actual_start: "2026-06-30"
       updated_at: "2026-07-04T04:15:00+03:00"
       confidence: 0.85
@@ -134,8 +134,9 @@ execution:
       confidence: 0.8
       note: Compact Today list shows focus blocks with time range, duration, linked Work Item, active state, and significant gaps. A full timeline view is not implemented.
     ts.day_review.totals_gaps:
-      progress: 0.98
+      progress: 1.0
       actual_start: "2026-06-30"
+      actual_finish: "2026-07-03"
       updated_at: "2026-07-03T21:46:00+03:00"
       confidence: 0.9
       note: UI and Markdown export show total tracked time, working occupancy, executive work, non-work tracked time, entrance count, per-Work-Item totals, per-focus-block Activity Zone totals, significant gaps of 20+ minutes between focus blocks, and an Open Gap after the last stopped block when tracking is currently idle. The Work Item list shows day/total tracked time when available. Day-window queries include overlapping blocks and clip their duration to the selected local day.
@@ -436,11 +437,12 @@ execution:
       confidence: 0.95
       note: "Accepted. `operational-reality:gate -- --from 2026-07-15 --to 2026-07-17` passed: 2/2 days, 11/3 projection starts, meeting-tail/stale-important/waiting/reactive states, 1/1 correction plus restart, 3/1 Reflection follow-ups, 1/1 causal chain, and 2/2 normal closures."
     ts.steering.workspace_convergence:
-      progress: 0.85
+      progress: 1.0
       actual_start: "2026-07-17"
-      updated_at: "2026-07-18T12:45:00+03:00"
+      actual_finish: "2026-07-22"
+      updated_at: "2026-07-22T19:31:00+03:00"
       confidence: 0.9
-      note: "Release candidate implemented and automatically verified; day 1 of 3 passed on 2026-07-17 with a contract-backed start, normal closure, no errors/overlaps, and no external active-work list. Day-1 friction was fixed without invalidating evidence: searchable reality-aware contract selection, stable details, visible work outside the contract, clearer refresh semantics, plain-text fields, and explicit Coordination tracking while assembling or revising the contract."
+      note: "Accepted. `operational-workspace:gate -- --from 2026-07-17 --to 2026-07-23` passed with 4/3 contract/start/closure days, 3/2 re-entry days, 1/1 revised day, intact history, and no unresolved errors, overlaps, or legacy dispatch starts."
     ts.steering.workspace_day_contract:
       progress: 1.0
       actual_start: "2026-07-17"
@@ -456,24 +458,26 @@ execution:
       confidence: 0.9
       note: "Done. Рабочий контур keeps contract, Operational Reality grounds, and active focus together; the full inventory is collapsed by default and remains a secondary maintenance surface. Browser and UI smoke passed."
     ts.steering.workspace_reentry:
-      progress: 0.5
+      progress: 1.0
       actual_start: "2026-07-17"
-      updated_at: "2026-07-17T10:55:00+03:00"
+      actual_finish: "2026-07-21"
+      updated_at: "2026-07-21T19:07:00+03:00"
       confidence: 0.85
-      note: "Implemented morning, adjustment, direct return, and post-break revision paths with dedicated telemetry. Awaiting re-entry evidence on at least two of three real days."
+      note: "Done. Re-entry through the contract was recorded on both 2026-07-20 and 2026-07-21 (`2/2`) without an external active-work list."
     ts.steering.workspace_explainability:
       progress: 1.0
       actual_start: "2026-07-17"
       actual_finish: "2026-07-17"
       updated_at: "2026-07-17T10:55:00+03:00"
       confidence: 0.9
-      note: "Done for v1. Actions name start, return, revision, history, and inventory effects; the exact real-use boundary is documented in the three-day dogfood protocol."
+      note: "Done for v1. Actions name start, return, revision, history, and inventory effects; the accepted four-day protocol records the remaining follow-up polish without withholding the milestone."
     ts.steering.workspace_gate:
-      progress: 0.33
+      progress: 1.0
       actual_start: "2026-07-17"
-      updated_at: "2026-07-17T20:48:00+03:00"
+      actual_finish: "2026-07-22"
+      updated_at: "2026-07-22T19:31:00+03:00"
       confidence: 0.9
-      note: "Day 1 of 3 accepted: 1 contract, 1 contract start, 1 normal closure, no errors/overlaps/shadow dispatch starts, and no external active-work list. Remaining acceptance: two more full days, re-entry on both, at least one honest revision, final clean gate, and manual verdicts."
+      note: "Accepted. The strict profile passed with 4/3 contract/start/normal-closure days, 3/2 re-entry days, 1/1 revised day, clean integrity and error checks, and manual confirmation that no external active-list was required."
     ts.causal_memory.working_memory_bridge:
       progress: 0.0
       updated_at: "2026-07-17T09:30:00+03:00"

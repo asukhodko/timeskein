@@ -18,6 +18,9 @@ assert(palette.includes("function readInventoryExpanded"), "inventory secondary-
 assert(!focusPanel.includes("<DispatchRitualPanel"), "shadow text dispatch backlog remains in the primary path");
 assert(workspace.includes("firstActionButtonLabel"), "first-action control is not context-aware");
 assert(!workspace.includes("onClick={() => startFirstAction(true)}"), "duplicate reentry action remains visible beside the primary start action");
+assert(workspace.includes("contractEditRevisionKind"), "contract review does not infer adjustment versus reentry from current state");
+assert(!workspace.includes("Изменить договор"), "ambiguous contract-edit action remains visible");
+assert(!workspace.includes("Пересмотреть после перерыва"), "duplicate post-break revision action remains visible");
 assert(workspace.includes('type="search"'), "day-contract subject picker is not searchable");
 assert(workspace.includes('role="combobox"'), "searchable subject picker has no combobox semantics");
 assert(workspace.includes("normalizeSearchText"), "subject search is not normalized");
@@ -36,8 +39,7 @@ assert(app.includes("MutationObserver"), "plain-text input policy does not cover
 
 for (const text of [
   "Собрать договор дня",
-  "Изменить договор",
-  "Пересмотреть после перерыва",
+  "Пересмотреть договор",
   "Начать первое действие",
   "Вернуться по договору",
   "История договора",

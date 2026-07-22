@@ -470,6 +470,10 @@ export interface AppEventSummary {
   corrections: number;
   correction_reviews: number;
   correction_failures: number;
+  unreviewed_correction_failures: number;
+  latest_correction_failure_at?: string;
+  latest_correction_failure_control?: string;
+  latest_correction_failure_error_code?: string;
   day_closure_starts: number;
   day_closure_completions: number;
   day_contract_created: number;

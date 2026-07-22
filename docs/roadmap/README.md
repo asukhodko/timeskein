@@ -14,12 +14,13 @@ action. Work is ordered by user value and early risk reduction.
 1. **Keep the accepted manual foundation green:** daily control, in-day
    structure, arbitrary-period reflection, Tracks/Labels, evidence, and
    decision follow-up remain the reliable Manual Source.
-2. **Use the accepted architecture gate:** ADR-0004, RFC-0009, Roadmap 0005,
-   and opskarta define user truth, observations, derived inference, ephemeral
-   artifacts, provenance, horizons, and dogfood gates.
-3. **Accept the operational workspace candidate:** Operational Reality, the day
-   contract, active focus, and inventory are implemented as one coherent
-   start/resume loop; three full real days must now prove the product result.
+2. **Use the accepted architecture gate:** ADR-0004/0005, RFC-0009/0010,
+   Roadmap 0005, and opskarta define user truth, untrusted observations,
+   derived inference, portable Context Packs, deletion intent, horizons, and
+   dogfood gates.
+3. **Preserve the accepted operational workspace:** Operational Reality, the
+   day contract, active focus, and inventory now form one coherent start/resume
+   loop proven across four real days, including returns and revisions.
 4. **Close the manual working-memory gap:** thoughts, materials, stages, state
    changes, and next actions remain usable without an external notebook.
 5. **Generalize only proven context value:** SourceNodes, PolicyGate, broader
@@ -32,17 +33,17 @@ action. Work is ordered by user value and early risk reduction.
 
 | Order | Milestone | User result |
 |------:|-----------|-------------|
-| 1 | Operational Workspace convergence | Release candidate ready; accept after one visible day contract and one justified next action drive three real days without reconciling competing surfaces |
-| 2 | Working Memory Bridge | Thoughts, materials, stages, changes, and next actions remain usable across long work and multi-day returns without an external notebook |
+| 1 | Operational Workspace convergence | Accepted 2026-07-22 after four real days, three re-entry days, and an immutable six-version contract history |
+| 2 | Working Memory Bridge | Thoughts, materials, stages, changes, next actions, and portable re-entry Context Packs remain usable across long work without an external notebook |
 | 3 | Causal period review | Weekly and Track reviews foreground confirmed changes, decisions, unresolved commitments, and follow-up |
 | 4 | Bounded Context Capture Probe | One focus-scoped source proves or disproves automatic-context value under visible privacy and retention controls |
 
-Causal Work Spine + Operational Reality v1 is accepted. Twelve real workdays
-removed the former three-way ambiguity, and the Operational Workspace
-implementation now embodies the selected route. Its code candidate passed
-tests, browser inspection, and packaged-app smoke; the three-day real-use gate
-is still open. The bounded automatic-context probe remains important, but it
-follows an accepted manual workspace and working-memory baseline.
+Causal Work Spine + Operational Reality v1 and Operational Workspace are
+accepted. Sixteen real workdays removed the former three-way ambiguity and
+proved the item-backed contract across starts, returns, revisions, and normal
+closure. Working Memory Bridge is now the nearest milestone. The bounded
+automatic-context probe remains important, but follows the accepted manual
+workspace and a future working-memory baseline.
 
 ## Roadmap Documents
 
@@ -62,10 +63,12 @@ follows an accepted manual workspace and working-memory baseline.
 - [ADR-0002: MVP = Manual-first](../adr/0002-mvp-manual-first.md)
 - [ADR-0003: Evidence-Mode Opt-in](../adr/0003-evidence-mode-opt-in.md)
 - [ADR-0004: User Truth and Derived Inference](../adr/0004-user-truth-and-derived-inference.md)
+- [ADR-0005: Untrusted Context and Consumer-Neutral Memory](../adr/0005-untrusted-context-and-consumer-neutral-memory.md)
 - [RFC-0001: MVP Inventory Design](../rfc/0001-mvp-inventory-design.md)
 - [RFC-0007: Screen Evidence Source Node](../rfc/0007-evidence-mode-screen-evidence-source-node.md)
 - [RFC-0008: Periodic Reports and Reflection Loops](../rfc/0008-periodic-reports-and-reflection.md)
 - [RFC-0009: Causal Work Memory and Operational Reality](../rfc/0009-causal-work-memory-and-operational-reality.md)
+- [RFC-0010: Artifacts, Observations, and Context Packs](../rfc/0010-artifacts-observations-and-context-packs.md)
 - [User Story: Manual Inventory](../mvp/02_user_story_manual_inventory.md)
 - [User Story: Evidence-Mode](../mvp/03_user_story_evidence_mode.md)
 

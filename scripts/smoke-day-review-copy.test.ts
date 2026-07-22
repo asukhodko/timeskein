@@ -153,7 +153,13 @@ test('day review checklist keeps the evening ritual in Russian', () => {
     },
     { level: 'review', title: 'Exercise start and continue paths', detail: '1 вводом, 0 из списка, 1 остановок' },
     { level: 'review', title: 'Test window entrypoints', detail: '1 запросов показа, 0 запросов скрытия' },
-    { level: 'review', title: 'Review failed focus corrections', detail: '1 ошибок коррекции' },
+    {
+      level: 'review',
+      title: 'Review failed focus corrections',
+      detail: '1 неудачная попытка · добавить пропущенный блок · данные не прошли проверку · успешно применено: 2',
+      action: 'accept_tracking_accuracy',
+      secondaryActions: ['stage_focus_correction'],
+    },
     {
       level: 'review',
       title: 'Review Activity Zone coverage',
@@ -174,7 +180,10 @@ test('day review checklist keeps the evening ritual in Russian', () => {
   assert.equal(formatDayReviewItem(items[4]).detail, '2 дела были в работе сегодня')
   assert.equal(formatDayReviewItem(items[5]).detail, '1 старт вводом, 0 стартов из списка, 1 остановка')
   assert.equal(formatDayReviewItem(items[6]).detail, '1 запрос на показ, 0 запросов на скрытие')
-  assert.equal(formatDayReviewItem(items[7]).detail, '1 ошибка коррекции')
+  assert.equal(
+    formatDayReviewItem(items[7]).detail,
+    '1 неудачная попытка · добавить пропущенный блок · данные не прошли проверку · успешно применено: 2'
+  )
   assert.equal(formatDayReviewItem(items[8]).title, 'Проверить зоны активности')
   assert.equal(formatDayReviewItem(items[9]).title, 'Можно копировать финальный отчёт')
 
@@ -197,6 +206,8 @@ test('day review checklist keeps the evening ritual in Russian', () => {
   assert(markdown.includes('Объяснить большие разрывы'), 'review label should be localized')
   assert(markdown.includes('Проверить время по делам'), 'Work Item time review should be user-facing')
   assert(markdown.includes('Проверить зоны активности'), 'optional review label should be localized')
+  assert(markdown.includes('«Трекинг верен»'), 'failed correction should offer explicit acceptance after review')
+  assert(markdown.includes('«Добавить блок»'), 'failed correction should offer a repair path')
   assert(markdown.includes('Можно копировать финальный отчёт'), 'ready label should be localized')
   assert(!markdown.includes('Review before report'), 'old English heading should not leak into the report')
   assert(!markdown.includes('Stop the active focus block'), 'old English blocker should not leak into the report')

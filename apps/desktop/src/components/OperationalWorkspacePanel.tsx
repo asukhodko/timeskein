@@ -25,7 +25,7 @@ import { useTaxonomy } from '../hooks/useTaxonomy'
 import { formatDuration } from '../utils/formatTime'
 import { RealityDetails } from './OperationalRealityPanel'
 
-type ContractDraft = {
+export type ContractDraft = {
   active: DayContractSubjectRef[]
   firstActionWorkItemId: string
   parked: DayContractSubjectRef[]
@@ -105,6 +105,12 @@ export default function OperationalWorkspacePanel() {
   const attentionItems = workspace?.reality.items.filter((item) => item.requires_attention) ?? []
   const selectedReality = workspace?.reality.items.find((item) => item.id === selectedRealityId)
     ?? activeReality[0]
+  const firstActionReality = contract
+    ? liveRealityForSnapshot(workspace?.reality.items ?? [], contract.first_action)
+    : undefined
+  const firstActionNeedsRevision = Boolean(
+    firstActionReality && ['waiting', 'completed', 'blocked', 'parked'].includes(firstActionReality.state)
+  )
 
   useEffect(() => {
     if (!selectedRealityId && activeReality[0]) setSelectedRealityId(activeReality[0].id)
@@ -113,13 +119,14 @@ export default function OperationalWorkspacePanel() {
   useEffect(() => {
     if (!editingKind) return
     if (!draft.firstActionWorkItemId || firstActionCandidates.some((item) => item.id === draft.firstActionWorkItemId)) return
-    setDraft((value) => ({ ...value, firstActionWorkItemId: '' }))
+    setDraft((value) => ({ ...value, firstActionWorkItemId: firstActionCandidates[0]?.id ?? '' }))
   }, [draft.active, draft.firstActionWorkItemId, editingKind, firstActionCandidates])
 
   const beginEdit = (kind: DayContractRevisionKind) => {
     setEditingKind(kind)
     setDraft(contract ? draftFromContract(contract) : EMPTY_DRAFT)
     setCoordinationError(null)
+    if (!currentFocus) startContractCoordination(kind)
   }
 
   const saveContract = () => {
@@ -302,14 +309,14 @@ export default function OperationalWorkspacePanel() {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {contract ? (
-            <>
-              <button type="button" onClick={() => beginEdit('adjustment')} className={secondaryButton}>
-                Изменить договор
-              </button>
-              <button type="button" onClick={() => beginEdit('reentry')} className={secondaryButton}>
-                Пересмотреть после перерыва
-              </button>
-            </>
+            <button
+              type="button"
+              onClick={() => beginEdit(contractEditRevisionKind(Boolean(currentFocus), hasTrackedToday))}
+              className={secondaryButton}
+              title="Создать новую версию договора; после перерыва она будет отмечена как возвращение"
+            >
+              Пересмотреть договор
+            </button>
           ) : (
             <button type="button" onClick={() => beginEdit('morning')} className={primaryButton}>
               Собрать договор дня
@@ -356,14 +363,25 @@ export default function OperationalWorkspacePanel() {
               <div className="mt-3 border-t border-gray-800 pt-2">
                 <div className="text-[10px] font-semibold uppercase text-gray-500">Первое действие</div>
                 <div className="mt-1 break-words text-sm font-medium text-gray-100">{contract.first_action.title}</div>
+                {firstActionReality && (
+                  <div className={firstActionNeedsRevision ? 'mt-0.5 text-xs text-amber-300' : 'mt-0.5 text-xs text-gray-500'}>
+                    Текущее состояние: {stateLabel(firstActionReality.state)}
+                    {firstActionNeedsRevision ? '. Выбери следующее действие и сохрани новую версию договора.' : ''}
+                  </div>
+                )}
                 <div className="mt-2 flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={() => startFirstAction(contract.revision_kind === 'reentry' || (!currentFocus && hasTrackedToday))}
-                    disabled={startMutation.isPending || currentFocus?.work_item_id === contract.first_action_work_item_id}
-                    className={primaryButton}
-                  >
-                    {firstActionButtonLabel(currentFocus?.work_item_id, contract.first_action_work_item_id, hasTrackedToday)}
+                  {!firstActionNeedsRevision && (
+                    <button
+                      type="button"
+                      onClick={() => startFirstAction(contract.revision_kind === 'reentry' || (!currentFocus && hasTrackedToday))}
+                      disabled={startMutation.isPending || currentFocus?.work_item_id === contract.first_action_work_item_id}
+                      className={primaryButton}
+                    >
+                      {firstActionButtonLabel(currentFocus?.work_item_id, contract.first_action_work_item_id, hasTrackedToday)}
+                    </button>
+                  )}
+                  <button type="button" onClick={() => beginEdit('adjustment')} className={secondaryButton}>
+                    Выбрать следующее
                   </button>
                 </div>
               </div>
@@ -475,9 +493,11 @@ function ContractEditor({
 }) {
   const activeKeys = new Set(draft.active.map(subjectKey))
   const parkedKeys = new Set(draft.parked.map(subjectKey))
-  const canSave = draft.active.length >= 2 && draft.active.length <= 3 &&
-    draft.parked.length >= 1 && draft.parked.length <= 3 &&
-    Boolean(draft.firstActionWorkItemId) && Boolean(draft.whyNow.trim())
+  const validationIssues = dayContractValidationIssues(
+    draft,
+    firstActionCandidates.map((item) => item.id)
+  )
+  const canSave = validationIssues.length === 0
 
   return (
     <div className="grid gap-3 border-t border-cyan-900/50 bg-cyan-950/10 px-4 py-3">
@@ -565,7 +585,15 @@ function ContractEditor({
       </div>
       {coordinationError && <div className="text-xs text-red-300">{coordinationError}</div>}
       {error && <div className="text-xs text-red-300">{error}</div>}
-      <div className="flex justify-end">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        {validationIssues.length > 0 ? (
+          <div className="rounded border border-amber-900/60 bg-amber-950/15 px-2 py-1.5 text-xs text-amber-200">
+            <div className="font-medium">Чтобы сохранить новую версию:</div>
+            <ul className="mt-0.5 list-disc pl-4 text-amber-100/80">
+              {validationIssues.map((issue) => <li key={issue}>{issue}</li>)}
+            </ul>
+          </div>
+        ) : <span className="text-xs text-emerald-400">Договор заполнен и готов к сохранению.</span>}
         <button type="button" onClick={onSave} disabled={!canSave || pending || coordinationPending} className={primaryButton}>
           {pending ? 'Сохраняю...' : kind === 'morning' ? 'Сохранить договор' : 'Сохранить новую версию'}
         </button>
@@ -870,7 +898,29 @@ function revisionKindLabel(kind: DayContractRevisionKind) {
 }
 
 function coordinationFocusTitle(kind: DayContractRevisionKind) {
-  return kind === 'morning' ? 'Вход в день' : 'Возврат после перерыва'
+  if (kind === 'morning') return 'Вход в день'
+  if (kind === 'reentry') return 'Возврат после перерыва'
+  return 'Пересмотр договора дня'
+}
+
+export function dayContractValidationIssues(draft: ContractDraft, validFirstActionIds: string[]) {
+  const issues: string[] = []
+  if (draft.active.length < 2) issues.push('оставь в игре 2–3 направления')
+  if (draft.active.length > 3) issues.push('сократи активный набор до трёх направлений')
+  if (draft.parked.length < 1) issues.push('укажи хотя бы один явно припаркованный конкурент')
+  if (draft.parked.length > 3) issues.push('оставь не больше трёх припаркованных конкурентов')
+  if (!draft.firstActionWorkItemId || !validFirstActionIds.includes(draft.firstActionWorkItemId)) {
+    issues.push('выбери первое действие внутри активного набора')
+  }
+  if (!draft.whyNow.trim()) issues.push('кратко запиши, почему этот выбор важен сейчас')
+  return issues
+}
+
+export function contractEditRevisionKind(
+  hasCurrentFocus: boolean,
+  hasTrackedToday: boolean
+): DayContractRevisionKind {
+  return !hasCurrentFocus && hasTrackedToday ? 'reentry' : 'adjustment'
 }
 
 function stateLabel(state: string) {

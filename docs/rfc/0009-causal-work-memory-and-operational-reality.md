@@ -51,7 +51,7 @@ Track остаётся заданным пользователем долгим 
 
 - Work Items, Tracks, Labels и их исторические изменения;
 - Focus Sessions и ручные события;
-- наблюдения SourceNodes с provenance;
+- наблюдения SourceNodes с provenance; их содержимое остаётся недоверенным;
 - Reflection Sessions, решения, исправления и подтверждения;
 - refs и дистиллированные факты, выбранные для долговременного хранения.
 
@@ -60,6 +60,7 @@ Track остаётся заданным пользователем долгим 
 Пересчитываемые представления:
 
 - Operational Reality;
+- Context Packs для возврата, обзора и внешнего анализа;
 - Episodes и Threads;
 - отчёты, кандидаты следующего фокуса и паттерны;
 - embeddings, индексы и LLM-интерпретации.
@@ -92,14 +93,42 @@ observed_at
 recorded_at
 schema_version
 sensitivity
+content_trust
+temporal_precision
 confidence
 correlation_id
 derivation_version
+provider_id
+model_id
+prompt_version
+processing_location
 ```
 
 Не каждое поле обязательно для ручного Level 0 события. Отсутствующее значение
-не подменяется фиктивным. Для машинного вывода обязательны источник,
-derivation version и confidence.
+не подменяется фиктивным. Для машинного вывода обязательны входные записи,
+источник, версия преобразования, место обработки и доступные сведения о модели.
+Любой внешний текст и OCR получают `content_trust: untrusted` и никогда не
+становятся инструкцией агенту.
+
+## Artifact, Observation, Derivation и Context Pack
+
+Будущий автоматический контекст не вводит параллельную память. Он использует
+общий путь:
+
+```text
+Artifact -> Observation -> Derivation -> Accepted Claim
+                         -> Context Pack projection
+```
+
+Artifact хранит материал или указатель на него. Observation сообщает только о
+наблюдении. Derivation является пересчитываемой интерпретацией. Только явно
+принятый пользователем claim может стать причинной записью состояния,
+результата, решения или следующего действия.
+
+`Context Pack` является переносимой проекцией для возврата в дело, обзора или
+ИИ-анализа. UI, Markdown, JSON, Codex, другая модель и будущий MCP-сервер читают
+один смысловой пакет, не меняя каноническую модель под конкретного потребителя.
+Полный контракт определён в [RFC-0010](0010-artifacts-observations-and-context-packs.md).
 
 ## Operational Reality
 
@@ -205,6 +234,11 @@ Legacy typed evidence и Reflection decisions читаются через ада
 - сохранение только выбранных refs и краткого дистиллированного снимка;
 - сравнение с ручным следом при возврате в дело и Track retrospective.
 
+До первого реального автоматического наблюдения должны пройти gate: шифрование
+чувствительных данных at rest, видимый индикатор, пауза, явные режимы
+`purge-raw` и `forget-completely`, каскадное удаление производных записей,
+аудит и защита от prompt injection. Screen content не входит в первый probe.
+
 Эксперимент успешен, если он снижает время восстановления контекста или
 добавляет полезное подтверждение результата при приемлемом уровне шума и
 коррекций.
@@ -261,7 +295,9 @@ device provenance, идемпотентный ingest и отделённые `ob
 ## Связанные документы
 
 - [ADR-0004: Ручная истина и производные машинные выводы](../adr/0004-user-truth-and-derived-inference.md)
+- [ADR-0005: Недоверенный контекст и независимая память](../adr/0005-untrusted-context-and-consumer-neutral-memory.md)
 - [RFC-0005: Event Ingest and SourceNodes](0005-event-ingest-source-nodes.md)
 - [RFC-0006: Retention, TTL and Distillation](0006-retention-ttl-distillation.md)
 - [RFC-0008: Periodic Reports and Reflection](0008-periodic-reports-and-reflection.md)
+- [RFC-0010: Артефакты, наблюдения и Context Pack](0010-artifacts-observations-and-context-packs.md)
 - [Roadmap 0005: North Star](../roadmap/0005-causal-work-memory-roadmap.md)

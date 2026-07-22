@@ -60,13 +60,14 @@ try {
   const closureDays = eventDays("day_closure_completed");
   const revisedDays = contractDays.filter((day) => (revisionsByDay.get(day)?.length ?? 0) > 1);
   const failureKinds = new Set([
-    "api_error",
     "focus_start_failed",
     "focus_stop_failed",
     "report_copy_failed",
     "day_contract_start_failed",
   ]);
-  const failures = events.filter((event) => failureKinds.has(event.kind));
+  const failures = events.filter((event) =>
+    failureKinds.has(event.kind) || (event.kind === "api_error" && !isReviewedCorrectionValidationError(event, events))
+  );
   const shadowStarts = events.filter((event) => {
     if (event.kind !== "focus_start_requested" && event.kind !== "focus_switch_requested") return false;
     return parsePayload(event.payload)?.control === "dispatch_ritual";
@@ -84,7 +85,7 @@ try {
     check(reentryDays.length >= options.minReentryDays, `дней с возвращением через договор: ${reentryDays.length}/${options.minReentryDays}`),
     check(revisedDays.length >= 1, `дней с сохранённой ревизией договора: ${revisedDays.length}/1`),
     check(invalidChains.length === 0, `целостность цепочек ревизий: ${invalidChains.length === 0 ? "ок" : invalidChains.join("; ")}`),
-    check(failures.length === 0, `ошибок API/старт/стоп/копирование/договор: ${failures.length}`),
+    check(failures.length === 0, `неразобранных ошибок API/старт/стоп/копирование/договор: ${failures.length}`),
     check(overlaps.length === 0, `пересечений фокус-блоков: ${overlaps.length}`),
     check(shadowStarts.length === 0, `стартов через старую текстовую диспетчеризацию: ${shadowStarts.length}`),
   ];
@@ -157,6 +158,19 @@ function subjectKey(subject) {
 function parsePayload(value) {
   if (!value) return undefined;
   try { return JSON.parse(value); } catch { return undefined; }
+}
+
+function isReviewedCorrectionValidationError(event, events) {
+  const payload = parsePayload(event.payload);
+  if (payload?.error_code !== "validation_error") return false;
+  if (!new Set(["focus.create_stopped", "focus.update", "focus.split"]).has(payload.request_method)) {
+    return false;
+  }
+  return events.some((candidate) =>
+    candidate.kind === "focus_correction_reviewed" &&
+    candidate.local_date === event.local_date &&
+    new Date(candidate.ts).getTime() > new Date(event.ts).getTime()
+  );
 }
 
 function groupBy(values, keyOf) {

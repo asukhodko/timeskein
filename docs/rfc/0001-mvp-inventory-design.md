@@ -290,14 +290,15 @@ Append-only журнал событий внешнего контекста:
 
 **Принцип:** автоматика не переписывает `state` и `note` — это источник истины пользователя.
 
-## B.6. Distill before forget (Level 2+)
+## B.6. Policy-aware cleanup (Level 2+)
 
 Перед удалением/сжатием сырых данных (ContextEvents, артефакты):
-1. Обновить Episodes/Threads на основе удаляемых данных
-2. Зафиксировать "итоги/выводы" если включено
-3. Записать provenance "что было дистиллировано и чем"
+1. Определить намерение удаления и разрешение на сохранение производной памяти
+2. При `expire-and-preserve` обновить Episodes/Threads и provenance
+3. При `forget-completely` удалить сырьё и зависимые данные без новой дистилляции
+4. Записать безопасный provenance операции удаления
 
-**Требует:** RFC Retention/TTL + Distillation.
+**Требует:** [RFC-0006: Retention/TTL + Distillation](0006-retention-ttl-distillation.md).
 
 ## B.7. Артефакты с TTL (Level 3)
 

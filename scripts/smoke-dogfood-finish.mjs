@@ -258,7 +258,7 @@ try {
     slowClosureSavedDefault.stdout.includes("закрытие заняло больше 10 минут") &&
       slowClosureSavedDefault.stdout.includes("Статус закрытия: завершено") &&
       slowClosureSavedDefault.stdout.includes("Короткое закрытие: Закрытие уложилось в 10 минут: нет (11:00).") &&
-      slowClosureSavedDefault.stdout.includes("этот день не доказывает текущую цель") &&
+      slowClosureSavedDefault.stdout.includes("не доказывают отдельный критерий короткого закрытия за 10 минут") &&
       slowClosureSavedDefault.stdout.includes("Не пытайся чинить это задним числом") &&
       slowClosureSavedDefault.stdout.includes("с датой того dogfood-дня"),
     "finish --save did not explain slow measured closure as a useful-but-not-goal-proof day"

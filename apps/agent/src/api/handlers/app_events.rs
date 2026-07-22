@@ -124,12 +124,28 @@ fn build_summary(events: Vec<AppEvent>) -> serde_json::Value {
     let mut already_active_without_action = 0usize;
     let mut window_shown_at: Option<DateTime<Utc>> = None;
     let mut slow_window_to_focus = 0;
+    let mut unreviewed_correction_failures = 0usize;
+    let mut latest_correction_failure_at: Option<String> = None;
+    let mut latest_correction_failure_control: Option<String> = None;
+    let mut latest_correction_failure_error_code: Option<String> = None;
 
     for event in &events {
         *by_kind.entry(event.kind.as_str().to_string()).or_default() += 1;
         *by_source
             .entry(event.source.as_str().to_string())
             .or_default() += 1;
+
+        if event.kind == AppEventKind::FocusCorrectionFailed {
+            unreviewed_correction_failures += 1;
+            latest_correction_failure_at = Some(event.ts.to_rfc3339());
+            latest_correction_failure_control = event_payload_string(event, "control");
+            latest_correction_failure_error_code = event_payload_string(event, "error_code");
+        } else if event.kind == AppEventKind::FocusCorrectionReviewed {
+            unreviewed_correction_failures = 0;
+            latest_correction_failure_at = None;
+            latest_correction_failure_control = None;
+            latest_correction_failure_error_code = None;
+        }
 
         if event.kind == AppEventKind::FocusStartRequested
             || event.kind == AppEventKind::FocusSwitchRequested
@@ -214,6 +230,10 @@ fn build_summary(events: Vec<AppEvent>) -> serde_json::Value {
         "corrections": count(&by_kind, "focus_corrected"),
         "correction_reviews": count(&by_kind, "focus_correction_reviewed"),
         "correction_failures": count(&by_kind, "focus_correction_failed"),
+        "unreviewed_correction_failures": unreviewed_correction_failures,
+        "latest_correction_failure_at": latest_correction_failure_at,
+        "latest_correction_failure_control": latest_correction_failure_control,
+        "latest_correction_failure_error_code": latest_correction_failure_error_code,
         "day_closure_starts": count(&by_kind, "day_closure_started"),
         "day_closure_completions": count(&by_kind, "day_closure_completed"),
         "day_contract_created": count(&by_kind, "day_contract_created"),
@@ -278,10 +298,14 @@ fn count(map: &BTreeMap<String, usize>, key: &str) -> usize {
 }
 
 fn event_action_id(event: &AppEvent) -> Option<String> {
+    event_payload_string(event, "action_id")
+}
+
+fn event_payload_string(event: &AppEvent, key: &str) -> Option<String> {
     event
         .payload
         .as_ref()
-        .and_then(|payload| payload.get("action_id"))
+        .and_then(|payload| payload.get(key))
         .and_then(|value| value.as_str())
         .map(str::to_string)
 }
@@ -381,4 +405,40 @@ fn parse_optional_datetime(
                 })
         })
         .transpose()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn correction_failure_stays_open_until_a_later_review() {
+        let mut failure = AppEvent::new(AppEventSource::Ui, AppEventKind::FocusCorrectionFailed);
+        failure.ts = DateTime::parse_from_rfc3339("2026-07-20T15:24:37Z")
+            .unwrap()
+            .with_timezone(&Utc);
+        failure.payload = Some(serde_json::json!({
+            "control": "add_missed_block",
+            "error_code": "validation_error",
+        }));
+
+        let failed_summary = build_summary(vec![failure.clone()]);
+        assert_eq!(failed_summary["unreviewed_correction_failures"], 1);
+        assert_eq!(
+            failed_summary["latest_correction_failure_control"],
+            "add_missed_block"
+        );
+        assert_eq!(
+            failed_summary["latest_correction_failure_error_code"],
+            "validation_error"
+        );
+
+        let mut review = AppEvent::new(AppEventSource::Ui, AppEventKind::FocusCorrectionReviewed);
+        review.ts = DateTime::parse_from_rfc3339("2026-07-20T16:00:00Z")
+            .unwrap()
+            .with_timezone(&Utc);
+        let reviewed_summary = build_summary(vec![failure, review]);
+        assert_eq!(reviewed_summary["unreviewed_correction_failures"], 0);
+        assert!(reviewed_summary["latest_correction_failure_at"].is_null());
+    }
 }

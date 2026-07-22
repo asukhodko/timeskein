@@ -111,9 +111,9 @@ x:
   exec:
     program:
       committed_date: "2026-07-17"
-      nearest_goal: Accept the implemented Operational Workspace on three full real days with one item-backed morning and re-entry loop.
-      success_by_next_sync: Three contract/start/closure days, re-entry on two days, one honest revision, clean machine gate, and no external active-work list.
-      note: The release candidate passed tests, browser inspection, release build, and packaged-app smoke on 2026-07-17. Product acceptance remains intentionally open; Working Memory Bridge follows the real-use gate.
+      nearest_goal: Build the Working Memory Bridge on top of the accepted Operational Workspace.
+      success_by_next_sync: Preserve chronological thoughts, materials, stages, daily outcomes, and re-entry context without depending on an external notebook.
+      note: Operational Workspace was accepted on 2026-07-22 with a green four-day gate. Working Memory Bridge is now the nearest milestone.
     defaults:
       weight_strategy: effort_effective
       status_progress:
@@ -179,7 +179,7 @@ x:
         mgmt:
           health: yellow
           owner: a.sukhodko
-          sync_note: Release candidate ready. Run the documented three-day protocol and strict gate; keep the inventory secondary and record whether any external active-list remains necessary.
+          sync_note: Days 1 and 2 passed; day 2 confirmed the repaired correction-review and closure path. Save one real revision, complete another contract/start/re-entry/closure day, then run the strict gate.
       working-memory:
         title: Working Memory Bridge
         scope_nodes:
@@ -320,7 +320,7 @@ x:
         show_owner: false
         wrap_title_lines: 2
         reduce_transitive_required_edges: true
-        caption: "Twelve real workdays selected a concrete route: converge the operational workspace, close the manual working-memory gap, strengthen causal period review, and only then test bounded automatic context before broader Context Fabric, private intelligence, continuity, and opt-in Full Context."
+        caption: "Sixteen real workdays accepted the operational workspace and selected the next route: close the manual working-memory gap with consumer-neutral Context Packs, strengthen causal period review, and only then test untrusted bounded context behind privacy gates before broader Context Fabric, private intelligence, continuity, and opt-in Full Context."
       exec-active-tracks:
         blocks:
           - architecture-gate

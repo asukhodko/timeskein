@@ -21,6 +21,8 @@ opt-in слоем. Ранний bounded Context Probe из [Roadmap 0005](../roa
 - [RFC-0006: Retention, TTL и Distillation](0006-retention-ttl-distillation.md) — политики retention, purge, revocation
 - [ADR-0003: Evidence-Mode Opt-in](../adr/0003-evidence-mode-opt-in.md) — решение о Evidence-Mode как строго opt-in
 - [RFC-0009: Causal Work Memory and Operational Reality](0009-causal-work-memory-and-operational-reality.md)
+- [ADR-0005: Недоверенный контекст и независимая память](../adr/0005-untrusted-context-and-consumer-neutral-memory.md)
+- [RFC-0010: Артефакты, наблюдения и Context Pack](0010-artifacts-observations-and-context-packs.md)
 - [Глоссарий](../glossary.md)
 
 ---
@@ -33,7 +35,10 @@ opt-in слоем. Ранний bounded Context Probe из [Roadmap 0005](../roa
 - **Строго opt-in:** Evidence-Mode никогда не включается по умолчанию
 - **Chunking model:** канонический тип артефакта — `chunk` (серия кадров за период времени)
 - **Privacy-first:** короткий TTL, pause/resume, purge, redaction rules
-- **Distill before forget:** перед удалением chunks извлекается ценность
+- **Policy-aware cleanup:** TTL может сохранить разрешённый экстракт, а полное
+  забывание удаляет сырьё и производные данные без новой дистилляции
+- **Untrusted content:** пиксели, OCR и найденный текст являются данными, а не
+  инструкциями агенту
 
 ---
 
@@ -242,6 +247,7 @@ Evidence events — это подтипы ContextEvent с kind `evidence.*`. О�
   "payload": {
     "chunk_id": "chunk-uuid",
     "purge_reason": "user_requested",
+    "purge_mode": "purge-raw",
     "bytes_freed": 524288,
     "distilled_snapshot_created": true
   },
@@ -286,7 +292,7 @@ Evidence events — это подтипы ContextEvent с kind `evidence.*`. О�
 |--------|-------|------------|
 | Цель | Освободить место / приватность | Отозвать доверие к источнику |
 | Scope | Evidence artifacts только | Canonical + Ephemeral по source_id |
-| Derived | Сохраняются как Distilled Snapshots | Пересчитываются без источника |
+| Derived | По выбранному режиму очистки | Пересчитываются без источника |
 
 Подробности — см. [RFC-0006, разделы 11-13](0006-retention-ttl-distillation.md#11-purge-семантика-level-3).
 
@@ -559,6 +565,11 @@ interface DerivedAnnotations {
   artifact_id: string;           // ID исходного артефакта
   processed_at: string;          // ISO 8601
   provider_id: string;           // ID использованного провайдера
+  model_id?: string;             // Конкретная модель, если применимо
+  prompt_version?: string;       // Версия шаблона извлечения
+  schema_version: string;        // Версия выходной схемы
+  processing_location: "local" | "remote";
+  content_trust: "untrusted";    // OCR и внешний текст не являются инструкциями
   
   // Извлечённые данные
   extracted_text?: string;       // OCR текст
@@ -636,7 +647,7 @@ interface TimelineCard {
 
 ### 8.5. Stage 4: Cleanup
 
-**Цель:** Удаление устаревших артефактов с сохранением извлечённой ценности.
+**Цель:** Удаление устаревших артефактов согласно выбранной retention-политике.
 
 **Входные данные:**
 - EvidenceArtifact с истёкшим TTL
@@ -644,10 +655,12 @@ interface TimelineCard {
 
 **Процесс:**
 1. Проверка TTL (`expires_at < now`)
-2. Проверка статуса дистилляции:
-   - Если chunk **не дистиллирован** → принудительная дистилляция перед удалением
-   - Если chunk **дистиллирован** → переход к удалению
-3. Создание Distilled Snapshot (если есть derived данные)
+2. Определение режима удаления:
+   - `expire-and-preserve` может выполнить разрешённую дистилляцию;
+   - `purge-raw` сохраняет только разрешённую производную память;
+   - `forget-completely` запрещает дистилляцию и удаляет зависимые данные;
+   - `revoke-source` пересчитывает проекции без источника.
+3. Создание Distilled Snapshot только когда это разрешено выбранным режимом.
 4. Удаление blob из storage
 5. Установка tombstone (`purged_at`, `purge_reason`)
 6. Генерация события `artifact_purged`
@@ -655,7 +668,7 @@ interface TimelineCard {
 
 **Выходные данные:**
 - Tombstone запись (для аудита)
-- Distilled Snapshot (derived данные сохранены)
+- Distilled Snapshot или каскадное удаление derived, в зависимости от режима
 - ContextEvent `evidence.artifact_purged`
 
 **Триггеры Cleanup:**
@@ -667,8 +680,9 @@ interface TimelineCard {
 | User purge | По команде пользователя |
 | Revocation | При отзыве источника |
 
-**Принцип "Distill before forget":**
-Перед удалением chunk система **обязана** убедиться, что дистилляция выполнена. Если chunk не был обработан, запускается принудительная дистилляция. Это гарантирует, что ценность (текст, refs, keywords) извлечена до удаления сырых данных.
+**Граница удаления:** команда `forget-completely` не должна создавать summary,
+refs или keywords непосредственно перед удалением. Точная матрица режимов
+определена в [RFC-0006](0006-retention-ttl-distillation.md#35-намерения-удаления).
 
 ### 8.6. Диаграмма жизненного цикла артефакта
 
@@ -704,7 +718,7 @@ interface TimelineCard {
 │                           ▼ Cleanup                                         │
 │                    ┌──────────────┐                                         │
 │                    │  TOMBSTONE   │ ─── blob deleted                        │
-│                    │              │     Distilled Snapshot preserved        │
+│                    │              │     Derived handled by policy            │
 │                    │              │     audit trail maintained              │
 │                    └──────────────┘                                         │
 │                                                                             │
@@ -716,6 +730,17 @@ interface TimelineCard {
 ## 9. Privacy Controls (Контроль приватности)
 
 Evidence-Mode предоставляет комплексные механизмы контроля приватности, обеспечивающие пользователю полный контроль над захватом и хранением screen evidence.
+
+До первого захваченного chunk обязательны:
+
+- шифрование чувствительных артефактов at rest;
+- ключ в системном хранилище учётных данных;
+- постоянно видимый индикатор захвата;
+- доступная одним действием пауза;
+- проверенный `forget-completely` с каскадным удалением;
+- явное отображение локальной или внешней обработки.
+
+Без этого gate SourceNode не может перейти из прототипа в реальный dogfood.
 
 ### 9.1. Pause/Resume (Приостановка/Возобновление)
 
@@ -752,16 +777,18 @@ Evidence-Mode предоставляет комплексные механизм
 
 ### 9.2. Purge (Очистка)
 
-Удаление evidence artifacts по команде пользователя с сохранением извлечённой ценности.
+Удаление evidence artifacts по команде пользователя в явно выбранном режиме.
 
 | Аспект | Описание |
 |--------|----------|
 | **Цель** | Удалить сырые evidence данные по запросу пользователя |
 | **Scope** | Evidence artifacts (chunks) + evidence pointers |
-| **НЕ удаляется** | Derived Timeline Cards/Episodes (сохраняются как Distilled Snapshots) |
+| **Производные данные** | сохраняются при `purge-raw`; удаляются или инвалидируются при `forget-completely` |
 | **Аудит** | Создаётся tombstone event `evidence.artifact_purged` |
 
-**Семантика Purge:**
+**Семантика `purge-raw`:** следующая диаграмма показывает только режим
+сохранения уже разрешённой производной памяти. Для `forget-completely`
+Derived Annotations и Timeline Card удаляются или инвалидируются каскадно.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -794,13 +821,17 @@ Evidence-Mode предоставляет комплексные механизм
 **API:**
 ```typescript
 // Purge с подтверждением
-"evidence.purge": (confirm: "CONFIRM_PURGE") => PurgeResult;
+"evidence.purge": (
+  mode: "purge-raw" | "forget-completely",
+  confirm: "CONFIRM_PURGE"
+) => PurgeResult;
 
 interface PurgeResult {
   success: boolean;
   artifacts_purged: number;
   bytes_freed: number;
   distilled_snapshots_created: number;
+  derived_records_deleted: number;
   tombstones_created: number;
 }
 ```
@@ -813,7 +844,10 @@ interface PurgeResult {
 | Purge by time range | Удалить artifacts за указанный период |
 | Purge by app | Удалить artifacts связанные с приложением |
 
-**Важно:** Purge ≠ Revocation. Purge удаляет только ephemeral evidence данные, сохраняя derived ценность. Revocation — это отзыв доверия к источнику (см. раздел 11).
+Scope выбирается отдельно от режима `purge-raw` или `forget-completely`.
+
+**Важно:** `purge-raw`, `forget-completely` и Revocation имеют разные
+результаты. UI и API не должны скрывать их под одной неуточнённой командой.
 
 ### 9.3. Redaction Rules (Правила редакции)
 
@@ -1109,9 +1143,10 @@ type GCTrigger = "scheduled" | "budget_warning" | "budget_critical" | "manual";
    - Затем: самые старые artifacts (FIFO)
    - Исключение: artifacts в процессе дистилляции
 
-2. **Проверка дистилляции:**
-   - Если artifact не дистиллирован → принудительная дистилляция
-   - Принцип "Distill before forget"
+2. **Проверка режима:**
+   - для `expire-and-preserve` разрешена policy-driven дистилляция;
+   - для `forget-completely` новая дистилляция запрещена;
+   - для Revocation производные записи пересчитываются без источника.
 
 3. **Удаление:**
    - Удаление blob из storage

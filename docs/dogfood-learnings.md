@@ -1,8 +1,8 @@
-# Dogfood findings: 2026-07-01 through 2026-07-16
+# Dogfood findings: 2026-07-01 through 2026-07-22
 
 ## Status
 
-This document summarizes twelve real workdays of using Timeskein as the primary
+This document summarizes sixteen real workdays of using Timeskein as the primary
 personal work journal. It records product conclusions, not a complete diary.
 Internal work names, people, links, and identifiers are intentionally omitted.
 
@@ -101,10 +101,17 @@ correctable projection can narrow a large inventory into a useful attention
 queue. Starting from a card, correcting state, preserving the reason, carrying
 a Reflection follow-up, and exposing the next action all worked on real days.
 
-The trial also exposed a structural problem: Operational Reality, the dispatch
-ritual, the day contract, and the full Work Item list currently represent
-overlapping answers to “what should I do now?”. The next product step is to
-make them one coherent loop.
+Operational Workspace resolved the structural split between Operational
+Reality, dispatch, the day contract, and the full inventory. Its four-day gate
+proved morning entry, post-break return, immutable revisions, and normal
+closure without a parallel external active-list.
+
+The accepted workspace also clarified the next boundary. A protected active
+set of two or three directions is useful, while the remaining real obligations
+need a visible overflow lane rather than silent disappearance or unlimited WIP.
+Each selected direction needs a concrete intended result for the day, and long
+work needs stages. Contract composition should expose Operational Reality
+without forcing a second navigation loop.
 
 ### Timeskein is not a general todo manager
 
@@ -139,13 +146,13 @@ the rest parked without pretending the backlog has disappeared.
 
 ### M2: Operational Workspace convergence
 
-The release candidate now unifies Operational Reality, the day contract,
+The accepted baseline unifies Operational Reality, the day contract,
 active focus, re-entry after a break, and the inventory boundary. The user sees
 one current working set and one justified next action; dispatching selects
 existing Work Items or Tracks instead of producing a hidden free-text plan.
-The complete inventory remains available for search and maintenance. This is
-an implemented hypothesis, not yet an accepted result: three full real days
-must show that the combined surface actually lowers transition cost.
+The complete inventory remains available for search and maintenance. Four real
+days accepted the combined surface with `4/3` contract/start/closure days,
+`3/2` re-entry days, and `1/1` revised day.
 
 ### M3: Working Memory Bridge
 
@@ -167,10 +174,9 @@ one focus-scoped automatic source with a visible indicator, local storage,
 short raw TTL, pause, purge, provenance, and a measured re-entry benefit. Do
 not build a general SourceNode platform before this gate passes.
 
-## Next acceptance gate
+## Accepted Operational Workspace gate
 
-Operational Workspace convergence is accepted only after several real days
-show that:
+Operational Workspace convergence was accepted after real days showed that:
 
 - the day contract is assembled from actual Work Items or Tracks and remains
   visible after the first start;
@@ -182,11 +188,11 @@ show that:
 - normal starting, switching, capture, correction, and day closure remain at
   least as reliable as the accepted baseline.
 
-The executable threshold is three contract/start/closure days, post-break
+The executable threshold was three contract/start/closure days, post-break
 re-entry on at least two days, and at least one honest saved contract revision.
 `pnpm operational-workspace:gate -- --from YYYY-MM-DD --to YYYY-MM-DD` checks
-the machine evidence; the user still confirms that no parallel external
-active-list was needed. The full protocol is in
+the machine evidence. It passed on 2026-07-22 with `4/3`, `3/2`, and `1/1`;
+the user confirmed that no parallel external active-list was needed. The full evidence is in
 [Operational Workspace Dogfood](dogfood-operational-workspace.md).
 
 ## What the evidence does not prove

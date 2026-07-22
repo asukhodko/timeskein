@@ -2110,11 +2110,13 @@ function buildDayReviewItems({
       }
     }
 
-    if (appTelemetry.correction_failures > 0) {
+    if (appTelemetry.unreviewed_correction_failures > 0) {
       items.push({
         level: 'review',
         title: 'Review failed focus corrections',
-        detail: `${appTelemetry.correction_failures} ошибок коррекции`,
+        detail: formatCorrectionFailureReviewDetail(appTelemetry),
+        action: 'accept_tracking_accuracy',
+        secondaryActions: ['stage_focus_correction'],
       })
     } else if (appTelemetry.corrections === 0 && appTelemetry.correction_reviews === 0) {
       items.push({
@@ -2559,6 +2561,30 @@ function formatDayReviewDetail(detail?: string) {
   return detail
 }
 
+function formatCorrectionFailureReviewDetail(summary: AppEventSummary) {
+  const count = summary.unreviewed_correction_failures
+  const parts = [formatCount(count, 'неудачная попытка', 'неудачные попытки', 'неудачных попыток')]
+  if (summary.latest_correction_failure_control) {
+    const controls: Record<string, string> = {
+      add_missed_block: 'добавить пропущенный блок',
+      edit_block: 'изменить блок',
+      split_block: 'разделить блок',
+    }
+    parts.push(controls[summary.latest_correction_failure_control] ?? summary.latest_correction_failure_control)
+  }
+  if (summary.latest_correction_failure_error_code) {
+    const errors: Record<string, string> = {
+      validation_error: 'данные не прошли проверку',
+      client_error: 'запрос был отклонён',
+    }
+    parts.push(errors[summary.latest_correction_failure_error_code] ?? summary.latest_correction_failure_error_code)
+  }
+  if (summary.corrections > 0) {
+    parts.push(`успешно применено: ${summary.corrections}`)
+  }
+  return parts.join(' · ')
+}
+
 function formatCount(value: number, one: string, few: string, many: string) {
   return `${value} ${pluralRu(value, one, few, many)}`
 }
@@ -2789,6 +2815,10 @@ function formatNextStepHint(item: DayReviewItem) {
 
   if (item.title === 'Confirm tracking accuracy or test correction') {
     return ' Нажми «Добавить блок», если в трекинге пропуск, или «Трекинг верен», если всё честно.'
+  }
+
+  if (item.title === 'Review failed focus corrections') {
+    return ' Проверь итоговую шкалу времени: нажми «Трекинг верен» или исправь её через «Добавить блок».'
   }
 
   if (isAcceptReviewAction(item.action)) {
@@ -3710,6 +3740,13 @@ function getOpenDayClosure(summary: AppEventSummary | null | undefined) {
 }
 
 function formatAppTelemetryMarkdown(summary: AppEventSummary) {
+  const latestCorrectionFailure = summary.latest_correction_failure_at
+    ? [
+        summary.latest_correction_failure_at,
+        summary.latest_correction_failure_control ?? 'unknown',
+        summary.latest_correction_failure_error_code ?? 'unknown',
+      ].join(' · ')
+    : 'n/a'
   const lines = [
     '## Телеметрия приложения',
     '',
@@ -3736,6 +3773,8 @@ function formatAppTelemetryMarkdown(summary: AppEventSummary) {
     `Capture updated/deleted: ${summary.capture_updated}/${summary.capture_deleted}`,
     `Capture failures create/resolve/update/delete/convert: ${summary.capture_create_failures}/${summary.capture_resolve_failures}/${summary.capture_update_failures}/${summary.capture_delete_failures}/${summary.capture_convert_failures}`,
     `Corrections requested/applied/reviewed/failed: ${summary.correction_requests}/${summary.corrections}/${summary.correction_reviews}/${summary.correction_failures}`,
+    `Unreviewed correction failures: ${summary.unreviewed_correction_failures}`,
+    `Latest correction failure: ${latestCorrectionFailure}`,
     `Day contract created/revised/start requests/starts/failures/reentries: ${summary.day_contract_created}/${summary.day_contract_revisions}/${summary.day_contract_start_requests}/${summary.day_contract_starts}/${summary.day_contract_start_failures}/${summary.day_contract_reentries}`,
     `Day closure started/completed: ${summary.day_closure_starts}/${summary.day_closure_completions}`,
     `Last day closure duration: ${summary.last_day_closure_duration_seconds == null ? 'n/a' : formatDuration(summary.last_day_closure_duration_seconds)}`,
@@ -4295,7 +4334,7 @@ function ActiveFocusSession({
   const isOverTarget = session.over_target_seconds > 0
 
   return (
-    <div className="grid gap-2">
+    <div className="grid gap-2 rounded border border-emerald-900/70 bg-emerald-950/25 px-3 py-2 shadow-inner shadow-emerald-950/40">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="text-xs uppercase tracking-wide text-emerald-300">Активный фокус</div>

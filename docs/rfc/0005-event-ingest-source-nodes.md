@@ -23,6 +23,8 @@
 - [ADR-0002: MVP = Manual-first](../adr/0002-mvp-manual-first.md)
 - [ADR-0003: Evidence-Mode Opt-in](../adr/0003-evidence-mode-opt-in.md) — решение о Evidence-Mode как строго opt-in Level 3
 - [RFC-0009: Causal Work Memory and Operational Reality](0009-causal-work-memory-and-operational-reality.md)
+- [ADR-0005: Недоверенный контекст и независимая память](../adr/0005-untrusted-context-and-consumer-neutral-memory.md)
+- [RFC-0010: Артефакты, наблюдения и Context Pack](0010-artifacts-observations-and-context-packs.md)
 - [Глоссарий](../glossary.md)
 
 ---
@@ -43,7 +45,10 @@
 
 Определить контракт для подключения источников событий (Collectors, Connectors, Extensions) к Device Agent.
 
-**Ключевой принцип:** новый источник не начинает кормить память, пока его явно не одобрили.
+**Ключевой принцип:** новый источник не начинает кормить память, пока его явно
+не одобрили. Его содержимое остаётся недоверенными данными и входит в общую
+модель через Artifact/Observation contract, а не как инструкция или отдельная
+система истины.
 
 ---
 

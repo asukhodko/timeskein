@@ -445,6 +445,24 @@ try {
     failedCorrectionStdout.includes("| Коррекция трекинга проверена | проверить |"),
     "report daily-control audit should not pass when a focus correction failed"
   );
+  assert(
+    failedCorrectionStdout.includes("Трекинг верен") && failedCorrectionStdout.includes("Добавить блок"),
+    "report should explain how to accept or repair a failed correction"
+  );
+
+  await runSql(`
+    INSERT INTO app_events (id, ts, source, kind, payload)
+    VALUES ('ae_failed_correction_review', '2026-06-30T07:55:45Z', 'ui', 'focus_correction_reviewed', '{"action_id":"k4","control":"review_checklist"}');
+  `);
+  const { stdout: reviewedFailureStdout } = await execFileAsync(
+    "node",
+    [join(repoRoot, "scripts/dogfood-report.mjs"), "--db", dbPath, "--date", "2026-06-30"],
+    { cwd: repoRoot }
+  );
+  assert(
+    reviewedFailureStdout.includes("Проверить ошибки коррекции фокуса") === false,
+    "report kept a correction failure after a later explicit review"
+  );
 
   await runSql(`
     INSERT INTO app_events (id, ts, source, kind, payload)

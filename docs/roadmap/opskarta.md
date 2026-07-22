@@ -9,8 +9,8 @@ This is the current machine-checkable roadmap for Timeskein. The source files li
 The accepted manual foundation includes the macOS Session replacement, cheap
 day closure, in-day structure, period reports, Reflection Sessions,
 Tracks/Labels, historical snapshots, typed evidence, decision follow-up, the
-Causal Work Spine, and Operational Reality. Twelve real workdays through
-2026-07-16 remain the evidence base and regression boundary.
+Causal Work Spine, and Operational Reality. Thirteen real workdays through
+2026-07-17 remain the evidence base and regression boundary.
 
 The roadmap now backcasts from one north star:
 
@@ -19,8 +19,8 @@ intention -> work episode -> context -> change
           -> evidence -> decision -> next action
 ```
 
-ADR-0004, RFC-0009, Roadmap 0005, and the cross-day dogfood findings define the
-route. `Causal Work Spine + Operational Reality v1` was accepted on the real
+ADR-0004/0005, RFC-0009/0010, Roadmap 0005, and the cross-day dogfood findings
+define the route. `Causal Work Spine + Operational Reality v1` was accepted on the real
 2026-07-15 and 2026-07-16 workdays. The executable gate confirmed two
 closures, eleven starts from Operational Reality, correction and restart,
 Reflection follow-up, and a complete causal chain. The same review found one
@@ -32,9 +32,11 @@ and early automatic context. The committed order is now:
 
 1. accept the implemented convergence of Operational Reality, an item-backed
    day contract, active focus, and secondary inventory on three real days;
-2. replace the external working notebook with a chronological memory bridge;
+2. replace the external working notebook with a chronological memory bridge
+   and consumer-neutral re-entry Context Packs;
 3. carry causal changes and commitments into period reviews;
-4. test one bounded automatic context source before building Context Fabric.
+4. test one bounded untrusted context source behind privacy and deletion gates
+   before building Context Fabric.
 
 The Operational Workspace release candidate was implemented and automatically
 verified on 2026-07-17. The `current` view now contains the accepted causal
@@ -67,14 +69,14 @@ flowchart LR
     class architecture_gate exec_done
     causal_memory["Causal<br/>Work Memory<br/>~30%"]
     class causal_memory exec_mgmt_green
+    style causal_memory stroke:#111827,stroke-width:3px
     current_steering["Accepted<br/>Operational Reality<br/>100%<br/>веха 2026-07-15"]
     class current_steering exec_done
-    operational_workspace["Operational<br/>Workspace convergence<br/>90%<br/>веха 2026-07-22"]
-    class operational_workspace exec_mgmt_yellow
-    style operational_workspace stroke:#111827,stroke-width:3px
+    operational_workspace["Operational<br/>Workspace convergence<br/>100%<br/>веха 2026-07-22"]
+    class operational_workspace exec_done
     working_memory["Working<br/>Memory Bridge<br/>~0%"]
     class working_memory exec_mgmt_neutral
-    trust_controls["Trust and<br/>privacy controls<br/>n/a"]
+    trust_controls["Trust and<br/>privacy controls<br/>~0%"]
     class trust_controls exec_mgmt_neutral
     bounded_context_probe["Bounded<br/>context probe<br/>~0%"]
     class bounded_context_probe exec_mgmt_neutral
@@ -103,7 +105,7 @@ flowchart LR
     continuity -. multi-device sources .-> full_context
 ```
 
-Twelve real workdays selected a concrete route: converge the operational workspace, close the manual working-memory gap, strengthen causal period review, and only then test bounded automatic context before broader Context Fabric, private intelligence, continuity, and opt-in Full Context.
+Sixteen real workdays accepted the operational workspace and selected the next route: close the manual working-memory gap with consumer-neutral Context Packs, strengthen causal period review, and only then test untrusted bounded context behind privacy gates before broader Context Fabric, private intelligence, continuity, and opt-in Full Context.
 
 ## North-star capability tree
 
@@ -113,9 +115,10 @@ Twelve real workdays selected a concrete route: converge the operational workspa
 /usr/bin/env PYTHONPATH=../../tools/opskarta python3 -m specs.v3.tools.cli render tree ../../plans/timeskein/main.plan.yaml ../../plans/timeskein/nodes.plan.yaml ../../plans/timeskein/schedule.plan.yaml ../../plans/timeskein/execution.plan.yaml ../../plans/timeskein/views.plan.yaml --view north-star
 -->
 <!-- GENERATED:START -->
-└── Timeskein [in_progress] (284 focus-blocks) {86% cov:55%}
-    ├── Causal Work Memory [in_progress] (29 focus-blocks) {38% cov:90%}
-    │   ├── Build a chronological working-memory bridge [planned] (16 focus-blocks) {0% cov:31%}
+└── Timeskein [in_progress] (289 focus-blocks) {86% cov:55%}
+    ├── Causal Work Memory [done] (32 focus-blocks) {34% cov:91%}
+    │   ├── Build a chronological working-memory bridge [planned] (19 focus-blocks) {0% cov:26%}
+    │   │   ├── Build consumer-neutral re-entry Context Packs [planned] (3 focus-blocks)
     │   │   ├── Keep one chronological thought and material stream [planned] (4 focus-blocks)
     │   │   ├── Make small action outcomes visible [planned] (3 focus-blocks)
     │   │   ├── Review larger day and work notes calmly [planned] (3 focus-blocks)
@@ -130,14 +133,14 @@ Twelve real workdays selected a concrete route: converge the operational workspa
     │   ├── Explicit context capture and SourceNodes [planned] (13 focus-blocks)
     │   ├── Implement one source observation envelope [planned] (3 focus-blocks)
     │   └── Run a bounded active-app and browser-context probe [planned] (5 focus-blocks)
-    ├── Current-State Steering [in_progress] (22 focus-blocks) {90%}
+    ├── Current-State Steering [in_progress] (22 focus-blocks) {100%}
     │   ├── Confirm and correct operational state [done] (3 focus-blocks) {100%}
-    │   └── Converge Operational Reality, day contract, and inventory [in_progress] (13 focus-blocks) {83%}
+    │   └── Converge Operational Reality, day contract, and inventory [in_progress] (13 focus-blocks) {100%}
     │       ├── Build a visible item-backed day contract [done] (3 focus-blocks) {100%}
     │       ├── Make one primary operational surface [done] (4 focus-blocks) {100%}
     │       ├── Make workspace actions and review checks self-explanatory [done] (2 focus-blocks) {100%}
-    │       ├── One operational workspace drives the real day [in_progress] (1 focus-blocks) {33%}
-    │       └── Use the same loop for morning entry and re-entry [in_progress] (3 focus-blocks) {50%}
+    │       ├── One operational workspace drives the real day [done] (1 focus-blocks) {100%}
+    │       └── Use the same loop for morning entry and re-entry [done] (3 focus-blocks) {100%}
     ├── Explainable Episodes and Private Intelligence [deferred] (27 focus-blocks)
     │   ├── Connect Episodes into semantic Threads [deferred] (8 focus-blocks)
     │   ├── Derive explainable work Episodes [deferred] (8 focus-blocks)
@@ -153,8 +156,9 @@ Twelve real workdays selected a concrete route: converge the operational workspa
     ├── Opt-in Full Context and Evidence Mode [deferred] (21 focus-blocks)
     │   ├── Evidence Mode [deferred] (20 focus-blocks)
     │   └── Full Context reconstructs work without becoming surveillance [deferred] (1 focus-blocks)
-    └── Trust, Privacy, and Retention [planned] (2 focus-blocks)
-        └── Define minimum policy controls for a context probe [planned] (2 focus-blocks)
+    └── Trust, Privacy, and Retention [planned] (4 focus-blocks)
+        ├── Define minimum policy controls for a context probe [planned] (2 focus-blocks)
+        └── Enforce untrusted-content and derivation boundaries [planned] (2 focus-blocks)
 <!-- GENERATED:END -->
 
 ## Strategic dogfood gates
@@ -170,7 +174,7 @@ Twelve real workdays selected a concrete route: converge the operational workspa
 - Context Fabric supports one explicit external source [deferred] (1 focus-blocks)
 - Define minimum policy controls for a context probe [planned] (2 focus-blocks)
 - Full Context reconstructs work without becoming surveillance [deferred] (1 focus-blocks)
-- One operational workspace drives the real day [in_progress] (1 focus-blocks) {33%}
+- One operational workspace drives the real day [done] (1 focus-blocks) {100%}
 - Private intelligence improves a real reflection decision [deferred] (1 focus-blocks)
 - Working memory supports multi-day re-entry [planned] (1 focus-blocks)
 <!-- GENERATED:END -->
@@ -212,9 +216,9 @@ gantt
     section Next operational workspace
     ✅ Build a visible item-backed day contract  :done, ts_steering_workspace_day_contract,    2026-07-17, 1d
     ✅ Make one primary operational surface  :done, ts_steering_workspace_primary_surface,    2026-07-17, 1d
-    🔄 Use the same loop for morning entry and re-entry  :active, ts_steering_workspace_reentry,    2026-07-20, 3d
+    ✅ Use the same loop for morning entry and re-entry  :done, ts_steering_workspace_reentry,    2026-07-20, 3d
     ✅ Make workspace actions and review checks self-explanatory  :done, ts_steering_workspace_explainability,    2026-07-17, 1d
-    🔄 One operational workspace drives the real day  :milestone, active, ts_steering_workspace_gate,    2026-07-22, 0d
+    ✅ One operational workspace drives the real day  :milestone, done, ts_steering_workspace_gate,    2026-07-22, 0d
 ```
 
 ## Current work list
@@ -225,11 +229,8 @@ gantt
 /usr/bin/env PYTHONPATH=../../tools/opskarta python3 -m specs.v3.tools.cli render list ../../plans/timeskein/main.plan.yaml ../../plans/timeskein/nodes.plan.yaml ../../plans/timeskein/schedule.plan.yaml ../../plans/timeskein/execution.plan.yaml ../../plans/timeskein/views.plan.yaml --view current
 -->
 <!-- GENERATED:START -->
-- Causal Work Memory [in_progress] (29 focus-blocks) {38% cov:90%}
-- Current-State Steering [in_progress] (22 focus-blocks) {90%}
-- Converge Operational Reality, day contract, and inventory [in_progress] (13 focus-blocks) {83%}
-- Use the same loop for morning entry and re-entry [in_progress] (3 focus-blocks) {50%}
-- One operational workspace drives the real day [in_progress] (1 focus-blocks) {33%}
+- Current-State Steering [in_progress] (22 focus-blocks) {100%}
+- Converge Operational Reality, day contract, and inventory [in_progress] (13 focus-blocks) {100%}
 <!-- GENERATED:END -->
 
 ## Next risk-reduction work
@@ -240,8 +241,9 @@ gantt
 /usr/bin/env PYTHONPATH=../../tools/opskarta python3 -m specs.v3.tools.cli render list ../../plans/timeskein/main.plan.yaml ../../plans/timeskein/nodes.plan.yaml ../../plans/timeskein/schedule.plan.yaml ../../plans/timeskein/execution.plan.yaml ../../plans/timeskein/views.plan.yaml --view next
 -->
 <!-- GENERATED:START -->
-- Build a chronological working-memory bridge [planned] (16 focus-blocks) {0% cov:31%}
+- Build a chronological working-memory bridge [planned] (19 focus-blocks) {0% cov:26%}
 - Keep one chronological thought and material stream [planned] (4 focus-blocks)
+- Build consumer-neutral re-entry Context Packs [planned] (3 focus-blocks)
 - Working memory supports multi-day re-entry [planned] (1 focus-blocks)
 - Track stages inside a Work Item [planned] (5 focus-blocks) {0%}
 - Review larger day and work notes calmly [planned] (3 focus-blocks)
@@ -267,6 +269,7 @@ gantt
 - Context Fabric supports one explicit external source [deferred] (1 focus-blocks)
 - Define minimum policy controls for a context probe [planned] (2 focus-blocks)
 - Derive explainable work Episodes [deferred] (8 focus-blocks)
+- Enforce untrusted-content and derivation boundaries [planned] (2 focus-blocks)
 - Evidence Mode [deferred] (20 focus-blocks)
 - Explainable Episodes and Private Intelligence [deferred] (27 focus-blocks)
 - Explicit context capture and SourceNodes [planned] (13 focus-blocks)
@@ -284,6 +287,6 @@ gantt
 - Run a bounded active-app and browser-context probe [planned] (5 focus-blocks)
 - Run period reviews inside the app [planned] (5 focus-blocks)
 - Sync and multi-device continuity [deferred] (13 focus-blocks)
-- Trust, Privacy, and Retention [planned] (2 focus-blocks)
+- Trust, Privacy, and Retention [planned] (4 focus-blocks)
 - Windows packaging and tray behavior [deferred] (8 focus-blocks)
 <!-- GENERATED:END -->

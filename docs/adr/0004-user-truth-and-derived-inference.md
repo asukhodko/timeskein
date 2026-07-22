@@ -87,6 +87,7 @@ Timeskein должен сохранять дневной контроль, Opera
 
 ## Связанные документы
 
+- [ADR-0005: Недоверенный контекст и независимая память](0005-untrusted-context-and-consumer-neutral-memory.md)
 - [RFC-0009: Causal Work Memory and Operational Reality](../rfc/0009-causal-work-memory-and-operational-reality.md)
 - [ADR-0002: MVP = Manual-first](0002-mvp-manual-first.md)
 - [ADR-0003: Evidence-Mode Opt-in](0003-evidence-mode-opt-in.md)

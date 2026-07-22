@@ -75,6 +75,8 @@ try {
   assert(metricsStdout.includes("Отвлечений исправлено/удалено: 1/1"), "metrics did not count capture cleanup");
   assert(metricsStdout.includes("Ошибок отвлечений создать/закрыть/исправить/удалить/превратить: 0/0/0/0/1"), "metrics did not count capture failures");
   assert(metricsStdout.includes("Коррекций запрошено/применено/проверено/ошибок: 1/1/1/1"), "metrics did not count corrections");
+  assert(metricsStdout.includes("Непроверенных ошибок коррекции: 0"), "metrics did not clear a correction failure after review");
+  assert(metricsStdout.includes("Последняя ошибка коррекции: нет"), "metrics kept a reviewed correction failure as current");
   assert(metricsStdout.includes("Закрытие дня начато/завершено: 1/1"), "metrics did not count day closure events");
   assert(metricsStdout.includes("Последняя длительность закрытия дня: 7:30"), "metrics did not calculate day closure duration");
   assert(metricsStdout.includes("Восстановлений устаревшего состояния агента: 1"), "metrics did not count stale recoveries");
@@ -116,6 +118,22 @@ try {
   assert(exportStdout.includes("day_closure_started"), "event export did not include day closure start");
   assert(exportStdout.includes("day_closure_completed"), "event export did not include day closure completion");
   assert(exportStdout.includes("manual_copy_fallback_shown"), "event export did not include copy fallback");
+
+  await runSql(`
+    INSERT INTO app_events (id, ts, source, kind, work_item_id, focus_session_id, payload)
+    VALUES ('e32', '2026-06-30T07:27:00Z', 'ui', 'focus_correction_failed', 'w1', 's1', '{"action_id":"k4","control":"add_missed_block","error_code":"validation_error"}');
+  `);
+  const { stdout: unreviewedCorrectionStdout } = await execFileAsync(
+    "node",
+    [join(repoRoot, "scripts/dogfood-metrics.mjs"), "--db", dbPath, "--date", "2026-06-30"],
+    { cwd: repoRoot }
+  );
+  assert(unreviewedCorrectionStdout.includes("Непроверенных ошибок коррекции: 1"), "metrics did not expose an unreviewed correction failure");
+  assert(
+    unreviewedCorrectionStdout.includes("Последняя ошибка коррекции:") &&
+      unreviewedCorrectionStdout.includes("add_missed_block · validation_error"),
+    "metrics did not expose safe details of the latest correction failure"
+  );
 
   await expectCommandFailure(
     ["node", [join(repoRoot, "scripts/dogfood-metrics.mjs"), "--db", dbPath, "--date", "bad-date"]],

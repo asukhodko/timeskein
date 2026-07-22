@@ -20,6 +20,15 @@ try {
   assert(passed.stdout.includes("Итог: пройдено"), "passing gate did not report success");
   assert(passed.stdout.includes("дней с возвращением через договор: 2/2"), "reentry evidence is missing");
 
+  await sqlite("DELETE FROM app_events WHERE id = 'correction-review-1';");
+  const unresolvedCorrection = await runGate();
+  assert(unresolvedCorrection.code === 1, "unreviewed correction validation error unexpectedly passed gate");
+  assert(
+    unresolvedCorrection.stdout.includes("неразобранных ошибок API/старт/стоп/копирование/договор: 1"),
+    "unreviewed correction validation error was not identified",
+  );
+  await sqlite(insertEvent("correction-review-1", "2099-01-18T12:01:00Z", "focus_correction_reviewed"));
+
   await sqlite("DELETE FROM app_events WHERE id = 'close-3';");
   const failed = await runGate();
   assert(failed.code === 1, "incomplete fixture unexpectedly passed gate");
@@ -114,6 +123,16 @@ function seedSql() {
       statements.push(insertEvent(`reentry-${index}`, `${date}T12:00:00Z`, "day_contract_reentry_reviewed"));
     }
   }
+  statements.push(
+    insertEvent(
+      "correction-validation-1",
+      "2099-01-18T12:00:30Z",
+      "api_error",
+      '{"error_code":"validation_error","request_method":"focus.create_stopped"}',
+    ),
+    insertEvent("correction-failed-1", "2099-01-18T12:00:31Z", "focus_correction_failed"),
+    insertEvent("correction-review-1", "2099-01-18T12:01:00Z", "focus_correction_reviewed"),
+  );
   statements.push(insertEvent("revised-0", "2099-01-17T12:01:00Z", "day_contract_revised"));
   return statements.join("\n");
 }

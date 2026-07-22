@@ -69,6 +69,7 @@ const ACCEPT_AS_IS_REVIEW_TITLES = new Set([
   "No day or Work Item notes/events",
   "Exercise start and continue paths",
   "Test window entrypoints",
+  "Review failed focus corrections",
   "Confirm tracking accuracy or test correction",
 ]);
 const BULK_ACCEPT_AS_IS_REVIEW_TITLES = new Set(
@@ -825,11 +826,11 @@ function buildReviewChecklistItems({
 
   const correctionTelemetry = parseCorrectionTelemetry(telemetryMarkdown);
   if (focusMarkdown.includes("| Time | Duration | Zone | Work Item | Note |") && correctionTelemetry) {
-    if (correctionTelemetry.failures > 0) {
+    if (correctionTelemetry.unreviewedFailures > 0) {
       items.push({
         level: "review",
         title: "Review failed focus corrections",
-        detail: `${correctionTelemetry.failures} ошибок коррекции`,
+        detail: formatFailedCorrectionReviewDetail(correctionTelemetry),
       });
     } else if (correctionTelemetry.applied === 0 && correctionTelemetry.reviewed === 0) {
       items.push({
@@ -1118,11 +1119,16 @@ function parseCorrectionTelemetry(markdown) {
   const match = markdown.match(/Corrections requested\/applied\/reviewed\/failed:\s*(\d+)\/(\d+)\/(\d+)\/(\d+)/);
   if (!match) return undefined;
 
+  const unreviewed = extractLineValue(markdown, "Unreviewed correction failures");
+  const latestFailure = extractLineValue(markdown, "Latest correction failure");
+
   return {
     requested: Number(match[1]),
     applied: Number(match[2]),
     reviewed: Number(match[3]),
     failures: Number(match[4]),
+    unreviewedFailures: unreviewed == null ? Number(match[4]) : parseLeadingNumber(unreviewed),
+    latestFailure: latestFailure && latestFailure !== "n/a" ? latestFailure : undefined,
   };
 }
 
@@ -1186,7 +1192,23 @@ function formatCorrectionEvidence(telemetry) {
     telemetry.failures > 0
       ? formatCount(telemetry.failures, "ошибка коррекции", "ошибки коррекции", "ошибок коррекции")
       : "ошибок коррекции нет",
+    telemetry.unreviewedFailures > 0
+      ? `${formatCount(telemetry.unreviewedFailures, "ошибка требует", "ошибки требуют", "ошибок требуют")} проверки`
+      : "непроверенных ошибок нет",
   ].join("; ");
+}
+
+function formatFailedCorrectionReviewDetail(telemetry) {
+  const count = formatCount(
+    telemetry.unreviewedFailures,
+    "неудачная попытка",
+    "неудачные попытки",
+    "неудачных попыток"
+  );
+  const parts = [count];
+  if (telemetry.latestFailure) parts.push(`последняя: ${telemetry.latestFailure}`);
+  if (telemetry.applied > 0) parts.push(`успешно применено: ${telemetry.applied}`);
+  return parts.join(" · ");
 }
 
 function formatClosureEvidence(closureCounts, lastClosureDuration) {
@@ -1387,6 +1409,10 @@ function formatNextStepHint(item) {
 
   if (item.title === "Confirm tracking accuracy or test correction") {
     return " Нажми «Добавить блок», если в трекинге пропуск, или «Трекинг верен», если всё честно.";
+  }
+
+  if (item.title === "Review failed focus corrections") {
+    return " Проверь итоговую шкалу времени: нажми «Трекинг верен» или исправь её через «Добавить блок».";
   }
 
   if (GAP_REVIEW_TITLES.has(item.title)) {

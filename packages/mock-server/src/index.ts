@@ -15,6 +15,12 @@ import {
   type OperationalState,
   type OperationalSubjectKind,
   type DayContractReviseParams,
+  type ContextPackProfile,
+  type ContextPackView,
+  type WorkMemoryCreateParams,
+  type WorkMemoryEntryKind,
+  type WorkMemoryListParams,
+  type WorkMemoryUpdateParams,
 } from "@timeskein/contracts";
 import { MockDataStore } from "./fixtures";
 
@@ -110,6 +116,17 @@ const APP_EVENT_KINDS = new Set<string>([
   "capture_usage_reviewed",
   "entry_paths_reviewed",
   "window_entrypoints_reviewed",
+  "working_memory_opened",
+  "working_memory_created",
+  "working_memory_updated",
+  "working_memory_deleted",
+  "work_item_stage_changed",
+  "context_pack_built",
+  "context_pack_exported",
+  "reentry_started",
+  "work_item_merged",
+  "day_contract_outcome_recorded",
+  "day_contract_overflow_recorded",
   "api_error",
 ]);
 
@@ -714,6 +731,119 @@ function handleMethod(
       });
     }
 
+    case "work_item.merge": {
+      const sourceId = params.source_id as string;
+      const canonicalId = params.canonical_id as string;
+      if (!sourceId || !canonicalId) {
+        return errorResponse(requestId, "validation_error", "source_id and canonical_id are required");
+      }
+      const alias = store.mergeWorkItems(sourceId, canonicalId, params.reason as string | undefined);
+      if (!alias) {
+        return errorResponse(requestId, "validation_error", "Work Items cannot be merged");
+      }
+      return successResponse(requestId, alias);
+    }
+
+    case "work_item.resolve": {
+      const id = params.id as string;
+      if (!id) return errorResponse(requestId, "validation_error", "Work Item ID is required");
+      const canonicalId = store.resolveWorkItemId(id);
+      if (!store.getWorkItem(canonicalId)) {
+        return errorResponse(requestId, "not_found", "Work Item not found");
+      }
+      return successResponse(requestId, {
+        requested_id: id,
+        canonical_id: canonicalId,
+        aliases: store.listWorkItemAliases(canonicalId),
+      });
+    }
+
+    case "working_memory.create": {
+      const entry = store.createWorkMemory(params as unknown as WorkMemoryCreateParams);
+      if (!entry) {
+        return errorResponse(requestId, "validation_error", "Working-memory entry cannot be created");
+      }
+      return successResponse(requestId, entry);
+    }
+
+    case "working_memory.list": {
+      const entries = store.listWorkMemory(params as WorkMemoryListParams);
+      return successResponse(requestId, { entries, total: entries.length });
+    }
+
+    case "working_memory.update": {
+      const entry = store.updateWorkMemory(params as unknown as WorkMemoryUpdateParams);
+      if (!entry) {
+        return errorResponse(requestId, "validation_error", "Working-memory entry cannot be updated");
+      }
+      return successResponse(requestId, entry);
+    }
+
+    case "working_memory.delete": {
+      const id = params.id as string;
+      if (!id) return errorResponse(requestId, "validation_error", "Working-memory entry ID is required");
+      const entry = store.deleteWorkMemory(id, params.reason as string | undefined);
+      return entry
+        ? successResponse(requestId, entry)
+        : errorResponse(requestId, "not_found", "Working-memory entry not found");
+    }
+
+    case "work_item_stage.create": {
+      const stage = store.createWorkItemStage(
+        params.work_item_id as string,
+        params.title as string,
+        params.activate as boolean | undefined,
+      );
+      return stage
+        ? successResponse(requestId, stage)
+        : errorResponse(requestId, "validation_error", "Work Item stage cannot be created");
+    }
+
+    case "work_item_stage.update": {
+      const stage = store.updateWorkItemStage(params.id as string, {
+        title: params.title as string | undefined,
+        state: params.state as import("@timeskein/contracts").WorkItemStageView["state"] | undefined,
+        position: params.position as number | undefined,
+      });
+      return stage
+        ? successResponse(requestId, stage)
+        : errorResponse(requestId, "not_found", "Work Item stage not found");
+    }
+
+    case "work_item_stage.delete": {
+      const stage = store.deleteWorkItemStage(params.id as string);
+      return stage
+        ? successResponse(requestId, stage)
+        : errorResponse(requestId, "not_found", "Work Item stage not found");
+    }
+
+    case "work_item_stage.list": {
+      const workItemId = params.work_item_id as string;
+      if (!workItemId) return errorResponse(requestId, "validation_error", "Work Item ID is required");
+      return successResponse(requestId, {
+        stages: store.listWorkItemStages(workItemId, params.include_archived === true),
+      });
+    }
+
+    case "context_pack.build": {
+      const profile = params.profile as ContextPackProfile;
+      const scopeId = params.scope_id as string;
+      const format = (params.format as "json" | "markdown" | "both" | undefined) ?? "both";
+      if (!(["work-item-reentry", "track-reentry"] as string[]).includes(profile) || !scopeId) {
+        return errorResponse(requestId, "validation_error", "Valid profile and scope_id are required");
+      }
+      if (!(["json", "markdown", "both"] as string[]).includes(format)) {
+        return errorResponse(requestId, "validation_error", "format must be json, markdown, or both");
+      }
+      const pack = store.buildContextPack(profile, scopeId, (params.as_of as string | undefined) ?? new Date().toISOString());
+      if (!pack) return errorResponse(requestId, "not_found", "Context Pack scope not found");
+      const markdown = renderContextPackMarkdown(pack);
+      return successResponse(requestId, {
+        pack: format === "markdown" ? undefined : pack,
+        markdown: format === "json" ? undefined : markdown,
+      });
+    }
+
     // Focus session methods
     case "focus.current": {
       return successResponse(requestId, {
@@ -734,6 +864,7 @@ function handleMethod(
         work_item_id: workItemId,
         activity_zone: params.activity_zone as ActivityZone | undefined,
         target_seconds: params.target_seconds as number | undefined,
+        stage_id: params.stage_id as string | undefined,
       });
 
       return successResponse(requestId, result);
@@ -743,6 +874,26 @@ function handleMethod(
       const session = store.stopFocusSession(params.id as string | undefined, params.note as string | undefined);
       if (!session) {
         return errorResponse(requestId, "not_found", "No active focus session");
+      }
+
+      const semanticEntries: Array<[WorkMemoryEntryKind, unknown]> = [
+        ["result", params.result],
+        ["state_change", params.state_change],
+        ["next_action", params.next_action],
+      ];
+      for (const [kind, rawText] of semanticEntries) {
+        if (typeof rawText !== "string" || !rawText.trim() || !session.work_item_id) continue;
+        store.createWorkMemory({
+          subject_kind: "work_item",
+          subject_id: session.work_item_id,
+          kind,
+          text: rawText.trim(),
+          focus_session_id: session.id,
+          stage_id: session.work_context?.stage_id,
+          local_date: session.stopped_at?.slice(0, 10),
+          origin_kind: "focus_stop",
+          origin_ref: session.id,
+        });
       }
 
       return successResponse(requestId, session);
@@ -1107,6 +1258,81 @@ function handleMethod(
     default:
       return errorResponse(requestId, "validation_error", `Unknown method: ${method}`);
   }
+}
+
+function renderContextPackMarkdown(pack: ContextPackView): string {
+  const lines = [
+    `# Context Pack: ${pack.scope.title}`,
+    "",
+    `- Profile: \`${pack.profile}\``,
+    `- Scope: \`${pack.scope.kind}\` / \`${pack.scope.id}\``,
+    `- As of: \`${pack.as_of}\``,
+    `- Projection: ${pack.provenance.projection}`,
+    "",
+    "## Current re-entry point",
+  ];
+  if (pack.facts.latest_confirmed_change) {
+    lines.push(`- Latest confirmed change: ${memoryContent(pack.facts.latest_confirmed_change)}`);
+  }
+  if (pack.facts.current_stage) {
+    lines.push(`- Current stage: ${oneLine(pack.facts.current_stage.title)} (\`${pack.facts.current_stage.state}\`)`);
+  }
+  if (pack.facts.next_actions.length === 0) {
+    lines.push("- Next action: not recorded");
+  } else {
+    for (const entry of [...pack.facts.next_actions].reverse().slice(0, 3)) {
+      lines.push(`- Next action: ${memoryContent(entry)}`);
+    }
+  }
+  lines.push("", "## Focus by stage", "", "| Stage | State | Time | Entrances |", "| --- | --- | ---: | ---: |");
+  for (const stage of pack.facts.focus.by_stage) {
+    lines.push(`| ${markdownCell(stage.title)} | ${markdownCell(stage.state)} | ${formatDuration(stage.active_seconds)} | ${stage.entrances} |`);
+  }
+  lines.push("", "## Working memory", "");
+  if (pack.facts.memory.length === 0) {
+    lines.push("No entries.");
+  } else {
+    for (const entry of pack.facts.memory) {
+      lines.push(`- \`${entry.occurred_at}\` \`${entry.current_revision.entry_kind}\` ${memoryContent(entry)}`);
+    }
+  }
+  if (pack.unknowns.length > 0) {
+    lines.push("", "## Unknowns", "", ...pack.unknowns.map((value) => `- ${oneLine(value)}`));
+  }
+  if (pack.warnings.length > 0) {
+    lines.push("", "## Warnings", "", ...pack.warnings.map((value) => `- ${oneLine(value)}`));
+  }
+  lines.push(
+    "",
+    "## Provenance",
+    "",
+    `- Source: ${pack.provenance.source}`,
+    `- External text policy: ${pack.provenance.external_text_policy}`,
+    "",
+  );
+  return lines.join("\n");
+}
+
+function memoryContent(entry: ContextPackView["facts"]["memory"][number]): string {
+  return oneLine(entry.current_revision.text ?? entry.current_revision.material_value ?? "(empty)");
+}
+
+function oneLine(value: string): string {
+  return value.split(/\s+/).filter(Boolean).join(" ");
+}
+
+function markdownCell(value: string): string {
+  return oneLine(value).replaceAll("|", "\\|");
+}
+
+function formatDuration(seconds: number): string {
+  const safeSeconds = Math.max(0, Math.floor(seconds));
+  const hours = Math.floor(safeSeconds / 3600);
+  const minutes = Math.floor((safeSeconds % 3600) / 60);
+  const remainingSeconds = safeSeconds % 60;
+  return hours > 0
+    ? `${hours}:${String(minutes).padStart(2, "0")}:${String(remainingSeconds).padStart(2, "0")}`
+    : `${minutes}:${String(remainingSeconds).padStart(2, "0")}`;
 }
 
 // -----------------------------------------------------------------------------

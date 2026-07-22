@@ -331,6 +331,12 @@ impl Database {
         if to.is_some() {
             sql.push_str(" AND datetime(ts) < datetime(?)");
         }
+        sql.push_str(
+            " AND NOT EXISTS (
+                SELECT 1 FROM work_memory_entries wme
+                WHERE wme.id = work_item_events.id AND wme.deleted_at IS NOT NULL
+              )",
+        );
         sql.push_str(" ORDER BY datetime(ts) ASC");
 
         let mut query = sqlx::query(&sql);

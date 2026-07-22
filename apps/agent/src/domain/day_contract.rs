@@ -64,6 +64,8 @@ impl DayContractRevisionKind {
 pub struct DayContractSubjectRef {
     pub kind: DayContractSubjectKind,
     pub subject_id: Uuid,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub daily_outcome: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -85,6 +87,8 @@ pub struct DayContractSubjectSnapshot {
     pub last_significant_change: Option<OperationalRealityBasisView>,
     pub track_path: Vec<TrackPathNode>,
     pub labels: Vec<LabelView>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub daily_outcome: Option<String>,
     pub captured_at: String,
 }
 
@@ -98,6 +102,7 @@ pub struct DayContractRevision {
     pub first_action_work_item_id: Uuid,
     pub first_action: DayContractSubjectSnapshot,
     pub parked_subjects: Vec<DayContractSubjectSnapshot>,
+    pub overflow_subjects: Vec<DayContractSubjectSnapshot>,
     pub why_now: String,
     pub created_at: DateTime<Utc>,
     pub source: String,
@@ -115,6 +120,7 @@ pub struct NewDayContractRevision {
     pub first_action_work_item_id: Uuid,
     pub first_action: DayContractSubjectSnapshot,
     pub parked_subjects: Vec<DayContractSubjectSnapshot>,
+    pub overflow_subjects: Vec<DayContractSubjectSnapshot>,
     pub why_now: String,
 }
 

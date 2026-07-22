@@ -1,6 +1,6 @@
 //! Work item API handlers
 
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, Local, Utc};
 use std::sync::Arc;
 use tokio::sync::RwLock;
 use uuid::Uuid;
@@ -10,8 +10,9 @@ use crate::db::Database;
 use crate::domain::{
     check_denylist, ActivityZone, AppEvent, AppEventKind, AppEventSource, CausalProvenance,
     CausalRecordKind, CausalSource, DenylistCheckResult, EvidenceKind, FocusSession,
-    NewCausalRecord, NextActionStatus, OperationalState, Ref, RefKind, WorkItem, WorkItemEvent,
-    WorkItemEventKind, WorkItemEventView, WorkItemState, WorkItemType, WorkItemView,
+    NewCausalRecord, NewWorkMemoryEntry, NextActionStatus, OperationalState, Ref, RefKind,
+    WorkItem, WorkItemEvent, WorkItemEventKind, WorkItemEventView, WorkItemState, WorkItemType,
+    WorkItemView, WorkMemoryEntryKind, WorkMemorySubjectKind,
 };
 use crate::AppState;
 
@@ -503,6 +504,16 @@ pub async fn handle_work_item_add_event(
                 RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
             })?;
     }
+    create_work_memory_projection(
+        &state.db,
+        &item,
+        &event,
+        text,
+        evidence_kind,
+        focus_session_id,
+    )
+    .await
+    .map_err(|e| RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string()))?;
 
     Ok(serde_json::to_value(WorkItemEventView::from_event_with_evidence(event, evidence)).unwrap())
 }
@@ -603,9 +614,18 @@ pub async fn handle_work_item_update_event(
     payload["text"] = serde_json::Value::String(text.to_string());
     event.payload = Some(payload);
 
-    state.db.update_work_item_event(&event).await.map_err(|e| {
-        RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
-    })?;
+    let memory_entry = state
+        .db
+        .get_work_memory_entry(id, true)
+        .await
+        .map_err(|e| {
+            RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
+        })?;
+    if memory_entry.is_none() {
+        state.db.update_work_item_event(&event).await.map_err(|e| {
+            RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
+        })?;
+    }
 
     let mut evidence = state.db.get_evidence_entry(event.id).await.map_err(|e| {
         RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
@@ -679,6 +699,27 @@ pub async fn handle_work_item_update_event(
             RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
         })?;
     }
+    if memory_entry.is_some() {
+        let memory_kind = evidence
+            .as_ref()
+            .and_then(|entry| EvidenceKind::from_str(&entry.kind))
+            .map(work_memory_kind_from_evidence)
+            .unwrap_or(WorkMemoryEntryKind::Observation);
+        state
+            .db
+            .revise_work_memory_entry(
+                id,
+                memory_kind,
+                Some(text.to_string()),
+                None,
+                None,
+                Some("Edited from Work Item event journal".to_string()),
+            )
+            .await
+            .map_err(|e| {
+                RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
+            })?;
+    }
 
     Ok(serde_json::to_value(WorkItemEventView::from_event_with_evidence(event, evidence)).unwrap())
 }
@@ -720,6 +761,21 @@ pub async fn handle_work_item_delete_event(
         .map_err(|e| {
             RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
         })?;
+    if state
+        .db
+        .get_work_memory_entry(id, true)
+        .await
+        .map_err(|e| RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string()))?
+        .is_some()
+    {
+        state
+            .db
+            .tombstone_work_memory_entry(id, Some("Removed from visible journal".to_string()))
+            .await
+            .map_err(|e| {
+                RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
+            })?;
+    }
     let deleted = state
         .db
         .delete_work_item_event_with_causal_correction(
@@ -1296,6 +1352,75 @@ fn app_event(
     event.focus_session_id = focus_session_id;
     event.payload = payload;
     event
+}
+
+async fn create_work_memory_projection(
+    database: &Database,
+    item: &WorkItem,
+    event: &WorkItemEvent,
+    text: &str,
+    evidence_kind: Option<EvidenceKind>,
+    focus_session_id: Option<Uuid>,
+) -> anyhow::Result<()> {
+    let semantics = database.get_work_item_semantics(item.id).await?;
+    let stage_id = database
+        .active_work_item_stage(item.id)
+        .await?
+        .map(|stage| stage.id);
+    let local_date = event
+        .ts
+        .with_timezone(&Local)
+        .date_naive()
+        .format("%Y-%m-%d")
+        .to_string();
+    let day_contract_revision_id = database
+        .list_day_contract_revisions(&local_date)
+        .await?
+        .last()
+        .map(|revision| revision.id);
+    database
+        .create_work_memory_entry(NewWorkMemoryEntry {
+            id: event.id,
+            subject_kind: WorkMemorySubjectKind::WorkItem,
+            subject_id: item.id,
+            work_item_id: Some(item.id),
+            track_id: semantics.track.as_ref().map(|track| track.id),
+            work_item_title_snapshot: Some(item.title.clone()),
+            focus_session_id,
+            stage_id,
+            day_contract_revision_id,
+            local_date: Some(local_date),
+            occurred_at: event.ts,
+            recorded_at: Utc::now(),
+            source: "user".to_string(),
+            provenance: "confirmed".to_string(),
+            origin_kind: "manual".to_string(),
+            origin_ref: Some(event.id.to_string()),
+            track_snapshot: semantics
+                .track
+                .as_ref()
+                .map(|track| track.path.clone())
+                .unwrap_or_default(),
+            labels_snapshot: semantics.labels,
+            entry_kind: evidence_kind
+                .map(work_memory_kind_from_evidence)
+                .unwrap_or(WorkMemoryEntryKind::Observation),
+            text: Some(text.to_string()),
+            material_kind: None,
+            material_value: None,
+        })
+        .await?;
+    Ok(())
+}
+
+fn work_memory_kind_from_evidence(kind: EvidenceKind) -> WorkMemoryEntryKind {
+    match kind {
+        EvidenceKind::Result => WorkMemoryEntryKind::Result,
+        EvidenceKind::Decision => WorkMemoryEntryKind::Decision,
+        EvidenceKind::Blocker => WorkMemoryEntryKind::Question,
+        EvidenceKind::NextStep => WorkMemoryEntryKind::NextAction,
+        EvidenceKind::Observation => WorkMemoryEntryKind::Observation,
+    }
 }
 
 /// Helper to extract work item ID from params

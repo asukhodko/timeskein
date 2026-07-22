@@ -66,6 +66,15 @@ import {
   type DayContractListResponse,
   type DayContractMutationResponse,
   type DayContractReviseParams,
+  type ContextPackBuildParams,
+  type ContextPackBuildResponse,
+  type WorkItemAliasView,
+  type WorkItemStageView,
+  type WorkMemoryCreateParams,
+  type WorkMemoryEntryView,
+  type WorkMemoryListParams,
+  type WorkMemoryListResponse,
+  type WorkMemoryUpdateParams,
   isApiError,
 } from '@timeskein/contracts'
 
@@ -185,6 +194,48 @@ export const workItemApi = {
     rpc<WorkItemDeleteResponse>('work_item.delete', { id, mode }),
   setSemantics: (params: WorkItemSetSemanticsParams) =>
     rpc<WorkItemSemanticsView>('work_item.set_semantics', params),
+  merge: (sourceId: string, canonicalId: string, reason?: string) =>
+    rpc<WorkItemAliasView>('work_item.merge', {
+      source_id: sourceId,
+      canonical_id: canonicalId,
+      reason,
+    }),
+  resolve: (id: string) =>
+    rpc<{ requested_id: string; canonical_id: string; aliases: WorkItemAliasView[] }>(
+      'work_item.resolve',
+      { id }
+    ),
+}
+
+export const workingMemoryApi = {
+  create: (params: WorkMemoryCreateParams) =>
+    rpc<WorkMemoryEntryView>('working_memory.create', params),
+  list: (params?: WorkMemoryListParams) =>
+    rpc<WorkMemoryListResponse>('working_memory.list', params),
+  update: (params: WorkMemoryUpdateParams) =>
+    rpc<WorkMemoryEntryView>('working_memory.update', params),
+  delete: (id: string, reason?: string) =>
+    rpc<WorkMemoryEntryView>('working_memory.delete', { id, reason }),
+  createStage: (params: { work_item_id: string; title: string; activate?: boolean }) =>
+    rpc<WorkItemStageView>('work_item_stage.create', params),
+  updateStage: (params: {
+    id: string
+    title?: string
+    state?: WorkItemStageView['state']
+    position?: number
+  }) => rpc<WorkItemStageView>('work_item_stage.update', params),
+  deleteStage: (id: string) =>
+    rpc<WorkItemStageView>('work_item_stage.delete', { id }),
+  listStages: (workItemId: string, includeArchived = false) =>
+    rpc<{ stages: WorkItemStageView[] }>('work_item_stage.list', {
+      work_item_id: workItemId,
+      include_archived: includeArchived,
+    }),
+}
+
+export const contextPackApi = {
+  build: (params: ContextPackBuildParams) =>
+    rpc<ContextPackBuildResponse>('context_pack.build', params),
 }
 
 export const taxonomyApi = {
@@ -244,9 +295,9 @@ export const dayEventApi = {
 export const focusApi = {
   current: () => rpc<FocusCurrentResponse>('focus.current'),
   list: (params?: { from?: string; to?: string }) => rpc<FocusListResponse>('focus.list', params),
-  start: (params: { title: string; work_item_id?: string; activity_zone?: ActivityZone; target_seconds?: number; telemetry_action_id?: string }) =>
+  start: (params: { title: string; work_item_id?: string; activity_zone?: ActivityZone; target_seconds?: number; telemetry_action_id?: string; stage_id?: string }) =>
     rpc<FocusSessionView>('focus.start', params),
-  stop: (params?: { id?: string; note?: string; telemetry_action_id?: string }) =>
+  stop: (params?: { id?: string; note?: string; telemetry_action_id?: string; result?: string; state_change?: string; next_action?: string }) =>
     rpc<FocusSessionView>('focus.stop', params),
   update: (params: FocusUpdateParams) =>
     rpc<FocusSessionView>('focus.update', params),

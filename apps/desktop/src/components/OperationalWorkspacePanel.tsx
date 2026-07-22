@@ -16,7 +16,7 @@ import {
   useStartFocusSession,
   useTodayFocusSessions,
 } from '../hooks/useFocusSessions'
-import { useInventory } from '../hooks/useInventory'
+import { useCreateWorkItem, useInventory } from '../hooks/useInventory'
 import {
   useOperationalWorkspace,
   useReviseDayContract,
@@ -29,6 +29,7 @@ export type ContractDraft = {
   active: DayContractSubjectRef[]
   firstActionWorkItemId: string
   parked: DayContractSubjectRef[]
+  overflow: DayContractSubjectRef[]
   whyNow: string
 }
 
@@ -44,6 +45,7 @@ const EMPTY_DRAFT: ContractDraft = {
   active: [],
   firstActionWorkItemId: '',
   parked: [],
+  overflow: [],
   whyNow: '',
 }
 
@@ -56,6 +58,7 @@ export default function OperationalWorkspacePanel() {
   const todayQuery = useTodayFocusSessions()
   const reviseMutation = useReviseDayContract()
   const startMutation = useStartFocusSession()
+  const createWorkItemMutation = useCreateWorkItem()
   const [editingKind, setEditingKind] = useState<DayContractRevisionKind | null>(null)
   const [draft, setDraft] = useState<ContractDraft>(EMPTY_DRAFT)
   const [showHistory, setShowHistory] = useState(false)
@@ -137,6 +140,7 @@ export default function OperationalWorkspacePanel() {
       active_subjects: draft.active,
       first_action_work_item_id: draft.firstActionWorkItemId,
       parked_subjects: draft.parked,
+      overflow_subjects: draft.overflow,
       why_now: draft.whyNow.trim(),
     }, {
       onSuccess: (response) => {
@@ -151,9 +155,35 @@ export default function OperationalWorkspacePanel() {
             },
           })
         }
+        if (response.revision.active_subjects.some((subject) => subject.daily_outcome?.trim())) {
+          void logAppEvent({
+            source: 'ui',
+            kind: 'day_contract_outcome_recorded',
+            work_item_id: response.revision.first_action_work_item_id,
+            payload: { outcome_count: response.revision.active_subjects.filter((subject) => subject.daily_outcome?.trim()).length },
+          })
+        }
+        if (response.revision.overflow_subjects.length > 0) {
+          void logAppEvent({
+            source: 'ui',
+            kind: 'day_contract_overflow_recorded',
+            work_item_id: response.revision.first_action_work_item_id,
+            payload: { overflow_count: response.revision.overflow_subjects.length },
+          })
+        }
         setEditingKind(null)
       },
     })
+  }
+
+  const createContractWorkItem = async (title: string) => {
+    const normalizedTitle = title.trim()
+    const created = await createWorkItemMutation.mutateAsync({
+      title: normalizedTitle,
+      type: 'task',
+      state: 'unknown',
+    })
+    return { id: created.id, title: normalizedTitle }
   }
 
   const startContractCoordination = (kind: DayContractRevisionKind) => {
@@ -333,11 +363,18 @@ export default function OperationalWorkspacePanel() {
           candidateByKey={candidateByKey}
           firstActionCandidates={firstActionCandidates}
           pending={reviseMutation.isPending}
-          error={reviseMutation.error instanceof Error ? reviseMutation.error.message : undefined}
+          error={
+            reviseMutation.error instanceof Error
+              ? reviseMutation.error.message
+              : createWorkItemMutation.error instanceof Error
+                ? createWorkItemMutation.error.message
+                : undefined
+          }
           currentFocus={currentFocus}
           coordinationPending={startMutation.isPending}
           coordinationError={coordinationError ?? undefined}
           onChange={setDraft}
+          onCreateWorkItem={createContractWorkItem}
           onStartCoordination={() => startContractCoordination(editingKind)}
           onSave={saveContract}
           onCancel={() => setEditingKind(null)}
@@ -394,6 +431,12 @@ export default function OperationalWorkspacePanel() {
                   <span className="text-gray-500">Припарковано: </span>
                   <span className="text-gray-400">{contract.parked_subjects.map((item) => item.title).join(' · ')}</span>
                 </div>
+                {contract.overflow_subjects.length > 0 && (
+                  <div>
+                    <span className="text-amber-400">Переполнение WIP: </span>
+                    <span className="text-gray-400">{contract.overflow_subjects.map((item) => item.title).join(' · ')}</span>
+                  </div>
+                )}
               </div>
               {outsideContractToday.length > 0 && (
                 <div className="mt-3 rounded border border-amber-900/70 bg-amber-950/15 px-2 py-2 text-xs">
@@ -472,6 +515,7 @@ function ContractEditor({
   coordinationPending,
   coordinationError,
   onChange,
+  onCreateWorkItem,
   onStartCoordination,
   onSave,
   onCancel,
@@ -487,12 +531,14 @@ function ContractEditor({
   coordinationPending: boolean
   coordinationError?: string
   onChange: (draft: ContractDraft) => void
+  onCreateWorkItem: (title: string) => Promise<{ id: string; title: string }>
   onStartCoordination: () => void
   onSave: () => void
   onCancel: () => void
 }) {
   const activeKeys = new Set(draft.active.map(subjectKey))
   const parkedKeys = new Set(draft.parked.map(subjectKey))
+  const overflowKeys = new Set(draft.overflow.map(subjectKey))
   const validationIssues = dayContractValidationIssues(
     draft,
     firstActionCandidates.map((item) => item.id)
@@ -504,7 +550,7 @@ function ContractEditor({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <div className="text-sm font-medium text-cyan-100">{revisionKindLabel(kind)}</div>
-          <div className="text-xs text-gray-500">Выбор делается из существующих дел и направлений; новый список здесь не создаётся.</div>
+          <div className="text-xs text-gray-500">Выбери существующее дело или введи новое название и создай его прямо здесь.</div>
         </div>
         <button type="button" onClick={onCancel} className={tertiaryButton}>Отмена</button>
       </div>
@@ -544,8 +590,14 @@ function ContractEditor({
           selected={draft.active}
           candidates={candidates}
           candidateByKey={candidateByKey}
-          blockedKeys={parkedKeys}
+          blockedKeys={new Set([...parkedKeys, ...overflowKeys])}
           max={3}
+          onCreateWorkItem={onCreateWorkItem}
+          onChange={(active) => onChange({ ...draft, active })}
+        />
+        <DailyOutcomeFields
+          active={draft.active}
+          candidateByKey={candidateByKey}
           onChange={(active) => onChange({ ...draft, active })}
         />
         <label className="grid min-w-0 gap-1 text-xs">
@@ -568,8 +620,9 @@ function ContractEditor({
           selected={draft.parked}
           candidates={candidates}
           candidateByKey={candidateByKey}
-          blockedKeys={activeKeys}
+          blockedKeys={new Set([...activeKeys, ...overflowKeys])}
           max={3}
+          onCreateWorkItem={onCreateWorkItem}
           onChange={(parked) => onChange({ ...draft, parked })}
         />
         <label className="grid min-w-0 gap-1 text-xs">
@@ -582,6 +635,22 @@ function ContractEditor({
             className={fieldClass}
           />
         </label>
+        <div className="lg:col-span-2">
+          <SubjectPicker
+            label="Переполнение · обязательства сверх WIP"
+            description="Они видимы, но не считаются активным набором и не конкурируют за текущий фокус."
+            selected={draft.overflow}
+            candidates={candidates}
+            candidateByKey={candidateByKey}
+            blockedKeys={new Set([...activeKeys, ...parkedKeys])}
+            max={20}
+            onCreateWorkItem={onCreateWorkItem}
+            onChange={(overflow) => onChange({ ...draft, overflow })}
+          />
+          {draft.overflow.length > 0 && (
+            <div className="mt-1 text-[11px] text-amber-300">WIP-превышение зафиксировано: {draft.overflow.length}. Эти пункты требуют разбора, но не обещаны на сегодня.</div>
+          )}
+        </div>
       </div>
       {coordinationError && <div className="text-xs text-red-300">{coordinationError}</div>}
       {error && <div className="text-xs text-red-300">{error}</div>}
@@ -602,6 +671,39 @@ function ContractEditor({
   )
 }
 
+function DailyOutcomeFields({
+  active,
+  candidateByKey,
+  onChange,
+}: {
+  active: DayContractSubjectRef[]
+  candidateByKey: Map<string, SubjectCandidate>
+  onChange: (subjects: DayContractSubjectRef[]) => void
+}) {
+  return (
+    <div className="grid min-w-0 gap-2 text-xs">
+      <div>
+        <div className="font-medium text-gray-400">Результат дня по активным направлениям</div>
+        <div className="text-[11px] text-gray-600">Что должно измениться сегодня, не переименовывая долгоживущее дело.</div>
+      </div>
+      {active.length === 0 ? <div className="text-gray-600">Сначала выбери активный набор.</div> : active.map((subject, index) => (
+        <label key={subjectKey(subject)} className="grid gap-1">
+          <span className="truncate text-[11px] text-cyan-300">{candidateByKey.get(subjectKey(subject))?.title ?? subject.subject_id}</span>
+          <textarea
+            rows={2}
+            value={subject.daily_outcome ?? ''}
+            onChange={(event) => onChange(active.map((candidate, candidateIndex) =>
+              candidateIndex === index ? { ...candidate, daily_outcome: event.target.value } : candidate
+            ))}
+            placeholder="Наблюдаемый результат или дневной шаг..."
+            className={`${fieldClass} resize-y`}
+          />
+        </label>
+      ))}
+    </div>
+  )
+}
+
 function SubjectPicker({
   label,
   description,
@@ -610,6 +712,7 @@ function SubjectPicker({
   candidateByKey,
   blockedKeys,
   max,
+  onCreateWorkItem,
   onChange,
 }: {
   label: string
@@ -619,22 +722,45 @@ function SubjectPicker({
   candidateByKey: Map<string, SubjectCandidate>
   blockedKeys: Set<string>
   max: number
+  onCreateWorkItem: (title: string) => Promise<{ id: string; title: string }>
   onChange: (subjects: DayContractSubjectRef[]) => void
 }) {
   const listboxId = useId()
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState(false)
+  const [creating, setCreating] = useState(false)
+  const [createdTitles, setCreatedTitles] = useState<Record<string, string>>({})
   const selectedKeys = new Set(selected.map(subjectKey))
   const available = candidates
     .filter((candidate) => !selectedKeys.has(subjectKey(candidate)) && !blockedKeys.has(subjectKey(candidate)))
     .filter((candidate) => candidateMatchesQuery(candidate, query))
     .slice(0, 30)
   const disabled = selected.length >= max
+  const normalizedQuery = normalizeSearchText(query)
+  const canCreate = Boolean(
+    query.trim() &&
+    !candidates.some((candidate) => normalizeSearchText(candidate.title) === normalizedQuery)
+  )
 
   const selectCandidate = (candidate: SubjectCandidate) => {
     onChange([...selected, { kind: candidate.kind, subject_id: candidate.subject_id }])
     setQuery('')
     setOpen(false)
+  }
+
+  const createFromQuery = async () => {
+    const title = query.trim()
+    if (!title || !canCreate || creating) return
+    setCreating(true)
+    try {
+      const created = await onCreateWorkItem(title)
+      setCreatedTitles((current) => ({ ...current, [created.id]: created.title }))
+      onChange([...selected, { kind: 'work_item', subject_id: created.id }])
+      setQuery('')
+      setOpen(false)
+    } finally {
+      setCreating(false)
+    }
   }
 
   return (
@@ -657,9 +783,14 @@ function SubjectPicker({
           }}
           onKeyDown={(event) => {
             if (event.key === 'Escape') setOpen(false)
-            if (event.key === 'Enter' && available[0]) {
-              event.preventDefault()
-              selectCandidate(available[0])
+            if (event.key === 'Enter') {
+              if (available[0]) {
+                event.preventDefault()
+                selectCandidate(available[0])
+              } else if (canCreate) {
+                event.preventDefault()
+                void createFromQuery()
+              }
             }
           }}
           placeholder={disabled ? `Выбрано максимум: ${max}` : 'Найти дело или направление...'}
@@ -671,7 +802,7 @@ function SubjectPicker({
             role="listbox"
             className="absolute z-30 mt-1 max-h-64 w-full min-w-0 overflow-auto rounded border border-gray-700 bg-gray-950 shadow-xl"
           >
-            {available.length === 0 ? (
+            {available.length === 0 && !canCreate ? (
               <div className="px-3 py-3 text-gray-500">Подходящих дел и направлений не найдено.</div>
             ) : available.map((candidate) => (
               <button
@@ -692,6 +823,17 @@ function SubjectPicker({
                 {candidate.detail && <div className="mt-0.5 line-clamp-2 text-[11px] text-gray-500">{candidate.detail}</div>}
               </button>
             ))}
+            {canCreate && (
+              <button
+                type="button"
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => void createFromQuery()}
+                disabled={creating}
+                className="block w-full border-t border-emerald-900/60 px-3 py-2 text-left font-medium text-emerald-300 hover:bg-emerald-950/30 disabled:text-gray-600"
+              >
+                {creating ? 'Создаю дело...' : `Создать дело «${query.trim()}»`}
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -700,7 +842,7 @@ function SubjectPicker({
           const candidate = candidateByKey.get(subjectKey(subject))
           return (
             <span key={subjectKey(subject)} className="flex min-w-0 max-w-full items-center gap-1 rounded border border-gray-700 bg-gray-900 px-2 py-1 text-gray-300">
-              <span className="truncate">{candidate?.title ?? subject.subject_id}</span>
+              <span className="truncate">{candidate?.title ?? createdTitles[subject.subject_id] ?? subject.subject_id}</span>
               <button
                 type="button"
                 onClick={() => onChange(selected.filter((item) => subjectKey(item) !== subjectKey(subject)))}
@@ -757,6 +899,11 @@ function ContractSubjectRow({
       {(live?.last_significant_change ?? snapshot.last_significant_change) && (
         <div className="mt-1 line-clamp-2 text-[11px] text-gray-500">
           Изменилось: {(live?.last_significant_change ?? snapshot.last_significant_change)?.summary}
+        </div>
+      )}
+      {snapshot.daily_outcome && (
+        <div className="mt-1 rounded border border-cyan-950 bg-cyan-950/20 px-1.5 py-1 text-[11px] text-cyan-200">
+          Результат дня: {snapshot.daily_outcome}
         </div>
       )}
     </button>
@@ -876,9 +1023,10 @@ function workItemCoveredByContract(item: WorkItemView, contract: DayContractRevi
 
 function draftFromContract(contract: DayContractRevisionView): ContractDraft {
   return {
-    active: contract.active_subjects.map((subject) => ({ kind: subject.kind, subject_id: subject.subject_id })),
+    active: contract.active_subjects.map((subject) => ({ kind: subject.kind, subject_id: subject.subject_id, daily_outcome: subject.daily_outcome })),
     firstActionWorkItemId: contract.first_action_work_item_id,
     parked: contract.parked_subjects.map((subject) => ({ kind: subject.kind, subject_id: subject.subject_id })),
+    overflow: contract.overflow_subjects.map((subject) => ({ kind: subject.kind, subject_id: subject.subject_id })),
     whyNow: contract.why_now,
   }
 }
@@ -909,6 +1057,7 @@ export function dayContractValidationIssues(draft: ContractDraft, validFirstActi
   if (draft.active.length > 3) issues.push('сократи активный набор до трёх направлений')
   if (draft.parked.length < 1) issues.push('укажи хотя бы один явно припаркованный конкурент')
   if (draft.parked.length > 3) issues.push('оставь не больше трёх припаркованных конкурентов')
+  if (draft.overflow.length > 20) issues.push('оставь не больше двадцати пунктов переполнения')
   if (!draft.firstActionWorkItemId || !validFirstActionIds.includes(draft.firstActionWorkItemId)) {
     issues.push('выбери первое действие внутри активного набора')
   }

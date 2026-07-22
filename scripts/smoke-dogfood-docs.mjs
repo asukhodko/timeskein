@@ -14,6 +14,7 @@ const checkedFiles = [
   "docs/dogfood-periodic-report.md",
   "docs/dogfood-operational-reality.md",
   "docs/dogfood-operational-workspace.md",
+  "docs/dogfood-working-memory.md",
   "docs/dogfood-learnings.md",
   "docs/acceptance-causal-work-spine-v1.md",
   "docs/roadmap/README.md",
@@ -100,11 +101,19 @@ for (const file of checkedFiles) {
     failures.push(`${file}: current Operational Workspace implementation or acceptance boundary is missing`);
   }
   if (
+    file === "docs/current-implementation.md" &&
+    (!text.includes("## Working Memory Bridge") ||
+      !text.includes("1/3/7") ||
+      !text.includes("pnpm working-memory:gate"))
+  ) {
+    failures.push(`${file}: Working Memory implementation or real-use boundary is missing`);
+  }
+  if (
     file === "docs/roadmap/README.md" &&
     (!text.includes("Keep the accepted manual foundation green") ||
       !text.includes("Use the accepted architecture gate") ||
       !text.includes("Preserve the accepted operational workspace") ||
-      !text.includes("Close the manual working-memory gap") ||
+      !text.includes("Accept the implemented working-memory bridge") ||
       !text.includes("Operational Workspace convergence") ||
       !text.includes("Bounded Context Capture Probe") ||
       !text.includes("Working Memory Bridge") ||
@@ -123,6 +132,16 @@ for (const file of checkedFiles) {
       !text.includes("внешний active-list"))
   ) {
     failures.push(`${file}: Operational Workspace real-use protocol or manual boundary is missing`);
+  }
+  if (
+    file === "docs/dogfood-working-memory.md" &&
+    (!text.includes("1 → 3 → 7") ||
+      !text.includes("work-item-reentry") ||
+      !text.includes("track-reentry") ||
+      !text.includes("pnpm working-memory:gate") ||
+      !text.includes("внешн"))
+  ) {
+    failures.push(`${file}: Working Memory multi-day protocol or external-notebook boundary is missing`);
   }
   if (
     file === "docs/dogfood-learnings.md" &&
@@ -187,6 +206,7 @@ for (const file of checkedFiles) {
       !text.includes("M4. Causal Period Review") ||
       !text.includes("M5. Bounded Context Capture Probe") ||
       !text.includes("Статус: **принято 2026-07-22.**") ||
+      !text.includes("Статус: **реализация готова 2026-07-22, приёмка идёт.**") ||
       !text.includes("`1/1` день с честными ревизиями") ||
       !text.includes("## Риск-гейты") ||
       !text.includes("не переписывать всю базу на event sourcing"))

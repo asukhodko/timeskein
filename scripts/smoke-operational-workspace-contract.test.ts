@@ -14,6 +14,7 @@ function draft(overrides: Partial<ContractDraft> = {}): ContractDraft {
     active: [item('a'), item('b'), item('c')],
     firstActionWorkItemId: 'a',
     parked: [item('p')],
+    overflow: [],
     whyNow: 'Это достаточно важный набор на сейчас.',
     ...overrides,
   }
@@ -42,6 +43,14 @@ test('disabled save names every missing contract condition', () => {
     'оставь в игре 2–3 направления',
     'укажи хотя бы один явно припаркованный конкурент',
     'кратко запиши, почему этот выбор важен сейчас',
+  ])
+})
+
+test('contract keeps overflow visible without turning it into unlimited WIP', () => {
+  const overflow = Array.from({ length: 21 }, (_, index) => item(`overflow-${index}`))
+
+  assert.deepEqual(dayContractValidationIssues(draft({ overflow }), ['a', 'b', 'c']), [
+    'оставь не больше двадцати пунктов переполнения',
   ])
 })
 

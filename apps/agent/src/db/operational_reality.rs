@@ -216,12 +216,25 @@ impl Database {
         let now = Utc::now();
         let correction_id = Uuid::new_v4();
         let mut transaction = self.pool().begin().await?;
-        let deleted = sqlx::query("DELETE FROM work_item_events WHERE id = ?1")
-            .bind(event_id.to_string())
-            .execute(&mut *transaction)
-            .await?;
+        let memory_exists: i64 =
+            sqlx::query_scalar("SELECT COUNT(*) FROM work_memory_entries WHERE id = ?1")
+                .bind(event_id.to_string())
+                .fetch_one(&mut *transaction)
+                .await?;
+        let affected = if memory_exists > 0 {
+            sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM work_item_events WHERE id = ?1")
+                .bind(event_id.to_string())
+                .fetch_one(&mut *transaction)
+                .await?
+        } else {
+            sqlx::query("DELETE FROM work_item_events WHERE id = ?1")
+                .bind(event_id.to_string())
+                .execute(&mut *transaction)
+                .await?
+                .rows_affected() as i64
+        };
 
-        if deleted.rows_affected() > 0 {
+        if affected > 0 {
             if let Some(previous) = previous {
                 if previous.subject_kind != OperationalSubjectKind::WorkItem
                     || previous.subject_id != work_item_id
@@ -260,7 +273,7 @@ impl Database {
         }
 
         transaction.commit().await?;
-        Ok(deleted.rows_affected() > 0)
+        Ok(affected > 0)
     }
 
     pub async fn operational_reality(
@@ -478,6 +491,12 @@ impl Database {
              FROM evidence_entries ee
              JOIN work_item_events wie ON wie.id = ee.work_item_event_id
              WHERE julianday(wie.ts) <= julianday(?1)
+               AND NOT EXISTS (
+                   SELECT 1 FROM work_memory_entries wme
+                   WHERE wme.id = wie.id
+                     AND wme.deleted_at IS NOT NULL
+                     AND julianday(wme.deleted_at) <= julianday(?1)
+               )
              ORDER BY julianday(wie.ts)",
         )
         .bind(as_of.to_rfc3339())
@@ -489,6 +508,12 @@ impl Database {
              FROM evidence_ref_snapshots ers
              JOIN work_item_events wie ON wie.id = ers.work_item_event_id
              WHERE julianday(wie.ts) <= julianday(?1)
+               AND NOT EXISTS (
+                   SELECT 1 FROM work_memory_entries wme
+                   WHERE wme.id = wie.id
+                     AND wme.deleted_at IS NOT NULL
+                     AND julianday(wme.deleted_at) <= julianday(?1)
+               )
              ORDER BY julianday(ers.captured_at), ers.id",
         )
         .bind(as_of.to_rfc3339())

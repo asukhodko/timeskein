@@ -5,26 +5,24 @@ import { logAppEvent } from '../api/client'
 import { 
   useInventory, 
   useSetWorkItemState, 
-  useSetWorkItemNote, 
   useAddRef, 
   useRemoveRef,
   useTouchWorkItem,
   useToggleWorkItemPin,
   useDeleteWorkItem,
-  useAddWorkItemEvent,
 } from '../hooks/useInventory'
 import SearchInput from './SearchInput'
 import InventoryList from './InventoryList'
 import CreateDialog from './CreateDialog'
 import FocusPanel from './FocusPanel'
 import StateMenu from './StateMenu'
-import NoteEditor from './NoteEditor'
+import WorkingMemoryPanel from './WorkingMemoryPanel'
 import WorkItemEditor from './WorkItemEditor'
 import RefsPanel from './RefsPanel'
 import ConfirmDialog from './ConfirmDialog'
 import TaxonomyManager from './TaxonomyManager'
 import OperationalWorkspacePanel from './OperationalWorkspacePanel'
-import type { WorkItemAddEventParams, WorkItemState } from '@timeskein/contracts'
+import type { WorkItemState } from '@timeskein/contracts'
 import { useCurrentFocusSession, useStartFocusSession } from '../hooks/useFocusSessions'
 import {
   countInventoryModes,
@@ -72,8 +70,6 @@ export default function Palette() {
   const selectedItem = visibleItems[selectedIndex]
 
   const stateMutation = useSetWorkItemState()
-  const noteMutation = useSetWorkItemNote()
-  const eventMutation = useAddWorkItemEvent()
   const addRefMutation = useAddRef()
   const removeRefMutation = useRemoveRef()
   const touchMutation = useTouchWorkItem()
@@ -168,7 +164,7 @@ export default function Palette() {
     if (selectedItem) setShowDeleteConfirm(true)
   }
 
-  const handleFocusSelected = useCallback(() => {
+  const handleFocusSelected = useCallback((stageId?: string) => {
     if (!selectedItem || startFocusMutation.isPending) return
 
     const actionId = createTelemetryActionId()
@@ -187,6 +183,7 @@ export default function Palette() {
       work_item_id: selectedItem.id,
       target_seconds: 25 * 60,
       telemetry_action_id: actionId,
+      stage_id: stageId,
     }, {
       onSuccess: (session) => {
         void logAppEvent({
@@ -334,22 +331,6 @@ export default function Palette() {
     if (selectedItem) {
       stateMutation.mutate({ id: selectedItem.id, state })
     }
-  }
-
-  const handleNoteSave = (note: string) => {
-    if (selectedItem) {
-      noteMutation.mutate({ id: selectedItem.id, note })
-    }
-  }
-
-  const handleAppendEvent = async (params: Omit<WorkItemAddEventParams, 'id' | 'focus_session_id'>) => {
-    if (!selectedItem) return
-
-    await eventMutation.mutateAsync({
-      id: selectedItem.id,
-      ...params,
-      focus_session_id: currentFocus?.work_item_id === selectedItem.id ? currentFocus.id : undefined,
-    })
   }
 
   const handleAddRef = (kind: string, value: string) => {
@@ -519,7 +500,7 @@ export default function Palette() {
           <button onClick={handleEditSelected} className="flex items-center gap-1 hover:text-gray-300 transition-colors" title="Открыть редактор дела; ссылки доступны через R">
             <kbd className="px-1 bg-gray-700 rounded">Enter</kbd><span>править</span>
           </button>
-          <button onClick={handleFocusSelected} className="flex items-center gap-1 hover:text-emerald-300 transition-colors" title="Начать или переключить фокус на выбранное дело">
+          <button onClick={() => handleFocusSelected()} className="flex items-center gap-1 hover:text-emerald-300 transition-colors" title="Начать или переключить фокус на выбранное дело">
             <kbd className="px-1 bg-gray-700 rounded">Space</kbd><span>фокус</span>
           </button>
           <button onClick={handleTouch} className="flex items-center gap-1 hover:text-gray-300 transition-colors" title="Коснуться дела">
@@ -528,8 +509,8 @@ export default function Palette() {
           <button onClick={() => selectedItem && setShowStateMenu(true)} className="flex items-center gap-1 hover:text-gray-300 transition-colors" title="Изменить состояние">
             <kbd className="px-1 bg-gray-700 rounded">S</kbd><span>статус</span>
           </button>
-          <button onClick={() => selectedItem && setShowNoteEditor(true)} className="flex items-center gap-1 hover:text-gray-300 transition-colors" title="Править заметку">
-            <kbd className="px-1 bg-gray-700 rounded">N</kbd><span>заметка</span>
+          <button onClick={() => selectedItem && setShowNoteEditor(true)} className="flex items-center gap-1 hover:text-gray-300 transition-colors" title="Открыть рабочую память">
+            <kbd className="px-1 bg-gray-700 rounded">N</kbd><span>память</span>
           </button>
           <button onClick={handlePin} className="flex items-center gap-1 hover:text-gray-300 transition-colors" title="Закрепить или открепить">
             <kbd className="px-1 bg-gray-700 rounded">P</kbd><span>закрепить</span>
@@ -581,17 +562,12 @@ export default function Palette() {
         />
       )}
 
-      {/* Note Editor */}
+      {/* Working Memory */}
       {showNoteEditor && selectedItem && (
-        <NoteEditor
-          itemId={selectedItem.id}
-          itemTitle={selectedItem.title}
-          currentNote={selectedItem.note || null}
-          itemRefs={selectedItem.refs}
-          onSave={handleNoteSave}
-          onAppendEvent={handleAppendEvent}
-          appendPending={eventMutation.isPending}
-          appendError={eventMutation.error instanceof Error ? eventMutation.error.message : null}
+        <WorkingMemoryPanel
+          item={selectedItem}
+          focusSession={currentFocus}
+          onStart={handleFocusSelected}
           onClose={() => setShowNoteEditor(false)}
         />
       )}

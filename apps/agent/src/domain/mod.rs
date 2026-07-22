@@ -13,6 +13,7 @@ pub mod operational_reality;
 pub mod ref_entity;
 pub mod semantics;
 pub mod work_item;
+pub mod working_memory;
 
 pub use app_event::*;
 pub use capture::*;
@@ -25,3 +26,4 @@ pub use operational_reality::*;
 pub use ref_entity::*;
 pub use semantics::*;
 pub use work_item::*;
+pub use working_memory::*;

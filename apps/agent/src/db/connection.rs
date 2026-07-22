@@ -108,6 +108,12 @@ impl Database {
             .execute(&self.pool)
             .await?;
 
+        let working_memory_bridge_sql =
+            include_str!("../../migrations/014_working_memory_bridge.sql");
+        sqlx::raw_sql(working_memory_bridge_sql)
+            .execute(&self.pool)
+            .await?;
+
         Ok(())
     }
 
@@ -203,13 +209,11 @@ impl Database {
         .fetch_optional(&self.pool)
         .await?;
 
-        if table_sql
-            .as_deref()
-            .is_some_and(|sql| {
-                sql.contains("activity_zone_glanced")
-                    && sql.contains("day_contract_reentry_reviewed")
-            })
-        {
+        if table_sql.as_deref().is_some_and(|sql| {
+            sql.contains("day_contract_reentry_reviewed")
+                && sql.contains("context_pack_exported")
+                && sql.contains("day_contract_overflow_recorded")
+        }) {
             return Ok(());
         }
 

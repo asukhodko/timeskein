@@ -12,6 +12,7 @@ mod refs;
 mod semantics;
 mod settings;
 mod work_items;
+mod working_memory;
 
 use std::sync::Arc;
 
@@ -34,6 +35,7 @@ pub use refs::*;
 pub use semantics::*;
 pub use settings::*;
 pub use work_items::*;
+pub use working_memory::*;
 
 /// API version
 pub const API_VERSION: &str = "1.0";
@@ -233,6 +235,19 @@ async fn dispatch_method(
         }
         "work_item.toggle_pin" => handle_work_item_toggle_pin(state, params, request_id).await,
         "work_item.delete" => handle_work_item_delete(state, params, request_id).await,
+
+        // Long-lived working memory and Work Item stages
+        "working_memory.create" => handle_work_memory_create(state, params, request_id).await,
+        "working_memory.list" => handle_work_memory_list(state, params, request_id).await,
+        "working_memory.update" => handle_work_memory_update(state, params, request_id).await,
+        "working_memory.delete" => handle_work_memory_delete(state, params, request_id).await,
+        "work_item_stage.create" => handle_work_item_stage_create(state, params, request_id).await,
+        "work_item_stage.update" => handle_work_item_stage_update(state, params, request_id).await,
+        "work_item_stage.delete" => handle_work_item_stage_delete(state, params, request_id).await,
+        "work_item_stage.list" => handle_work_item_stage_list(state, params, request_id).await,
+        "work_item.merge" => handle_work_item_merge(state, params, request_id).await,
+        "work_item.resolve" => handle_work_item_resolve(state, params, request_id).await,
+        "context_pack.build" => handle_context_pack_build(state, params, request_id).await,
 
         // Focus session methods
         "focus.current" => handle_focus_current(state, params, request_id).await,

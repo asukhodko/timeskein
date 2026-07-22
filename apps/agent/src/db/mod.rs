@@ -12,6 +12,7 @@ mod refs;
 mod semantics;
 mod settings;
 mod work_items;
+mod working_memory;
 
 pub use connection::Database;
 pub use operational_reality::causal_record_views;

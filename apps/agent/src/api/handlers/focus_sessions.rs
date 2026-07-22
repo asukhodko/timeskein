@@ -2,14 +2,17 @@
 
 use std::sync::Arc;
 
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, Local, Utc};
 use tokio::sync::RwLock;
 use uuid::Uuid;
 
 use crate::api::handlers::RpcResponse;
+use crate::db::Database;
 use crate::domain::{
     ActivityZone, AppEvent, AppEventKind, AppEventSource, CausalRecordKind, FocusSession,
-    FocusSessionState, FocusSessionView, NewCausalRecord, WorkItem, WorkItemState, WorkItemType,
+    FocusSessionState, FocusSessionView, NewCausalRecord, NewWorkMemoryEntry, NextActionStatus,
+    WorkItem, WorkItemEvent, WorkItemEventKind, WorkItemState, WorkItemType, WorkMemoryEntryKind,
+    WorkMemorySubjectKind,
 };
 use crate::AppState;
 
@@ -26,9 +29,18 @@ pub async fn handle_focus_current(
         .get_active_focus_session()
         .await
         .map_err(|e| RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string()))?
-        .map(|(session, work_item_title)| {
-            FocusSessionView::from_session(&session, work_item_title, now)
-        });
+        .map(|(session, work_item_title)| (session, work_item_title));
+
+    let session = match session {
+        Some((session, work_item_title)) => Some(
+            focus_session_view(&state.db, &session, work_item_title, now)
+                .await
+                .map_err(|e| {
+                    RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
+                })?,
+        ),
+        None => None,
+    };
 
     Ok(serde_json::json!({ "session": session }))
 }
@@ -40,6 +52,7 @@ pub async fn handle_focus_start(
     request_id: &str,
 ) -> Result<serde_json::Value, RpcResponse> {
     let requested_work_item_id = parse_optional_uuid(params.get("work_item_id"), request_id)?;
+    let requested_stage_id = parse_optional_uuid(params.get("stage_id"), request_id)?;
     let requested_activity_zone = match params.get("activity_zone").and_then(|value| value.as_str())
     {
         Some(value) => Some(ActivityZone::from_str(value).ok_or_else(|| {
@@ -130,14 +143,53 @@ pub async fn handle_focus_start(
     let activity_zone = linked_work_item.activity_zone;
     let title = linked_work_item.title.clone();
 
+    if let Some(stage_id) = requested_stage_id {
+        let stage = state
+            .db
+            .get_work_item_stage(stage_id)
+            .await
+            .map_err(|e| {
+                RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
+            })?
+            .ok_or_else(|| {
+                RpcResponse::error(
+                    request_id.to_string(),
+                    "not_found",
+                    "Work Item stage not found",
+                )
+            })?;
+        if stage.work_item_id != linked_work_item.id || stage.deleted_at.is_some() {
+            return Err(RpcResponse::error(
+                request_id.to_string(),
+                "validation_error",
+                "Stage belongs to another Work Item or is archived",
+            ));
+        }
+        state
+            .db
+            .update_work_item_stage(stage_id, None, Some("active".to_string()), None)
+            .await
+            .map_err(|e| {
+                RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
+            })?;
+    }
+
     if let Some((mut active_session, active_work_item_title)) =
         state.db.get_active_focus_session().await.map_err(|e| {
             RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
         })?
     {
         if active_session.work_item_id == work_item_id {
-            let view =
-                FocusSessionView::from_session(&active_session, active_work_item_title, Utc::now());
+            let view = focus_session_view(
+                &state.db,
+                &active_session,
+                active_work_item_title,
+                Utc::now(),
+            )
+            .await
+            .map_err(|e| {
+                RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
+            })?;
             let _ = state
                 .db
                 .log_app_event(&agent_event(
@@ -195,6 +247,24 @@ pub async fn handle_focus_start(
         .map_err(|e| {
             RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
         })?;
+    let local_date = session
+        .started_at
+        .with_timezone(&Local)
+        .date_naive()
+        .format("%Y-%m-%d")
+        .to_string();
+    state
+        .db
+        .snapshot_focus_work_context(
+            session.id,
+            work_item_id,
+            work_item_title.clone(),
+            &local_date,
+        )
+        .await
+        .map_err(|e| {
+            RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
+        })?;
     let mut causal = NewCausalRecord::for_work_item(linked_work_item.id, CausalRecordKind::Intent);
     causal.text = Some(format!("Начат фокус: {}", linked_work_item.title));
     causal.focus_session_id = Some(session.id);
@@ -210,7 +280,11 @@ pub async fn handle_focus_start(
     item.set_state(WorkItemState::Active);
     let _ = state.db.update_work_item(&item).await;
 
-    let view = FocusSessionView::from_session(&session, work_item_title, Utc::now());
+    let view = focus_session_view(&state.db, &session, work_item_title, Utc::now())
+        .await
+        .map_err(|e| {
+            RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
+        })?;
     let focus_session_id = session.id;
     let event_kind = if reused_work_item || requested_work_item_id.is_some() {
         AppEventKind::FocusSwitched
@@ -250,6 +324,9 @@ pub async fn handle_focus_stop(
         .get("note")
         .and_then(|value| value.as_str())
         .map(str::to_string);
+    let result = optional_trimmed_text(params.get("result"));
+    let state_change = optional_trimmed_text(params.get("state_change"));
+    let next_action = optional_trimmed_text(params.get("next_action"));
 
     let state = state.write().await;
 
@@ -300,7 +377,38 @@ pub async fn handle_focus_stop(
             })?;
     }
 
-    let view = FocusSessionView::from_session(&session, work_item_title, Utc::now());
+    if let Some(work_item_id) = session.work_item_id {
+        for (kind, text) in [
+            (WorkMemoryEntryKind::Result, result),
+            (WorkMemoryEntryKind::StateChange, state_change),
+            (WorkMemoryEntryKind::NextAction, next_action),
+        ] {
+            if let Some(text) = text {
+                if let Err(error) =
+                    create_focus_stop_memory(&state.db, work_item_id, &session, kind, text).await
+                {
+                    let _ = state
+                        .db
+                        .log_app_event(&agent_event(
+                            AppEventKind::ApiError,
+                            Some(work_item_id),
+                            Some(session.id),
+                            Some(serde_json::json!({
+                                "request_method": "focus.stop.memory",
+                                "error": error.to_string(),
+                            })),
+                        ))
+                        .await;
+                }
+            }
+        }
+    }
+
+    let view = focus_session_view(&state.db, &session, work_item_title, Utc::now())
+        .await
+        .map_err(|e| {
+            RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
+        })?;
     let work_item_id = session.work_item_id;
     let focus_session_id = session.id;
     let _ = state
@@ -347,6 +455,15 @@ pub async fn handle_focus_update(
                 "Focus session not found",
             )
         })?;
+    let original_work_item_id = session.work_item_id;
+    let existing_work_context =
+        state
+            .db
+            .get_focus_work_snapshot(session.id)
+            .await
+            .map_err(|e| {
+                RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
+            })?;
 
     if session.state == FocusSessionState::Active {
         return Err(RpcResponse::error(
@@ -413,8 +530,32 @@ pub async fn handle_focus_update(
         .map_err(|e| {
             RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
         })?;
+    if existing_work_context.is_none() || original_work_item_id != session.work_item_id {
+        let local_date = session
+            .started_at
+            .with_timezone(&Local)
+            .date_naive()
+            .format("%Y-%m-%d")
+            .to_string();
+        state
+            .db
+            .snapshot_focus_work_context(
+                session.id,
+                session.work_item_id,
+                updated_work_item_title.clone(),
+                &local_date,
+            )
+            .await
+            .map_err(|e| {
+                RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
+            })?;
+    }
 
-    let view = FocusSessionView::from_session(&session, updated_work_item_title, Utc::now());
+    let view = focus_session_view(&state.db, &session, updated_work_item_title, Utc::now())
+        .await
+        .map_err(|e| {
+            RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
+        })?;
     Ok(serde_json::to_value(view).unwrap())
 }
 
@@ -497,8 +638,30 @@ pub async fn handle_focus_create_stopped(
         .map_err(|e| {
             RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
         })?;
+    let local_date = session
+        .started_at
+        .with_timezone(&Local)
+        .date_naive()
+        .format("%Y-%m-%d")
+        .to_string();
+    state
+        .db
+        .snapshot_focus_work_context(
+            session.id,
+            session.work_item_id,
+            work_item_title.clone(),
+            &local_date,
+        )
+        .await
+        .map_err(|e| {
+            RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
+        })?;
 
-    let view = FocusSessionView::from_session(&session, work_item_title, now);
+    let view = focus_session_view(&state.db, &session, work_item_title, now)
+        .await
+        .map_err(|e| {
+            RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
+        })?;
     Ok(serde_json::to_value(view).unwrap())
 }
 
@@ -602,11 +765,153 @@ pub async fn handle_focus_split(
         .map_err(|e| {
             RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
         })?;
+    let right_local_date = right
+        .started_at
+        .with_timezone(&Local)
+        .date_naive()
+        .format("%Y-%m-%d")
+        .to_string();
+    state
+        .db
+        .snapshot_focus_work_context(
+            right.id,
+            right.work_item_id,
+            right_work_item_title.clone(),
+            &right_local_date,
+        )
+        .await
+        .map_err(|e| {
+            RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
+        })?;
+
+    let left_view = focus_session_view(&state.db, &left, left_work_item_title, now)
+        .await
+        .map_err(|e| {
+            RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
+        })?;
+    let right_view = focus_session_view(&state.db, &right, right_work_item_title, now)
+        .await
+        .map_err(|e| {
+            RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
+        })?;
 
     Ok(serde_json::json!({
-        "left": FocusSessionView::from_session(&left, left_work_item_title, now),
-        "right": FocusSessionView::from_session(&right, right_work_item_title, now),
+        "left": left_view,
+        "right": right_view,
     }))
+}
+
+async fn focus_session_view(
+    database: &Database,
+    session: &FocusSession,
+    work_item_title: Option<String>,
+    now: DateTime<Utc>,
+) -> anyhow::Result<FocusSessionView> {
+    let mut view = FocusSessionView::from_session(session, work_item_title, now);
+    view.work_context = database.get_focus_work_snapshot(session.id).await?;
+    Ok(view)
+}
+
+async fn create_focus_stop_memory(
+    database: &Database,
+    work_item_id: Uuid,
+    session: &FocusSession,
+    kind: WorkMemoryEntryKind,
+    text: String,
+) -> anyhow::Result<()> {
+    let item = database
+        .get_work_item(work_item_id)
+        .await?
+        .ok_or_else(|| anyhow::anyhow!("Work Item not found"))?;
+    let semantics = database.get_work_item_semantics(work_item_id).await?;
+    let focus_snapshot = database.get_focus_work_snapshot(session.id).await?;
+    let occurred_at = session.stopped_at.unwrap_or_else(Utc::now);
+    let local_date = occurred_at
+        .with_timezone(&Local)
+        .date_naive()
+        .format("%Y-%m-%d")
+        .to_string();
+    let id = Uuid::new_v4();
+    let mut event = WorkItemEvent::new(
+        work_item_id,
+        WorkItemEventKind::NoteAdded,
+        Some(serde_json::json!({
+            "text": text,
+            "focus_session_id": session.id,
+            "memory_entry_kind": kind.as_str(),
+            "origin": "focus_stop",
+        })),
+    );
+    event.id = id;
+    event.ts = occurred_at;
+    database.log_event(&event).await?;
+    database
+        .create_work_memory_entry(NewWorkMemoryEntry {
+            id,
+            subject_kind: WorkMemorySubjectKind::WorkItem,
+            subject_id: work_item_id,
+            work_item_id: Some(work_item_id),
+            track_id: semantics.track.as_ref().map(|track| track.id),
+            work_item_title_snapshot: Some(item.title),
+            focus_session_id: Some(session.id),
+            stage_id: focus_snapshot
+                .as_ref()
+                .and_then(|snapshot| snapshot.stage_id),
+            day_contract_revision_id: focus_snapshot
+                .as_ref()
+                .and_then(|snapshot| snapshot.day_contract_revision_id),
+            local_date: Some(local_date),
+            occurred_at,
+            recorded_at: Utc::now(),
+            source: "user".to_string(),
+            provenance: "confirmed".to_string(),
+            origin_kind: "focus_stop".to_string(),
+            origin_ref: Some(session.id.to_string()),
+            track_snapshot: semantics
+                .track
+                .as_ref()
+                .map(|track| track.path.clone())
+                .unwrap_or_default(),
+            labels_snapshot: semantics.labels,
+            entry_kind: kind,
+            text: event
+                .payload
+                .as_ref()
+                .and_then(|payload| payload.get("text"))
+                .and_then(|value| value.as_str())
+                .map(str::to_string),
+            material_kind: None,
+            material_value: None,
+        })
+        .await?;
+
+    let causal_kind = match kind {
+        WorkMemoryEntryKind::Result => Some(CausalRecordKind::Result),
+        WorkMemoryEntryKind::NextAction => Some(CausalRecordKind::NextAction),
+        WorkMemoryEntryKind::StateChange => Some(CausalRecordKind::StateAssertion),
+        _ => None,
+    };
+    if let Some(causal_kind) = causal_kind {
+        let mut causal = NewCausalRecord::for_work_item(work_item_id, causal_kind);
+        causal.text = event
+            .payload
+            .as_ref()
+            .and_then(|payload| payload.get("text"))
+            .and_then(|value| value.as_str())
+            .map(str::to_string);
+        causal.occurred_at = occurred_at;
+        causal.focus_session_id = Some(session.id);
+        causal.evidence_event_id = Some(id);
+        causal.payload = serde_json::json!({
+            "origin": "focus.stop",
+            "working_memory_entry_id": id,
+        });
+        if kind == WorkMemoryEntryKind::NextAction {
+            causal.next_action_status = Some(NextActionStatus::Open);
+        }
+        database.create_causal_record(causal).await?;
+    }
+    Ok(())
 }
 
 fn agent_event(
@@ -622,6 +927,14 @@ fn agent_event(
     event
 }
 
+fn optional_trimmed_text(value: Option<&serde_json::Value>) -> Option<String> {
+    value
+        .and_then(|value| value.as_str())
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .map(str::to_string)
+}
+
 /// Handle focus.list.
 pub async fn handle_focus_list(
     state: &Arc<RwLock<AppState>>,
@@ -633,21 +946,26 @@ pub async fn handle_focus_list(
 
     let state = state.read().await;
     let now = Utc::now();
-    let sessions = state
+    let raw_sessions = state
         .db
         .list_focus_sessions(from, to, now)
         .await
-        .map_err(|e| RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string()))?
-        .into_iter()
-        .map(|(session, work_item_title)| {
-            let mut view = FocusSessionView::from_session(&session, work_item_title, now);
-            if from.is_some() || to.is_some() {
-                view.active_seconds = clipped_active_seconds(&session, now, from, to);
-                view.over_target_seconds = (view.active_seconds - view.target_seconds).max(0);
-            }
-            view
-        })
-        .collect::<Vec<_>>();
+        .map_err(|e| {
+            RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
+        })?;
+    let mut sessions = Vec::with_capacity(raw_sessions.len());
+    for (session, work_item_title) in raw_sessions {
+        let mut view = focus_session_view(&state.db, &session, work_item_title, now)
+            .await
+            .map_err(|e| {
+                RpcResponse::error(request_id.to_string(), "internal_error", &e.to_string())
+            })?;
+        if from.is_some() || to.is_some() {
+            view.active_seconds = clipped_active_seconds(&session, now, from, to);
+            view.over_target_seconds = (view.active_seconds - view.target_seconds).max(0);
+        }
+        sessions.push(view);
+    }
 
     let active_seconds_total = sessions
         .iter()

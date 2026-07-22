@@ -13,7 +13,7 @@ use crate::domain::{
     DayContractSubjectRef, DayContractSubjectSnapshot, NewDayContractRevision,
     OperationalRealityView, OperationalWorkspaceView, WorkItemState,
 };
-use crate::{AppState, db::Database};
+use crate::{db::Database, AppState};
 
 pub async fn handle_operational_workspace_get(
     state: &Arc<RwLock<AppState>>,
@@ -22,9 +22,11 @@ pub async fn handle_operational_workspace_get(
 ) -> Result<serde_json::Value, RpcResponse> {
     let local_date = parse_local_date(params.get("local_date"), request_id)?;
     let state = state.read().await;
-    let workspace = build_workspace(&state.db, &local_date).await.map_err(|error| {
-        RpcResponse::error(request_id.to_string(), "internal_error", &error.to_string())
-    })?;
+    let workspace = build_workspace(&state.db, &local_date)
+        .await
+        .map_err(|error| {
+            RpcResponse::error(request_id.to_string(), "internal_error", &error.to_string())
+        })?;
     Ok(serde_json::to_value(workspace).unwrap())
 }
 
@@ -39,21 +41,34 @@ pub async fn handle_day_contract_revise(
         .and_then(|value| value.as_str())
         .and_then(DayContractRevisionKind::from_str)
         .ok_or_else(|| validation_error(request_id, "Valid revision_kind is required"))?;
-    let active_refs = parse_subject_refs(params.get("active_subjects"), "active_subjects", request_id)?;
-    let parked_refs = parse_subject_refs(params.get("parked_subjects"), "parked_subjects", request_id)?;
+    let active_refs =
+        parse_subject_refs(params.get("active_subjects"), "active_subjects", request_id)?;
+    let parked_refs =
+        parse_subject_refs(params.get("parked_subjects"), "parked_subjects", request_id)?;
+    let overflow_refs = parse_subject_refs(
+        params.get("overflow_subjects"),
+        "overflow_subjects",
+        request_id,
+    )?;
     if !(2..=3).contains(&active_refs.len()) {
         return Err(validation_error(
             request_id,
             "Day contract must contain 2 or 3 active subjects",
         ));
     }
-    if !(1..=3).contains(&parked_refs.len()) {
+    if parked_refs.len() > 3 {
         return Err(validation_error(
             request_id,
-            "Day contract must contain 1 to 3 parked competitors",
+            "Day contract may contain at most 3 parked competitors",
         ));
     }
-    ensure_distinct_subjects(&active_refs, &parked_refs, request_id)?;
+    if overflow_refs.len() > 20 {
+        return Err(validation_error(
+            request_id,
+            "Day contract may contain at most 20 overflow subjects",
+        ));
+    }
+    ensure_distinct_subjects(&active_refs, &parked_refs, &overflow_refs, request_id)?;
     let first_action_work_item_id = parse_required_uuid(
         params.get("first_action_work_item_id"),
         "first_action_work_item_id",
@@ -94,7 +109,11 @@ pub async fn handle_day_contract_revise(
         .await
         .map_err(|error| internal_error(request_id, error))?
         .ok_or_else(|| {
-            RpcResponse::error(request_id.to_string(), "not_found", "First action Work Item not found")
+            RpcResponse::error(
+                request_id.to_string(),
+                "not_found",
+                "First action Work Item not found",
+            )
         })?;
     let first_semantics = state
         .db
@@ -123,22 +142,36 @@ pub async fn handle_day_contract_revise(
         .map_err(|error| internal_error(request_id, error))?;
     let mut active_subjects = Vec::with_capacity(active_refs.len());
     for subject in &active_refs {
-        active_subjects.push(
-            snapshot_subject(&state.db, &reality, subject, captured_at, request_id).await?,
-        );
+        active_subjects
+            .push(snapshot_subject(&state.db, &reality, subject, captured_at, request_id).await?);
     }
     let mut parked_subjects = Vec::with_capacity(parked_refs.len());
     for subject in &parked_refs {
-        parked_subjects.push(
-            snapshot_subject(&state.db, &reality, subject, captured_at, request_id).await?,
-        );
+        parked_subjects
+            .push(snapshot_subject(&state.db, &reality, subject, captured_at, request_id).await?);
     }
+    let mut overflow_subjects = Vec::with_capacity(overflow_refs.len());
+    for subject in &overflow_refs {
+        overflow_subjects
+            .push(snapshot_subject(&state.db, &reality, subject, captured_at, request_id).await?);
+    }
+    let first_outcome = active_refs
+        .iter()
+        .find(|subject| match subject.kind {
+            DayContractSubjectKind::WorkItem => subject.subject_id == first_action_work_item_id,
+            DayContractSubjectKind::Track => first_semantics
+                .track
+                .as_ref()
+                .is_some_and(|track| track.path.iter().any(|node| node.id == subject.subject_id)),
+        })
+        .and_then(|subject| subject.daily_outcome.clone());
     let first_action_snapshot = snapshot_subject(
         &state.db,
         &reality,
         &DayContractSubjectRef {
             kind: DayContractSubjectKind::WorkItem,
             subject_id: first_action.id,
+            daily_outcome: first_outcome,
         },
         captured_at,
         request_id,
@@ -154,6 +187,7 @@ pub async fn handle_day_contract_revise(
             first_action_work_item_id,
             first_action: first_action_snapshot,
             parked_subjects,
+            overflow_subjects,
             why_now,
         })
         .await
@@ -172,12 +206,15 @@ pub async fn handle_day_contract_revise(
         "revision_kind": revision.revision_kind.as_str(),
         "active_count": revision.active_subjects.len(),
         "parked_count": revision.parked_subjects.len(),
+        "overflow_count": revision.overflow_subjects.len(),
     }));
     let _ = state.db.log_app_event(&event).await;
 
-    let workspace = build_workspace(&state.db, &local_date).await.map_err(|error| {
-        RpcResponse::error(request_id.to_string(), "internal_error", &error.to_string())
-    })?;
+    let workspace = build_workspace(&state.db, &local_date)
+        .await
+        .map_err(|error| {
+            RpcResponse::error(request_id.to_string(), "internal_error", &error.to_string())
+        })?;
     Ok(serde_json::json!({
         "revision": revision,
         "workspace": workspace,
@@ -246,6 +283,7 @@ async fn snapshot_subject(
             last_significant_change: item.last_significant_change.clone(),
             track_path: item.track_path.clone(),
             labels: item.labels.clone(),
+            daily_outcome: subject.daily_outcome.clone(),
             captured_at: captured_at.to_rfc3339(),
         });
     }
@@ -280,6 +318,7 @@ async fn snapshot_subject(
                     .map(|track| track.path.clone())
                     .unwrap_or_default(),
                 labels: semantics.labels,
+                daily_outcome: subject.daily_outcome.clone(),
                 captured_at: captured_at.to_rfc3339(),
             })
         }
@@ -308,6 +347,7 @@ async fn snapshot_subject(
                 last_significant_change: None,
                 track_path: path,
                 labels: vec![],
+                daily_outcome: subject.daily_outcome.clone(),
                 captured_at: captured_at.to_rfc3339(),
             })
         }
@@ -319,8 +359,11 @@ fn parse_subject_refs(
     field: &str,
     request_id: &str,
 ) -> Result<Vec<DayContractSubjectRef>, RpcResponse> {
+    let Some(value) = value else {
+        return Ok(vec![]);
+    };
     let values = value
-        .and_then(|value| value.as_array())
+        .as_array()
         .ok_or_else(|| validation_error(request_id, &format!("{field} must be an array")))?;
     values
         .iter()
@@ -329,9 +372,22 @@ fn parse_subject_refs(
                 .get("kind")
                 .and_then(|value| value.as_str())
                 .and_then(DayContractSubjectKind::from_str)
-                .ok_or_else(|| validation_error(request_id, "Subject kind must be work_item or track"))?;
-            let subject_id = parse_required_uuid(value.get("subject_id"), "subject_id", request_id)?;
-            Ok(DayContractSubjectRef { kind, subject_id })
+                .ok_or_else(|| {
+                    validation_error(request_id, "Subject kind must be work_item or track")
+                })?;
+            let subject_id =
+                parse_required_uuid(value.get("subject_id"), "subject_id", request_id)?;
+            let daily_outcome = value
+                .get("daily_outcome")
+                .and_then(|value| value.as_str())
+                .map(str::trim)
+                .filter(|value| !value.is_empty())
+                .map(|value| value.chars().take(1000).collect::<String>());
+            Ok(DayContractSubjectRef {
+                kind,
+                subject_id,
+                daily_outcome,
+            })
         })
         .collect()
 }
@@ -339,10 +395,11 @@ fn parse_subject_refs(
 fn ensure_distinct_subjects(
     active: &[DayContractSubjectRef],
     parked: &[DayContractSubjectRef],
+    overflow: &[DayContractSubjectRef],
     request_id: &str,
 ) -> Result<(), RpcResponse> {
     let mut seen = HashSet::new();
-    for subject in active.iter().chain(parked) {
+    for subject in active.iter().chain(parked).chain(overflow) {
         if !seen.insert((subject.kind, subject.subject_id)) {
             return Err(validation_error(
                 request_id,

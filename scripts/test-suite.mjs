@@ -25,6 +25,8 @@ const steps = [
   ["pnpm", ["smoke:operational-workspace-gate"]],
   ["pnpm", ["smoke:operational-workspace-ui"]],
   ["pnpm", ["smoke:operational-workspace-contract"]],
+  ["pnpm", ["smoke:working-memory-cli"]],
+  ["pnpm", ["smoke:working-memory-ui"]],
   ["pnpm", ["smoke:app-events"]],
   ["pnpm", ["smoke:dogfood-report"]],
   ["pnpm", ["smoke:dogfood-finish"]],

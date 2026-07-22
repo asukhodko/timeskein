@@ -59,6 +59,18 @@ impl Database {
         .bind(supersedes_id.map(|value| value.to_string()))
         .execute(&mut *transaction)
         .await?;
+        for (ordinal, subject) in draft.overflow_subjects.iter().enumerate() {
+            sqlx::query(
+                "INSERT INTO day_contract_overflow_subjects (
+                    day_contract_revision_id, ordinal, subject_snapshot_json
+                 ) VALUES (?1, ?2, ?3)",
+            )
+            .bind(id.to_string())
+            .bind(ordinal as i64)
+            .bind(serde_json::to_string(subject)?)
+            .execute(&mut *transaction)
+            .await?;
+        }
         transaction.commit().await?;
 
         Ok(DayContractRevision {
@@ -70,6 +82,7 @@ impl Database {
             first_action_work_item_id: draft.first_action_work_item_id,
             first_action: draft.first_action,
             parked_subjects: draft.parked_subjects,
+            overflow_subjects: draft.overflow_subjects,
             why_now: draft.why_now,
             created_at,
             source: "user".to_string(),
@@ -95,7 +108,15 @@ impl Database {
         .bind(local_date)
         .fetch_all(self.pool())
         .await?;
-        rows.iter().map(day_contract_from_row).collect()
+        let mut revisions = Vec::with_capacity(rows.len());
+        for row in &rows {
+            let mut revision = day_contract_from_row(row)?;
+            revision.overflow_subjects = self
+                .list_day_contract_overflow_subjects(revision.id)
+                .await?;
+            revisions.push(revision);
+        }
+        Ok(revisions)
     }
 
     pub async fn list_day_contract_revisions_range(
@@ -116,7 +137,38 @@ impl Database {
         .bind(to)
         .fetch_all(self.pool())
         .await?;
-        rows.iter().map(day_contract_from_row).collect()
+        let mut revisions = Vec::with_capacity(rows.len());
+        for row in &rows {
+            let mut revision = day_contract_from_row(row)?;
+            revision.overflow_subjects = self
+                .list_day_contract_overflow_subjects(revision.id)
+                .await?;
+            revisions.push(revision);
+        }
+        Ok(revisions)
+    }
+
+    async fn list_day_contract_overflow_subjects(
+        &self,
+        revision_id: Uuid,
+    ) -> Result<Vec<DayContractSubjectSnapshot>> {
+        let rows = sqlx::query(
+            "SELECT subject_snapshot_json
+             FROM day_contract_overflow_subjects
+             WHERE day_contract_revision_id = ?1
+             ORDER BY ordinal ASC",
+        )
+        .bind(revision_id.to_string())
+        .fetch_all(self.pool())
+        .await?;
+        rows.iter()
+            .map(|row| {
+                serde_json::from_str::<DayContractSubjectSnapshot>(
+                    &row.get::<String, _>("subject_snapshot_json"),
+                )
+                .map_err(Into::into)
+            })
+            .collect()
     }
 }
 
@@ -139,6 +191,7 @@ fn day_contract_from_row(row: &sqlx::sqlite::SqliteRow) -> Result<DayContractRev
         parked_subjects: serde_json::from_str::<Vec<DayContractSubjectSnapshot>>(
             &row.get::<String, _>("parked_subjects_json"),
         )?,
+        overflow_subjects: vec![],
         why_now: row.get("why_now"),
         created_at: parse_datetime(row.get("created_at"))?,
         source: row.get("source"),
@@ -176,6 +229,7 @@ mod tests {
             last_significant_change: None,
             track_path: vec![],
             labels: vec![],
+            daily_outcome: None,
             captured_at: Utc::now().to_rfc3339(),
         }
     }
@@ -198,6 +252,7 @@ mod tests {
                 first_action_work_item_id: first,
                 first_action: snapshot(first, "One"),
                 parked_subjects: vec![snapshot(parked, "Parked")],
+                overflow_subjects: vec![],
                 why_now: "Morning choice".to_string(),
             })
             .await
@@ -210,6 +265,7 @@ mod tests {
                 first_action_work_item_id: second,
                 first_action: snapshot(second, "Two"),
                 parked_subjects: vec![snapshot(parked, "Parked")],
+                overflow_subjects: vec![snapshot(Uuid::new_v4(), "Overflow")],
                 why_now: "Changed after new evidence".to_string(),
             })
             .await
@@ -224,5 +280,6 @@ mod tests {
         assert_eq!(revisions[0].active_subjects[0].title, "One");
         assert_eq!(revisions[1].revision_number, 2);
         assert_eq!(revisions[1].supersedes_id, Some(revision_one.id));
+        assert_eq!(revisions[1].overflow_subjects[0].title, "Overflow");
     }
 }

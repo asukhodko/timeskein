@@ -62,6 +62,9 @@ export const MANUAL_COPY_HINT =
 export default function FocusPanel({ selectedItem }: FocusPanelProps) {
   const [title, setTitle] = useState('')
   const [note, setNote] = useState('')
+  const [stopResult, setStopResult] = useState('')
+  const [stopStateChange, setStopStateChange] = useState('')
+  const [stopNextAction, setStopNextAction] = useState('')
   const [now, setNow] = useState(() => new Date())
   const [copyDayState, setCopyDayState] = useState<'idle' | 'copied' | 'failed'>('idle')
   const [copyReportState, setCopyReportState] = useState<'idle' | 'copied' | 'failed'>('idle')
@@ -490,10 +493,34 @@ export default function FocusPanel({ selectedItem }: FocusPanelProps) {
     })
 
     stopMutation.mutate(
-      { note, telemetry_action_id: actionId },
+      {
+        note,
+        telemetry_action_id: actionId,
+        result: stopResult.trim() || undefined,
+        state_change: stopStateChange.trim() || undefined,
+        next_action: stopNextAction.trim() || undefined,
+      },
       {
         onSuccess: (session) => {
           setNote('')
+          const semanticKinds = [
+            ['result', stopResult],
+            ['state_change', stopStateChange],
+            ['next_action', stopNextAction],
+          ] as const
+          setStopResult('')
+          setStopStateChange('')
+          setStopNextAction('')
+          for (const [memoryKind, value] of semanticKinds) {
+            if (!value.trim()) continue
+            void logAppEvent({
+              source: 'ui',
+              kind: 'working_memory_created',
+              work_item_id: session.work_item_id,
+              focus_session_id: session.id,
+              payload: { memory_kind: memoryKind, origin: 'focus_stop' },
+            })
+          }
           void logAppEvent({
             source: 'ui',
             kind: 'focus_stopped',
@@ -884,7 +911,19 @@ export default function FocusPanel({ selectedItem }: FocusPanelProps) {
     <section className="border-b border-gray-700 bg-gray-950/45">
       <div className="grid gap-3 px-4 py-3">
         {current && (
-          <ActiveFocusSession session={current} note={note} setNote={setNote} onStop={stopCurrentSession} stopping={stopMutation.isPending} />
+          <ActiveFocusSession
+            session={current}
+            note={note}
+            setNote={setNote}
+            result={stopResult}
+            setResult={setStopResult}
+            stateChange={stopStateChange}
+            setStateChange={setStopStateChange}
+            nextAction={stopNextAction}
+            setNextAction={setStopNextAction}
+            onStop={stopCurrentSession}
+            stopping={stopMutation.isPending}
+          />
         )}
 
         <ActiveFocusJournal
@@ -4321,12 +4360,24 @@ function ActiveFocusSession({
   session,
   note,
   setNote,
+  result,
+  setResult,
+  stateChange,
+  setStateChange,
+  nextAction,
+  setNextAction,
   onStop,
   stopping,
 }: {
   session: FocusSessionView
   note: string
   setNote: (value: string) => void
+  result: string
+  setResult: (value: string) => void
+  stateChange: string
+  setStateChange: (value: string) => void
+  nextAction: string
+  setNextAction: (value: string) => void
   onStop: () => void
   stopping: boolean
 }) {
@@ -4348,6 +4399,12 @@ function ActiveFocusSession({
           </div>
           {session.work_item_title && session.work_item_title !== session.title && (
             <div className="truncate text-xs text-gray-500">{session.work_item_title}</div>
+          )}
+          {(session.work_context?.stage_title || session.work_context?.daily_outcome) && (
+            <div className="mt-1 grid gap-0.5 text-[11px] text-gray-500">
+              {session.work_context.stage_title && <div>Этап: <span className="text-cyan-300">{session.work_context.stage_title}</span></div>}
+              {session.work_context.daily_outcome && <div>Результат дня: <span className="text-gray-300">{session.work_context.daily_outcome}</span></div>}
+            </div>
           )}
         </div>
         <div className="shrink-0 text-right">
@@ -4390,6 +4447,36 @@ function ActiveFocusSession({
           Стоп
         </button>
       </div>
+      {session.work_item_id && (
+        <details className="rounded border border-gray-800 bg-gray-950/35 px-3 py-2">
+          <summary className="cursor-pointer text-xs text-gray-400 hover:text-gray-200">
+            Зафиксировать след блока: сделал → изменилось → дальше
+          </summary>
+          <div className="mt-2 grid gap-2 sm:grid-cols-3">
+            <textarea
+              value={result}
+              onChange={(event) => setResult(event.target.value)}
+              rows={2}
+              placeholder="Что сделал или получил"
+              className="min-h-16 resize-y rounded border border-gray-700 bg-gray-900 px-2 py-1.5 text-xs text-gray-100 placeholder-gray-600 focus:border-emerald-600"
+            />
+            <textarea
+              value={stateChange}
+              onChange={(event) => setStateChange(event.target.value)}
+              rows={2}
+              placeholder="Как изменилось состояние"
+              className="min-h-16 resize-y rounded border border-gray-700 bg-gray-900 px-2 py-1.5 text-xs text-gray-100 placeholder-gray-600 focus:border-emerald-600"
+            />
+            <textarea
+              value={nextAction}
+              onChange={(event) => setNextAction(event.target.value)}
+              rows={2}
+              placeholder="Следующий физический шаг"
+              className="min-h-16 resize-y rounded border border-gray-700 bg-gray-900 px-2 py-1.5 text-xs text-gray-100 placeholder-gray-600 focus:border-emerald-600"
+            />
+          </div>
+        </details>
+      )}
     </div>
   )
 }

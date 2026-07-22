@@ -215,6 +215,7 @@ export type DayContractRevisionKind = "morning" | "reentry" | "adjustment";
 export interface DayContractSubjectRef {
   kind: DayContractSubjectKind;
   subject_id: string;
+  daily_outcome?: string;
 }
 
 export interface DayContractSubjectSnapshot {
@@ -230,6 +231,7 @@ export interface DayContractSubjectSnapshot {
   last_significant_change?: OperationalRealityBasisView;
   track_path: TrackPathNode[];
   labels: LabelView[];
+  daily_outcome?: string;
   captured_at: string;
 }
 
@@ -242,6 +244,7 @@ export interface DayContractRevisionView {
   first_action_work_item_id: string;
   first_action: DayContractSubjectSnapshot;
   parked_subjects: DayContractSubjectSnapshot[];
+  overflow_subjects: DayContractSubjectSnapshot[];
   why_now: string;
   created_at: string;
   source: "user" | "system";
@@ -316,6 +319,148 @@ export interface WorkItemEventView {
   evidence?: EvidenceEntryView;
 }
 
+// -----------------------------------------------------------------------------
+// Working Memory Bridge Types
+// -----------------------------------------------------------------------------
+
+export type WorkMemorySubjectKind = "work_item" | "track";
+export type WorkMemoryEntryKind =
+  | "thought"
+  | "question"
+  | "decision"
+  | "observation"
+  | "result"
+  | "next_action"
+  | "material"
+  | "state_change";
+export type WorkMemoryMaterialKind = "text" | "url" | "file_path";
+export type WorkMemoryRevisionKind = "create" | "edit" | "delete" | "restore";
+
+export interface WorkMemoryRevisionView {
+  id: string;
+  revision_number: number;
+  change_kind: WorkMemoryRevisionKind;
+  entry_kind: WorkMemoryEntryKind;
+  text?: string;
+  material_kind?: WorkMemoryMaterialKind;
+  material_value?: string;
+  change_note?: string;
+  created_at: string;
+  source: "user" | "system" | "legacy" | "import";
+  provenance: "confirmed" | "observed" | "derived" | "legacy_current" | "imported";
+}
+
+export interface WorkMemoryEntryView {
+  id: string;
+  subject_kind: WorkMemorySubjectKind;
+  subject_id: string;
+  work_item_id?: string;
+  track_id?: string;
+  work_item_title_snapshot?: string;
+  focus_session_id?: string;
+  stage_id?: string;
+  stage_title?: string;
+  day_contract_revision_id?: string;
+  local_date?: string;
+  occurred_at: string;
+  recorded_at: string;
+  updated_at: string;
+  source: "user" | "system" | "legacy" | "import";
+  provenance: "confirmed" | "observed" | "derived" | "legacy_current" | "imported";
+  origin_kind: "manual" | "focus_stop" | "day_contract" | "capture" | "legacy_event" | "import";
+  origin_ref?: string;
+  track_snapshot: TrackPathNode[];
+  labels_snapshot: LabelView[];
+  current_revision: WorkMemoryRevisionView;
+  revisions: WorkMemoryRevisionView[];
+  deleted_at?: string;
+}
+
+export interface WorkItemStageView {
+  id: string;
+  work_item_id: string;
+  title: string;
+  position: number;
+  state: "planned" | "active" | "completed" | "archived";
+  created_at: string;
+  updated_at: string;
+  completed_at?: string;
+  deleted_at?: string;
+  active_seconds: number;
+  entrances: number;
+}
+
+export interface FocusWorkSnapshotView {
+  focus_session_id: string;
+  work_item_id?: string;
+  work_item_title?: string;
+  stage_id?: string;
+  stage_title?: string;
+  daily_outcome?: string;
+  day_contract_revision_id?: string;
+  captured_at: string;
+  provenance: "confirmed" | "derived" | "legacy_current";
+}
+
+export interface WorkItemAliasView {
+  source_work_item_id: string;
+  canonical_work_item_id: string;
+  source_title_snapshot: string;
+  merged_at: string;
+  merge_reason?: string;
+}
+
+export type ContextPackProfile = "work-item-reentry" | "track-reentry";
+
+export interface ContextPackView {
+  schema_version: 1;
+  profile: ContextPackProfile;
+  scope: {
+    kind: "work_item" | "track";
+    id: string;
+    title: string;
+    canonical_id?: string;
+    aliases: WorkItemAliasView[];
+  };
+  as_of: string;
+  facts: {
+    work_items: Array<{
+      id: string;
+      title: string;
+      state: WorkItemState;
+      track_path: TrackPathNode[];
+      labels: LabelView[];
+    }>;
+    stages: WorkItemStageView[];
+    memory: WorkMemoryEntryView[];
+    focus: {
+      active_seconds: number;
+      entrances: number;
+      by_stage: Array<{
+        id?: string;
+        title: string;
+        state: string;
+        active_seconds: number;
+        entrances: number;
+      }>;
+    };
+    latest_confirmed_change?: WorkMemoryEntryView;
+    current_stage?: WorkItemStageView;
+    open_questions: WorkMemoryEntryView[];
+    materials: WorkMemoryEntryView[];
+    next_actions: WorkMemoryEntryView[];
+  };
+  unknowns: string[];
+  warnings: string[];
+  redactions: string[];
+  provenance: {
+    source: string;
+    projection: string;
+    canonical_tables: string[];
+    external_text_policy: string;
+  };
+}
+
 export type DayEventKind = "note_added";
 
 export interface DayEventView {
@@ -356,6 +501,7 @@ export interface FocusSessionView {
   started_at: string;  // ISO 8601
   stopped_at?: string;  // ISO 8601
   updated_at: string;  // ISO 8601
+  work_context?: FocusWorkSnapshotView;
 }
 
 // -----------------------------------------------------------------------------
@@ -442,6 +588,17 @@ export type AppEventKind =
   | "capture_usage_reviewed"
   | "entry_paths_reviewed"
   | "window_entrypoints_reviewed"
+  | "working_memory_opened"
+  | "working_memory_created"
+  | "working_memory_updated"
+  | "working_memory_deleted"
+  | "work_item_stage_changed"
+  | "context_pack_built"
+  | "context_pack_exported"
+  | "reentry_started"
+  | "work_item_merged"
+  | "day_contract_outcome_recorded"
+  | "day_contract_overflow_recorded"
   | "api_error";
 
 export interface AppEventView {
@@ -838,6 +995,7 @@ export interface DayContractReviseParams {
   active_subjects: DayContractSubjectRef[];
   first_action_work_item_id: string;
   parked_subjects: DayContractSubjectRef[];
+  overflow_subjects?: DayContractSubjectRef[];
   why_now: string;
 }
 
@@ -881,6 +1039,7 @@ export interface FocusStartParams {
   activity_zone?: ActivityZone;
   target_seconds?: number;
   telemetry_action_id?: string;
+  stage_id?: string;
 }
 
 // focus.stop parameters
@@ -888,6 +1047,58 @@ export interface FocusStopParams {
   id?: string;
   note?: string;
   telemetry_action_id?: string;
+  result?: string;
+  state_change?: string;
+  next_action?: string;
+}
+
+export interface WorkMemoryCreateParams {
+  subject_kind: WorkMemorySubjectKind;
+  subject_id: string;
+  kind: WorkMemoryEntryKind;
+  text?: string;
+  material_kind?: WorkMemoryMaterialKind;
+  material_value?: string;
+  focus_session_id?: string;
+  stage_id?: string;
+  local_date?: string;
+  occurred_at?: string;
+  origin_kind?: "manual" | "focus_stop" | "day_contract" | "capture" | "import";
+  origin_ref?: string;
+}
+
+export interface WorkMemoryUpdateParams {
+  id: string;
+  kind: WorkMemoryEntryKind;
+  text?: string;
+  material_kind?: WorkMemoryMaterialKind;
+  material_value?: string;
+  change_note?: string;
+}
+
+export interface WorkMemoryListParams {
+  subject_kind?: WorkMemorySubjectKind;
+  subject_id?: string;
+  from?: string;
+  to?: string;
+  include_deleted?: boolean;
+}
+
+export interface WorkMemoryListResponse {
+  entries: WorkMemoryEntryView[];
+  total: number;
+}
+
+export interface ContextPackBuildParams {
+  profile: ContextPackProfile;
+  scope_id: string;
+  as_of?: string;
+  format?: "json" | "markdown" | "both";
+}
+
+export interface ContextPackBuildResponse {
+  pack?: ContextPackView;
+  markdown?: string;
 }
 
 // focus.update parameters

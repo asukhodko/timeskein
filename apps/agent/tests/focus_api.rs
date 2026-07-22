@@ -1171,9 +1171,13 @@ async fn unicode_search_reuses_titles_and_dispatch_can_create_coordination_work(
         Some(work_item_id.as_str())
     );
 
-    let reused = handle_focus_start(&state, json!({ "title": "ПРОЕКТ АЛЬФА" }), "reuse-uppercase")
-        .await
-        .expect("reuse case-insensitive title");
+    let reused = handle_focus_start(
+        &state,
+        json!({ "title": "ПРОЕКТ АЛЬФА" }),
+        "reuse-uppercase",
+    )
+    .await
+    .expect("reuse case-insensitive title");
     assert_eq!(reused["work_item_id"].as_str(), Some(work_item_id.as_str()));
     handle_focus_stop(&state, json!({}), "stop-rb")
         .await

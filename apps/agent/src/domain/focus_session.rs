@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use super::ActivityZone;
+use super::FocusWorkSnapshotView;
 
 /// Focus session state.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, sqlx::Type)]
@@ -111,6 +112,8 @@ pub struct FocusSessionView {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub stopped_at: Option<String>,
     pub updated_at: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub work_context: Option<FocusWorkSnapshotView>,
 }
 
 impl FocusSessionView {
@@ -134,6 +137,7 @@ impl FocusSessionView {
             started_at: session.started_at.to_rfc3339(),
             stopped_at: session.stopped_at.map(|dt| dt.to_rfc3339()),
             updated_at: session.updated_at.to_rfc3339(),
+            work_context: None,
         }
     }
 }

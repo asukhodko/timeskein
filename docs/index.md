@@ -40,18 +40,19 @@ The system answers questions like:
 6. **[Periodic Report Dogfood](dogfood-periodic-report.md)** - First real multi-day report and evidence for the P0 periodic-reflection slice
 7. **[Operational Reality Dogfood](dogfood-operational-reality.md)** - Accepted two-day evidence, protocol, and executable gate
 8. **[Operational Workspace Dogfood](dogfood-operational-workspace.md)** - Accepted four-day evidence, executable gate, and remaining product findings
-9. **[Causal Work Spine Acceptance Audit](acceptance-causal-work-spine-v1.md)** - Requirement-by-requirement implementation and real-use evidence
-10. **[Dogfood Findings](dogfood-learnings.md)** - Product conclusions and development order derived from sixteen real workdays
-11. **[Glossary](glossary.md)** - Definitions of all terms used
-12. **[Architecture Decision Records](adr/README.md)** - Key architectural choices
-13. **[Technical Specifications (RFC)](rfc/README.md)** - Detailed technical designs
-14. **[MVP User Stories](mvp/README.md)** - Features and acceptance criteria
-15. **[Causal Work Memory Roadmap](roadmap/0005-causal-work-memory-roadmap.md)** - Current north-star route, horizons, assumptions, and risk gates
-16. **[Artifacts, Observations, and Context Packs](rfc/0010-artifacts-observations-and-context-packs.md)** - Future-safe boundary between manual memory, untrusted sources, and portable consumers
-17. **[opskarta Roadmap](roadmap/opskarta.md)** - Current machine-checkable capability map
-18. **[In-Day Structure Roadmap](roadmap/0004-in-day-structure-roadmap.md)** - Accepted in-day thoughts, zone visibility, dispatching, and gap classification layer
-19. **[Periodic Reflection Roadmap](roadmap/0003-periodic-reflection-roadmap.md)** - Accepted period reports, semantic history, evidence, and reflection loop
-20. **[Roadmap Index](roadmap/README.md)** - Roadmap status and related links
+9. **[Working Memory Bridge Dogfood](dogfood-working-memory.md)** - Real 1/3/7-day re-entry protocol and strict acceptance gate
+10. **[Causal Work Spine Acceptance Audit](acceptance-causal-work-spine-v1.md)** - Requirement-by-requirement implementation and real-use evidence
+11. **[Dogfood Findings](dogfood-learnings.md)** - Product conclusions and development order derived from sixteen real workdays
+12. **[Glossary](glossary.md)** - Definitions of all terms used
+13. **[Architecture Decision Records](adr/README.md)** - Key architectural choices
+14. **[Technical Specifications (RFC)](rfc/README.md)** - Detailed technical designs
+15. **[MVP User Stories](mvp/README.md)** - Features and acceptance criteria
+16. **[Causal Work Memory Roadmap](roadmap/0005-causal-work-memory-roadmap.md)** - Current north-star route, horizons, assumptions, and risk gates
+17. **[Artifacts, Observations, and Context Packs](rfc/0010-artifacts-observations-and-context-packs.md)** - Future-safe boundary between manual memory, untrusted sources, and portable consumers
+18. **[opskarta Roadmap](roadmap/opskarta.md)** - Current machine-checkable capability map
+19. **[In-Day Structure Roadmap](roadmap/0004-in-day-structure-roadmap.md)** - Accepted in-day thoughts, zone visibility, dispatching, and gap classification layer
+20. **[Periodic Reflection Roadmap](roadmap/0003-periodic-reflection-roadmap.md)** - Accepted period reports, semantic history, evidence, and reflection loop
+21. **[Roadmap Index](roadmap/README.md)** - Roadmap status and related links
 
 ---
 
@@ -71,6 +72,7 @@ All documentation below is the **source of truth** for the project.
 | [dogfood-periodic-report.md](dogfood-periodic-report.md) | First real 2026-07-01..2026-07-10 period review, decision value, and known P0 limitations |
 | [dogfood-operational-reality.md](dogfood-operational-reality.md) | Accepted two-day Operational Reality evidence, protocol, and executable gate |
 | [dogfood-operational-workspace.md](dogfood-operational-workspace.md) | Accepted four-day evidence, executable gate, interpretation boundary, and follow-up findings for Operational Workspace |
+| [dogfood-working-memory.md](dogfood-working-memory.md) | Working Memory Bridge real-use protocol, 1/3/7-day pauses, Context Pack evidence, and strict gate |
 | [acceptance-causal-work-spine-v1.md](acceptance-causal-work-spine-v1.md) | Requirement-by-requirement implementation and real-use audit |
 | [dogfood-learnings.md](dogfood-learnings.md) | Cross-day product findings, principles, and updated development order |
 | [glossary.md](glossary.md) | Definitions of all terms and entities |
@@ -98,7 +100,7 @@ All documentation below is the **source of truth** for the project.
 | [RFC-0007](rfc/0007-evidence-mode-screen-evidence-source-node.md) | Level 3 | Screen Evidence Source Node (Evidence-Mode) |
 | [RFC-0008](rfc/0008-periodic-reports-and-reflection.md) | Level 0+ / Level 2+ | Periodic reports, arbitrary-range exports, Track/Label slices, LLM packs, and reflection loops |
 | [RFC-0009](rfc/0009-causal-work-memory-and-operational-reality.md) | Accepted v1 / Level 0+ to Level 3 | Accepted causal spine and Operational Reality v1, plus provenance, incremental migration, and the future bounded context probe |
-| [RFC-0010](rfc/0010-artifacts-observations-and-context-packs.md) | Draft / Level 0+ to Level 3 | Artifacts, untrusted observations, derivations, accepted claims, Context Packs, and deletion boundaries |
+| [RFC-0010](rfc/0010-artifacts-observations-and-context-packs.md) | Implemented manual slice / Level 0+ to Level 3 | Manual materials and Context Packs are implemented; untrusted observations, derivations, and deletion policy remain future work |
 
 ### User Stories
 

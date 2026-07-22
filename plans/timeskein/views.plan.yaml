@@ -82,13 +82,22 @@ views:
           - ts.steering.manual_correction
           - ts.steering.operational_reality_gate
       operational-workspace:
-        title: Next operational workspace
+        title: Accepted operational workspace
         nodes:
           - ts.steering.workspace_day_contract
           - ts.steering.workspace_primary_surface
           - ts.steering.workspace_reentry
           - ts.steering.workspace_explainability
           - ts.steering.workspace_gate
+      working-memory:
+        title: Working memory implementation and re-entry gate
+        nodes:
+          - ts.causal_memory.working_memory_stream
+          - ts.causal_memory.context_pack_v1
+          - ts.in_day_structure.work_item_stages
+          - ts.in_day_structure.rich_note_review
+          - ts.in_day_structure.visible_causality
+          - ts.causal_memory.working_memory_gate
 
 x:
   strategy:
@@ -96,9 +105,9 @@ x:
     planning_mode: backcasting-with-risk-gates
     horizons:
       now:
-        outcome: Accept the implemented convergence of Operational Reality, day contract, active focus, and secondary inventory on three real days.
+        outcome: Accept Working Memory Bridge on one real long-lived Work Item through distinct 1-, 3-, and 7-day re-entry without an external notebook.
       next:
-        outcome: Replace the external working notebook, then carry confirmed causal change into period reviews.
+        outcome: Carry confirmed causal change into period reviews, then test one bounded automatic context source behind trust controls.
       later:
         outcome: Test bounded automatic context, then build explainable Episodes, private intelligence, multi-device continuity, and opt-in Full Context.
     invariants:
@@ -110,10 +119,10 @@ x:
       - Far work is not scheduled before its preceding risk gate passes.
   exec:
     program:
-      committed_date: "2026-07-17"
-      nearest_goal: Build the Working Memory Bridge on top of the accepted Operational Workspace.
-      success_by_next_sync: Preserve chronological thoughts, materials, stages, daily outcomes, and re-entry context without depending on an external notebook.
-      note: Operational Workspace was accepted on 2026-07-22 with a green four-day gate. Working Memory Bridge is now the nearest milestone.
+      committed_date: "2026-07-22"
+      nearest_goal: Accept the implemented Working Memory Bridge through real 1/3/7-day re-entry.
+      success_by_next_sync: Use one long-lived Work Item as the sole working-memory source, export both Context Pack profiles in Markdown and JSON, and pass the strict gate after the final return.
+      note: Operational Workspace is accepted. Working Memory Bridge is code-ready; only its time-dependent real-use gate remains open.
     defaults:
       weight_strategy: effort_effective
       status_progress:
@@ -158,7 +167,7 @@ x:
         mgmt:
           health: green
           owner: a.sukhodko
-          sync_note: The manual causal spine, evidence chain, historical correction, and non-overlapping timeline baseline are accepted. Working Memory Bridge is committed after workspace convergence.
+          sync_note: The manual causal spine is accepted. Working Memory Bridge is implemented, with only its real 1/3/7-day re-entry gate still open.
       current-steering:
         title: Accepted Operational Reality
         scope_nodes:
@@ -177,17 +186,17 @@ x:
           - ts.steering.workspace_convergence
         target_gate: ts.steering.workspace_gate
         mgmt:
-          health: yellow
+          health: green
           owner: a.sukhodko
-          sync_note: Days 1 and 2 passed; day 2 confirmed the repaired correction-review and closure path. Save one real revision, complete another contract/start/re-entry/closure day, then run the strict gate.
+          sync_note: Accepted 2026-07-22 after four real days; contract, revision, re-entry, closure, integrity, and external-list boundaries passed.
       working-memory:
         title: Working Memory Bridge
         scope_nodes:
           - ts.causal_memory.working_memory_bridge
         mgmt:
-          health: neutral
+          health: yellow
           owner: a.sukhodko
-          sync_note: Follows workspace acceptance. Replace the external notebook for chronological reasoning, materials, stages, and changed-state evidence.
+          sync_note: Code, API, UI, Context Packs, telemetry, CLI, tests, and protocol are implemented. Await distinct 1/3/7-day real returns before acceptance.
       trust-controls:
         title: Trust and privacy controls
         scope_nodes:
@@ -320,7 +329,7 @@ x:
         show_owner: false
         wrap_title_lines: 2
         reduce_transitive_required_edges: true
-        caption: "Sixteen real workdays accepted the operational workspace and selected the next route: close the manual working-memory gap with consumer-neutral Context Packs, strengthen causal period review, and only then test untrusted bounded context behind privacy gates before broader Context Fabric, private intelligence, continuity, and opt-in Full Context."
+        caption: "Sixteen real workdays accepted the operational workspace. Working Memory Bridge is implemented and awaits distinct 1/3/7-day real re-entry; causal period review and a bounded untrusted-context probe follow only after that gate passes."
       exec-active-tracks:
         blocks:
           - architecture-gate

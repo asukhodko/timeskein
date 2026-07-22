@@ -26,11 +26,14 @@ The remaining product boundary is now clearer:
 - automatic context collection remains unproven and is intentionally sequenced
   after convergence of the manual operational workspace and working memory.
 
-The current product result is the accepted Operational Workspace baseline.
-Its four-day gate passed on 2026-07-22. The next product boundary is Working
-Memory Bridge: keeping thoughts, materials, stages, and concrete daily outcomes
-usable without an external notebook. See
+The accepted product baseline is Operational Workspace; its four-day gate
+passed on 2026-07-22. Working Memory Bridge is now implemented in the Rust
+agent, browser mock, React UI, CLI, tests, and gate. Its product acceptance is
+still open: keeping thoughts, materials, stages, and concrete daily outcomes
+usable without an external notebook must be proven by the real 1/3/7-day
+protocol. See
 [Operational Workspace Dogfood](dogfood-operational-workspace.md),
+[Working Memory Bridge Dogfood](dogfood-working-memory.md),
 [Dogfood Findings](dogfood-learnings.md), and
 [Roadmap 0005](roadmap/0005-causal-work-memory-roadmap.md). The future source
 boundary is fixed in
@@ -560,6 +563,62 @@ through the same workspace after breaks.
 Command+Tab restore of a hidden macOS window remains a known platform
 integration issue; tray/global-shortcut/reopen paths remain available.
 
+## Working Memory Bridge
+
+Migration `014_working_memory_bridge.sql` adds:
+
+- `work_memory_entries` with subject, focus, stage, contract, semantic snapshot,
+  provenance, origin, recorded/occurred time, and deletion metadata;
+- immutable `work_memory_entry_revisions` for create, edit, delete, and restore;
+- named `work_item_stages` and append-only stage events;
+- `focus_session_work_snapshots` for historical stage and daily outcome;
+- `work_item_aliases` for duplicate merge and stable resolution of old ids;
+- explicit day-contract overflow beyond protected active WIP.
+
+The migration imports existing timestamped Work Item notes as
+`legacy_current` memory without pretending their classification is a new
+historical fact. New entries preserve current Track and Label snapshots. A
+user deletion hides the entry from the current projection while retaining its
+revisions and tombstone.
+
+Rust, shared TypeScript contracts, browser mock, and desktop client expose the
+same methods:
+
+- `working_memory.create/list/update/delete`;
+- `work_item_stage.create/update/delete/list`;
+- `work_item.merge` and `work_item.resolve`;
+- `context_pack.build` for `work-item-reentry` and `track-reentry`.
+
+The Work Item memory modal provides a long resizable editor, chronology and
+revision history, materials, stage lifecycle, duplicate merge, a re-entry
+summary, and `Начать отсюда`. The focus stop surface optionally records result,
+state change, and next physical action in one action. The day-contract editor
+stores a daily outcome for each active direction, separates overflow from WIP,
+and can create or reuse a Work Item from its search field.
+
+Focus start snapshots the active stage and current day-contract outcome.
+Changing either later does not rewrite a stopped or running session. Context
+Packs are deterministic projections with explicit scope, `as_of`, facts,
+unknowns, warnings, redactions, and provenance; UI, Markdown, and JSON read the
+same model. External text is kept as data and is never promoted into an
+instruction.
+
+Commands:
+
+```bash
+pnpm context-pack -- --profile work-item-reentry --scope UUID --format both --output /tmp/work-item-reentry
+pnpm context-pack -- --profile track-reentry --scope UUID --format both --output /tmp/track-reentry
+pnpm working-memory:gate -- --work-item UUID --from YYYY-MM-DD --to YYYY-MM-DD
+```
+
+Automated coverage includes migration and restart behavior, API and mock
+parity, invalid-input atomicity, revisions and tombstones, stage and daily
+outcome snapshots, duplicate merge and alias resolution, deterministic Context
+Packs, CLI export, strict gate fixtures, and source-level UI contracts. Real
+acceptance remains pending until one long-lived Work Item is resumed through
+the memory surface after distinct pauses of at least 1, 3, and 7 days without
+an external task-memory notebook.
+
 ## Dogfood Findings
 
 The 2026-07-01, 2026-07-02, and 2026-07-03 dogfood days showed that the core timer loop works, and that Capture Inbox can preserve incoming events without switching away from the current focus. The first post-baseline slice added post-factum correction, entry/window fixes, Day Events, Work Item Events, Activity Zones, explicit Work Item time review evidence, and strict report evidence. The 2026-07-06 dogfood day produced a strong daily-control trace in real use: 7:30:36 tracked, 19 entrances, Activity Zones, Day Events, Work Item Events, Capture Inbox conversion, Work Item day/total time evidence, and zero API/copy/start-stop failures. The 2026-07-07 dogfood day produced useful in-day structure evidence: zones, day events, Work Item events, and a clear long post-break loss of manageability. The 2026-07-08 dogfood day closed the daily-control goal: final saved evidence was clean, measured evening closure took 2:32, and strict `pnpm dogfood:goal-check -- --date 2026-07-08 --no-codex-guidance` passed after `pnpm test`, `pnpm dogfood:preflight`, and strict RC evidence. The 2026-07-09 dogfood day proved the first in-day structure layer on a harder day: 4:31:02 tracked, 13 entrances, 15 Day Events, 12 Work Item Events, four explained recovery gaps, no app/API/copy/start-stop failures, and a final saved report. Strict `pnpm dogfood:goal-check -- --date 2026-07-09 --no-codex-guidance` passed. The same day exposed three follow-up fixes: dispatch wording needed examples, free day thoughts needed an input even without active focus, and gap explanations needed tolerance when an open gap closed a minute later. The first real period report then reviewed 1–9 July as one dataset: 39:53:26 tracked, 105 entrances, 28 Day Events, 16 contextual Work Item Events, 5 captures, and 19 significant gaps. It exposed nine old unexplained gaps, sparse-context days, mixed zones, broad Work Items, and the limits of selecting future focus without semantic completion state.
@@ -705,19 +764,17 @@ On multi-monitor macOS setups, the tray/status item is controlled by the system 
 - Sync, SourceNodes, Context Capture, and Evidence-Mode are future levels, not current functionality.
 - A hidden macOS window still cannot reliably be restored through `Cmd+Tab`; the menu-bar item remains the dependable entrypoint.
 - The UI is dark-only. A light theme remains planned polish.
-- The journal lacks a dedicated `artifact/material` evidence kind and a permanent chronological thought workspace.
-- Operational Workspace is accepted; remaining issues are follow-up polish around contract composition context, item creation from the picker, WIP overflow visibility, and accidental closure start. The formerly ambiguous edit/re-entry buttons are one `Пересмотреть договор` action; the application records adjustment versus re-entry from the current day state.
+- Working Memory Bridge supports manual text, URL, and file-path materials, but not binary storage or preview.
+- Operational Workspace is accepted; remaining issues are follow-up polish around contract composition context and accidental closure start. Item creation, daily outcomes, and visible WIP overflow are now available in the contract editor. The formerly ambiguous edit/re-entry buttons are one `Пересмотреть договор` action; the application records adjustment versus re-entry from the current day state.
 - Reflection follow-up is shown only for points with an unresolved review decision; the UI does not yet explain this eligibility or re-open the latest saved follow-up.
 - Gap explanations are stored as Day Events and can still produce competing classifications instead of a single corrected gap entity.
 
 ## Next Engineering Steps
 
-The semantic-history, evidence-backed Track story, Causal Work Spine, and
-Operational Reality v1 and Operational Workspace gates are accepted. The
-immediate engineering milestone is Working Memory Bridge: chronological thoughts and
-materials, calm long-note review, stages, explicit `action -> change` records,
-and portable re-entry Context Packs should remove the remaining dependence on
-an external notebook. Causal period review follows working memory. The bounded
+The semantic-history, evidence-backed Track story, Causal Work Spine,
+Operational Reality v1, and Operational Workspace gates are accepted. Working
+Memory Bridge is implemented and is now waiting for its real 1/3/7-day
+acceptance evidence. Causal period review follows only after that gate. The bounded
 Context Capture Probe then tests whether untrusted automatic observations
 improve re-entry enough to justify their privacy and noise cost.
 

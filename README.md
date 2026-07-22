@@ -24,6 +24,7 @@ background monitoring.
 | Causal Work Spine | Working baseline | Append-only intent, state, result, decision, next-action, confirmation, and correction records with provenance and semantic snapshots |
 | Operational Reality | Accepted baseline | Explainable current projection with unknowns, confidence, manual correction, Reflection follow-up, next-action lifecycle, JSON export, and a passed two-real-day gate |
 | Operational Workspace | Accepted baseline | Item-backed day contract, immutable revisions, one primary steering surface, morning start, re-entry, export, telemetry, and a passed four-day gate |
+| Working Memory Bridge | Implemented, acceptance pending | Chronological memory, revisions and tombstones, stages, materials, daily outcomes, WIP overflow, duplicate merge, re-entry surface, and deterministic Work Item/Track Context Packs |
 | North-star architecture | Implemented foundation | Causal Work Memory, user-truth and untrusted-content boundaries, portable Context Packs, risk gates, bounded Context Probe, and the long-horizon map are defined in ADR-0004/0005, RFC-0009/0010, Roadmap 0005, and opskarta |
 | Dogfood Telemetry | Working baseline | Local app-event journal and CLI metrics for tracking UX friction |
 | Mock Server | Working | Full API implementation for development |
@@ -33,15 +34,17 @@ background monitoring.
 **What works now:** The browser mock and macOS `.app` support focus tracking,
 Capture Inbox, Work Item inventory, correction, day and period review,
 Tracks/Labels, typed evidence, causal history, and the accepted Operational
-Reality projection through the embedded Rust agent.
+Reality projection through the embedded Rust agent. The current code also
+implements Working Memory Bridge; its product acceptance deliberately remains
+open until the real 1/3/7-day re-entry protocol passes.
 
 **Current focus:** The manual day, period reflection, semantic history,
 evidence-backed Track story, and `Causal Work Spine + Operational Reality v1`
 and Operational Workspace are accepted. The workspace now converges Operational
 Reality, an item-backed day contract, active focus, and the secondary inventory;
 its gate passed with `4/3` contract/start/closure days, `3/2` re-entry days, and
-`1/1` revised day. Working Memory Bridge is the next milestone, followed by
-causal period review and a bounded untrusted-context probe.
+`1/1` revised day. Working Memory Bridge is code-ready and is now in real-use
+acceptance; causal period review and a bounded untrusted-context probe follow it.
 Full SourceNodes, sync, private intelligence, and opt-in Evidence Mode remain
 later capabilities.
 
@@ -52,6 +55,7 @@ See [Dogfood Release Baseline](docs/dogfood-release-baseline.md) for the accepte
 See [Periodic Report Dogfood](docs/dogfood-periodic-report.md) for the first real multi-day review and its limitations.
 See [Operational Reality Dogfood](docs/dogfood-operational-reality.md) for the accepted two-real-day evidence and reproducible protocol.
 Use [Operational Workspace Dogfood](docs/dogfood-operational-workspace.md) for the required three-real-day acceptance protocol and executable gate.
+Use [Working Memory Bridge Dogfood](docs/dogfood-working-memory.md) for the long-lived Work Item protocol and strict 1/3/7-day gate.
 See [Causal Work Spine Acceptance Audit](docs/acceptance-causal-work-spine-v1.md) for requirement-by-requirement implementation and real-use evidence.
 See [Dogfood Findings](docs/dogfood-learnings.md) for the product conclusions
 and route derived from sixteen real workdays.
@@ -239,12 +243,17 @@ with a Ref to a next action, and normal day closure on both days.
 ### Operational Workspace
 
 `Рабочий контур` is now the primary steering surface. A morning contract selects
-2–3 existing Work Items or Tracks, one first-action Work Item, 1–3 parked
+2–3 Work Items or Tracks, one first-action Work Item, 1–3 parked
 competitors, and one `why now` statement. The saved contract remains visible
 after focus starts, shows Operational Reality grounds beside the selection,
 supports post-break re-entry, and records every adjustment as an append-only
 revision. The complete Work Item inventory is collapsed by default and remains
 available through `Дела` for search and maintenance.
+
+Each active direction can carry a concrete daily outcome. Obligations beyond
+the protected WIP 2–3 are recorded separately as visible overflow. Searching
+inside the editor can create or reuse a Work Item and immediately add it to the
+contract without opening the full inventory.
 
 Opening a contract editor with no running focus starts Coordination tracking
 automatically. Removing the previous first action selects another eligible
@@ -276,6 +285,47 @@ historical overlaps block final day closure and appear as an explicit period
 report warning; Timeskein does not silently rewrite them.
 
 The report separates facts, observations, data-quality warnings, profile-specific evidence, and decisions. It includes totals by day, Activity Zone and Work Item; semantic coverage; focus-block timeline; significant gaps; Day Events; Work Item Events; Capture Inbox outcomes; current linked refs; open Track tails; and up to three focus candidates. Candidates are prompts for conscious review, not automatic productivity judgments. Generated period reports and decision templates are ignored by git by default.
+
+### Working Memory Bridge
+
+Open a selected Work Item's `Рабочая память` surface to keep chronological
+thoughts, questions, decisions, observations, results, state changes, next
+actions, and manual materials. Long entries have a dedicated resizable editor;
+edits append revisions, and deletion leaves an explicit historical tombstone.
+Named stages can be planned, activated, completed, or archived. A Focus Session
+snapshots its stage and current daily outcome so later edits do not rewrite the
+past.
+
+The stop panel can optionally preserve one causal trace without making it a
+condition of stopping: result, changed state, and next physical action. On
+return, the same memory surface shows the latest confirmed change, current
+stage, unknowns, materials, and next action, then starts the Work Item through
+`Начать отсюда`. Duplicate Work Items can be merged into the selected canonical
+item while keeping focus, memory, stages, classification, and an alias from the
+old id.
+
+The UI can copy deterministic `work-item-reentry` and `track-reentry` Context
+Packs as Markdown and JSON. CLI export uses the same projection:
+
+```bash
+pnpm context-pack -- --profile work-item-reentry --scope WORK_ITEM_UUID \
+  --format both --output /tmp/timeskein-work-item-reentry
+pnpm context-pack -- --profile track-reentry --scope TRACK_UUID \
+  --format both --output /tmp/timeskein-track-reentry
+```
+
+After the required real-use pauses, run the strict acceptance gate with an
+exclusive upper date:
+
+```bash
+pnpm working-memory:gate -- --work-item WORK_ITEM_UUID \
+  --from YYYY-MM-DD --to YYYY-MM-DD
+```
+
+Implementation tests are green, but Working Memory Bridge is not accepted until
+the real protocol in [Working Memory Bridge Dogfood](docs/dogfood-working-memory.md)
+proves returns after pauses of at least 1, 3, and 7 days without an external
+task-memory notebook.
 
 ### Starting a Timeskein Day on macOS
 

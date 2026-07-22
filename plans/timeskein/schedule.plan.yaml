@@ -169,3 +169,21 @@ schedule:
       duration: 1d
     ts.steering.workspace_gate:
       start: "2026-07-22"
+
+    ts.causal_memory.working_memory_stream:
+      start: "2026-07-22"
+      duration: 1d
+    ts.causal_memory.context_pack_v1:
+      start: "2026-07-22"
+      duration: 1d
+    ts.in_day_structure.work_item_stages:
+      start: "2026-07-22"
+      duration: 1d
+    ts.in_day_structure.rich_note_review:
+      start: "2026-07-22"
+      duration: 1d
+    ts.in_day_structure.visible_causality:
+      start: "2026-07-22"
+      duration: 1d
+    ts.causal_memory.working_memory_gate:
+      start: "2026-07-23"

@@ -20,8 +20,8 @@ nodes:
     title: Causal Work Memory
     kind: capability
     parent: ts
-    status: done
-    notes: Establish the shared causal spine for manual facts, observations, outcomes, decisions, next actions, projections, and future sources without rewriting the whole database.
+    status: in_progress
+    notes: The shared causal spine is accepted. Working Memory Bridge is implemented and now awaits real 1/3/7-day re-entry acceptance before this capability advances to causal period review.
     x:
       ops:
         attention_class: now
@@ -132,14 +132,14 @@ nodes:
     title: Build a chronological working-memory bridge
     kind: epic
     parent: ts.causal_memory
-    status: planned
+    status: in_progress
     deps:
       - id: ts.causal_memory.spine_gate
       - id: ts.steering.workspace_gate
-    notes: "Committed after Operational Workspace convergence. Provide a persistent chronological thought stream, first-class artifact/material records, comfortable long-note review, Work Item stages, semantic hygiene, explicit action -> change capture, and consumer-neutral re-entry Context Packs. Dogfood showed that long work can be timed while its reasoning and outcomes remain split between Timeskein and an external notebook."
+    notes: "Implemented on 2026-07-22: chronological working memory, revisions and tombstones, materials, stages, daily outcomes, action -> change -> next-action capture, merge aliases, and work-item/track Context Packs in UI, Markdown, and JSON. Automated gates are green; the epic stays in progress until one real long-lived Work Item passes distinct 1/3/7-day returns without an external notebook."
     x:
       ops:
-        attention_class: next
+        attention_class: now
       strategy:
         horizon: next
         capability: causal-memory
@@ -150,14 +150,14 @@ nodes:
     title: Keep one chronological thought and material stream
     kind: task
     parent: ts.causal_memory.working_memory_bridge
-    status: planned
+    status: done
     effort: 4
     deps:
       - id: ts.steering.workspace_gate
-    notes: Keep thoughts, questions, decisions, results, next actions, observations, and a first-class material/artifact kind visible with or without active focus. Preserve cheap capture and allow calm chronological review.
+    notes: "Done 2026-07-22. The selected Work Item has one chronological stream for thoughts, questions, decisions, observations, results, next actions, materials, revisions, and tombstones. Capture remains available without active focus and preserves provenance and semantic snapshots."
     x:
       ops:
-        attention_class: next
+        attention_class: done
       strategy:
         horizon: next
         capability: causal-memory
@@ -168,14 +168,14 @@ nodes:
     title: Build consumer-neutral re-entry Context Packs
     kind: task
     parent: ts.causal_memory.working_memory_bridge
-    status: planned
+    status: done
     effort: 3
     deps:
       - id: ts.causal_memory.working_memory_stream
-    notes: Build versioned work-item-reentry and track-reentry projections from manual facts, artifacts, decisions, unknowns, refs, changes, and next actions. The same pack must render as UI, Markdown, and JSON without depending on Codex, Chronicle, or a specific model provider.
+    notes: "Done 2026-07-22. Versioned work-item-reentry and track-reentry profiles project manual facts, materials, decisions, unknowns, refs, stages, changed state, and next actions into the same deterministic UI, Markdown, and JSON semantics. Build/export events are auditable and provider-neutral."
     x:
       ops:
-        attention_class: next
+        attention_class: done
       strategy:
         horizon: next
         capability: causal-memory
@@ -186,7 +186,7 @@ nodes:
     title: Working memory supports multi-day re-entry
     kind: milestone
     parent: ts.causal_memory.working_memory_bridge
-    status: planned
+    status: in_progress
     milestone: true
     effort: 1
     deps:
@@ -195,10 +195,10 @@ nodes:
       - id: ts.in_day_structure.rich_note_review
       - id: ts.in_day_structure.work_item_stages
       - id: ts.in_day_structure.visible_causality
-    notes: Accept only after a real long-running direction can be resumed after 1, 3, and 7 days from its Timeskein trace without reconstructing the work in an external notebook.
+    notes: "Automated implementation gate is ready. Accept only after the same real long-running direction is resumed after distinct 1, 3, and 7 day pauses from its Timeskein trace, with both Context Pack profiles exported as Markdown and JSON and no reconstruction in an external notebook."
     x:
       ops:
-        attention_class: next
+        attention_class: now
       strategy:
         horizon: next
         capability: causal-memory
@@ -1170,15 +1170,15 @@ nodes:
     title: Track stages inside a Work Item
     kind: task
     parent: ts.causal_memory.working_memory_bridge
-    status: planned
+    status: done
     effort: 5
     deps:
       - id: ts.in_day_structure.active_work_journal
       - id: ts.steering.workspace_gate
-    notes: "Allow a Work Item such as '1x1 + preparation + post-analysis' to have explicit stages. Focus blocks should optionally attach to a stage, reports should show time by stage, and stage changes should not require splitting the Work Item into fake separate tasks."
+    notes: "Done 2026-07-22. Work Items have ordered stages with one active stage; focus blocks snapshot the selected stage, the working-memory surface can advance it, and Context Packs preserve stage history without fake duplicate Work Items."
     x:
       ops:
-        attention_class: next
+        attention_class: done
       strategy:
         horizon: next
         capability: causal-memory
@@ -1259,15 +1259,15 @@ nodes:
     title: Review larger day and work notes calmly
     kind: task
     parent: ts.causal_memory.working_memory_bridge
-    status: planned
+    status: done
     effort: 3
     deps:
       - id: ts.in_day_structure.dogfood_gate
       - id: ts.steering.workspace_gate
-    notes: "Support larger multi-line notes as working artifacts, with comfortable view/edit/export. Dogfood through 2026-07-16 showed that a permanent chronological panel must remain useful even without active focus and should include an explicit artifact/material kind; the external notebook still wins on overview today."
+    notes: "Done 2026-07-22 for the Working Memory Bridge. The panel has a resizable multiline editor, chronological reading, editing through revisions, visible deletion tombstones, explicit material records, and export through Context Packs. Real dogfood must still prove that it replaces the external notebook."
     x:
       ops:
-        attention_class: next
+        attention_class: done
       strategy:
         horizon: next
         capability: causal-memory
@@ -1302,15 +1302,15 @@ nodes:
     title: Make small action outcomes visible
     kind: task
     parent: ts.causal_memory.working_memory_bridge
-    status: planned
+    status: done
     effort: 3
     deps:
       - id: ts.causal_memory.transition_history
       - id: ts.steering.workspace_gate
-    notes: "Support the practice `I did X -> state changed as Y` after a focus block or during review. The 2026-07-09 dogfood day showed that loss of perceived causality raises entry cost: action feels too small against the scale of accumulated problems."
+    notes: "Done 2026-07-22. Focus stop can persist result, changed state, and next physical action together; the Focus Session snapshots stage and daily outcome, and the re-entry surface shows the latest confirmed change and where to continue."
     x:
       ops:
-        attention_class: next
+        attention_class: done
       strategy:
         horizon: next
         capability: causal-memory

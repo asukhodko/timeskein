@@ -9,8 +9,8 @@ This is the current machine-checkable roadmap for Timeskein. The source files li
 The accepted manual foundation includes the macOS Session replacement, cheap
 day closure, in-day structure, period reports, Reflection Sessions,
 Tracks/Labels, historical snapshots, typed evidence, decision follow-up, the
-Causal Work Spine, and Operational Reality. Thirteen real workdays through
-2026-07-17 remain the evidence base and regression boundary.
+Causal Work Spine, Operational Reality, and Operational Workspace. Sixteen real
+workdays through 2026-07-22 remain the evidence base and regression boundary.
 
 The roadmap now backcasts from one north star:
 
@@ -30,19 +30,19 @@ ones are explicit report-integrity blockers.
 Dogfood closed the former choice between integration, working-memory polish,
 and early automatic context. The committed order is now:
 
-1. accept the implemented convergence of Operational Reality, an item-backed
-   day contract, active focus, and secondary inventory on three real days;
-2. replace the external working notebook with a chronological memory bridge
-   and consumer-neutral re-entry Context Packs;
+1. preserve the accepted convergence of Operational Reality, an item-backed
+   day contract, active focus, and secondary inventory;
+2. accept the implemented chronological memory bridge and consumer-neutral
+   re-entry Context Packs on one real Work Item after 1/3/7-day pauses;
 3. carry causal changes and commitments into period reviews;
 4. test one bounded untrusted context source behind privacy and deletion gates
    before building Context Fabric.
 
-The Operational Workspace release candidate was implemented and automatically
-verified on 2026-07-17. The `current` view now contains the accepted causal
-baseline plus its three-day product gate. The `next` view contains manual
-working-memory and causal-review work. Automatic collection and later
-capabilities remain coarse and unscheduled until the manual gates pass.
+Operational Workspace was accepted on 2026-07-22. Working Memory Bridge is
+implemented and automatically verified; the `current` view now contains its
+time-dependent 1/3/7-day product gate. Causal period review remains next.
+Automatic collection and later capabilities stay coarse and unscheduled until
+the manual gate passes.
 
 ## Executive view
 
@@ -67,15 +67,15 @@ flowchart LR
     class accepted_foundation exec_done
     architecture_gate["North-star<br/>architecture gate<br/>100%<br/>веха 2026-07-10"]
     class architecture_gate exec_done
-    causal_memory["Causal<br/>Work Memory<br/>~30%"]
+    causal_memory["Causal<br/>Work Memory<br/>~90%"]
     class causal_memory exec_mgmt_green
     style causal_memory stroke:#111827,stroke-width:3px
     current_steering["Accepted<br/>Operational Reality<br/>100%<br/>веха 2026-07-15"]
     class current_steering exec_done
     operational_workspace["Operational<br/>Workspace convergence<br/>100%<br/>веха 2026-07-22"]
     class operational_workspace exec_done
-    working_memory["Working<br/>Memory Bridge<br/>~0%"]
-    class working_memory exec_mgmt_neutral
+    working_memory["Working<br/>Memory Bridge<br/>100%"]
+    class working_memory exec_done
     trust_controls["Trust and<br/>privacy controls<br/>~0%"]
     class trust_controls exec_mgmt_neutral
     bounded_context_probe["Bounded<br/>context probe<br/>~0%"]
@@ -105,7 +105,7 @@ flowchart LR
     continuity -. multi-device sources .-> full_context
 ```
 
-Sixteen real workdays accepted the operational workspace and selected the next route: close the manual working-memory gap with consumer-neutral Context Packs, strengthen causal period review, and only then test untrusted bounded context behind privacy gates before broader Context Fabric, private intelligence, continuity, and opt-in Full Context.
+Sixteen real workdays accepted the operational workspace. Working Memory Bridge is implemented and awaits distinct 1/3/7-day real re-entry; causal period review and a bounded untrusted-context probe follow only after that gate passes.
 
 ## North-star capability tree
 
@@ -115,15 +115,10 @@ Sixteen real workdays accepted the operational workspace and selected the next r
 /usr/bin/env PYTHONPATH=../../tools/opskarta python3 -m specs.v3.tools.cli render tree ../../plans/timeskein/main.plan.yaml ../../plans/timeskein/nodes.plan.yaml ../../plans/timeskein/schedule.plan.yaml ../../plans/timeskein/execution.plan.yaml ../../plans/timeskein/views.plan.yaml --view north-star
 -->
 <!-- GENERATED:START -->
-└── Timeskein [in_progress] (289 focus-blocks) {86% cov:55%}
-    ├── Causal Work Memory [done] (32 focus-blocks) {34% cov:91%}
-    │   ├── Build a chronological working-memory bridge [planned] (19 focus-blocks) {0% cov:26%}
-    │   │   ├── Build consumer-neutral re-entry Context Packs [planned] (3 focus-blocks)
-    │   │   ├── Keep one chronological thought and material stream [planned] (4 focus-blocks)
-    │   │   ├── Make small action outcomes visible [planned] (3 focus-blocks)
-    │   │   ├── Review larger day and work notes calmly [planned] (3 focus-blocks)
-    │   │   ├── Track stages inside a Work Item [planned] (5 focus-blocks) {0%}
-    │   │   └── Working memory supports multi-day re-entry [planned] (1 focus-blocks)
+└── Timeskein [in_progress] (289 focus-blocks) {99% cov:55%}
+    ├── Causal Work Memory [in_progress] (32 focus-blocks) {97% cov:91%}
+    │   ├── Build a chronological working-memory bridge [in_progress] (19 focus-blocks) {95%}
+    │   │   └── Working memory supports multi-day re-entry [in_progress] (1 focus-blocks) {0%}
     │   ├── Carry causal outcomes into period reports [planned] (3 focus-blocks)
     │   └── Preserve manual state and next-action transitions [done] (3 focus-blocks) {100%}
     ├── Context Fabric [planned] (31 focus-blocks)
@@ -176,7 +171,7 @@ Sixteen real workdays accepted the operational workspace and selected the next r
 - Full Context reconstructs work without becoming surveillance [deferred] (1 focus-blocks)
 - One operational workspace drives the real day [done] (1 focus-blocks) {100%}
 - Private intelligence improves a real reflection decision [deferred] (1 focus-blocks)
-- Working memory supports multi-day re-entry [planned] (1 focus-blocks)
+- Working memory supports multi-day re-entry [in_progress] (1 focus-blocks) {0%}
 <!-- GENERATED:END -->
 
 ## Accepted history and committed schedule
@@ -213,12 +208,19 @@ gantt
     ✅ Build operational reality panel  :done, ts_periodic_reflection_operational_reality,    2026-07-10, 1d
     ✅ Confirm and correct operational state  :done, ts_steering_manual_correction,    2026-07-10, 1d
     ✅ Operational Reality selects the next justified action  :milestone, done, ts_steering_operational_reality_gate,    2026-07-15, 0d
-    section Next operational workspace
+    section Accepted operational workspace
     ✅ Build a visible item-backed day contract  :done, ts_steering_workspace_day_contract,    2026-07-17, 1d
     ✅ Make one primary operational surface  :done, ts_steering_workspace_primary_surface,    2026-07-17, 1d
     ✅ Use the same loop for morning entry and re-entry  :done, ts_steering_workspace_reentry,    2026-07-20, 3d
     ✅ Make workspace actions and review checks self-explanatory  :done, ts_steering_workspace_explainability,    2026-07-17, 1d
     ✅ One operational workspace drives the real day  :milestone, done, ts_steering_workspace_gate,    2026-07-22, 0d
+    section Working memory implementation and re-entry gate
+    ✅ Keep one chronological thought and material stream  :done, ts_causal_memory_working_memory_stream,    2026-07-22, 1d
+    ✅ Build consumer-neutral re-entry Context Packs  :done, ts_causal_memory_context_pack_v1,    2026-07-22, 1d
+    ✅ Track stages inside a Work Item  :done, ts_in_day_structure_work_item_stages,    2026-07-22, 1d
+    ✅ Review larger day and work notes calmly  :done, ts_in_day_structure_rich_note_review,    2026-07-22, 1d
+    ✅ Make small action outcomes visible  :done, ts_in_day_structure_visible_causality,    2026-07-22, 1d
+    🔄 Working memory supports multi-day re-entry  :milestone, active, ts_causal_memory_working_memory_gate,    2026-07-23, 0d
 ```
 
 ## Current work list
@@ -229,6 +231,9 @@ gantt
 /usr/bin/env PYTHONPATH=../../tools/opskarta python3 -m specs.v3.tools.cli render list ../../plans/timeskein/main.plan.yaml ../../plans/timeskein/nodes.plan.yaml ../../plans/timeskein/schedule.plan.yaml ../../plans/timeskein/execution.plan.yaml ../../plans/timeskein/views.plan.yaml --view current
 -->
 <!-- GENERATED:START -->
+- Causal Work Memory [in_progress] (32 focus-blocks) {97% cov:91%}
+- Build a chronological working-memory bridge [in_progress] (19 focus-blocks) {95%}
+- Working memory supports multi-day re-entry [in_progress] (1 focus-blocks) {0%}
 - Current-State Steering [in_progress] (22 focus-blocks) {100%}
 - Converge Operational Reality, day contract, and inventory [in_progress] (13 focus-blocks) {100%}
 <!-- GENERATED:END -->
@@ -241,13 +246,6 @@ gantt
 /usr/bin/env PYTHONPATH=../../tools/opskarta python3 -m specs.v3.tools.cli render list ../../plans/timeskein/main.plan.yaml ../../plans/timeskein/nodes.plan.yaml ../../plans/timeskein/schedule.plan.yaml ../../plans/timeskein/execution.plan.yaml ../../plans/timeskein/views.plan.yaml --view next
 -->
 <!-- GENERATED:START -->
-- Build a chronological working-memory bridge [planned] (19 focus-blocks) {0% cov:26%}
-- Keep one chronological thought and material stream [planned] (4 focus-blocks)
-- Build consumer-neutral re-entry Context Packs [planned] (3 focus-blocks)
-- Working memory supports multi-day re-entry [planned] (1 focus-blocks)
-- Track stages inside a Work Item [planned] (5 focus-blocks) {0%}
-- Review larger day and work notes calmly [planned] (3 focus-blocks)
-- Make small action outcomes visible [planned] (3 focus-blocks)
 - Carry causal outcomes into period reports [planned] (3 focus-blocks)
 <!-- GENERATED:END -->
 

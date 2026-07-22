@@ -21,8 +21,9 @@ action. Work is ordered by user value and early risk reduction.
 3. **Preserve the accepted operational workspace:** Operational Reality, the
    day contract, active focus, and inventory now form one coherent start/resume
    loop proven across four real days, including returns and revisions.
-4. **Close the manual working-memory gap:** thoughts, materials, stages, state
-   changes, and next actions remain usable without an external notebook.
+4. **Accept the implemented working-memory bridge:** thoughts, materials,
+   stages, state changes, and next actions must restore one real long-lived
+   Work Item after distinct 1/3/7-day pauses without an external notebook.
 5. **Generalize only proven context value:** SourceNodes, PolicyGate, broader
    collectors, and Evidence Mode do not precede the bounded value/trust gate.
 6. **Keep far capabilities coarse:** explainable Episodes/Threads, private
@@ -34,16 +35,17 @@ action. Work is ordered by user value and early risk reduction.
 | Order | Milestone | User result |
 |------:|-----------|-------------|
 | 1 | Operational Workspace convergence | Accepted 2026-07-22 after four real days, three re-entry days, and an immutable six-version contract history |
-| 2 | Working Memory Bridge | Thoughts, materials, stages, changes, next actions, and portable re-entry Context Packs remain usable across long work without an external notebook |
+| 2 | Working Memory Bridge | Implementation ready 2026-07-22; real 1/3/7-day re-entry acceptance is in progress |
 | 3 | Causal period review | Weekly and Track reviews foreground confirmed changes, decisions, unresolved commitments, and follow-up |
 | 4 | Bounded Context Capture Probe | One focus-scoped source proves or disproves automatic-context value under visible privacy and retention controls |
 
 Causal Work Spine + Operational Reality v1 and Operational Workspace are
-accepted. Sixteen real workdays removed the former three-way ambiguity and
-proved the item-backed contract across starts, returns, revisions, and normal
-closure. Working Memory Bridge is now the nearest milestone. The bounded
+accepted. Sixteen real workdays through 2026-07-22 removed the former three-way
+ambiguity and proved the item-backed contract across starts, returns,
+revisions, and normal closure. Working Memory Bridge is implemented; its real
+multi-day acceptance is now the nearest milestone. The bounded
 automatic-context probe remains important, but follows the accepted manual
-workspace and a future working-memory baseline.
+workspace and an accepted working-memory baseline.
 
 ## Roadmap Documents
 

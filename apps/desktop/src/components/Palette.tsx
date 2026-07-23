@@ -22,7 +22,7 @@ import RefsPanel from './RefsPanel'
 import ConfirmDialog from './ConfirmDialog'
 import TaxonomyManager from './TaxonomyManager'
 import OperationalWorkspacePanel from './OperationalWorkspacePanel'
-import type { WorkItemState } from '@timeskein/contracts'
+import type { WorkItemState, WorkItemView } from '@timeskein/contracts'
 import { useCurrentFocusSession, useStartFocusSession } from '../hooks/useFocusSessions'
 import {
   countInventoryModes,
@@ -53,7 +53,7 @@ export default function Palette() {
   const [workAreaHeightPx, setWorkAreaHeightPx] = useState(readWorkAreaHeight)
   const [showCreate, setShowCreate] = useState(false)
   const [showStateMenu, setShowStateMenu] = useState(false)
-  const [showNoteEditor, setShowNoteEditor] = useState(false)
+  const [workingMemoryItemId, setWorkingMemoryItemId] = useState<string | null>(null)
   const [showWorkItemEditor, setShowWorkItemEditor] = useState(false)
   const [showRefsPanel, setShowRefsPanel] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
@@ -68,6 +68,10 @@ export default function Palette() {
   )
   const modeCounts = useMemo(() => countInventoryModes(items), [items])
   const selectedItem = visibleItems[selectedIndex]
+  const workingMemoryItem = useMemo(
+    () => items.find((item) => item.id === workingMemoryItemId),
+    [items, workingMemoryItemId]
+  )
 
   const stateMutation = useSetWorkItemState()
   const addRefMutation = useAddRef()
@@ -164,23 +168,27 @@ export default function Palette() {
     if (selectedItem) setShowDeleteConfirm(true)
   }
 
-  const handleFocusSelected = useCallback((stageId?: string) => {
-    if (!selectedItem || startFocusMutation.isPending) return
+  const handleFocusItem = useCallback((
+    item: WorkItemView,
+    stageId?: string,
+    control = 'selected_shortcut'
+  ) => {
+    if (startFocusMutation.isPending) return
 
     const actionId = createTelemetryActionId()
     void logAppEvent({
       source: 'ui',
       kind: 'focus_start_requested',
-      work_item_id: selectedItem.id,
+      work_item_id: item.id,
       payload: {
         action_id: actionId,
-        control: 'selected_shortcut',
+        control,
       },
     })
 
     startFocusMutation.mutate({
-      title: selectedItem.title,
-      work_item_id: selectedItem.id,
+      title: item.title,
+      work_item_id: item.id,
       target_seconds: 25 * 60,
       telemetry_action_id: actionId,
       stage_id: stageId,
@@ -193,7 +201,7 @@ export default function Palette() {
           focus_session_id: session.id,
           payload: {
             action_id: actionId,
-            control: 'selected_shortcut',
+            control,
           },
         })
       },
@@ -201,16 +209,24 @@ export default function Palette() {
         void logAppEvent({
           source: 'ui',
           kind: 'focus_start_failed',
-          work_item_id: selectedItem.id,
+          work_item_id: item.id,
           payload: {
             action_id: actionId,
-            control: 'selected_shortcut',
+            control,
             error_code: error instanceof Error && 'code' in error ? String(error.code) : 'unknown',
           },
         })
       },
     })
-  }, [selectedItem, startFocusMutation])
+  }, [startFocusMutation])
+
+  const handleFocusSelected = useCallback((stageId?: string) => {
+    if (selectedItem) handleFocusItem(selectedItem, stageId)
+  }, [handleFocusItem, selectedItem])
+
+  const openWorkingMemory = useCallback((item?: WorkItemView) => {
+    if (item) setWorkingMemoryItemId(item.id)
+  }, [])
 
   const confirmDelete = () => {
     if (selectedItem) {
@@ -243,7 +259,7 @@ export default function Palette() {
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       // Ignore if any modal is open
-      if (showCreate || showStateMenu || showNoteEditor || showWorkItemEditor || showRefsPanel || showDeleteConfirm || showTaxonomyManager) return
+      if (showCreate || showStateMenu || workingMemoryItemId || showWorkItemEditor || showRefsPanel || showDeleteConfirm || showTaxonomyManager) return
 
       // Ignore item shortcuts while typing in a field.
       const isInput = isEditableElement(e.target)
@@ -301,7 +317,7 @@ export default function Palette() {
           break
         case 'KeyN':
           e.preventDefault()
-          if (selectedItem) setShowNoteEditor(true)
+          openWorkingMemory(selectedItem)
           break
         case 'KeyE':
           e.preventDefault()
@@ -319,7 +335,7 @@ export default function Palette() {
           break
       }
     },
-    [visibleItems.length, selectedItem, inventoryExpanded, showCreate, showStateMenu, showNoteEditor, showWorkItemEditor, showRefsPanel, showDeleteConfirm, showTaxonomyManager, handleFocusSelected]
+    [visibleItems.length, selectedItem, inventoryExpanded, showCreate, showStateMenu, workingMemoryItemId, showWorkItemEditor, showRefsPanel, showDeleteConfirm, showTaxonomyManager, handleFocusSelected, openWorkingMemory]
   )
 
   useEffect(() => {
@@ -416,7 +432,10 @@ export default function Palette() {
         style={inventoryExpanded ? { height: `${workAreaHeightPx}px` } : undefined}
       >
         <OperationalWorkspacePanel />
-        <FocusPanel selectedItem={inventoryExpanded ? selectedItem : undefined} />
+        <FocusPanel
+          selectedItem={inventoryExpanded ? selectedItem : undefined}
+          onOpenWorkingMemory={openWorkingMemory}
+        />
       </div>
 
       {inventoryExpanded && (
@@ -509,7 +528,7 @@ export default function Palette() {
           <button onClick={() => selectedItem && setShowStateMenu(true)} className="flex items-center gap-1 hover:text-gray-300 transition-colors" title="Изменить состояние">
             <kbd className="px-1 bg-gray-700 rounded">S</kbd><span>статус</span>
           </button>
-          <button onClick={() => selectedItem && setShowNoteEditor(true)} className="flex items-center gap-1 hover:text-gray-300 transition-colors" title="Открыть рабочую память">
+          <button onClick={() => openWorkingMemory(selectedItem)} className="flex items-center gap-1 hover:text-gray-300 transition-colors" title="Открыть рабочую память">
             <kbd className="px-1 bg-gray-700 rounded">N</kbd><span>память</span>
           </button>
           <button onClick={handlePin} className="flex items-center gap-1 hover:text-gray-300 transition-colors" title="Закрепить или открепить">
@@ -563,12 +582,12 @@ export default function Palette() {
       )}
 
       {/* Working Memory */}
-      {showNoteEditor && selectedItem && (
+      {workingMemoryItem && (
         <WorkingMemoryPanel
-          item={selectedItem}
+          item={workingMemoryItem}
           focusSession={currentFocus}
-          onStart={handleFocusSelected}
-          onClose={() => setShowNoteEditor(false)}
+          onStart={(stageId) => handleFocusItem(workingMemoryItem, stageId, 'working_memory')}
+          onClose={() => setWorkingMemoryItemId(null)}
         />
       )}
 

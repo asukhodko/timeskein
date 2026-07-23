@@ -14,7 +14,8 @@ const [palette, memory, focus, workspace, hooks] = await Promise.all([
 
 assert(palette.includes("<WorkingMemoryPanel"), "working-memory surface is not mounted");
 assert(palette.includes("focusSession={currentFocus}"), "active focus is not passed into working memory");
-assert(palette.includes("onStart={handleFocusSelected}"), "re-entry cannot start the selected Work Item");
+assert(palette.includes("onOpenWorkingMemory={openWorkingMemory}"), "working memory is not reachable from the focus surface");
+assert(palette.includes("handleFocusItem(workingMemoryItem, stageId, 'working_memory')"), "re-entry cannot start the Working Memory Work Item");
 assert(palette.includes("stage_id: stageId"), "re-entry start does not preserve the chosen stage");
 
 for (const text of [
@@ -59,6 +60,8 @@ assert(focus.includes("сделал → изменилось → дальше"),
 assert(focus.includes("Следующий физический шаг"), "focus stop cannot preserve the next physical action");
 assert(focus.includes("session.work_context?.stage_title"), "active focus does not show its stage snapshot");
 assert(focus.includes("session.work_context?.daily_outcome"), "active focus does not show its daily outcome snapshot");
+assert(focus.includes("Открыть рабочую память активного дела"), "active focus does not expose working memory");
+assert(focus.includes("Открыть рабочую память выбранного дела"), "selected Work Item does not expose working memory");
 
 assert(workspace.includes("DailyOutcomeFields"), "day contract has no per-direction daily outcome");
 assert(workspace.includes("overflow_subjects: draft.overflow"), "day contract does not persist WIP overflow");

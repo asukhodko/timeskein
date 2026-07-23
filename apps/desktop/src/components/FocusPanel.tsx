@@ -52,6 +52,7 @@ import MissedFocusBlockDialog from './MissedFocusBlockDialog'
 
 interface FocusPanelProps {
   selectedItem?: WorkItemView
+  onOpenWorkingMemory?: (item: WorkItemView) => void
 }
 
 const SIGNIFICANT_GAP_SECONDS = 20 * 60
@@ -59,7 +60,7 @@ const ACTIVITY_ZONES: ActivityZone[] = ['work', 'coordination', 'recovery', 'idl
 const DAY_EVENT_DRAFT_STORAGE_PREFIX = 'timeskein.day-event-draft.v1.'
 export const MANUAL_COPY_HINT =
   'Буфер обмена не принял текст. Поле уже выделено: нажми Command+C и вставь отчёт куда нужно.'
-export default function FocusPanel({ selectedItem }: FocusPanelProps) {
+export default function FocusPanel({ selectedItem, onOpenWorkingMemory }: FocusPanelProps) {
   const [title, setTitle] = useState('')
   const [note, setNote] = useState('')
   const [stopResult, setStopResult] = useState('')
@@ -922,6 +923,11 @@ export default function FocusPanel({ selectedItem }: FocusPanelProps) {
             nextAction={stopNextAction}
             setNextAction={setStopNextAction}
             onStop={stopCurrentSession}
+            onOpenWorkingMemory={
+              currentWorkItem && onOpenWorkingMemory
+                ? () => onOpenWorkingMemory(currentWorkItem)
+                : undefined
+            }
             stopping={stopMutation.isPending}
           />
         )}
@@ -982,14 +988,26 @@ export default function FocusPanel({ selectedItem }: FocusPanelProps) {
                   {truncate(selectedItem.title, 80)}
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={startSelectedSession}
-                disabled={startMutation.isPending}
-                className="shrink-0 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-blue-500 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-500"
-              >
-                {current ? 'Переключиться' : 'Начать'}
-              </button>
+              <div className="flex shrink-0 items-center gap-2">
+                {onOpenWorkingMemory && (
+                  <button
+                    type="button"
+                    onClick={() => onOpenWorkingMemory(selectedItem)}
+                    className="rounded-md border border-cyan-800 px-3 py-1.5 text-xs font-semibold text-cyan-200 transition-colors hover:border-cyan-600 hover:bg-cyan-950/60"
+                    title="Открыть рабочую память выбранного дела"
+                  >
+                    Память
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={startSelectedSession}
+                  disabled={startMutation.isPending}
+                  className="rounded-md bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-blue-500 disabled:cursor-not-allowed disabled:bg-gray-700 disabled:text-gray-500"
+                >
+                  {current ? 'Переключиться' : 'Начать'}
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -4367,6 +4385,7 @@ function ActiveFocusSession({
   nextAction,
   setNextAction,
   onStop,
+  onOpenWorkingMemory,
   stopping,
 }: {
   session: FocusSessionView
@@ -4379,6 +4398,7 @@ function ActiveFocusSession({
   nextAction: string
   setNextAction: (value: string) => void
   onStop: () => void
+  onOpenWorkingMemory?: () => void
   stopping: boolean
 }) {
   const progress = Math.min((session.active_seconds / session.target_seconds) * 100, 100)
@@ -4389,12 +4409,22 @@ function ActiveFocusSession({
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="text-xs uppercase tracking-wide text-emerald-300">Активный фокус</div>
-          <div className="flex min-w-0 items-center gap-2">
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
             <div className="truncate text-sm font-semibold text-gray-100">{session.title}</div>
             {session.work_item_id && (
               <span className="rounded border border-emerald-500/40 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-emerald-300">
                 дело
               </span>
+            )}
+            {onOpenWorkingMemory && (
+              <button
+                type="button"
+                onClick={onOpenWorkingMemory}
+                className="rounded border border-cyan-800 px-2 py-0.5 text-[10px] font-semibold text-cyan-200 transition-colors hover:border-cyan-600 hover:bg-cyan-950/60"
+                title="Открыть рабочую память активного дела"
+              >
+                Память
+              </button>
             )}
           </div>
           {session.work_item_title && session.work_item_title !== session.title && (

@@ -15,8 +15,11 @@ const [palette, memory, focus, workspace, hooks] = await Promise.all([
 assert(palette.includes("<WorkingMemoryPanel"), "working-memory surface is not mounted");
 assert(palette.includes("focusSession={currentFocus}"), "active focus is not passed into working memory");
 assert(palette.includes("onOpenWorkingMemory={openWorkingMemory}"), "working memory is not reachable from the focus surface");
-assert(palette.includes("handleFocusItem(workingMemoryItem, stageId, 'working_memory')"), "re-entry cannot start the Working Memory Work Item");
+assert(palette.includes("workingMemoryItem,\n            stageId,\n            'working_memory',\n            hasNextAction,"), "re-entry cannot pass its saved next-action evidence into focus start");
 assert(palette.includes("stage_id: stageId"), "re-entry start does not preserve the chosen stage");
+assert(palette.includes("focus_session_id: session.id"), "successful re-entry is not linked to its exact Focus Session");
+assert(palette.includes("currentFocus?.id !== session.id"), "already-active focus can be misreported as a new re-entry");
+assert(palette.includes("kind: 'reentry_started'"), "successful re-entry telemetry is missing");
 
 for (const text of [
   "Рабочая память",
@@ -27,6 +30,7 @@ for (const text of [
   "Хронология",
   "Этапы",
   "Context Pack",
+  "Предпросмотр Context Pack",
   "Объединить дубль с этим делом",
   "Объединить без потери истории",
   "Начать отсюда",
@@ -36,14 +40,26 @@ for (const text of [
 
 assert(memory.includes("rows={7}"), "long-form editor is not large enough to be a calm writing surface");
 assert(memory.includes("min-h-40 resize-y"), "long-form editor cannot be resized");
+assert(memory.includes("materialKind === 'text'"), "text material has no dedicated long-form editor");
+assert(memory.includes("Текст материала. Ctrl+Enter сохраняет."), "text material editor does not explain the save shortcut");
+assert(memory.includes("min-h-28 resize-y"), "text material editor cannot be resized");
 assert(memory.includes("whitespace-pre-wrap break-words"), "long-form memory can overlap or lose line breaks");
 assert(memory.includes("entry.revisions.map"), "revision history is not visible");
 assert(memory.includes("Удалить с историей"), "deletion does not explain historical preservation");
+assert(memory.includes("include_deleted: true"), "deleted memory entries disappear from the visible chronology");
+assert(memory.includes("Запись удалена; прежнее содержимое доступно в истории."), "deleted memory has no visible tombstone");
+assert(memory.includes("!deleted && <button type=\"button\" onClick={onEdit}"), "deleted memory remains editable");
+assert(memory.includes("!deleted && <button type=\"button\" onClick={onDelete}"), "deleted memory can be deleted repeatedly");
+assert(!memory.includes("kind: 'reentry_started'"), "re-entry is logged before focus start succeeds");
 assert(memory.includes("Внешний текст сохраняется как данные"), "untrusted text boundary is not visible");
 assert(memory.includes("work-item-reentry"), "Work Item Context Pack profile is missing");
 assert(memory.includes("track-reentry"), "Track Context Pack profile is missing");
+assert(memory.includes("Профиль «Направление» пока недоступен"), "missing Track profile has no recovery instruction");
+assert(memory.includes("нажми Enter и назначь ему направление"), "missing Track profile does not explain the assignment path");
 assert(memory.includes("copyContext('markdown')"), "Markdown Context Pack export is missing");
 assert(memory.includes("copyContext('json')"), "JSON Context Pack export is missing");
+assert(memory.includes("contextQuery.data?.markdown"), "Context Pack preview does not use the exported Markdown projection");
+assert(memory.includes("max-h-64 overflow-auto whitespace-pre-wrap break-words"), "Context Pack preview can overflow its bounded surface");
 assert(memory.includes("kind: 'context_pack_exported'"), "Context Pack export telemetry is missing");
 assert(memory.includes("const [asOf, setAsOf] = useState"), "Context Pack snapshot time is not explicit state");
 assert((memory.match(/refreshContext\(\)/g) ?? []).length >= 5, "Context Pack can remain stale after memory changes");

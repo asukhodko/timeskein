@@ -5,11 +5,12 @@ use serde_json::{json, Value};
 use tempfile::tempdir;
 use timeskein_agent::api::{
     handle_context_pack_build, handle_day_contract_revise, handle_focus_list, handle_focus_start,
-    handle_focus_stop, handle_focus_update, handle_label_create, handle_track_create,
-    handle_work_item_create, handle_work_item_merge, handle_work_item_resolve,
-    handle_work_item_set_semantics, handle_work_item_stage_create, handle_work_item_stage_update,
-    handle_work_memory_create, handle_work_memory_delete, handle_work_memory_list,
-    handle_work_memory_update,
+    handle_focus_stop, handle_focus_update, handle_inventory_list, handle_label_create,
+    handle_track_create, handle_work_item_add_event, handle_work_item_create,
+    handle_work_item_events, handle_work_item_merge, handle_work_item_resolve,
+    handle_work_item_set_semantics, handle_work_item_stage_create,
+    handle_work_item_stage_list, handle_work_item_stage_update, handle_work_memory_create,
+    handle_work_memory_delete, handle_work_memory_list, handle_work_memory_update,
 };
 use timeskein_agent::{db::Database, AppState};
 use tokio::sync::RwLock;
@@ -47,6 +48,222 @@ fn memory_texts(response: &Value) -> Vec<&str> {
         .iter()
         .filter_map(|entry| entry["current_revision"]["text"].as_str())
         .collect()
+}
+
+fn canonical_json_from_markdown(markdown: &str) -> Value {
+    let section = markdown
+        .split_once("## Canonical JSON")
+        .expect("canonical JSON section")
+        .1;
+    let fenced = section
+        .split_once("```json\n")
+        .expect("canonical JSON fence")
+        .1;
+    let payload = fenced
+        .split_once("\n```")
+        .expect("canonical JSON closing fence")
+        .0;
+    serde_json::from_str(payload).expect("canonical JSON payload")
+}
+
+#[tokio::test]
+async fn restart_preserves_memory_stage_material_outcome_and_next_action() {
+    let directory = tempdir().expect("tempdir");
+    let database_path = directory.path().join("timeskein-restart.db");
+    let first_state = Arc::new(RwLock::new(AppState {
+        db: Database::new(&database_path).await.expect("first database"),
+        start_time: std::time::Instant::now(),
+    }));
+
+    let track = handle_track_create(
+        &first_state,
+        json!({ "title": "Restart Track" }),
+        "restart-track",
+    )
+    .await
+    .expect("track");
+    let work_item_id = create_item(&first_state, "Restart-safe long work").await;
+    let companion_item_id = create_item(&first_state, "Restart contract companion").await;
+    handle_work_item_set_semantics(
+        &first_state,
+        json!({
+            "id": work_item_id,
+            "track_id": track["id"],
+            "label_ids": []
+        }),
+        "restart-semantics",
+    )
+    .await
+    .expect("semantics");
+    let local_date = Local::now().date_naive().format("%Y-%m-%d").to_string();
+    handle_day_contract_revise(
+        &first_state,
+        json!({
+            "local_date": local_date,
+            "revision_kind": "morning",
+            "active_subjects": [{
+                "kind": "work_item",
+                "subject_id": work_item_id,
+                "daily_outcome": "Prove restart durability"
+            }, {
+                "kind": "work_item",
+                "subject_id": companion_item_id,
+                "daily_outcome": "Keep the contract structurally valid"
+            }],
+            "first_action_work_item_id": work_item_id,
+            "parked_subjects": [],
+            "overflow_subjects": [],
+            "why_now": "Durable memory must survive process restarts"
+        }),
+        "restart-contract",
+    )
+    .await
+    .expect("contract");
+    let stage = handle_work_item_stage_create(
+        &first_state,
+        json!({
+            "work_item_id": work_item_id,
+            "title": "Durability check",
+            "activate": true
+        }),
+        "restart-stage",
+    )
+    .await
+    .expect("stage");
+    handle_work_memory_create(
+        &first_state,
+        json!({
+            "subject_kind": "work_item",
+            "subject_id": work_item_id,
+            "kind": "material",
+            "material_kind": "url",
+            "material_value": "https://example.test/restart-evidence",
+            "stage_id": stage["id"]
+        }),
+        "restart-material",
+    )
+    .await
+    .expect("material");
+    handle_work_memory_create(
+        &first_state,
+        json!({
+            "subject_kind": "work_item",
+            "subject_id": work_item_id,
+            "kind": "decision",
+            "text": "Keep the canonical state in SQLite",
+            "stage_id": stage["id"]
+        }),
+        "restart-decision",
+    )
+    .await
+    .expect("decision");
+    let focus = handle_focus_start(
+        &first_state,
+        json!({ "work_item_id": work_item_id, "stage_id": stage["id"] }),
+        "restart-focus",
+    )
+    .await
+    .expect("focus");
+    handle_focus_stop(
+        &first_state,
+        json!({
+            "id": focus["id"],
+            "result": "Persisted the complete working-memory path",
+            "state_change": "Restart durability now has direct evidence",
+            "next_action": "Reopen the same database and inspect the Context Pack"
+        }),
+        "restart-stop",
+    )
+    .await
+    .expect("stop");
+
+    drop(first_state);
+
+    let reopened_state = Arc::new(RwLock::new(AppState {
+        db: Database::new(&database_path)
+            .await
+            .expect("reopened database"),
+        start_time: std::time::Instant::now(),
+    }));
+    let memory = handle_work_memory_list(
+        &reopened_state,
+        json!({
+            "subject_kind": "work_item",
+            "subject_id": work_item_id,
+            "include_deleted": true
+        }),
+        "restart-memory-list",
+    )
+    .await
+    .expect("memory after restart");
+    let texts = memory_texts(&memory);
+    for expected in [
+        "Keep the canonical state in SQLite",
+        "Persisted the complete working-memory path",
+        "Restart durability now has direct evidence",
+        "Reopen the same database and inspect the Context Pack",
+    ] {
+        assert!(
+            texts.contains(&expected),
+            "missing after restart: {expected}"
+        );
+    }
+    assert!(memory["entries"].as_array().unwrap().iter().any(|entry| {
+        entry["current_revision"]["material_value"] == "https://example.test/restart-evidence"
+    }));
+
+    let stages = handle_work_item_stage_list(
+        &reopened_state,
+        json!({ "work_item_id": work_item_id, "include_archived": true }),
+        "restart-stage-list",
+    )
+    .await
+    .expect("stages after restart");
+    assert_eq!(stages["stages"][0]["title"], "Durability check");
+    assert_eq!(stages["stages"][0]["state"], "active");
+
+    let sessions = handle_focus_list(&reopened_state, json!({}), "restart-focus-list")
+        .await
+        .expect("focus after restart");
+    let persisted_focus = sessions["sessions"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|session| session["id"] == focus["id"])
+        .expect("persisted focus");
+    assert_eq!(
+        persisted_focus["work_context"]["daily_outcome"],
+        "Prove restart durability"
+    );
+    assert_eq!(
+        persisted_focus["work_context"]["stage_title"],
+        "Durability check"
+    );
+
+    let pack = handle_context_pack_build(
+        &reopened_state,
+        json!({
+            "profile": "work-item-reentry",
+            "scope_id": work_item_id,
+            "as_of": "2099-01-01T00:00:00Z",
+            "format": "both"
+        }),
+        "restart-pack",
+    )
+    .await
+    .expect("context pack after restart");
+    assert!(pack["markdown"]
+        .as_str()
+        .unwrap()
+        .contains("Reopen the same database and inspect the Context Pack"));
+    assert_eq!(
+        canonical_json_from_markdown(pack["markdown"].as_str().unwrap()),
+        pack["pack"]
+    );
+    assert_eq!(
+        pack["pack"]["facts"]["current_stage"]["title"],
+        "Durability check"
+    );
 }
 
 #[tokio::test]
@@ -416,10 +633,36 @@ async fn working_memory_keeps_revisions_stage_and_daily_outcome_snapshots() {
     .await
     .expect("second context pack");
     assert_eq!(first_pack, second_pack);
-    assert!(first_pack["markdown"]
-        .as_str()
-        .unwrap()
-        .contains("Exercise the second stage"));
+    let first_markdown = first_pack["markdown"].as_str().unwrap();
+    assert!(first_markdown.contains("Exercise the second stage"));
+    assert!(first_markdown.contains("## Focus by stage"));
+    assert_eq!(
+        canonical_json_from_markdown(first_markdown),
+        first_pack["pack"]
+    );
+    let stage_totals = first_pack["pack"]["facts"]["focus"]["by_stage"]
+        .as_array()
+        .expect("focus totals by stage");
+    for stage_title in ["Discovery", "Delivery"] {
+        let stage = stage_totals
+            .iter()
+            .find(|stage| stage["title"].as_str() == Some(stage_title))
+            .unwrap_or_else(|| panic!("missing stage total: {stage_title}"));
+        assert_eq!(stage["entrances"], 1);
+    }
+    let packed_memory = first_pack["pack"]["facts"]["memory"]
+        .as_array()
+        .expect("packed memory");
+    for (result, stage_title) in [
+        ("Created the canonical memory schema", "Discovery"),
+        ("Exercised the delivery stage", "Delivery"),
+    ] {
+        let entry = packed_memory
+            .iter()
+            .find(|entry| entry["current_revision"]["text"].as_str() == Some(result))
+            .unwrap_or_else(|| panic!("missing stage-scoped result: {result}"));
+        assert_eq!(entry["stage_title"], stage_title);
+    }
     assert_eq!(
         first_pack["pack"]["provenance"]["projection"],
         "deterministic canonical projection v1"
@@ -466,6 +709,23 @@ async fn merging_duplicate_items_preserves_history_and_resolves_the_old_id() {
     )
     .await
     .expect("label duplicate");
+    let event = handle_work_item_add_event(
+        &state,
+        json!({
+            "id": duplicate_id,
+            "text": "The old card contains a verified design decision",
+            "evidence_kind": "decision",
+            "new_ref": {
+                "kind": "url",
+                "value": "https://example.test/pre-merge-evidence",
+                "is_primary": true
+            }
+        }),
+        "duplicate-event",
+    )
+    .await
+    .expect("duplicate event");
+    let event_id = event["id"].as_str().unwrap().to_string();
     handle_work_memory_create(
         &state,
         json!({
@@ -478,6 +738,19 @@ async fn merging_duplicate_items_preserves_history_and_resolves_the_old_id() {
     )
     .await
     .expect("duplicate memory");
+    handle_work_memory_create(
+        &state,
+        json!({
+            "subject_kind": "work_item",
+            "subject_id": duplicate_id,
+            "kind": "material",
+            "material_kind": "url",
+            "material_value": "https://example.test/pre-merge-material"
+        }),
+        "duplicate-material",
+    )
+    .await
+    .expect("duplicate material");
     let stage = handle_work_item_stage_create(
         &state,
         json!({ "work_item_id": duplicate_id, "title": "Before merge", "activate": true }),
@@ -531,6 +804,9 @@ async fn merging_duplicate_items_preserves_history_and_resolves_the_old_id() {
     let texts = memory_texts(&memory);
     assert!(texts.contains(&"Continue through the old identity"));
     assert!(texts.contains(&"Made progress before merge"));
+    assert!(memory["entries"].as_array().unwrap().iter().any(|entry| {
+        entry["current_revision"]["material_value"] == "https://example.test/pre-merge-material"
+    }));
 
     let sessions = handle_focus_list(&state, json!({}), "focus-after-merge")
         .await
@@ -542,6 +818,38 @@ async fn merging_duplicate_items_preserves_history_and_resolves_the_old_id() {
         .any(|session| {
             session["id"] == focus["id"] && session["work_item_id"] == canonical_id
         }));
+
+    let events = handle_work_item_events(
+        &state,
+        json!({ "id": canonical_id }),
+        "events-after-merge",
+    )
+    .await
+    .expect("events after merge");
+    let merged_event = events["events"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|entry| entry["id"].as_str() == Some(event_id.as_str()))
+        .expect("merged event");
+    assert_eq!(merged_event["work_item_id"], canonical_id);
+    assert_eq!(
+        merged_event["evidence"]["refs"][0]["value"],
+        "https://example.test/pre-merge-evidence"
+    );
+
+    let inventory = handle_inventory_list(&state, json!({}), "inventory-after-merge")
+        .await
+        .expect("inventory after merge");
+    let canonical_item = inventory["items"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|entry| entry["id"].as_str() == Some(canonical_id.as_str()))
+        .expect("canonical inventory item");
+    assert!(canonical_item["refs"].as_array().unwrap().iter().any(|entry| {
+        entry["value"] == "https://example.test/pre-merge-evidence"
+    }));
 
     let pack = handle_context_pack_build(
         &state,
@@ -562,6 +870,13 @@ async fn merging_duplicate_items_preserves_history_and_resolves_the_old_id() {
         .unwrap()
         .iter()
         .any(|entry| entry["current_revision"]["text"] == "Continue through the old identity"));
+    assert!(pack["pack"]["facts"]["materials"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|entry| {
+            entry["current_revision"]["material_value"] == "https://example.test/pre-merge-material"
+        }));
 
     let semantics = {
         let state = state.read().await;
@@ -573,4 +888,74 @@ async fn merging_duplicate_items_preserves_history_and_resolves_the_old_id() {
     };
     assert_eq!(semantics.labels.len(), 1);
     assert_eq!(semantics.labels[0].title, "dogfood");
+}
+
+#[tokio::test]
+async fn merging_items_with_different_tracks_requires_an_explicit_choice() {
+    let state = test_state().await;
+    let canonical_id = create_item(&state, "Canonical classified project").await;
+    let duplicate_id = create_item(&state, "Duplicate classified project").await;
+    let canonical_track = handle_track_create(
+        &state,
+        json!({ "title": "Canonical Track" }),
+        "canonical-track",
+    )
+    .await
+    .expect("canonical track");
+    let duplicate_track = handle_track_create(
+        &state,
+        json!({ "title": "Duplicate Track" }),
+        "duplicate-track",
+    )
+    .await
+    .expect("duplicate track");
+    handle_work_item_set_semantics(
+        &state,
+        json!({
+            "id": canonical_id,
+            "track_id": canonical_track["id"],
+            "label_ids": []
+        }),
+        "classify-canonical",
+    )
+    .await
+    .expect("classify canonical");
+    handle_work_item_set_semantics(
+        &state,
+        json!({
+            "id": duplicate_id,
+            "track_id": duplicate_track["id"],
+            "label_ids": []
+        }),
+        "classify-duplicate",
+    )
+    .await
+    .expect("classify duplicate");
+
+    let error = handle_work_item_merge(
+        &state,
+        json!({
+            "source_id": duplicate_id,
+            "canonical_id": canonical_id,
+            "reason": "Potential duplicate"
+        }),
+        "merge-conflicting-tracks",
+    )
+    .await
+    .expect_err("different Tracks must not be merged silently");
+    assert!(error
+        .error
+        .expect("merge error")
+        .message
+        .contains("different Tracks"));
+
+    let resolved = handle_work_item_resolve(
+        &state,
+        json!({ "id": duplicate_id }),
+        "resolve-after-reject",
+    )
+    .await
+    .expect("duplicate still exists");
+    assert_eq!(resolved["canonical_id"], duplicate_id);
+    assert!(resolved["aliases"].as_array().unwrap().is_empty());
 }

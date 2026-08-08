@@ -235,9 +235,8 @@ impl Database {
         include_deleted: bool,
     ) -> Result<Option<WorkMemoryEntryView>> {
         let mut sql = String::from(
-            "SELECT wme.*, wis.title AS stage_title
+            "SELECT wme.*
              FROM work_memory_entries wme
-             LEFT JOIN work_item_stages wis ON wis.id = wme.stage_id
              WHERE wme.id = ?1",
         );
         if !include_deleted {
@@ -261,9 +260,8 @@ impl Database {
         include_deleted: bool,
     ) -> Result<Vec<WorkMemoryEntryView>> {
         let mut sql = String::from(
-            "SELECT wme.*, wis.title AS stage_title
+            "SELECT wme.*
              FROM work_memory_entries wme
-             LEFT JOIN work_item_stages wis ON wis.id = wme.stage_id
              WHERE 1 = 1",
         );
         if subject.is_some() {
@@ -304,6 +302,14 @@ impl Database {
         row: &sqlx::sqlite::SqliteRow,
     ) -> Result<WorkMemoryEntryView> {
         let id = parse_uuid(row.get::<String, _>("id"))?;
+        let stage_id = optional_uuid(row.get("stage_id"))?;
+        let occurred_at = row.get::<String, _>("occurred_at");
+        let stage_title = match stage_id {
+            Some(stage_id) => self
+                .work_item_stage_title_as_of(stage_id, &occurred_at)
+                .await?,
+            None => None,
+        };
         let revision_rows = sqlx::query(
             "SELECT id, revision_number, change_kind, entry_kind, text,
                     material_kind, material_value, change_note, created_at,
@@ -332,11 +338,11 @@ impl Database {
             track_id: optional_uuid(row.get("track_id"))?,
             work_item_title_snapshot: row.get("work_item_title_snapshot"),
             focus_session_id: optional_uuid(row.get("focus_session_id"))?,
-            stage_id: optional_uuid(row.get("stage_id"))?,
-            stage_title: row.get("stage_title"),
+            stage_id,
+            stage_title,
             day_contract_revision_id: optional_uuid(row.get("day_contract_revision_id"))?,
             local_date: row.get("local_date"),
-            occurred_at: row.get("occurred_at"),
+            occurred_at,
             recorded_at: row.get("recorded_at"),
             updated_at: row.get("updated_at"),
             source: row.get("source"),
@@ -349,6 +355,39 @@ impl Database {
             revisions,
             deleted_at: row.get("deleted_at"),
         })
+    }
+
+    async fn work_item_stage_title_as_of(
+        &self,
+        stage_id: Uuid,
+        as_of: &str,
+    ) -> Result<Option<String>> {
+        let title = sqlx::query_scalar::<_, String>(
+            "SELECT json_extract(payload_json, '$.title')
+             FROM work_item_stage_events
+             WHERE stage_id = ?1
+               AND occurred_at <= ?2
+               AND json_extract(payload_json, '$.title') IS NOT NULL
+             ORDER BY occurred_at DESC, recorded_at DESC, id DESC
+             LIMIT 1",
+        )
+        .bind(stage_id.to_string())
+        .bind(as_of)
+        .fetch_optional(self.pool())
+        .await?;
+        Ok(title)
+    }
+
+    async fn list_work_memory_entries_as_of(
+        &self,
+        as_of: DateTime<Utc>,
+    ) -> Result<Vec<WorkMemoryEntryView>> {
+        self.list_work_memory_entries(None, None, None, true)
+            .await?
+            .into_iter()
+            .map(|entry| project_work_memory_entry_as_of(entry, as_of))
+            .filter_map(Result::transpose)
+            .collect()
     }
 
     pub async fn create_work_item_stage(
@@ -372,14 +411,7 @@ impl Database {
         .fetch_one(&mut *transaction)
         .await?;
         if activate {
-            sqlx::query(
-                "UPDATE work_item_stages SET state = 'planned', updated_at = ?2
-                 WHERE work_item_id = ?1 AND state = 'active' AND deleted_at IS NULL",
-            )
-            .bind(work_item_id.to_string())
-            .bind(now.to_rfc3339())
-            .execute(&mut *transaction)
-            .await?;
+            demote_active_stages(&mut transaction, work_item_id, None, now).await?;
         }
         let state = if activate { "active" } else { "planned" };
         sqlx::query(
@@ -438,16 +470,7 @@ impl Database {
         let now = Utc::now();
         let mut transaction = self.pool().begin().await?;
         if next_state == "active" {
-            sqlx::query(
-                "UPDATE work_item_stages SET state = 'planned', updated_at = ?2
-                 WHERE work_item_id = ?1 AND id <> ?3
-                   AND state = 'active' AND deleted_at IS NULL",
-            )
-            .bind(existing.work_item_id.to_string())
-            .bind(now.to_rfc3339())
-            .bind(id.to_string())
-            .execute(&mut *transaction)
-            .await?;
+            demote_active_stages(&mut transaction, existing.work_item_id, Some(id), now).await?;
         }
         let completed_at = if next_state == "completed" {
             Some(now.to_rfc3339())
@@ -569,6 +592,92 @@ impl Database {
             stages.push(self.stage_from_row(&row).await?);
         }
         Ok(stages)
+    }
+
+    async fn list_work_item_stages_as_of(
+        &self,
+        work_item_id: Uuid,
+        as_of: DateTime<Utc>,
+    ) -> Result<Vec<WorkItemStageView>> {
+        let mut result = Vec::new();
+        for mut stage in self.list_work_item_stages(work_item_id, true).await? {
+            if DateTime::parse_from_rfc3339(&stage.created_at)?.with_timezone(&Utc) > as_of {
+                continue;
+            }
+            let rows = sqlx::query(
+                "SELECT kind, occurred_at, payload_json
+                 FROM work_item_stage_events
+                 WHERE stage_id = ?1 AND occurred_at <= ?2
+                 ORDER BY occurred_at, recorded_at, id",
+            )
+            .bind(stage.id.to_string())
+            .bind(as_of.to_rfc3339())
+            .fetch_all(self.pool())
+            .await?;
+            if let Some(created) = rows
+                .iter()
+                .find(|row| row.get::<String, _>("kind") == "created")
+            {
+                let payload: serde_json::Value =
+                    serde_json::from_str(&created.get::<String, _>("payload_json"))?;
+                stage.title = payload
+                    .get("title")
+                    .and_then(serde_json::Value::as_str)
+                    .unwrap_or(&stage.title)
+                    .to_string();
+                stage.state = payload
+                    .get("state")
+                    .and_then(serde_json::Value::as_str)
+                    .unwrap_or("planned")
+                    .to_string();
+                stage.position = payload
+                    .get("position")
+                    .and_then(serde_json::Value::as_i64)
+                    .unwrap_or(stage.position);
+                stage.updated_at = created.get("occurred_at");
+                stage.completed_at = None;
+                stage.deleted_at = None;
+            }
+            for row in rows {
+                let kind = row.get::<String, _>("kind");
+                if kind == "created" {
+                    continue;
+                }
+                let occurred_at = row.get::<String, _>("occurred_at");
+                let payload: serde_json::Value =
+                    serde_json::from_str(&row.get::<String, _>("payload_json"))?;
+                if let Some(title) = payload.get("title").and_then(serde_json::Value::as_str) {
+                    stage.title = title.to_string();
+                }
+                if let Some(state) = payload.get("state").and_then(serde_json::Value::as_str) {
+                    stage.state = state.to_string();
+                    stage.completed_at = (state == "completed").then(|| occurred_at.clone());
+                    if matches!(state, "planned" | "active") {
+                        stage.deleted_at = None;
+                    }
+                }
+                if let Some(position) = payload.get("position").and_then(serde_json::Value::as_i64)
+                {
+                    stage.position = position;
+                }
+                if kind == "deleted" {
+                    stage.state = "archived".to_string();
+                    stage.deleted_at = Some(occurred_at.clone());
+                    stage.completed_at = None;
+                }
+                stage.updated_at = occurred_at;
+            }
+            stage.active_seconds = 0;
+            stage.entrances = 0;
+            result.push(stage);
+        }
+        result.sort_by(|left, right| {
+            left.position
+                .cmp(&right.position)
+                .then_with(|| left.created_at.cmp(&right.created_at))
+                .then_with(|| left.id.cmp(&right.id))
+        });
+        Ok(result)
     }
 
     pub async fn active_work_item_stage(
@@ -781,6 +890,26 @@ impl Database {
         self.get_work_item(target_id)
             .await?
             .ok_or_else(|| anyhow!("Canonical Work Item not found"))?;
+        let source_track: Option<String> = sqlx::query_scalar(
+            "SELECT track_id FROM work_item_tracks WHERE work_item_id = ?1 LIMIT 1",
+        )
+        .bind(source_id.to_string())
+        .fetch_optional(self.pool())
+        .await?;
+        let target_track: Option<String> = sqlx::query_scalar(
+            "SELECT track_id FROM work_item_tracks WHERE work_item_id = ?1 LIMIT 1",
+        )
+        .bind(target_id.to_string())
+        .fetch_optional(self.pool())
+        .await?;
+        if source_track.is_some()
+            && target_track.is_some()
+            && source_track.as_ref() != target_track.as_ref()
+        {
+            return Err(anyhow!(
+                "Work Items belong to different Tracks; align their Track before merging"
+            ));
+        }
         let now = Utc::now();
         let mut transaction = self.pool().begin().await?;
 
@@ -817,14 +946,7 @@ impl Database {
         .fetch_one(&mut *transaction)
         .await?;
         if target_has_active_stage > 0 {
-            sqlx::query(
-                "UPDATE work_item_stages SET state = 'planned', updated_at = ?2
-                 WHERE work_item_id = ?1 AND state = 'active' AND deleted_at IS NULL",
-            )
-            .bind(source_id.to_string())
-            .bind(now.to_rfc3339())
-            .execute(&mut *transaction)
-            .await?;
+            demote_active_stages(&mut transaction, source_id, None, now).await?;
         }
 
         for table in [
@@ -1052,34 +1174,26 @@ impl Database {
                     .unwrap_or_default(),
                 labels: semantics.labels,
             });
-            stages.extend(self.list_work_item_stages(item.id, true).await?);
+            stages.extend(self.list_work_item_stages_as_of(item.id, as_of).await?);
         }
 
         let mut memory = self
-            .list_work_memory_entries(None, None, None, false)
+            .list_work_memory_entries_as_of(as_of)
             .await?
             .into_iter()
-            .filter(|entry| {
-                let before_cutoff = DateTime::parse_from_rfc3339(&entry.occurred_at)
-                    .map(|value| value.with_timezone(&Utc) <= as_of)
-                    .unwrap_or(false);
-                if !before_cutoff {
-                    return false;
-                }
-                match profile {
-                    ContextPackProfile::WorkItemReentry => entry
-                        .work_item_id
-                        .is_some_and(|id| selected_ids.contains(&id)),
-                    ContextPackProfile::TrackReentry => {
-                        entry.track_id == Some(requested_scope_id)
-                            || entry
-                                .work_item_id
-                                .is_some_and(|id| selected_ids.contains(&id))
-                            || entry
-                                .track_snapshot
-                                .iter()
-                                .any(|node| node.id == requested_scope_id)
-                    }
+            .filter(|entry| match profile {
+                ContextPackProfile::WorkItemReentry => entry
+                    .work_item_id
+                    .is_some_and(|id| selected_ids.contains(&id)),
+                ContextPackProfile::TrackReentry => {
+                    entry.track_id == Some(requested_scope_id)
+                        || entry
+                            .work_item_id
+                            .is_some_and(|id| selected_ids.contains(&id))
+                        || entry
+                            .track_snapshot
+                            .iter()
+                            .any(|node| node.id == requested_scope_id)
                 }
             })
             .collect::<Vec<_>>();
@@ -1093,6 +1207,12 @@ impl Database {
         let totals = self
             .work_memory_stage_totals(&selected_ids.iter().copied().collect::<Vec<_>>(), as_of)
             .await?;
+        for stage in &mut stages {
+            if let Some((active_seconds, entrances, _)) = totals.get(&Some(stage.id)) {
+                stage.active_seconds = *active_seconds;
+                stage.entrances = *entrances;
+            }
+        }
         let stage_by_id = stages
             .iter()
             .map(|stage| (stage.id, stage))
@@ -1240,6 +1360,55 @@ async fn insert_stage_event(
     Ok(())
 }
 
+async fn demote_active_stages(
+    transaction: &mut sqlx::Transaction<'_, sqlx::Sqlite>,
+    work_item_id: Uuid,
+    except_id: Option<Uuid>,
+    now: DateTime<Utc>,
+) -> Result<()> {
+    let rows = sqlx::query(
+        "SELECT id, title, position
+         FROM work_item_stages
+         WHERE work_item_id = ?1 AND state = 'active' AND deleted_at IS NULL
+           AND (?2 IS NULL OR id <> ?2)",
+    )
+    .bind(work_item_id.to_string())
+    .bind(except_id.map(|id| id.to_string()))
+    .fetch_all(&mut **transaction)
+    .await?;
+    for row in rows {
+        let stage_id = parse_uuid(row.get("id"))?;
+        let title = row.get::<String, _>("title");
+        let position = row.get::<i64, _>("position");
+        sqlx::query(
+            "UPDATE work_item_stages SET state = 'planned', updated_at = ?2
+             WHERE id = ?1",
+        )
+        .bind(stage_id.to_string())
+        .bind(now.to_rfc3339())
+        .execute(&mut **transaction)
+        .await?;
+        insert_stage_event(
+            transaction,
+            stage_id,
+            work_item_id,
+            "reopened",
+            now,
+            serde_json::json!({
+                "previous_title": title,
+                "title": title,
+                "previous_state": "active",
+                "state": "planned",
+                "previous_position": position,
+                "position": position,
+                "reason": "another_stage_activated",
+            }),
+        )
+        .await?;
+    }
+    Ok(())
+}
+
 fn memory_revision_from_row(row: &sqlx::sqlite::SqliteRow) -> Result<WorkMemoryRevisionView> {
     Ok(WorkMemoryRevisionView {
         id: parse_uuid(row.get("id"))?,
@@ -1254,6 +1423,32 @@ fn memory_revision_from_row(row: &sqlx::sqlite::SqliteRow) -> Result<WorkMemoryR
         source: row.get("source"),
         provenance: row.get("provenance"),
     })
+}
+
+fn project_work_memory_entry_as_of(
+    mut entry: WorkMemoryEntryView,
+    as_of: DateTime<Utc>,
+) -> Result<Option<WorkMemoryEntryView>> {
+    let occurred_at = DateTime::parse_from_rfc3339(&entry.occurred_at)?.with_timezone(&Utc);
+    let recorded_at = DateTime::parse_from_rfc3339(&entry.recorded_at)?.with_timezone(&Utc);
+    if occurred_at > as_of || recorded_at > as_of {
+        return Ok(None);
+    }
+
+    entry.revisions.retain(|revision| {
+        DateTime::parse_from_rfc3339(&revision.created_at)
+            .map(|value| value.with_timezone(&Utc) <= as_of)
+            .unwrap_or(false)
+    });
+    let Some(current_revision) = entry.revisions.last().cloned() else {
+        return Ok(None);
+    };
+    entry.updated_at = current_revision.created_at.clone();
+    entry.deleted_at = (current_revision.change_kind == WorkMemoryRevisionKind::Delete.as_str())
+        .then(|| current_revision.created_at.clone());
+    entry.current_revision = current_revision;
+
+    Ok(entry.deleted_at.is_none().then_some(entry))
 }
 
 fn validate_memory_content(
@@ -1369,12 +1564,64 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn context_pack_as_of_is_stable_after_later_edit_delete_and_restore() {
+        let (database, item) = fixture().await;
+        let created = database
+            .create_work_memory_entry(entry(&item, WorkMemoryEntryKind::Thought, "Original"))
+            .await
+            .unwrap();
+        let as_of = Utc::now();
+        tokio::time::sleep(std::time::Duration::from_millis(2)).await;
+
+        database
+            .revise_work_memory_entry(
+                created.id,
+                WorkMemoryEntryKind::Decision,
+                Some("Edited later".to_string()),
+                None,
+                None,
+                Some("Later clarification".to_string()),
+            )
+            .await
+            .unwrap();
+        database
+            .tombstone_work_memory_entry(created.id, Some("Later deletion".to_string()))
+            .await
+            .unwrap();
+        database
+            .revise_work_memory_entry(
+                created.id,
+                WorkMemoryEntryKind::Observation,
+                Some("Restored later".to_string()),
+                None,
+                None,
+                Some("Later restore".to_string()),
+            )
+            .await
+            .unwrap();
+
+        let pack = database
+            .build_context_pack(ContextPackProfile::WorkItemReentry, item.id, as_of)
+            .await
+            .unwrap();
+        assert_eq!(pack.facts.memory.len(), 1);
+        assert_eq!(
+            pack.facts.memory[0].current_revision.text.as_deref(),
+            Some("Original")
+        );
+        assert_eq!(pack.facts.memory[0].revisions.len(), 1);
+        assert!(pack.facts.memory[0].deleted_at.is_none());
+    }
+
+    #[tokio::test]
     async fn only_one_stage_is_active_and_history_survives_transition() {
         let (database, item) = fixture().await;
         let first = database
             .create_work_item_stage(item.id, "Discovery".to_string(), true)
             .await
             .unwrap();
+        let as_of = Utc::now();
+        tokio::time::sleep(std::time::Duration::from_millis(2)).await;
         let second = database
             .create_work_item_stage(item.id, "Delivery".to_string(), true)
             .await
@@ -1406,7 +1653,15 @@ mod tests {
                 .fetch_one(database.pool())
                 .await
                 .unwrap();
-        assert_eq!(event_count, 2);
+        assert_eq!(event_count, 3);
+
+        let historical = database
+            .build_context_pack(ContextPackProfile::WorkItemReentry, item.id, as_of)
+            .await
+            .unwrap();
+        assert_eq!(historical.facts.stages.len(), 1);
+        assert_eq!(historical.facts.stages[0].title, "Discovery");
+        assert_eq!(historical.facts.stages[0].state, "active");
     }
 
     #[tokio::test]

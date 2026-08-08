@@ -737,6 +737,15 @@ function handleMethod(
       if (!sourceId || !canonicalId) {
         return errorResponse(requestId, "validation_error", "source_id and canonical_id are required");
       }
+      const source = store.getWorkItem(store.resolveWorkItemId(sourceId));
+      const canonical = store.getWorkItem(store.resolveWorkItemId(canonicalId));
+      if (source?.track && canonical?.track && source.track.id !== canonical.track.id) {
+        return errorResponse(
+          requestId,
+          "validation_error",
+          "Work Items belong to different Tracks; align their Track before merging"
+        );
+      }
       const alias = store.mergeWorkItems(sourceId, canonicalId, params.reason as string | undefined);
       if (!alias) {
         return errorResponse(requestId, "validation_error", "Work Items cannot be merged");

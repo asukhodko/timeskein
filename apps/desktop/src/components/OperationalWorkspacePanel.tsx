@@ -23,7 +23,7 @@ import {
 } from '../hooks/useOperationalWorkspace'
 import { useTaxonomy } from '../hooks/useTaxonomy'
 import { formatDuration } from '../utils/formatTime'
-import { RealityDetails } from './OperationalRealityPanel'
+import { OperationalRealityView, RealityDetails } from './OperationalRealityPanel'
 
 export type ContractDraft = {
   active: DayContractSubjectRef[]
@@ -40,6 +40,8 @@ type SubjectCandidate = DayContractSubjectRef & {
   track?: TrackView
   reality?: OperationalRealityItemView
 }
+
+type WorkspaceSurface = 'reality' | 'contour'
 
 const EMPTY_DRAFT: ContractDraft = {
   active: [],
@@ -65,9 +67,11 @@ export default function OperationalWorkspacePanel() {
   const [showAttention, setShowAttention] = useState(false)
   const [selectedRealityId, setSelectedRealityId] = useState<string | null>(null)
   const [coordinationError, setCoordinationError] = useState<string | null>(null)
+  const [surface, setSurface] = useState<WorkspaceSurface | null>(null)
 
   const workspace = workspaceQuery.data
   const contract = workspace?.current_contract
+  const activeSurface: WorkspaceSurface = surface ?? (contract ? 'contour' : 'reality')
   const workItems = useMemo(() => inventoryQuery.data?.items ?? [], [inventoryQuery.data?.items])
   const tracks = useMemo(() => taxonomyQuery.data?.tracks ?? [], [taxonomyQuery.data?.tracks])
   const candidates = useMemo(
@@ -114,6 +118,12 @@ export default function OperationalWorkspacePanel() {
   const firstActionNeedsRevision = Boolean(
     firstActionReality && ['waiting', 'completed', 'blocked', 'parked'].includes(firstActionReality.state)
   )
+  const contourReviewReasons = [
+    firstActionNeedsRevision ? 'первое действие больше не готово к продолжению' : null,
+    outsideContractToday.length > 0
+      ? `${outsideContractToday.length} ${pluralizeItems(outsideContractToday.length)} уже получили время вне договора`
+      : null,
+  ].filter((reason): reason is string => Boolean(reason))
 
   useEffect(() => {
     if (!selectedRealityId && activeReality[0]) setSelectedRealityId(activeReality[0].id)
@@ -126,6 +136,7 @@ export default function OperationalWorkspacePanel() {
   }, [draft.active, draft.firstActionWorkItemId, editingKind, firstActionCandidates])
 
   const beginEdit = (kind: DayContractRevisionKind) => {
+    setSurface('contour')
     setEditingKind(kind)
     setDraft(contract ? draftFromContract(contract) : EMPTY_DRAFT)
     setCoordinationError(null)
@@ -310,7 +321,7 @@ export default function OperationalWorkspacePanel() {
   }
 
   if (workspaceQuery.isLoading || inventoryQuery.isLoading || taxonomyQuery.isLoading) {
-    return <section className="border-b border-cyan-900/50 px-4 py-4 text-sm text-gray-500">Собираю рабочий контур...</section>
+    return <section className="border-b border-cyan-900/50 px-4 py-4 text-sm text-gray-500">Собираю рабочую реальность...</section>
   }
   if (workspaceQuery.error || inventoryQuery.error || taxonomyQuery.error) {
     return <section className="border-b border-red-900/50 px-4 py-4 text-sm text-red-300">Не удалось собрать единое рабочее пространство.</section>
@@ -321,7 +332,9 @@ export default function OperationalWorkspacePanel() {
       <header className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-sm font-semibold text-cyan-100">Рабочий контур</h2>
+            <h2 className="text-sm font-semibold text-cyan-100">
+              {activeSurface === 'reality' ? 'Рабочая реальность' : 'Рабочий контур'}
+            </h2>
             {contract && (
               <span className="rounded border border-cyan-900 px-1.5 py-0.5 text-[10px] text-cyan-300">
                 договор · версия {contract.revision_number}
@@ -334,10 +347,32 @@ export default function OperationalWorkspacePanel() {
             )}
           </div>
           <p className="mt-0.5 text-xs text-gray-500">
-            Что сейчас в игре, почему выбран этот ход и откуда продолжить.
+            {activeSurface === 'reality'
+              ? 'Что фактически требует внимания по сохранённым данным, сигналам и решениям.'
+              : 'Что ты выбрал в игру на сегодня, почему и откуда продолжить.'}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          <div className="grid grid-cols-2 rounded border border-gray-700 p-0.5 text-xs" role="tablist" aria-label="Представление работы">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeSurface === 'reality'}
+              onClick={() => setSurface('reality')}
+              className={workspaceTabClass(activeSurface === 'reality')}
+            >
+              Реальность
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeSurface === 'contour'}
+              onClick={() => setSurface('contour')}
+              className={workspaceTabClass(activeSurface === 'contour', contourReviewReasons.length > 0)}
+            >
+              Контур{contourReviewReasons.length > 0 ? ' · проверить' : ''}
+            </button>
+          </div>
           {contract ? (
             <button
               type="button"
@@ -381,7 +416,32 @@ export default function OperationalWorkspacePanel() {
         />
       )}
 
-      {!editingKind && contract && (
+      {!editingKind && activeSurface === 'reality' && !contract && (
+        <div className="border-t border-cyan-900/40 bg-cyan-950/10 px-4 py-2 text-xs text-gray-400">
+          Договор дня не собран. Это не блокирует просмотр реальности, старт дел и обычный учёт; договор понадобится, когда захочется явно сузить текущий выбор.
+        </div>
+      )}
+
+      {!editingKind && activeSurface === 'reality' && contract && contourReviewReasons.length > 0 && (
+        <div className="flex flex-col gap-2 border-t border-amber-900/60 bg-amber-950/15 px-4 py-2 text-xs sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <div className="font-medium text-amber-200">Рабочий контур расходится с наблюдаемыми фактами.</div>
+            <div className="mt-0.5 text-gray-400">{contourReviewReasons.join('; ')}.</div>
+          </div>
+          <button type="button" onClick={() => beginEdit('adjustment')} className={secondaryButton}>
+            Пересмотреть контур
+          </button>
+        </div>
+      )}
+
+      {!editingKind && activeSurface === 'reality' && (
+        <OperationalRealityView
+          reality={workspace?.reality}
+          onRefresh={() => void workspaceQuery.refetch()}
+        />
+      )}
+
+      {!editingKind && activeSurface === 'contour' && contract && (
         <div className="border-t border-gray-800">
           <div className="grid min-w-0 gap-0 lg:h-[24rem] lg:grid-cols-[minmax(18rem,0.85fr)_minmax(25rem,1.4fr)] lg:overflow-hidden">
             <div className="min-w-0 border-b border-gray-800 px-4 py-3 lg:overflow-auto lg:border-b-0 lg:border-r">
@@ -494,9 +554,9 @@ export default function OperationalWorkspacePanel() {
         </div>
       )}
 
-      {!editingKind && !contract && (
+      {!editingKind && activeSurface === 'contour' && !contract && (
         <div className="border-t border-gray-800 px-4 py-4 text-sm text-gray-500">
-          На сегодня ещё нет договора. Выбери 2–3 реальных направления и одно уже существующее дело, с которого начнёшь.
+          Рабочий контур появится после договора дня. Пока можно остаться в «Рабочей реальности» и пользоваться Timeskein без договора.
         </div>
       )}
     </section>
@@ -1112,6 +1172,20 @@ function firstActionButtonLabel(
   if (currentWorkItemId) return 'Переключиться на первое действие'
   if (hasTrackedToday) return 'Вернуться по договору'
   return 'Начать первое действие'
+}
+
+function workspaceTabClass(active: boolean, needsReview = false) {
+  if (active) return 'rounded-sm bg-cyan-900/70 px-2.5 py-1 text-cyan-100'
+  if (needsReview) return 'rounded-sm px-2.5 py-1 text-amber-300 hover:bg-gray-800'
+  return 'rounded-sm px-2.5 py-1 text-gray-500 hover:bg-gray-800 hover:text-gray-300'
+}
+
+function pluralizeItems(count: number) {
+  const mod10 = count % 10
+  const mod100 = count % 100
+  if (mod10 === 1 && mod100 !== 11) return 'дело'
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return 'дела'
+  return 'дел'
 }
 
 const fieldClass = 'min-w-0 w-full rounded border border-gray-700 bg-gray-950 px-2 py-2 text-xs text-gray-200 placeholder:text-gray-600 focus:border-cyan-600 focus:outline-none'

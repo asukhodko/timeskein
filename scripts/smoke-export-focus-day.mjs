@@ -21,6 +21,13 @@ try {
   await runSqlFile(join(repoRoot, "apps/agent/migrations/005_activity_zones.sql"));
   await runSqlFile(join(repoRoot, "apps/agent/migrations/008_day_events.sql"));
   await runSql(`
+    CREATE TABLE focus_session_work_snapshots (
+      focus_session_id TEXT PRIMARY KEY,
+      stage_id TEXT,
+      stage_title TEXT,
+      daily_outcome TEXT
+    );
+
     INSERT INTO work_items (id, title, type, state, pinned, note, created_at, updated_at, last_seen_at)
     VALUES
       ('w1', 'Deep Work', 'task', 'unknown', 0, 'Keep the implementation context here.', '2026-06-30T06:00:00Z', '2026-06-30T06:00:00Z', '2026-06-30T06:00:00Z'),
@@ -44,6 +51,14 @@ try {
 
     UPDATE work_items SET activity_zone = 'coordination' WHERE id = 'w2';
     UPDATE focus_sessions SET activity_zone = 'coordination' WHERE work_item_id = 'w2';
+
+    INSERT INTO focus_session_work_snapshots (
+      focus_session_id, stage_id, stage_title, daily_outcome
+    )
+    VALUES
+      ('s0', 'stage-discovery', 'Discovery', 'Choose the implementation boundary'),
+      ('s1', 'stage-discovery', 'Discovery', 'Choose the implementation boundary'),
+      ('s3', 'stage-delivery', 'Delivery', 'Ship the verified slice');
   `);
 
   const { stdout } = await execFileAsync(
@@ -97,6 +112,19 @@ try {
   assert(stdout.includes("| 30:00 | 1 | Координация |"), "export did not aggregate localized Coordination zone");
   assert(stdout.includes("| 45:00 | 3 | Deep Work |"), "export did not aggregate Deep Work");
   assert(stdout.includes("| 30:00 | 1 | Meetings |"), "export did not aggregate Meetings");
+  assert(stdout.includes("## По этапам"), "export did not include localized stage totals");
+  assert(
+    stdout.includes("| 35:00 | 2 | Discovery | Choose the implementation boundary |"),
+    "export did not aggregate the historical Discovery snapshots"
+  );
+  assert(
+    stdout.includes("| 30:00 | 1 | Без этапа |  |"),
+    "export did not keep an unclassified session visible"
+  );
+  assert(
+    stdout.includes("| 10:00 | 1 | Delivery | Ship the verified slice |"),
+    "export did not aggregate the historical Delivery snapshot"
+  );
   assert(stdout.includes("## Заметки дел"), "export did not include Work Item Notes section");
   assert(
     stdout.includes("- Deep Work: Keep the implementation context here."),
@@ -125,6 +153,7 @@ try {
   );
   assert(internalStdout.includes("Total tracked: 1:15:00"), "internal export did not keep raw tracked total");
   assert(internalStdout.includes("## By Work Item"), "internal export did not keep raw Work Item section");
+  assert(internalStdout.includes("## By Stage"), "internal export did not keep raw stage section");
 
   await runSql(`
     INSERT INTO work_items (id, title, type, state, pinned, created_at, updated_at, last_seen_at)

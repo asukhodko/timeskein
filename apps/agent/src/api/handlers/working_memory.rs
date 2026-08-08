@@ -593,9 +593,21 @@ fn render_context_pack_markdown(pack: &ContextPackView) -> String {
         String::new(),
         format!("- Source: {}", pack.provenance.source),
         format!(
+            "- Canonical tables: {}",
+            pack.provenance.canonical_tables.join(", ")
+        ),
+        format!(
             "- External text policy: {}",
             pack.provenance.external_text_policy
         ),
+        String::new(),
+        "## Canonical JSON".to_string(),
+        String::new(),
+        "The fenced payload below is the exact canonical projection used by the UI and JSON export.".to_string(),
+        String::new(),
+        "```json".to_string(),
+        serde_json::to_string_pretty(pack).expect("Context Pack must serialize"),
+        "```".to_string(),
         String::new(),
     ]);
     lines.join("\n")

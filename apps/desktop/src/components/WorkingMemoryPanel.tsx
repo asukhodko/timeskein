@@ -26,7 +26,7 @@ import { formatDuration } from '../utils/formatTime'
 interface WorkingMemoryPanelProps {
   item: WorkItemView
   focusSession?: FocusSessionView
-  onStart: (stageId?: string) => void
+  onStart: (stageId?: string, hasNextAction?: boolean) => void
   onClose: () => void
 }
 
@@ -63,7 +63,11 @@ export default function WorkingMemoryPanel({ item, focusSession, onStart, onClos
   const loggedPackKeyRef = useRef('')
   const modalRef = useRef<HTMLDivElement>(null)
 
-  const memoryParams = useMemo(() => ({ subject_kind: 'work_item' as const, subject_id: item.id }), [item.id])
+  const memoryParams = useMemo(() => ({
+    subject_kind: 'work_item' as const,
+    subject_id: item.id,
+    include_deleted: true,
+  }), [item.id])
   const memoryQuery = useWorkingMemory(memoryParams)
   const stagesQuery = useWorkItemStages(item.id)
   const inventoryQuery = useInventory()
@@ -222,13 +226,7 @@ export default function WorkingMemoryPanel({ item, focusSession, onStart, onClos
   }
 
   const startFromHere = () => {
-    void logAppEvent({
-      source: 'ui',
-      kind: 'reentry_started',
-      work_item_id: item.id,
-      payload: { stage_id: activeStage?.id, has_next_action: Boolean(nextAction) },
-    })
-    onStart(activeStage?.id)
+    onStart(activeStage?.id, Boolean(nextAction))
     onClose()
   }
 
@@ -277,7 +275,28 @@ export default function WorkingMemoryPanel({ item, focusSession, onStart, onClos
                     <select value={materialKind} onChange={(event) => setMaterialKind(event.target.value as WorkMemoryMaterialKind)} className={fieldClass}>
                       {MATERIAL_KINDS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
                     </select>
-                    <input value={materialValue} onChange={(event) => setMaterialValue(event.target.value)} placeholder="Текст, URL или путь к файлу" className={fieldClass} />
+                    {materialKind === 'text' ? (
+                      <textarea
+                        value={materialValue}
+                        onChange={(event) => setMaterialValue(event.target.value)}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
+                            event.preventDefault()
+                            void submitEntry()
+                          }
+                        }}
+                        rows={5}
+                        placeholder="Текст материала. Ctrl+Enter сохраняет."
+                        className={`${fieldClass} min-h-28 resize-y leading-relaxed`}
+                      />
+                    ) : (
+                      <input
+                        value={materialValue}
+                        onChange={(event) => setMaterialValue(event.target.value)}
+                        placeholder={materialKind === 'url' ? 'https://…' : '/путь/к/файлу'}
+                        className={fieldClass}
+                      />
+                    )}
                   </div>
                 ) : <span className="self-center text-xs text-gray-500">Можно писать подробно. Ctrl+Enter сохраняет.</span>}
               </div>
@@ -364,6 +383,11 @@ export default function WorkingMemoryPanel({ item, focusSession, onStart, onClos
               <div className="mt-2 text-xs text-gray-500">
                 Воспроизводимая проекция на {new Date(asOf).toLocaleString('ru-RU')}.
               </div>
+              {!item.track && (
+                <div className="mt-2 rounded border border-amber-900/60 bg-amber-950/15 px-2.5 py-2 text-xs leading-relaxed text-amber-200">
+                  Профиль «Направление» пока недоступен. Закрой память, выбери это дело, нажми Enter и назначь ему направление.
+                </div>
+              )}
               {contextQuery.isLoading ? <div className="mt-3 text-xs text-gray-500">Собираю...</div> : (
                 <div className="mt-3 grid gap-2">
                   <div className="rounded border border-gray-800 p-2 text-xs text-gray-300">
@@ -373,6 +397,12 @@ export default function WorkingMemoryPanel({ item, focusSession, onStart, onClos
                     <button type="button" onClick={() => void copyContext('markdown')} className={secondaryButton}>Копировать Markdown</button>
                     <button type="button" onClick={() => void copyContext('json')} className={secondaryButton}>Копировать JSON</button>
                   </div>
+                  <details className="min-w-0 rounded border border-gray-800 bg-gray-950/45 p-2">
+                    <summary className="cursor-pointer text-xs font-medium text-gray-300">Предпросмотр Context Pack</summary>
+                    <pre className="mt-2 max-h-64 overflow-auto whitespace-pre-wrap break-words text-[11px] leading-relaxed text-gray-400">
+                      {contextQuery.data?.markdown ?? 'Проекция пока не собрана.'}
+                    </pre>
+                  </details>
                   {copyState === 'copied' && <div className="text-xs text-emerald-300">Скопировано.</div>}
                   {copyState === 'failed' && <div className="text-xs text-red-300">Буфер обмена не принял данные.</div>}
                 </div>
@@ -423,22 +453,25 @@ function ReentryLine({ label, entry, empty }: { label: string; entry?: WorkMemor
 
 function MemoryRow({ entry, onEdit, onDelete }: { entry: WorkMemoryEntryView; onEdit: () => void; onDelete: () => void }) {
   const [showHistory, setShowHistory] = useState(false)
+  const deleted = Boolean(entry.deleted_at)
   return (
-    <article className="p-3">
+    <article className={deleted ? 'bg-gray-950/40 p-3 opacity-75' : 'p-3'}>
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2 text-[11px]">
           <span className="rounded border border-emerald-900 px-1.5 py-0.5 uppercase text-emerald-300">{memoryKindLabel(entry.current_revision.entry_kind)}</span>
+          {deleted && <span className="rounded border border-red-900 px-1.5 py-0.5 uppercase text-red-300">Удалено</span>}
           <span className="text-gray-500">{new Date(entry.occurred_at).toLocaleString('ru-RU')}</span>
           {entry.stage_title && <span className="text-cyan-400">этап: {entry.stage_title}</span>}
           {entry.revisions.length > 1 && <span className="text-amber-300">редакций: {entry.revisions.length}</span>}
         </div>
         <div className="flex gap-1">
-          <button type="button" onClick={onEdit} className={smallButton}>Править</button>
+          {!deleted && <button type="button" onClick={onEdit} className={smallButton}>Править</button>}
           <button type="button" onClick={() => setShowHistory((value) => !value)} className={smallButton}>История</button>
-          <button type="button" onClick={onDelete} className="rounded px-2 py-1 text-[11px] text-red-400 hover:bg-red-950/30">Удалить</button>
+          {!deleted && <button type="button" onClick={onDelete} className="rounded px-2 py-1 text-[11px] text-red-400 hover:bg-red-950/30">Удалить</button>}
         </div>
       </div>
       <div className="mt-2 whitespace-pre-wrap break-words text-sm leading-relaxed text-gray-200">{entryContent(entry)}</div>
+      {deleted && <div className="mt-1 text-xs text-red-300">Запись удалена; прежнее содержимое доступно в истории.</div>}
       <div className="mt-1 text-[10px] text-gray-600">{entry.source} · {entry.provenance} · {entry.origin_kind}</div>
       {showHistory && (
         <div className="mt-3 grid gap-2 border-l border-gray-700 pl-3">

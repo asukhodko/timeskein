@@ -56,6 +56,23 @@ assert(
   firstStart.work_context?.daily_outcome === "Get one verified signal and preserve the next action",
   "focus did not snapshot the daily outcome",
 );
+const duringFocus = await rpc("working_memory.create", {
+  subject_kind: "work_item",
+  subject_id: canonical.id,
+  kind: "observation",
+  text: "The active block exposed one boundary worth preserving",
+  focus_session_id: firstStart.id,
+  stage_id: discovery.id,
+  local_date: localDate,
+});
+assert(
+  duringFocus.focus_session_id === firstStart.id,
+  "working-memory entry created during focus lost its Focus Session link",
+);
+assert(
+  duringFocus.stage_id === discovery.id && duringFocus.stage_title === "Discovery",
+  "working-memory entry created during focus lost its stage snapshot",
+);
 await rpc("focus.stop", {
   id: firstStart.id,
   result: "Verified the first boundary",
@@ -63,7 +80,11 @@ await rpc("focus.stop", {
   next_action: "Open the implementation and test the narrow path",
 });
 
-await rpc("work_item_stage.update", { id: discovery.id, state: "completed" });
+await rpc("work_item_stage.update", {
+  id: discovery.id,
+  title: "Discovery complete",
+  state: "completed",
+});
 const delivery = await rpc("work_item_stage.create", {
   work_item_id: canonical.id,
   title: "Delivery",
@@ -90,6 +111,9 @@ const thought = await rpc("working_memory.create", {
   text: "The return surface must explain why this is the next step",
   local_date: localDate,
 });
+await delay(2);
+const beforeThoughtEdit = new Date().toISOString();
+await delay(2);
 const edited = await rpc("working_memory.update", {
   id: thought.id,
   kind: "decision",
@@ -125,6 +149,17 @@ const allMemory = await rpc("working_memory.list", {
 });
 assert(allMemory.entries.some((entry) => entry.id === temporary.id && entry.deleted_at), "deleted entry is not auditable");
 
+const historicalPack = await rpc("context_pack.build", {
+  profile: "work-item-reentry",
+  scope_id: canonical.id,
+  as_of: beforeThoughtEdit,
+  format: "json",
+});
+const historicalThought = historicalPack.pack.facts.memory.find((entry) => entry.id === thought.id);
+assert(historicalThought?.current_revision.text === "The return surface must explain why this is the next step",
+  "Context Pack leaked a later working-memory revision into as_of");
+assert(historicalThought?.revisions.length === 1, "Context Pack leaked future revision history into as_of");
+
 const workItemPackA = await rpc("context_pack.build", {
   profile: "work-item-reentry",
   scope_id: canonical.id,
@@ -146,6 +181,19 @@ assert(workItemPackA.pack.facts.stages.length === 2, "Context Pack did not inclu
 assert(workItemPackA.pack.facts.materials.length === 1, "Context Pack did not include the material");
 assert(workItemPackA.pack.facts.next_actions.length >= 2, "Context Pack did not include next actions");
 assert(workItemPackA.markdown.includes("Run the acceptance scenario after a pause"), "markdown lost the next action");
+for (const stageTitle of ["Discovery", "Delivery"]) {
+  const stage = workItemPackA.pack.facts.focus.by_stage.find((entry) => entry.title === stageTitle);
+  assert(stage?.entrances === 1, `Context Pack lost focus totals for ${stageTitle}`);
+}
+for (const [result, stageTitle] of [
+  ["Verified the first boundary", "Discovery"],
+  ["Implemented the narrow path", "Delivery"],
+]) {
+  const entry = workItemPackA.pack.facts.memory.find(
+    (candidate) => candidate.current_revision.text === result,
+  );
+  assert(entry?.stage_title === stageTitle, `Context Pack lost the ${stageTitle} result snapshot`);
+}
 
 const trackPack = await rpc("context_pack.build", {
   profile: "track-reentry",
@@ -210,4 +258,8 @@ async function rpc(method, params = {}) {
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
+}
+
+function delay(milliseconds) {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
 }

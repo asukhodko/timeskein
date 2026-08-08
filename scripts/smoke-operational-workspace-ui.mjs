@@ -4,15 +4,23 @@ import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
 const repoRoot = resolve(import.meta.dirname, "..");
-const [app, palette, workspace, focusPanel] = await Promise.all([
+const [app, palette, workspace, focusPanel, realityPanel] = await Promise.all([
   readFile(resolve(repoRoot, "apps/desktop/src/App.tsx"), "utf8"),
   readFile(resolve(repoRoot, "apps/desktop/src/components/Palette.tsx"), "utf8"),
   readFile(resolve(repoRoot, "apps/desktop/src/components/OperationalWorkspacePanel.tsx"), "utf8"),
   readFile(resolve(repoRoot, "apps/desktop/src/components/FocusPanel.tsx"), "utf8"),
+  readFile(resolve(repoRoot, "apps/desktop/src/components/OperationalRealityPanel.tsx"), "utf8"),
 ]);
 
 assert(palette.includes("<OperationalWorkspacePanel />"), "primary workspace is not mounted");
-assert(!palette.includes("<OperationalRealityPanel />"), "old independent Operational Reality surface remains mounted");
+assert(!palette.includes("<OperationalRealityPanel />"), "Operational Reality is mounted as a competing top-level surface");
+assert(workspace.includes("type WorkspaceSurface = 'reality' | 'contour'"), "workspace does not separate reality from contour");
+assert(workspace.includes("surface ?? (contract ? 'contour' : 'reality')"), "workspace cannot enter reality without a contract");
+assert(workspace.includes("<OperationalRealityView"), "derived Operational Reality projection is not available in the workspace");
+assert(realityPanel.includes("export function OperationalRealityView"), "Operational Reality projection is not reusable as a workspace view");
+assert(workspace.includes("Договор дня не собран. Это не блокирует"), "missing contract still blocks or obscures Operational Reality");
+assert(workspace.includes("contourReviewReasons"), "observable contract drift cannot return attention to the contour");
+assert(workspace.includes("Рабочий контур расходится с наблюдаемыми фактами"), "contract drift has no explicit user-facing signal");
 assert(palette.includes("inventoryExpanded ? selectedItem : undefined"), "hidden inventory still controls the primary focus panel");
 assert(palette.includes("function readInventoryExpanded"), "inventory secondary-surface state is not persisted");
 assert(!focusPanel.includes("<DispatchRitualPanel"), "shadow text dispatch backlog remains in the primary path");
@@ -39,6 +47,10 @@ assert(app.includes("MutationObserver"), "plain-text input policy does not cover
 
 for (const text of [
   "Собрать договор дня",
+  "Рабочая реальность",
+  "Рабочий контур",
+  "Реальность",
+  "Контур",
   "Пересмотреть договор",
   "Начать первое действие",
   "Вернуться по договору",

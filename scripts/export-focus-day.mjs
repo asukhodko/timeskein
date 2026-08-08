@@ -98,7 +98,14 @@ function startOfLocalDay(date) {
 
 async function loadSessions(path, from, to, now) {
   const hasActivityZone = await columnExists(path, "focus_sessions", "activity_zone");
+  const hasWorkSnapshots = await tableExists(path, "focus_session_work_snapshots");
   const activityZoneExpression = hasActivityZone ? "fs.activity_zone" : "'work'";
+  const stageIdExpression = hasWorkSnapshots ? "fws.stage_id" : "NULL";
+  const stageTitleExpression = hasWorkSnapshots ? "fws.stage_title" : "NULL";
+  const dailyOutcomeExpression = hasWorkSnapshots ? "fws.daily_outcome" : "NULL";
+  const workSnapshotJoin = hasWorkSnapshots
+    ? "LEFT JOIN focus_session_work_snapshots fws ON fws.focus_session_id = fs.id"
+    : "";
 
   const query = `
     SELECT
@@ -113,9 +120,13 @@ async function loadSessions(path, from, to, now) {
       fs.note,
       fs.started_at,
       fs.stopped_at,
-      fs.updated_at
+      fs.updated_at,
+      ${stageIdExpression} AS stage_id,
+      ${stageTitleExpression} AS stage_title,
+      ${dailyOutcomeExpression} AS daily_outcome
     FROM focus_sessions fs
     LEFT JOIN work_items wi ON wi.id = fs.work_item_id
+    ${workSnapshotJoin}
     WHERE datetime(COALESCE(fs.stopped_at, ${sqlString(now.toISOString())})) > datetime(${sqlString(from.toISOString())})
       AND datetime(fs.started_at) < datetime(${sqlString(to.toISOString())})
     ORDER BY datetime(fs.started_at) ASC
@@ -142,6 +153,9 @@ async function loadSessions(path, from, to, now) {
       started_at: row.started_at,
       stopped_at: row.stopped_at ?? undefined,
       updated_at: row.updated_at,
+      stage_id: row.stage_id ?? undefined,
+      stage_title: row.stage_title ?? undefined,
+      daily_outcome: row.daily_outcome ?? undefined,
     };
   });
 }
@@ -352,6 +366,22 @@ function buildDayMarkdown(sessionsOldestFirst, activeSecondsTotal, day, now, wor
     }
   }
 
+  const stageTotals = aggregateStageTotals(sessionsOldestFirst);
+  if (stageTotals.length > 0) {
+    lines.push(
+      "",
+      "## By Stage",
+      "",
+      "| Duration | Entrances | Stage | Daily Outcome |",
+      "| ---: | ---: | --- | --- |"
+    );
+    for (const stage of stageTotals) {
+      lines.push(
+        `| ${escapeMarkdownTable(formatDuration(stage.activeSeconds))} | ${stage.entrances} | ${escapeMarkdownTable(stage.title)} | ${escapeMarkdownTable(stage.dailyOutcomes.join(" · "))} |`
+      );
+    }
+  }
+
   appendWorkItemNotes(lines, workItemTotals);
   appendDayEvents(lines, dayEvents, sessionsOldestFirst);
   appendWorkItemEvents(lines, workItemEvents, sessionsOldestFirst);
@@ -460,6 +490,47 @@ function aggregateActivityZoneTotals(sessions) {
   });
 }
 
+function aggregateStageTotals(sessions) {
+  const hasStageContext = sessions.some(
+    (session) => session.stage_id || session.stage_title || session.daily_outcome
+  );
+  if (!hasStageContext) {
+    return [];
+  }
+
+  const totals = new Map();
+
+  for (const session of sessions) {
+    const key = session.stage_id ?? "unassigned";
+    const current = totals.get(key) ?? {
+      title: session.stage_title?.trim() || "Без этапа",
+      activeSeconds: 0,
+      entrances: 0,
+      dailyOutcomes: new Set(),
+    };
+
+    current.activeSeconds += session.active_seconds;
+    current.entrances += 1;
+    if (session.daily_outcome?.trim()) {
+      current.dailyOutcomes.add(session.daily_outcome.trim());
+    }
+    totals.set(key, current);
+  }
+
+  return Array.from(totals.values())
+    .map((stage) => ({
+      ...stage,
+      dailyOutcomes: Array.from(stage.dailyOutcomes),
+    }))
+    .sort((left, right) => {
+      if (right.activeSeconds !== left.activeSeconds) {
+        return right.activeSeconds - left.activeSeconds;
+      }
+
+      return left.title.localeCompare(right.title);
+    });
+}
+
 function getZoneActiveSeconds(zoneTotals, zone) {
   return zoneTotals.find((item) => item.zone === zone)?.activeSeconds ?? 0;
 }
@@ -539,6 +610,11 @@ function localizeDayMarkdown(markdown) {
     .replace(/: counted as ([^\n]+) inside this day$/gm, ": учтено $1 внутри этого дня")
     .replace(/^## By Work Item$/gm, "## По делам")
     .replace(/^\| Duration \| Entrances \| Work Item \|$/gm, "| Длительность | Входов | Дело |")
+    .replace(/^## By Stage$/gm, "## По этапам")
+    .replace(
+      /^\| Duration \| Entrances \| Stage \| Daily Outcome \|$/gm,
+      "| Длительность | Входов | Этап | Дневной результат |"
+    )
     .replace(/^## By Activity Zone$/gm, "## По зонам активности")
     .replace(/^\| Duration \| Entrances \| Zone \|$/gm, "| Длительность | Входов | Зона |")
     .replace(/^## Work Item Notes$/gm, "## Заметки дел")

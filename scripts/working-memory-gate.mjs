@@ -23,8 +23,8 @@ try {
   `);
   if (itemRows.length === 0) throw new Error(`Work Item не найден: ${options.workItem}`);
   const trackId = options.track || await resolveTrackId(dbPath, canonicalId);
-  const fromTs = `${options.from}T00:00:00`;
-  const toTs = `${options.to}T00:00:00`;
+  const fromTs = localMidnightIso(options.from);
+  const toTs = localMidnightIso(options.to);
 
   const [memory, stages, stageEvents, sessions, appEvents, aliases] = await Promise.all([
     query(dbPath, `
@@ -78,32 +78,58 @@ try {
   ]);
 
   const revisionRows = await query(dbPath, `
-    SELECT entry_id, COUNT(*) AS revisions,
-           SUM(CASE WHEN change_kind = 'delete' THEN 1 ELSE 0 END) AS deletions
-    FROM work_memory_entry_revisions
-    WHERE entry_id IN (
-      SELECT id FROM work_memory_entries WHERE work_item_id = ${sql(canonicalId)}
-    )
-    GROUP BY entry_id;
+    SELECT wmer.entry_id,
+           SUM(CASE WHEN wmer.change_kind = 'edit' THEN 1 ELSE 0 END) AS edits,
+           SUM(CASE WHEN wmer.change_kind = 'delete' THEN 1 ELSE 0 END) AS deletions
+    FROM work_memory_entry_revisions wmer
+    JOIN work_memory_entries wme ON wme.id = wmer.entry_id
+    WHERE wme.work_item_id = ${sql(canonicalId)}
+      AND datetime(wmer.created_at) >= datetime(${sql(fromTs)})
+      AND datetime(wmer.created_at) < datetime(${sql(toTs)})
+    GROUP BY wmer.entry_id;
   `);
+  const activeMemory = memory.filter((entry) => !entry.deleted_at);
   const stageTransitions = stageEvents.filter((event) =>
     new Set(["activated", "completed", "reopened"]).has(event.kind)
   );
   const semanticKinds = new Set(["thought", "question", "decision", "observation"]);
-  const semanticEntries = memory.filter((entry) => semanticKinds.has(entry.entry_kind));
-  const materials = memory.filter((entry) => entry.entry_kind === "material" && entry.material_kind && entry.material_value);
-  const causalChains = causalChainCount(memory);
+  const semanticEntries = activeMemory.filter((entry) => semanticKinds.has(entry.entry_kind));
+  const materials = activeMemory.filter((entry) => entry.entry_kind === "material" && entry.material_kind && entry.material_value);
+  const causalFocusIds = focusIdsWithCausalChain(activeMemory);
+  const causalChains = causalFocusIds.size;
   const focusStageIds = new Set(sessions.map((session) => session.stage_id).filter(Boolean));
   const focusWithOutcome = sessions.filter((session) => session.daily_outcome && session.day_contract_revision_id);
   const eventsByKind = groupBy(appEvents, (event) => event.kind);
-  const reentryEvents = eventsByKind.get("reentry_started") ?? [];
-  const reentryGaps = verifiedReentries(reentryEvents, sessions);
-  const pauseEvidence = matchPauseThresholds(reentryGaps, [1, 3, 7]);
+  const d0Evaluation = evaluateD0Baseline({
+    sessions,
+    memory: activeMemory,
+    materials,
+    causalFocusIds,
+    trackId,
+  });
+  const d0Baseline = d0Evaluation.baseline;
+  const reentryEvents = (eventsByKind.get("reentry_started") ?? [])
+    .filter((event) => d0Baseline && Date.parse(event.ts) > Date.parse(d0Baseline.stopped_at));
+  const successfulFocusStarts = [
+    ...(eventsByKind.get("focus_started") ?? []),
+    ...(eventsByKind.get("focus_switched") ?? []),
+  ].filter((event) => {
+    if (event.source !== "agent") return false;
+    const payload = parsePayload(event.payload);
+    return payload?.already_active === false && typeof payload.action_id === "string";
+  });
+  const reentryGaps = d0Baseline
+    ? verifiedReentries(reentryEvents, sessions, causalFocusIds, successfulFocusStarts)
+    : [];
+  const pauseEvidence = matchPauseSequence(reentryGaps, [1, 3, 7]);
+  const projectionEvidenceFloor = pauseEvidence.at(-1)?.ts ?? d0Baseline?.stopped_at;
   const packBuildEvidence = (eventsByKind.get("context_pack_built") ?? [])
+    .filter((event) => eventAtOrAfter(event, projectionEvidenceFloor))
     .map((event) => parsePayload(event.payload))
     .filter((payload) => payload && matchesContextPackScope(payload, canonicalId, options.workItem, trackId));
   const packProfiles = new Set(packBuildEvidence.map((payload) => payload.profile));
   const exportEvidence = (eventsByKind.get("context_pack_exported") ?? [])
+    .filter((event) => eventAtOrAfter(event, projectionEvidenceFloor))
     .map((event) => parsePayload(event.payload))
     .filter((payload) => payload && matchesContextPackScope(payload, canonicalId, options.workItem, trackId));
   const exportedProfiles = new Set(exportEvidence.map((payload) => payload.profile));
@@ -124,13 +150,18 @@ try {
     event.kind === "api_error" || event.kind.endsWith("_failed")
   );
   const overlaps = findFocusSessionOverlaps(sessions, { from: fromTs, to: toTs });
-  const periodDays = Math.round((Date.parse(`${options.to}T00:00:00Z`) - Date.parse(`${options.from}T00:00:00Z`)) / 86_400_000);
+  const requestedPeriodDays = Math.round((Date.parse(`${options.to}T00:00:00Z`) - Date.parse(`${options.from}T00:00:00Z`)) / 86_400_000);
+  const observedPeriodDays = observedExperimentDays(d0Baseline, pauseEvidence);
   const stageSnapshotTitles = new Set(sessions.map((session) => session.stage_title).filter(Boolean));
-  const hasEditedHistory = revisionRows.some((row) => Number(row.revisions) > 1);
+  const hasEditedHistory = revisionRows.some((row) => Number(row.edits) > 0);
+  const experiment = experimentStatus(d0Baseline, pauseEvidence, observedPeriodDays);
 
   const checks = [
-    check(periodDays >= 7, `календарный период: ${periodDays}/7 дней`),
-    check(memory.length >= 6, `записей рабочей памяти: ${memory.length}/6`),
+    check(d0Evaluation.preparation.memory, `запись памяти до старта D0: ${d0Evaluation.preparation.memory ? "есть" : "нет"}`),
+    check(d0Evaluation.preparation.material, `материал до старта D0: ${d0Evaluation.preparation.material ? "есть" : "нет"}`),
+    check(Boolean(d0Baseline), `базовый день D0: ${d0Baseline ? formatTimestamp(d0Baseline.stopped_at) : "ещё не зафиксирован"}`),
+    check(observedPeriodDays >= 7, `наблюдаемый период после D0: ${observedPeriodDays}/7 дней`),
+    check(activeMemory.length >= 6, `актуальных записей рабочей памяти: ${activeMemory.length}/6`),
     check(semanticEntries.length >= 3, `мыслей, вопросов, решений и наблюдений: ${semanticEntries.length}/3`),
     check(materials.length >= 1, `зарегистрированных материалов: ${materials.length}/1`),
     check(hasEditedHistory, `история редакций: ${hasEditedHistory ? "есть" : "нет"}`),
@@ -153,12 +184,23 @@ try {
     ok: checks.every((item) => item.ok),
     work_item: { requested_id: options.workItem, canonical_id: canonicalId, title: itemRows[0].title },
     track_id: trackId,
-    period: { from: options.from, to: options.to, upper_bound_inclusive: false, days: periodDays },
+    period: {
+      from: options.from,
+      to: options.to,
+      upper_bound_inclusive: false,
+      requested_days: requestedPeriodDays,
+      observed_days_after_d0: observedPeriodDays,
+    },
+    experiment,
     evidence: {
-      memory_entries: memory.length,
-      edited_entries: revisionRows.filter((row) => Number(row.revisions) > 1).length,
+      memory_entries: activeMemory.length,
+      historical_memory_entries: memory.length,
+      current_deleted_entries: memory.length - activeMemory.length,
+      edited_entries: revisionRows.filter((row) => Number(row.edits) > 0).length,
       deleted_entries: revisionRows.filter((row) => Number(row.deletions) > 0).length,
       materials: materials.length,
+      d0_setup_memory_before_focus: d0Evaluation.preparation.memory,
+      d0_setup_material_before_focus: d0Evaluation.preparation.material,
       stages: stages.length,
       stage_transitions: stageTransitions.length,
       focus_stage_snapshots: focusStageIds.size,
@@ -185,35 +227,85 @@ try {
   process.exitCode = 1;
 }
 
-function causalChainCount(memory) {
+function focusIdsWithCausalChain(memory) {
   const byFocus = groupBy(memory.filter((entry) => entry.focus_session_id), (entry) => entry.focus_session_id);
-  let count = 0;
+  const result = new Set();
   for (const entries of byFocus.values()) {
     const kinds = new Set(entries.map((entry) => entry.entry_kind));
-    if (kinds.has("result") && kinds.has("state_change") && kinds.has("next_action")) count += 1;
+    if (kinds.has("result") && kinds.has("state_change") && kinds.has("next_action")) {
+      result.add(entries[0].focus_session_id);
+    }
   }
-  return count;
+  return result;
 }
 
-function verifiedReentries(events, sessions) {
+function evaluateD0Baseline({ sessions, memory, materials, causalFocusIds, trackId }) {
+  const result = {
+    baseline: undefined,
+    preparation: { memory: false, material: false },
+  };
+  if (!trackId) return result;
+  for (const session of sessions) {
+    if (!session.stopped_at || !session.stage_id || !session.stage_title) continue;
+    if (!session.daily_outcome || !session.day_contract_revision_id) continue;
+    if (!causalFocusIds.has(session.id)) continue;
+    const startedAt = Date.parse(session.started_at);
+    const sessionDate = localDateKey(session.started_at);
+    if (!Number.isFinite(startedAt) || !sessionDate) continue;
+    const recordedBeforeFocus = (entry) => {
+      const recordedAt = Date.parse(entry.recorded_at);
+      return Number.isFinite(recordedAt) &&
+        recordedAt <= startedAt &&
+        localDateKey(entry.recorded_at) === sessionDate;
+    };
+    const preparation = {
+      memory: memory.some((entry) => entry.entry_kind !== "material" && recordedBeforeFocus(entry)),
+      material: materials.some(recordedBeforeFocus),
+    };
+    result.preparation.memory ||= preparation.memory;
+    result.preparation.material ||= preparation.material;
+    if (preparation.memory && preparation.material) {
+      result.baseline = session;
+      return result;
+    }
+  }
+  return result;
+}
+
+function verifiedReentries(events, sessions, causalFocusIds, successfulFocusStarts) {
+  const sessionsById = new Map(sessions.map((session) => [session.id, session]));
   return events.flatMap((event) => {
     const payload = parsePayload(event.payload);
     if (payload?.has_next_action !== true) return [];
+    if (typeof payload.action_id !== "string" || payload.action_id.length === 0) return [];
+    if (!event.focus_session_id || !causalFocusIds.has(event.focus_session_id)) return [];
+    const confirmedStart = successfulFocusStarts.find((candidate) => {
+      if (candidate.focus_session_id !== event.focus_session_id) return false;
+      return parsePayload(candidate.payload)?.action_id === payload.action_id;
+    });
+    if (!confirmedStart) return [];
     const eventTime = Date.parse(event.ts);
     if (!Number.isFinite(eventTime)) return [];
-    const matchingFocus = sessions
-      .map((session) => ({ session, delta: Date.parse(session.started_at) - eventTime }))
-      .filter(({ delta }) => Number.isFinite(delta) && delta >= -30_000 && delta <= 300_000)
-      .sort((left, right) => Math.abs(left.delta) - Math.abs(right.delta))[0];
-    if (!matchingFocus) return [];
+    const session = sessionsById.get(event.focus_session_id);
+    if (!session) return [];
+    const startedAt = Date.parse(session.started_at);
+    const delta = eventTime - startedAt;
+    if (!Number.isFinite(startedAt) || delta < 0 || delta > 300_000) return [];
     return [{
       event_id: event.id,
       ts: event.ts,
-      focus_session_id: matchingFocus.session.id,
-      focus_started_after_seconds: Math.round(matchingFocus.delta / 1000),
+      focus_session_id: session.id,
+      focus_started_before_event_seconds: Math.round(delta / 1000),
       gap_days: gapFromPreviousFocus(event.ts, sessions),
     }];
   });
+}
+
+function eventAtOrAfter(event, floorTimestamp) {
+  if (!floorTimestamp) return true;
+  const eventTime = Date.parse(event.ts);
+  const floorTime = Date.parse(floorTimestamp);
+  return Number.isFinite(eventTime) && Number.isFinite(floorTime) && eventTime >= floorTime;
 }
 
 function gapFromPreviousFocus(timestamp, sessions) {
@@ -227,16 +319,54 @@ function gapFromPreviousFocus(timestamp, sessions) {
   return prior == null ? null : Math.floor((ts - prior) / 86_400_000);
 }
 
-function matchPauseThresholds(gaps, thresholds) {
-  const candidates = gaps.filter((entry) => entry.gap_days != null).sort((left, right) => right.gap_days - left.gap_days);
+function matchPauseSequence(gaps, thresholds) {
+  const candidates = gaps
+    .filter((entry) => entry.gap_days != null)
+    .sort((left, right) => Date.parse(left.ts) - Date.parse(right.ts));
   const matches = [];
-  for (const threshold of [...thresholds].sort((left, right) => right - left)) {
-    const index = candidates.findIndex((entry) => entry.gap_days >= threshold);
-    if (index < 0) continue;
+  let cursor = 0;
+  for (const threshold of thresholds) {
+    const index = candidates.findIndex((entry, candidateIndex) =>
+      candidateIndex >= cursor && entry.gap_days >= threshold
+    );
+    if (index < 0) break;
     matches.push({ threshold_days: threshold, ...candidates[index] });
-    candidates.splice(index, 1);
+    cursor = index + 1;
   }
-  return matches.sort((left, right) => left.threshold_days - right.threshold_days);
+  return matches;
+}
+
+function observedExperimentDays(d0Baseline, pauseEvidence) {
+  if (!d0Baseline) return 0;
+  const lastTimestamp = pauseEvidence.at(-1)?.ts ?? d0Baseline.stopped_at;
+  return Math.max(0, Math.floor(
+    (Date.parse(lastTimestamp) - Date.parse(d0Baseline.stopped_at)) / 86_400_000,
+  ));
+}
+
+function experimentStatus(d0Baseline, pauseEvidence, observedPeriodDays) {
+  if (!d0Baseline) {
+    return {
+      phase: "pre_d0",
+      label: "подготовка D0",
+      d0_focus_session_id: null,
+      d0_stopped_at: null,
+      completed_returns: 0,
+      next_pause_days: null,
+      observed_days: 0,
+    };
+  }
+  const labels = ["D0", "D1", "D4", "D11"];
+  const index = Math.min(pauseEvidence.length, labels.length - 1);
+  return {
+    phase: labels[index].toLowerCase(),
+    label: labels[index],
+    d0_focus_session_id: d0Baseline.id,
+    d0_stopped_at: d0Baseline.stopped_at,
+    completed_returns: pauseEvidence.length,
+    next_pause_days: [1, 3, 7][pauseEvidence.length] ?? null,
+    observed_days: observedPeriodDays,
+  };
 }
 
 async function resolveCanonicalId(dbPath, requestedId) {
@@ -269,7 +399,8 @@ function renderMarkdown(result) {
     "# Приёмка Working Memory Bridge v1",
     "",
     `Дело: ${result.work_item.title} (${result.work_item.canonical_id})`,
-    `Период: ${result.period.from} включительно — ${result.period.to} исключительно`,
+    `Период запроса: ${result.period.from} включительно — ${result.period.to} исключительно`,
+    `Стадия эксперимента: ${result.experiment.label}`,
     `Итог: ${result.ok ? "пройдено" : "ещё не пройдено"}`,
     "",
     "## Проверки",
@@ -287,11 +418,38 @@ function renderMarkdown(result) {
     lines.push(
       "## Следующее доказательство",
       "",
-      "Выполни первый незакрытый пункт в интерфейсе, затем повтори gate. Для возврата открывай память дела и нажимай «Начать отсюда»; Context Pack скопируй для Work Item и Track в обоих форматах.",
+      nextEvidence(result),
       "",
     );
   }
   return `${lines.join("\n")}\n`;
+}
+
+function nextEvidence(result) {
+  if (result.experiment.phase === "pre_d0") {
+    const missing = [];
+    if (!result.track_id) missing.push("назначить Track");
+    if (!result.evidence.d0_setup_memory_before_focus) missing.push("добавить запись памяти до старта фокуса");
+    if (!result.evidence.d0_setup_material_before_focus) missing.push("добавить материал до старта фокуса");
+    if (result.evidence.stages < 1) missing.push("создать и активировать этап");
+    if (result.evidence.focus_outcome_snapshots < 1) missing.push("задать дневной результат");
+    if (result.evidence.causal_chains < 1) {
+      missing.push("остановить реальный фокус-блок с полями «сделал → изменилось → следующий шаг»");
+    }
+    const setup = missing.length > 0 ? ` Не хватает: ${missing.join("; ")}.` : "";
+    return `Сначала зафиксируй D0 для этого дела.${setup} До этого календарные дни и возвраты не засчитываются.`;
+  }
+  if (result.experiment.next_pause_days != null) {
+    return `Следующий контроль: не открывай это дело в фокусе не менее ${result.experiment.next_pause_days} дн., затем открой «Память», нажми «Начать отсюда» и заверши блок новой причинной цепочкой.`;
+  }
+  return "Возвраты D1/D4/D11 подтверждены. Закрой оставшиеся пункты структуры и экспорта, затем повтори строгий gate.";
+}
+
+function formatTimestamp(value) {
+  return new Intl.DateTimeFormat("ru-RU", {
+    dateStyle: "short",
+    timeStyle: "short",
+  }).format(new Date(value));
 }
 
 async function ensureSchema(dbPath) {
@@ -349,6 +507,21 @@ function sql(value) {
   return `'${String(value).replaceAll("'", "''")}'`;
 }
 
+function localMidnightIso(localDate) {
+  const value = new Date(`${localDate}T00:00:00`);
+  if (Number.isNaN(value.getTime())) throw new Error(`Некорректная календарная дата: ${localDate}`);
+  return value.toISOString();
+}
+
+function localDateKey(timestamp) {
+  const value = new Date(timestamp);
+  if (Number.isNaN(value.getTime())) return undefined;
+  const year = value.getFullYear();
+  const month = String(value.getMonth() + 1).padStart(2, "0");
+  const day = String(value.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 function parseArgs(args) {
   const result = { format: "md", softFail: false };
   for (let index = 0; index < args.length; index += 1) {
@@ -366,6 +539,7 @@ function parseArgs(args) {
   pnpm working-memory:gate -- --work-item UUID --from YYYY-MM-DD --to YYYY-MM-DD [параметры]
 
 Проверяет реальную приёмку Working Memory Bridge v1. Верхняя граница периода не включается.
+Календарный прогресс начинается только с полного базового блока D0; ширина диапазона сама по себе не засчитывается.
 
 Параметры:
   --track UUID       Ожидаемый Track; без параметра берётся текущий Track дела

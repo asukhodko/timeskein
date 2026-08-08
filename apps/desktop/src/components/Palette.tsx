@@ -171,7 +171,8 @@ export default function Palette() {
   const handleFocusItem = useCallback((
     item: WorkItemView,
     stageId?: string,
-    control = 'selected_shortcut'
+    control = 'selected_shortcut',
+    reentryHasNextAction = false
   ) => {
     if (startFocusMutation.isPending) return
 
@@ -204,6 +205,20 @@ export default function Palette() {
             control,
           },
         })
+        if (control === 'working_memory' && currentFocus?.id !== session.id) {
+          void logAppEvent({
+            source: 'ui',
+            kind: 'reentry_started',
+            work_item_id: session.work_item_id,
+            focus_session_id: session.id,
+            payload: {
+              action_id: actionId,
+              stage_id: stageId,
+              has_next_action: reentryHasNextAction,
+              control,
+            },
+          })
+        }
       },
       onError: (error) => {
         void logAppEvent({
@@ -218,7 +233,7 @@ export default function Palette() {
         })
       },
     })
-  }, [startFocusMutation])
+  }, [currentFocus?.id, startFocusMutation])
 
   const handleFocusSelected = useCallback((stageId?: string) => {
     if (selectedItem) handleFocusItem(selectedItem, stageId)
@@ -586,7 +601,12 @@ export default function Palette() {
         <WorkingMemoryPanel
           item={workingMemoryItem}
           focusSession={currentFocus}
-          onStart={(stageId) => handleFocusItem(workingMemoryItem, stageId, 'working_memory')}
+          onStart={(stageId, hasNextAction) => handleFocusItem(
+            workingMemoryItem,
+            stageId,
+            'working_memory',
+            hasNextAction,
+          )}
           onClose={() => setWorkingMemoryItemId(null)}
         />
       )}

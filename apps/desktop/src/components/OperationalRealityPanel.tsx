@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import type {
   OperationalRealityItemView,
+  OperationalRealityView as OperationalRealityProjection,
   OperationalState,
 } from '@timeskein/contracts'
 
@@ -28,21 +29,7 @@ const STATES: Array<{ id: OperationalState; label: string }> = [
 
 export default function OperationalRealityPanel() {
   const [expanded, setExpanded] = useState(true)
-  const [showAll, setShowAll] = useState(false)
-  const [selectedId, setSelectedId] = useState<string | null>(null)
   const query = useOperationalReality()
-  const items = query.data?.items ?? []
-  const visibleItems = useMemo(
-    () => (showAll ? items : items.filter((item) => item.requires_attention)),
-    [items, showAll]
-  )
-
-  useEffect(() => {
-    if (selectedId && visibleItems.some((item) => item.id === selectedId)) return
-    setSelectedId(visibleItems[0]?.id ?? null)
-  }, [visibleItems, selectedId])
-
-  const selected = visibleItems.find((item) => item.id === selectedId)
   const summary = query.data?.summary
 
   return (
@@ -61,6 +48,55 @@ export default function OperationalRealityPanel() {
             </span>
           )}
         </button>
+      </div>
+
+      {expanded && (
+        <OperationalRealityView
+          reality={query.data}
+          isLoading={query.isLoading}
+          error={query.error}
+          onRefresh={() => void query.refetch()}
+        />
+      )}
+    </section>
+  )
+}
+
+export function OperationalRealityView({
+  reality,
+  isLoading = false,
+  error,
+  onRefresh,
+}: {
+  reality?: OperationalRealityProjection
+  isLoading?: boolean
+  error?: unknown
+  onRefresh?: () => void
+}) {
+  const [showAll, setShowAll] = useState(false)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const items = useMemo(() => reality?.items ?? [], [reality?.items])
+  const visibleItems = useMemo(
+    () => (showAll ? items : items.filter((item) => item.requires_attention)),
+    [items, showAll]
+  )
+
+  useEffect(() => {
+    if (selectedId && visibleItems.some((item) => item.id === selectedId)) return
+    setSelectedId(visibleItems[0]?.id ?? null)
+  }, [visibleItems, selectedId])
+
+  const selected = visibleItems.find((item) => item.id === selectedId)
+  const summary = reality?.summary
+
+  return (
+    <div className="border-t border-gray-800">
+      <div className="flex flex-col gap-2 px-4 py-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0 text-xs text-gray-500">
+          {summary
+            ? `${summary.total} пунктов · ${summary.requiring_attention} требуют решения · ${summary.confirmed} подтверждено`
+            : 'Проекция собирается из сохранённых фактов, решений и фактической работы.'}
+        </div>
         <div className="grid grid-cols-2 gap-2 sm:flex sm:shrink-0 sm:items-center">
           <button
             type="button"
@@ -69,47 +105,48 @@ export default function OperationalRealityPanel() {
           >
             {showAll ? 'Только требующие решения' : 'Показать всё'}
           </button>
-          <button
-            type="button"
-            onClick={() => void query.refetch()}
-            className="min-w-0 rounded border border-gray-700 px-2 py-1 text-xs text-gray-400 hover:border-cyan-700 hover:text-cyan-200"
-            title="Пересобрать проекцию из сохранённых фактов"
-          >
-            Обновить
-          </button>
+          {onRefresh && (
+            <button
+              type="button"
+              onClick={onRefresh}
+              className="min-w-0 rounded border border-gray-700 px-2 py-1 text-xs text-gray-400 hover:border-cyan-700 hover:text-cyan-200"
+              title="Пересобрать проекцию из сохранённых фактов"
+            >
+              Обновить факты
+            </button>
+          )}
         </div>
       </div>
-
-      {expanded && (
-        <div className="grid grid-cols-1 border-t border-gray-800 lg:max-h-[24rem] lg:min-h-0 lg:grid-cols-[minmax(18rem,0.9fr)_minmax(24rem,1.35fr)] lg:overflow-hidden">
-          <div className="max-h-56 min-w-0 overflow-auto border-b border-gray-800 lg:max-h-[24rem] lg:min-h-0 lg:border-b-0 lg:border-r">
-            {query.isLoading ? (
-              <div className="px-4 py-4 text-sm text-gray-500">Собираю факты...</div>
-            ) : query.error ? (
-              <div className="px-4 py-4 text-sm text-red-300">Не удалось собрать рабочую реальность</div>
-            ) : visibleItems.length === 0 ? (
-              <div className="px-4 py-4 text-sm text-gray-500">Сейчас нет пунктов, требующих решения.</div>
-            ) : (
-              visibleItems.map((item) => (
-                <RealityRow
-                  key={item.id}
-                  item={item}
-                  selected={item.id === selectedId}
-                  onSelect={() => setSelectedId(item.id)}
-                />
-              ))
-            )}
-          </div>
-          <div className="min-w-0 lg:max-h-[24rem] lg:min-h-0 lg:overflow-auto">
-            {selected ? (
-              <RealityDetails item={selected} />
-            ) : (
-              <div className="px-5 py-4 text-sm text-gray-500">Выбери пункт, чтобы увидеть основания.</div>
-            )}
-          </div>
+      <div className="grid grid-cols-1 border-t border-gray-800 lg:h-[24rem] lg:min-h-0 lg:grid-cols-[minmax(18rem,0.9fr)_minmax(24rem,1.35fr)] lg:overflow-hidden">
+        <div className="max-h-56 min-w-0 overflow-auto border-b border-gray-800 lg:max-h-none lg:min-h-0 lg:border-b-0 lg:border-r">
+          {isLoading ? (
+            <div className="px-4 py-4 text-sm text-gray-500">Собираю факты...</div>
+          ) : error ? (
+            <div className="px-4 py-4 text-sm text-red-300">Не удалось собрать рабочую реальность</div>
+          ) : visibleItems.length === 0 ? (
+            <div className="px-4 py-4 text-sm text-gray-500">
+              {showAll ? 'Рабочая реальность пока пуста.' : 'Сейчас нет пунктов, требующих решения. Можно показать всю реальность.'}
+            </div>
+          ) : (
+            visibleItems.map((item) => (
+              <RealityRow
+                key={item.id}
+                item={item}
+                selected={item.id === selectedId}
+                onSelect={() => setSelectedId(item.id)}
+              />
+            ))
+          )}
         </div>
-      )}
-    </section>
+        <div className="min-w-0 lg:min-h-0 lg:overflow-auto">
+          {selected ? (
+            <RealityDetails item={selected} />
+          ) : (
+            <div className="px-5 py-4 text-sm text-gray-500">Выбери пункт, чтобы увидеть основания.</div>
+          )}
+        </div>
+      </div>
+    </div>
   )
 }
 

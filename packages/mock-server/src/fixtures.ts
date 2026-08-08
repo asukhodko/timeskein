@@ -56,6 +56,31 @@ const dayAgo = new Date(Date.now() - 86400000).toISOString();
 const twoDaysAgo = new Date(Date.now() - 172800000).toISOString();
 const weekAgo = new Date(Date.now() - 604800000).toISOString();
 
+function projectWorkMemoryEntryAsOf(
+  entry: WorkMemoryEntryView,
+  asOf: string
+): WorkMemoryEntryView | undefined {
+  const cutoff = new Date(asOf).getTime();
+  if (
+    new Date(entry.occurred_at).getTime() > cutoff ||
+    new Date(entry.recorded_at).getTime() > cutoff
+  ) {
+    return undefined;
+  }
+  const revisions = entry.revisions
+    .filter((revision) => new Date(revision.created_at).getTime() <= cutoff)
+    .map((revision) => ({ ...revision }));
+  const currentRevision = revisions.at(-1);
+  if (!currentRevision || currentRevision.change_kind === "delete") return undefined;
+  return {
+    ...entry,
+    updated_at: currentRevision.created_at,
+    deleted_at: undefined,
+    current_revision: currentRevision,
+    revisions,
+  };
+}
+
 // Mock refs
 const mockRefs: Record<string, RefView[]> = {
   "item-1": [
@@ -1782,6 +1807,7 @@ export class MockDataStore {
     const source = this.workItems.get(sourceId);
     const target = this.workItems.get(canonicalId);
     if (!source || !target || sourceId === canonicalId) return undefined;
+    if (source.track && target.track && source.track.id !== target.track.id) return undefined;
     const alias: WorkItemAliasView = {
       source_work_item_id: sourceId,
       canonical_work_item_id: canonicalId,
@@ -1828,8 +1854,11 @@ export class MockDataStore {
           item.track?.path.some((node) => node.id === requestedId)
         );
     const itemIds = new Set(items.map((item) => item.id));
-    const memory = this.listWorkMemory({ include_deleted: false }).filter((entry) =>
-      new Date(entry.occurred_at).getTime() <= new Date(asOf).getTime() && (
+    const memory = this.listWorkMemory({ include_deleted: true })
+      .map((entry) => projectWorkMemoryEntryAsOf(entry, asOf))
+      .filter((entry): entry is WorkMemoryEntryView => Boolean(entry))
+      .filter((entry) =>
+      (
         (entry.work_item_id ? itemIds.has(entry.work_item_id) : false) ||
         entry.track_id === requestedId ||
         entry.track_snapshot.some((node) => node.id === requestedId)

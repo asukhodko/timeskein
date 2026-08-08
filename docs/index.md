@@ -12,6 +12,7 @@ The system answers questions like:
 - "What tried to interrupt me, and did I handle it later?"
 - "Where did the tracking tool itself create friction today?"
 - "What changed after my action, why do I trust that, and what should happen next?"
+- "Which incoming fragments still have no explicit fate?"
 
 ### Core Principles
 
@@ -19,6 +20,7 @@ The system answers questions like:
 2. **Privacy by default** - Minimal data collection, no "life recorder"
 3. **Manual-first as baseline** - Manual mode always works; automation is opt-in
 4. **Provenance** - Every observation knows its source, time, and applied rules
+5. **Clarify before collecting more** - Incoming fragments need an explicit fate; retention without review and deletion creates a new source of chaos
 
 ### Anti-Goals
 
@@ -41,24 +43,38 @@ The system answers questions like:
 7. **[Operational Reality Dogfood](dogfood-operational-reality.md)** - Accepted two-day evidence, protocol, and executable gate
 8. **[Operational Workspace Dogfood](dogfood-operational-workspace.md)** - Accepted four-day evidence, executable gate, and remaining product findings
 9. **[Working Memory Bridge Dogfood](dogfood-working-memory.md)** - Real 1/3/7-day re-entry protocol and strict acceptance gate
-10. **[Causal Work Spine Acceptance Audit](acceptance-causal-work-spine-v1.md)** - Requirement-by-requirement implementation and real-use evidence
-11. **[Dogfood Findings](dogfood-learnings.md)** - Product conclusions and development order derived from sixteen real workdays
-12. **[Glossary](glossary.md)** - Definitions of all terms used
-13. **[Architecture Decision Records](adr/README.md)** - Key architectural choices
-14. **[Technical Specifications (RFC)](rfc/README.md)** - Detailed technical designs
-15. **[MVP User Stories](mvp/README.md)** - Features and acceptance criteria
-16. **[Causal Work Memory Roadmap](roadmap/0005-causal-work-memory-roadmap.md)** - Current north-star route, horizons, assumptions, and risk gates
-17. **[Artifacts, Observations, and Context Packs](rfc/0010-artifacts-observations-and-context-packs.md)** - Future-safe boundary between manual memory, untrusted sources, and portable consumers
-18. **[opskarta Roadmap](roadmap/opskarta.md)** - Current machine-checkable capability map
-19. **[In-Day Structure Roadmap](roadmap/0004-in-day-structure-roadmap.md)** - Accepted in-day thoughts, zone visibility, dispatching, and gap classification layer
-20. **[Periodic Reflection Roadmap](roadmap/0003-periodic-reflection-roadmap.md)** - Accepted period reports, semantic history, evidence, and reflection loop
-21. **[Roadmap Index](roadmap/README.md)** - Roadmap status and related links
+10. **[Working Memory Bridge Acceptance Audit](acceptance-working-memory-bridge-v1.md)** - Automated evidence, live D0–D11 state, and completion boundary
+11. **[Causal Work Spine Acceptance Audit](acceptance-causal-work-spine-v1.md)** - Requirement-by-requirement implementation and real-use evidence
+12. **[Dogfood Findings](dogfood-learnings.md)** - Product conclusions and development order derived from nineteen real workdays
+13. **[Product Memory and Future Capabilities](product-memory-and-future-capabilities.md)** - Valuable early ideas, current interpretation, and promotion rules
+14. **[Glossary](glossary.md)** - Definitions of all terms used
+15. **[Architecture Decision Records](adr/README.md)** - Key architectural choices
+16. **[Technical Specifications (RFC)](rfc/README.md)** - Current contracts and historical designs
+17. **[MVP User Stories](mvp/README.md)** - Historical requirements and retained product ideas
+18. **[Causal Work Memory Roadmap](roadmap/0005-causal-work-memory-roadmap.md)** - Current north-star route, horizons, assumptions, and risk gates
+19. **[Artifacts, Observations, and Context Packs](rfc/0010-artifacts-observations-and-context-packs.md)** - Future-safe boundary between manual memory, untrusted sources, and portable consumers
+20. **[opskarta Roadmap](roadmap/opskarta.md)** - Current machine-checkable capability map
+21. **[In-Day Structure Roadmap](roadmap/0004-in-day-structure-roadmap.md)** - Accepted in-day thoughts, zone visibility, dispatching, and gap classification layer
+22. **[Periodic Reflection Roadmap](roadmap/0003-periodic-reflection-roadmap.md)** - Accepted period reports, semantic history, evidence, and reflection loop
+23. **[Roadmap Index](roadmap/README.md)** - Roadmap status and related links
 
 ---
 
-## Canonical Documents
+## Document Authority
 
-All documentation below is the **source of truth** for the project.
+Not every preserved document describes the current system.
+
+1. [Current Implementation](current-implementation.md) and executable tests
+   describe what runs now.
+2. [Roadmap 0005](roadmap/0005-causal-work-memory-roadmap.md) and
+   [opskarta](roadmap/opskarta.md) define the current order of work.
+3. Accepted ADRs define architectural invariants.
+4. RFCs describe contracts at different maturity levels; their index states
+   whether each one is implemented, active design, or historical reference.
+5. MVP stories and Roadmaps 0001–0002 are design history and an idea reservoir,
+   not a current delivery commitment.
+6. [Product Memory](product-memory-and-future-capabilities.md) preserves useful
+   unscheduled ideas without presenting them as implemented or committed.
 
 ### Foundation
 
@@ -73,8 +89,10 @@ All documentation below is the **source of truth** for the project.
 | [dogfood-operational-reality.md](dogfood-operational-reality.md) | Accepted two-day Operational Reality evidence, protocol, and executable gate |
 | [dogfood-operational-workspace.md](dogfood-operational-workspace.md) | Accepted four-day evidence, executable gate, interpretation boundary, and follow-up findings for Operational Workspace |
 | [dogfood-working-memory.md](dogfood-working-memory.md) | Working Memory Bridge real-use protocol, 1/3/7-day pauses, Context Pack evidence, and strict gate |
+| [acceptance-working-memory-bridge-v1.md](acceptance-working-memory-bridge-v1.md) | Requirement audit, automated evidence, live D0–D11 progress, and final completion rule |
 | [acceptance-causal-work-spine-v1.md](acceptance-causal-work-spine-v1.md) | Requirement-by-requirement implementation and real-use audit |
 | [dogfood-learnings.md](dogfood-learnings.md) | Cross-day product findings, principles, and updated development order |
+| [product-memory-and-future-capabilities.md](product-memory-and-future-capabilities.md) | Recovered early ideas, future capability register, and promotion rules |
 | [glossary.md](glossary.md) | Definitions of all terms and entities |
 
 ### Architecture Decision Records (ADR)
@@ -91,14 +109,14 @@ All documentation below is the **source of truth** for the project.
 
 | Document | Maturity | Summary |
 |----------|----------|---------|
-| [RFC-0001](rfc/0001-mvp-inventory-design.md) | Level 0 | MVP inventory design |
-| [RFC-0002](rfc/0002-system-topology-and-component-map.md) | Level 0+ | System topology and component map |
-| [RFC-0003](rfc/0003-client-app-suite-architecture.md) | Level 0+ | Client application suite architecture |
-| [RFC-0004](rfc/0004-local-api.md) | Level 0+ | Local API (Surface - Agent) |
-| [RFC-0005](rfc/0005-event-ingest-source-nodes.md) | Level 2+ | Event Ingest + SourceNode + Pairing |
-| [RFC-0006](rfc/0006-retention-ttl-distillation.md) | Level 2+ | Retention, TTL, Distillation |
-| [RFC-0007](rfc/0007-evidence-mode-screen-evidence-source-node.md) | Level 3 | Screen Evidence Source Node (Evidence-Mode) |
-| [RFC-0008](rfc/0008-periodic-reports-and-reflection.md) | Level 0+ / Level 2+ | Periodic reports, arbitrary-range exports, Track/Label slices, LLM packs, and reflection loops |
+| [RFC-0001](rfc/0001-mvp-inventory-design.md) | Historical baseline / partial implementation | Original MVP inventory design; current behavior lives in code and Current Implementation |
+| [RFC-0002](rfc/0002-system-topology-and-component-map.md) | Strategic draft / partial local slice | Long-horizon topology; Hub, sync and collectors are not implemented |
+| [RFC-0003](rfc/0003-client-app-suite-architecture.md) | Strategic draft / partial desktop slice | Client-suite design; only browser and macOS surfaces are current |
+| [RFC-0004](rfc/0004-local-api.md) | Implemented evolving contract | Local API architecture is live; exact methods live in shared contracts and code |
+| [RFC-0005](rfc/0005-event-ingest-source-nodes.md) | Future draft | Event Ingest, SourceNode and Pairing after a successful bounded probe |
+| [RFC-0006](rfc/0006-retention-ttl-distillation.md) | Future draft | Retention, TTL, Distillation and deletion controls |
+| [RFC-0007](rfc/0007-evidence-mode-screen-evidence-source-node.md) | Far-future draft | Opt-in Screen Evidence Source Node |
+| [RFC-0008](rfc/0008-periodic-reports-and-reflection.md) | Manual P0–P4 accepted / later slices draft | Period reports, Track/Label slices and Reflection Sessions work; in-app review and LLM layers remain future |
 | [RFC-0009](rfc/0009-causal-work-memory-and-operational-reality.md) | Accepted v1 / Level 0+ to Level 3 | Accepted causal spine and Operational Reality v1, plus provenance, incremental migration, and the future bounded context probe |
 | [RFC-0010](rfc/0010-artifacts-observations-and-context-packs.md) | Implemented manual slice / Level 0+ to Level 3 | Manual materials and Context Packs are implemented; untrusted observations, derivations, and deletion policy remain future work |
 

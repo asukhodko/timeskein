@@ -456,9 +456,9 @@ execution:
       progress: 1.0
       actual_start: "2026-07-17"
       actual_finish: "2026-07-17"
-      updated_at: "2026-07-17T10:55:00+03:00"
+      updated_at: "2026-07-28T08:20:00+03:00"
       confidence: 0.9
-      note: "Done. Рабочий контур keeps contract, Operational Reality grounds, and active focus together; the full inventory is collapsed by default and remains a secondary maintenance surface. Browser and UI smoke passed."
+      note: "Done and clarified after day 19. One workspace exposes Рабочая реальность as the full derived projection and Рабочий контур as the optional contract-backed lens. Reality remains usable without a contract; fact-based drift returns attention to contour review. Inventory remains a secondary maintenance surface."
     ts.steering.workspace_reentry:
       progress: 1.0
       actual_start: "2026-07-17"
@@ -481,11 +481,11 @@ execution:
       confidence: 0.9
       note: "Accepted. The strict profile passed with 4/3 contract/start/normal-closure days, 3/2 re-entry days, 1/1 revised day, clean integrity and error checks, and manual confirmation that no external active-list was required."
     ts.causal_memory.working_memory_bridge:
-      progress: 0.82
+      progress: 0.85
       actual_start: "2026-07-22"
-      updated_at: "2026-07-22T23:50:00+03:00"
+      updated_at: "2026-08-08T20:20:00+03:00"
       confidence: 0.9
-      note: "Implementation-complete candidate: migration 014, canonical API, browser mock parity, chronological memory with revisions/tombstones/materials, stages and snapshots, daily outcomes and overflow, merge aliases, causal focus stop, UI/Markdown/JSON Context Packs, telemetry, CLI, strict gate, tests, and dogfood protocol. Completion is withheld until distinct real 1/3/7-day re-entry succeeds without an external notebook."
+      note: "Implementation-complete candidate: migration 014, canonical API, browser mock parity, chronological working memory with revisions/tombstones/materials, stages and snapshots, daily outcomes and overflow, conflict-safe merge aliases, causal focus stop, UI/Markdown/JSON Context Packs, telemetry, CLI, strict gate, tests, and dogfood protocol. Hardening through 2026-08-08 made memory revisions and stage transitions exact historical as_of projections, kept deleted entries visible as immutable tombstones, made local-date gate boundaries explicit instants, required D0 setup to be recorded before its focus block, added a direct same-SQLite restart durability test, asserted canonical JSON equality across Markdown and API, visually verified the UI at 1280px and 720px without overlap, and added historically snapped stage totals to the day report. Seven ordinary workdays from 2026-07-30 through 2026-08-07 produced 52:13:58 tracked and 104 entrances, including 12:18 on ППП, without new memory or re-entry. This is the natural pre-D0 baseline. The soft gate reports 4/6 entries, 1/3 semantic entries, five stages, two stage transitions, 11 daily-outcome snapshots and an assigned Track, but no material, revision, complete causal stop trace, or re-entry, so D0 has not started. Completion is withheld until distinct real 1/3/7-day re-entry succeeds without an external notebook."
     ts.causal_memory.working_memory_stream:
       progress: 1.0
       actual_start: "2026-07-22"
@@ -497,9 +497,9 @@ execution:
       progress: 1.0
       actual_start: "2026-07-22"
       actual_finish: "2026-07-22"
-      updated_at: "2026-07-22T23:50:00+03:00"
+      updated_at: "2026-07-24T22:31:00+03:00"
       confidence: 0.95
-      note: "work-item-reentry and track-reentry profiles render from one canonical projection in UI, Markdown, and JSON. Export telemetry records profile, format, scope, and as_of; the gate requires all four profile/format pairs."
+      note: "work-item-reentry and track-reentry profiles render from one canonical projection in UI, Markdown, and JSON. Markdown embeds the exact canonical JSON and integration tests assert equality with the API pack; the UI previews that same Markdown in a bounded scroll surface. Memory revisions, delete/restore state, and stage transitions are selected at exact as_of rather than leaking later edits into earlier packs. Each memory entry resolves its stage title at the entry's occurred_at, so a later stage rename cannot rewrite an earlier result; a missing historical stage event remains unknown instead of borrowing the current title. Export telemetry records profile, format, scope, and as_of; the gate requires all four profile/format pairs."
     ts.in_day_structure.rich_note_review:
       progress: 1.0
       actual_start: "2026-07-22"
@@ -517,6 +517,6 @@ execution:
     ts.causal_memory.working_memory_gate:
       progress: 0.0
       actual_start: "2026-07-23"
-      updated_at: "2026-07-23T00:05:00+03:00"
+      updated_at: "2026-08-08T20:20:00+03:00"
       confidence: 0.95
-      note: "Implementation and automated gate are ready. Await one real long-lived Work Item with distinct 1-, 3-, and 7-day returns, both Context Pack profiles in Markdown and JSON, and a manual verdict that no external notebook was needed."
+      note: "Implementation and automated gate are ready; date boundaries use local calendar midnights converted to exact instants. The gate exposes the explicit pre_d0 -> d0 -> d1 -> d4 -> d11 state, anchors elapsed time to the first complete baseline block instead of the requested date range, requires active same-day memory and material recorded before D0 focus starts, ignores deleted or earlier evidence, and accepts 1-, 3-, and 7-day pauses only in chronological order. A return requires the exact Focus Session created by a successful `Начать отсюда`, its own complete causal stop trace, and final Context Pack builds/exports after the latest return; failed, already-active, neighboring manual, incomplete, or stale-projection evidence is rejected by smoke tests. The 2026-08-08 soft gate found 4/6 active memory entries, 1/3 semantic entries, 0 materials, 0 revisions, five stages, two stage transitions, 11 daily-outcome snapshots, 0/2 causal stop traces, 0/3 returns, the work-item UI Context Pack profile, an assigned Track, and older complete CLI exports that must be rebuilt after D11. Await a complete D0 baseline on or after 2026-08-10, then distinct returns and a manual verdict that no external notebook was needed."

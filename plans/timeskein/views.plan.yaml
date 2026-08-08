@@ -107,22 +107,23 @@ x:
       now:
         outcome: Accept Working Memory Bridge on one real long-lived Work Item through distinct 1-, 3-, and 7-day re-entry without an external notebook.
       next:
-        outcome: Carry confirmed causal change into period reviews, then test one bounded automatic context source behind trust controls.
+        outcome: Carry confirmed causal change into period reviews, clarify and prune incoming inventory, then test one bounded automatic context source behind trust controls.
       later:
-        outcome: Test bounded automatic context, then build explainable Episodes, private intelligence, multi-device continuity, and opt-in Full Context.
+        outcome: Generalize a proven bounded source into Context Fabric, then build explainable Episodes, private intelligence, multi-device continuity, and opt-in Full Context.
     invariants:
       - Manual mode remains fully useful.
       - User-confirmed state and decisions are authoritative.
       - Observations and machine interpretations keep explicit provenance.
       - Raw sensitive artifacts are ephemeral and revocable.
       - Duration is evidence of effort, not proof of result.
+      - Existing incoming fragments are clarified and pruned before automatic sources add more.
       - Far work is not scheduled before its preceding risk gate passes.
   exec:
     program:
-      committed_date: "2026-07-22"
+      committed_date: "2026-08-08"
       nearest_goal: Accept the implemented Working Memory Bridge through real 1/3/7-day re-entry.
-      success_by_next_sync: Use one long-lived Work Item as the sole working-memory source, export both Context Pack profiles in Markdown and JSON, and pass the strict gate after the final return.
-      note: Operational Workspace is accepted. Working Memory Bridge is code-ready; only its time-dependent real-use gate remains open.
+      success_by_next_sync: Complete D0 on one long-lived Work Item with material, named stages, daily outcome, focus work, and a causal stop trace, then use Timeskein as the sole source for the scheduled returns.
+      note: Operational Workspace is accepted and day 19 restored the explicit Reality/Contour boundary. Working Memory Bridge is code-ready; seven ordinary workdays are retained as a natural pre-D0 baseline, while the complete D0 setup and time-dependent re-entry gate remain open.
     defaults:
       weight_strategy: effort_effective
       status_progress:
@@ -193,10 +194,28 @@ x:
         title: Working Memory Bridge
         scope_nodes:
           - ts.causal_memory.working_memory_bridge
+        target_gate: ts.causal_memory.working_memory_gate
+        progress_override: 0.82
         mgmt:
           health: yellow
           owner: a.sukhodko
-          sync_note: Code, API, UI, Context Packs, telemetry, CLI, tests, and protocol are implemented. Await distinct 1/3/7-day real returns before acceptance.
+          sync_note: Code, API, UI, Context Packs, telemetry, CLI, tests, and protocol are implemented. Four real active entries prove the write path; same-day pre-focus memory/material, revision, stages, causal stop, and fresh final exports still precede D0 and the distinct 1/3/7-day returns. Every return must be the exact successful memory-started Focus Session and end with its own causal trace. Track and daily-outcome snapshots are already present.
+      causal-period-review:
+        title: Causal Period Review
+        scope_nodes:
+          - ts.periodic_reflection.causal_period_story
+        mgmt:
+          health: neutral
+          owner: a.sukhodko
+          sync_note: Promote confirmed changes, decisions, unresolved commitments, and next actions into weekly and Track review after Working Memory acceptance.
+      inventory-stewardship:
+        title: Inventory Stewardship
+        scope_nodes:
+          - ts.stewardship
+        mgmt:
+          health: neutral
+          owner: a.sukhodko
+          sync_note: Give captures, unknowns, stale tails, duplicates, and items without next actions an explicit fate before adding automatic context.
       trust-controls:
         title: Trust and privacy controls
         scope_nodes:
@@ -214,7 +233,7 @@ x:
         mgmt:
           health: neutral
           owner: a.sukhodko
-          sync_note: Run only after the operational workspace and working-memory bridge are coherent. Collect during manual focus and decide from measured re-entry/evidence value.
+          sync_note: Run only after Working Memory, causal period review, inventory stewardship, and minimum trust controls pass. Collect during manual focus and decide from measured re-entry/evidence value.
       context-fabric:
         title: Context Fabric
         scope_nodes:
@@ -273,10 +292,16 @@ x:
       - from: operational-workspace
         to: working-memory
         type: required
+      - from: working-memory
+        to: causal-period-review
+        type: required
+      - from: causal-period-review
+        to: inventory-stewardship
+        type: required
       - from: architecture-gate
         to: trust-controls
         type: required
-      - from: working-memory
+      - from: inventory-stewardship
         to: bounded-context-probe
         type: required
       - from: trust-controls
@@ -285,7 +310,7 @@ x:
       - from: bounded-context-probe
         to: context-fabric
         type: required
-      - from: working-memory
+      - from: causal-period-review
         to: private-intelligence
         type: required
       - from: context-fabric
@@ -315,6 +340,8 @@ x:
           - current-steering
           - operational-workspace
           - working-memory
+          - causal-period-review
+          - inventory-stewardship
           - trust-controls
           - bounded-context-probe
           - context-fabric
@@ -329,7 +356,7 @@ x:
         show_owner: false
         wrap_title_lines: 2
         reduce_transitive_required_edges: true
-        caption: "Sixteen real workdays accepted the operational workspace. Working Memory Bridge is implemented and awaits distinct 1/3/7-day real re-entry; causal period review and a bounded untrusted-context probe follow only after that gate passes."
+        caption: "Nineteen structured dogfood days accepted the operational workspace and clarified Reality as the derived foundation with Contour as its optional contract lens. Seven later ordinary workdays supplied a natural pre-D0 baseline: tracking remained stable, but working memory was not used without the explicit acceptance path. Working Memory Bridge is implemented, while the complete D0 baseline and distinct 1/3/7-day re-entry remain. Causal period review and inventory stewardship precede any bounded untrusted-context probe."
       exec-active-tracks:
         blocks:
           - architecture-gate
@@ -337,6 +364,8 @@ x:
           - current-steering
           - operational-workspace
           - working-memory
+          - causal-period-review
+          - inventory-stewardship
           - trust-controls
           - bounded-context-probe
         direction: TD

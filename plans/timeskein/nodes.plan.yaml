@@ -5,7 +5,7 @@ nodes:
     title: Timeskein
     kind: product
     status: in_progress
-    notes: Local-first causal work memory and steering system. Sixteen real workdays accepted daily control, in-day structure, period reflection, semantic Tracks/Labels, evidence-backed stories, the causal spine, Operational Reality, and Operational Workspace. The route now closes the manual working-memory gap through consumer-neutral Context Packs, promotes causal period review, and only then probes untrusted automatic context behind privacy and deletion gates.
+    notes: Local-first causal work memory and steering system. Nineteen real workdays accepted daily control, in-day structure, period reflection, semantic Tracks/Labels, evidence-backed stories, the causal spine, Operational Reality, and Operational Workspace. Day 19 clarified that Operational Reality is the derived foundation while the Working Contour is an optional user-authored contract view. The route now closes the manual working-memory gap through consumer-neutral Context Packs, promotes causal period review, teaches the inventory to clarify and prune incoming fragments, and only then probes untrusted automatic context behind privacy and deletion gates.
     x:
       ops:
         attention_class: overview
@@ -136,7 +136,7 @@ nodes:
     deps:
       - id: ts.causal_memory.spine_gate
       - id: ts.steering.workspace_gate
-    notes: "Implemented on 2026-07-22: chronological working memory, revisions and tombstones, materials, stages, daily outcomes, action -> change -> next-action capture, merge aliases, and work-item/track Context Packs in UI, Markdown, and JSON. Automated gates are green; the epic stays in progress until one real long-lived Work Item passes distinct 1/3/7-day returns without an external notebook."
+    notes: "Implemented on 2026-07-22 and hardened through 2026-08-08: chronological working memory, visible immutable revision/deletion history, materials, stages, daily outcomes, action -> change -> next-action capture, conflict-safe merge aliases, and exact_as_of work-item/track Context Packs in UI, Markdown, and JSON. A direct restart test proves that the re-entry state survives reopening the same SQLite database; Markdown canonical JSON equals the API pack; visual checks at 1280px and 720px found no overlap or horizontal overflow. Seven ordinary workdays from 2026-07-30 through 2026-08-07 produced 52:13:58 tracked and 104 entrances, including 12:18 on ППП, without new memory or re-entry; this is retained as a natural pre-D0 baseline. The soft gate reports four entries, one semantic entry, five stages, two transitions, an assigned Track, and 11 daily-outcome snapshots, but no material, revision, complete causal stop trace, or re-entry. D0 has not started; its memory and material must be recorded before the qualifying focus block. Automated gates are green; the epic stays in progress until one real long-lived Work Item passes distinct 1/3/7-day returns without an external notebook."
     x:
       ops:
         attention_class: now
@@ -172,7 +172,7 @@ nodes:
     effort: 3
     deps:
       - id: ts.causal_memory.working_memory_stream
-    notes: "Done 2026-07-22. Versioned work-item-reentry and track-reentry profiles project manual facts, materials, decisions, unknowns, refs, stages, changed state, and next actions into the same deterministic UI, Markdown, and JSON semantics. Build/export events are auditable and provider-neutral."
+    notes: "Done 2026-07-22, hardened 2026-07-24. Versioned work-item-reentry and track-reentry profiles project manual facts, materials, decisions, unknowns, refs, stages, changed state, and next actions into the same deterministic UI, Markdown, and JSON semantics. Markdown embeds the canonical JSON and tests assert exact equality with the API pack; the UI previews that same Markdown. The ordinary day export now also groups immutable focus snapshots by stage and daily outcome, with mixed unclassified blocks visible as Без этапа and a legacy-schema fallback. Build/export events are auditable and provider-neutral."
     x:
       ops:
         attention_class: done
@@ -195,7 +195,7 @@ nodes:
       - id: ts.in_day_structure.rich_note_review
       - id: ts.in_day_structure.work_item_stages
       - id: ts.in_day_structure.visible_causality
-    notes: "Automated implementation gate is ready. Accept only after the same real long-running direction is resumed after distinct 1, 3, and 7 day pauses from its Timeskein trace, with both Context Pack profiles exported as Markdown and JSON and no reconstruction in an external notebook."
+    notes: "Automated implementation gate is ready and reports the explicit pre_d0 -> d0 -> d1 -> d4 -> d11 state. A caller-supplied date range cannot manufacture elapsed acceptance time, and re-entry evidence is counted only after a complete baseline and in chronological 1-, 3-, and 7-day order. D0 requires active same-day memory and material recorded before the qualifying focus starts, plus its stage, daily outcome, real focus work, and causal stop evidence; context added after the block or later deleted cannot backdate or satisfy the baseline. Each return is linked to the exact Focus Session created by a successful `Начать отсюда` action and must end with its own result -> state change -> next action chain; a failed, already-active, or neighboring manual start does not count. Final Work Item/Track Context Packs and all Markdown/JSON exports must be produced after the last accepted return. Accept only after the same real long-running direction is resumed from its Timeskein trace without reconstruction in an external notebook."
     x:
       ops:
         attention_class: now
@@ -269,7 +269,7 @@ nodes:
     status: in_progress
     deps:
       - id: ts.steering.operational_reality_gate
-    notes: "Accepted 2026-07-22. The strict gate passed with 4/3 contract/start/closure days, 3/2 re-entry days, 1/1 revised day, intact history, and no unresolved errors or overlaps. The final day preserved six versions and work started from revised contracts without an external active-list. The final audit merged ambiguous edit/re-entry buttons into one state-aware review action. Follow-up needs are visible overflow beyond protected WIP 2–3, Operational Reality context while composing, a concrete daily outcome per direction, direct item creation, and cancelable accidental closure."
+    notes: "Accepted 2026-07-22. The strict gate passed with 4/3 contract/start/closure days, 3/2 re-entry days, 1/1 revised day, intact history, and no unresolved errors or overlaps. The final day preserved six versions and work started from revised contracts without an external active-list. Day 19 corrected an over-convergence regression: the single workspace now exposes derived Рабочая реальность and optional contract-backed Рабочий контур as distinct views. Follow-up needs are Operational Reality context while composing, cancelable accidental closure, and explainable signals that the contour needs review."
     x:
       ops:
         attention_class: now
@@ -305,7 +305,7 @@ nodes:
     effort: 4
     deps:
       - id: ts.steering.workspace_day_contract
-    notes: The primary Рабочий контур combines the current contract, Operational Reality grounds, and active focus. Inventory is collapsed by default and opened separately for search and maintenance; browser inspection and UI smoke passed.
+    notes: One Operational Workspace now has two explicit views. Рабочая реальность remains the full derived and correctable projection even without a day contract; Рабочий контур is the optional contract lens with active set, first action, parking and history. Observable drift can call attention back to the contour. Inventory remains a secondary search and maintenance surface.
     x:
       ops:
         attention_class: now
@@ -313,7 +313,7 @@ nodes:
         horizon: now
         capability: steering
         architecture_layer: derived
-        success_signal: The primary screen no longer asks the user to reconcile Operational Reality, dispatch, and inventory before acting.
+        success_signal: The primary screen keeps Reality and Contour semantically distinct without making the user reconcile competing stores before acting.
         privacy_class: ordinary
   ts.steering.workspace_reentry:
     title: Use the same loop for morning entry and re-entry
@@ -373,6 +373,26 @@ nodes:
         success_signal: Current focus, grounds, parking, state change, and next action are understandable in one workspace across a real day.
         privacy_class: ordinary
         dogfood_gate: operational-workspace-real-days
+  ts.steering.adaptive_surface_architecture:
+    title: Split the dense workspace into role-based adaptive surfaces
+    kind: epic
+    parent: ts.steering
+    status: planned
+    effort: 8
+    deps:
+      - id: ts.steering.workspace_gate
+      - id: ts.causal_memory.working_memory_gate
+    notes: "Day 18 confirmed that the full desktop workspace is useful but needs a large screen. Define separate Now/Capture, Day, Work/Memory, Review, and Settings/Continuity surfaces before mobile work; compact and mobile clients must not be scaled copies of the entire desktop canvas."
+    x:
+      ops:
+        attention_class: later
+      strategy:
+        horizon: next-later
+        capability: steering
+        architecture_layer: presentation
+        assumption: Role-based navigation can preserve power while lowering orientation cost on compact screens.
+        success_signal: Core start, capture, re-entry, memory, and review flows remain usable at compact desktop and mobile widths without hiding canonical facts.
+        privacy_class: ordinary
 
   ts.trust:
     title: Trust, Privacy, and Retention
@@ -428,12 +448,85 @@ nodes:
         success_signal: Source content cannot become an instruction or silently mutate user-authoritative state.
         privacy_class: high
 
+  ts.stewardship:
+    title: Inventory Stewardship and Inbound Clarification
+    kind: capability
+    parent: ts
+    status: planned
+    notes: Give significant incoming fragments an explicit fate and keep causal memory finite, understandable, and trustworthy before automatic sources increase the volume.
+    x:
+      ops:
+        attention_class: next
+      strategy:
+        horizon: next
+        capability: stewardship
+        architecture_layer: control
+        success_signal: Captures, unknowns, stale tails, duplicates, and items without next actions are deliberately resolved instead of silently accumulating.
+        privacy_class: mixed
+  ts.stewardship.clarification_loop:
+    title: Give incoming fragments an explicit fate
+    kind: epic
+    parent: ts.stewardship
+    status: planned
+    effort: 5
+    deps:
+      - id: ts.causal_memory.working_memory_gate
+      - id: ts.periodic_reflection.causal_period_story
+    notes: Build one review queue for captures, Unclassified or unknown records, stale tails, probable duplicates, and Work Items without next actions. Outcomes are continue, link, delegate, wait, defer, reference, merge, archive, or delete, with preserved provenance and an optional revisit time.
+    x:
+      ops:
+        attention_class: next
+      strategy:
+        horizon: next
+        capability: stewardship
+        architecture_layer: control
+        success_signal: Every reviewed fragment has a visible destination, reason, and return condition instead of remaining ambient WIP.
+        privacy_class: mixed
+  ts.stewardship.inventory_review:
+    title: Review and prune stale inventory
+    kind: task
+    parent: ts.stewardship
+    status: planned
+    effort: 3
+    deps:
+      - id: ts.stewardship.clarification_loop
+    notes: Support a regular real inventory review with visible unresolved counts, duplicate merging, archival, deliberate deletion, and evidence that useful memory remains recoverable.
+    x:
+      ops:
+        attention_class: next
+      strategy:
+        horizon: next
+        capability: stewardship
+        architecture_layer: derived
+        success_signal: Inventory size and unresolved tails remain understandable without an external grooming list.
+        privacy_class: mixed
+  ts.stewardship.gate:
+    title: Clarification keeps inventory trusted and finite
+    kind: milestone
+    parent: ts.stewardship
+    status: planned
+    milestone: true
+    effort: 1
+    deps:
+      - id: ts.stewardship.inventory_review
+    notes: Accept only after a real weekly review assigns explicit outcomes to representative incoming fragments, leaves the remaining unknown queue visible, and proves merge, archive, and delete paths without losing provenance.
+    x:
+      ops:
+        attention_class: next
+      strategy:
+        horizon: next
+        capability: stewardship
+        architecture_layer: control
+        success_signal: The user no longer needs an external list to remember where incoming fragments went or what still needs clarification.
+        privacy_class: mixed
+        dogfood_gate: inventory-stewardship-real-review
+
   ts.context_fabric:
     title: Context Fabric
     kind: capability
     parent: ts
     status: planned
-    notes: Validate automatic context early through a bounded focus-scoped probe, then generalize only proven value into SourceNodes and explicit connectors.
+    notes: After manual working memory, causal review, and inventory stewardship are accepted, validate automatic context through a bounded focus-scoped probe and generalize only proven value into SourceNodes and explicit connectors.
     x:
       ops:
         attention_class: later
@@ -452,6 +545,7 @@ nodes:
     deps:
       - id: ts.causal_memory.provenance_contract
       - id: ts.causal_memory.working_memory_gate
+      - id: ts.stewardship.gate
       - id: ts.trust.minimum_policy_gate
     notes: Support one idempotent source with Artifact and Observation envelopes, provenance, sensitivity, content_trust, temporal precision, timestamps, correlation to an active Focus Session, and an explicit retention/deletion policy.
     x:
@@ -591,6 +685,24 @@ nodes:
         architecture_layer: canonical
         success_signal: New data does not create an avoidable future sync migration.
         privacy_class: mixed
+  ts.continuity.portable_state:
+    title: Add verified backup, restore, and portable state
+    kind: task
+    parent: ts.continuity
+    status: planned
+    effort: 5
+    deps:
+      - id: ts.causal_memory.spine_gate
+    notes: "Day 18 turned persistence into a real trust need. Build an application-level SQLite snapshot with schema/version manifest, checksums, integrity verification, external-material reference inventory, restore into an isolated profile, and a tested transfer path. This is a prerequisite for trustworthy sync, not an implementation of sync."
+    x:
+      ops:
+        attention_class: later
+      strategy:
+        horizon: next-later
+        capability: continuity
+        architecture_layer: canonical
+        success_signal: A fresh local profile restores the same canonical history from one verified bundle and reports unresolved external file references.
+        privacy_class: high
 
   ts.full_context:
     title: Opt-in Full Context and Evidence Mode
@@ -1044,7 +1156,7 @@ nodes:
     effort: 2
     deps:
       - id: ts.focus_core.dogfood_gate
-    notes: Fixed typing C/С opening Create, creating a new active Work Item, ambiguous last-seen timestamps, and added the first Capture Inbox baseline. Post-baseline work added Work Item title/basic-field editing, focus-block correction including add-missed-block, per-block Activity Zone snapshots/overrides, Work Item day/total time, Work Item list modes for accumulated multi-day inventories, a resizable Today/Work Item split, timestamped Day Events with explicit zones and gap/open-gap Explain shortcuts, timestamped Work Item Events, capture-to-event promotion, capture edit/delete for open items, Command+Tab/Dock restore, non-always-on-top window policy, native menu-bar status refresh, show/hide request telemetry, guarded dogfood:continue for reopening an existing day, separate Total tracked / Working occupancy / Executive work / Non-work tracked report totals, and a live Activity Zone dashboard. Remaining friction is mostly richer correction/review UI.
+    notes: Fixed typing C/С opening Create, creating a new active Work Item, ambiguous last-seen timestamps, and added the first Capture Inbox baseline. Post-baseline work added Work Item title/basic-field editing, focus-block correction including add-missed-block, per-block Activity Zone snapshots/overrides, Work Item day/total time, Work Item list modes for accumulated multi-day inventories, a resizable Today/Work Item split, timestamped Day Events with explicit zones and gap/open-gap Explain shortcuts, timestamped Work Item Events, capture-to-event promotion, capture edit/delete for open items, Command+Tab/Dock restore, non-always-on-top window policy, native menu-bar status refresh, show/hide request telemetry, guarded dogfood:continue for reopening an existing day, separate Total tracked / Working occupancy / Executive work / Non-work tracked report totals, and a live Activity Zone dashboard. Remaining friction includes richer correction/review UI and replacing the text-only missed-block Work Item field with the shared searchable picker.
     x:
       ops:
         attention_class: done
@@ -1505,6 +1617,9 @@ nodes:
     parent: ts.continuity
     status: deferred
     effort: 8
+    deps:
+      - id: ts.steering.adaptive_surface_architecture
+      - id: ts.continuity.sync_readiness
     x:
       ops:
         attention_class: later
@@ -1520,6 +1635,9 @@ nodes:
     parent: ts.continuity
     status: deferred
     effort: 8
+    deps:
+      - id: ts.steering.adaptive_surface_architecture
+      - id: ts.continuity.sync_readiness
     x:
       ops:
         attention_class: later
@@ -1537,6 +1655,7 @@ nodes:
     effort: 13
     deps:
       - id: ts.continuity.sync_readiness
+      - id: ts.continuity.portable_state
       - id: ts.causal_memory.spine_gate
     x:
       ops:

@@ -9,8 +9,11 @@ This is the current machine-checkable roadmap for Timeskein. The source files li
 The accepted manual foundation includes the macOS Session replacement, cheap
 day closure, in-day structure, period reports, Reflection Sessions,
 Tracks/Labels, historical snapshots, typed evidence, decision follow-up, the
-Causal Work Spine, Operational Reality, and Operational Workspace. Sixteen real
-workdays through 2026-07-22 remain the evidence base and regression boundary.
+Causal Work Spine, Operational Reality, and Operational Workspace. Nineteen
+real workdays through 2026-07-27 remain the evidence base and regression
+boundary. Day 19 clarified the accepted workspace boundary: Operational
+Reality is the full derived projection, while Working Contour is its optional
+user-authored contract lens.
 
 The roadmap now backcasts from one north star:
 
@@ -30,19 +33,28 @@ ones are explicit report-integrity blockers.
 Dogfood closed the former choice between integration, working-memory polish,
 and early automatic context. The committed order is now:
 
-1. preserve the accepted convergence of Operational Reality, an item-backed
-   day contract, active focus, and secondary inventory;
+1. preserve one accepted workspace with distinct Operational Reality and
+   Working Contour views, an item-backed optional day contract, active focus,
+   and secondary inventory;
 2. accept the implemented chronological memory bridge and consumer-neutral
    re-entry Context Packs on one real Work Item after 1/3/7-day pauses;
 3. carry causal changes and commitments into period reviews;
-4. test one bounded untrusted context source behind privacy and deletion gates
+4. give incoming fragments an explicit fate and prune stale or duplicate
+   inventory;
+5. test one bounded untrusted context source behind privacy and deletion gates
    before building Context Fabric.
 
 Operational Workspace was accepted on 2026-07-22. Working Memory Bridge is
-implemented and automatically verified; the `current` view now contains its
-time-dependent 1/3/7-day product gate. Causal period review remains next.
-Automatic collection and later capabilities stay coarse and unscheduled until
-the manual gate passes.
+implemented and automatically verified. By 2026-07-28 one real Work Item had
+four memory records, an assigned Track, and daily-outcome snapshots, but the D0
+gate still lacked same-day memory and material recorded before focus, revision
+history, named stages and transitions, a complete causal stop trace, and a
+verified re-entry. The `current` view therefore still contains its
+time-dependent 1/3/7-day product gate.
+Causal period review and Inventory Stewardship follow. Verified state
+portability and role-based compact surfaces are now explicit later milestones;
+cloud synchronization and automatic collection stay coarse and unscheduled
+until the manual gates pass.
 
 ## Executive view
 
@@ -69,13 +81,17 @@ flowchart LR
     class architecture_gate exec_done
     causal_memory["Causal<br/>Work Memory<br/>~90%"]
     class causal_memory exec_mgmt_green
-    style causal_memory stroke:#111827,stroke-width:3px
     current_steering["Accepted<br/>Operational Reality<br/>100%<br/>веха 2026-07-15"]
     class current_steering exec_done
     operational_workspace["Operational<br/>Workspace convergence<br/>100%<br/>веха 2026-07-22"]
     class operational_workspace exec_done
-    working_memory["Working<br/>Memory Bridge<br/>100%"]
-    class working_memory exec_done
+    working_memory["Working<br/>Memory Bridge<br/>80%<br/>веха 2026-07-23"]
+    class working_memory exec_mgmt_yellow
+    style working_memory stroke:#111827,stroke-width:3px
+    causal_period_review["Causal<br/>Period Review<br/>~0%"]
+    class causal_period_review exec_mgmt_neutral
+    inventory_stewardship["Inventory<br/>Stewardship<br/>~0%"]
+    class inventory_stewardship exec_mgmt_neutral
     trust_controls["Trust and<br/>privacy controls<br/>~0%"]
     class trust_controls exec_mgmt_neutral
     bounded_context_probe["Bounded<br/>context probe<br/>~0%"]
@@ -94,8 +110,10 @@ flowchart LR
     causal_memory --> current_steering
     current_steering --> operational_workspace
     operational_workspace --> working_memory
+    working_memory --> causal_period_review
+    causal_period_review --> inventory_stewardship
     architecture_gate --> trust_controls
-    working_memory --> bounded_context_probe
+    inventory_stewardship --> bounded_context_probe
     trust_controls --> bounded_context_probe
     bounded_context_probe --> context_fabric
     context_fabric --> private_intelligence
@@ -105,7 +123,7 @@ flowchart LR
     continuity -. multi-device sources .-> full_context
 ```
 
-Sixteen real workdays accepted the operational workspace. Working Memory Bridge is implemented and awaits distinct 1/3/7-day real re-entry; causal period review and a bounded untrusted-context probe follow only after that gate passes.
+Nineteen structured dogfood days accepted the operational workspace and clarified Reality as the derived foundation with Contour as its optional contract lens. Seven later ordinary workdays supplied a natural pre-D0 baseline: tracking remained stable, but working memory was not used without the explicit acceptance path. Working Memory Bridge is implemented, while the complete D0 baseline and distinct 1/3/7-day re-entry remain. Causal period review and inventory stewardship precede any bounded untrusted-context probe.
 
 ## North-star capability tree
 
@@ -115,7 +133,7 @@ Sixteen real workdays accepted the operational workspace. Working Memory Bridge 
 /usr/bin/env PYTHONPATH=../../tools/opskarta python3 -m specs.v3.tools.cli render tree ../../plans/timeskein/main.plan.yaml ../../plans/timeskein/nodes.plan.yaml ../../plans/timeskein/schedule.plan.yaml ../../plans/timeskein/execution.plan.yaml ../../plans/timeskein/views.plan.yaml --view north-star
 -->
 <!-- GENERATED:START -->
-└── Timeskein [in_progress] (289 focus-blocks) {99% cov:55%}
+└── Timeskein [in_progress] (311 focus-blocks) {99% cov:54%}
     ├── Causal Work Memory [in_progress] (32 focus-blocks) {97% cov:91%}
     │   ├── Build a chronological working-memory bridge [in_progress] (19 focus-blocks) {95%}
     │   │   └── Working memory supports multi-day re-entry [in_progress] (1 focus-blocks) {0%}
@@ -128,21 +146,27 @@ Sixteen real workdays accepted the operational workspace. Working Memory Bridge 
     │   ├── Explicit context capture and SourceNodes [planned] (13 focus-blocks)
     │   ├── Implement one source observation envelope [planned] (3 focus-blocks)
     │   └── Run a bounded active-app and browser-context probe [planned] (5 focus-blocks)
-    ├── Current-State Steering [in_progress] (22 focus-blocks) {100%}
+    ├── Current-State Steering [in_progress] (30 focus-blocks) {100% cov:73%}
     │   ├── Confirm and correct operational state [done] (3 focus-blocks) {100%}
-    │   └── Converge Operational Reality, day contract, and inventory [in_progress] (13 focus-blocks) {100%}
-    │       ├── Build a visible item-backed day contract [done] (3 focus-blocks) {100%}
-    │       ├── Make one primary operational surface [done] (4 focus-blocks) {100%}
-    │       ├── Make workspace actions and review checks self-explanatory [done] (2 focus-blocks) {100%}
-    │       ├── One operational workspace drives the real day [done] (1 focus-blocks) {100%}
-    │       └── Use the same loop for morning entry and re-entry [done] (3 focus-blocks) {100%}
+    │   ├── Converge Operational Reality, day contract, and inventory [in_progress] (13 focus-blocks) {100%}
+    │   │   ├── Build a visible item-backed day contract [done] (3 focus-blocks) {100%}
+    │   │   ├── Make one primary operational surface [done] (4 focus-blocks) {100%}
+    │   │   ├── Make workspace actions and review checks self-explanatory [done] (2 focus-blocks) {100%}
+    │   │   ├── One operational workspace drives the real day [done] (1 focus-blocks) {100%}
+    │   │   └── Use the same loop for morning entry and re-entry [done] (3 focus-blocks) {100%}
+    │   └── Split the dense workspace into role-based adaptive surfaces [planned] (8 focus-blocks)
     ├── Explainable Episodes and Private Intelligence [deferred] (27 focus-blocks)
     │   ├── Connect Episodes into semantic Threads [deferred] (8 focus-blocks)
     │   ├── Derive explainable work Episodes [deferred] (8 focus-blocks)
     │   ├── Export LLM packs with redaction controls [deferred] (5 focus-blocks)
     │   ├── Private intelligence improves a real reflection decision [deferred] (1 focus-blocks)
     │   └── Run period reviews inside the app [planned] (5 focus-blocks)
-    ├── Multi-device Continuity [deferred] (33 focus-blocks)
+    ├── Inventory Stewardship and Inbound Clarification [planned] (9 focus-blocks)
+    │   ├── Clarification keeps inventory trusted and finite [planned] (1 focus-blocks)
+    │   ├── Give incoming fragments an explicit fate [planned] (5 focus-blocks)
+    │   └── Review and prune stale inventory [planned] (3 focus-blocks)
+    ├── Multi-device Continuity [deferred] (38 focus-blocks)
+    │   ├── Add verified backup, restore, and portable state [planned] (5 focus-blocks)
     │   ├── Android client path [deferred] (8 focus-blocks)
     │   ├── Canonical history survives multi-device use [deferred] (1 focus-blocks)
     │   ├── Keep new canonical facts sync-ready [planned] (3 focus-blocks)
@@ -166,6 +190,7 @@ Sixteen real workdays accepted the operational workspace. Working Memory Bridge 
 <!-- GENERATED:START -->
 - Automatic context proves value and trust [planned] (1 focus-blocks)
 - Canonical history survives multi-device use [deferred] (1 focus-blocks)
+- Clarification keeps inventory trusted and finite [planned] (1 focus-blocks)
 - Context Fabric supports one explicit external source [deferred] (1 focus-blocks)
 - Define minimum policy controls for a context probe [planned] (2 focus-blocks)
 - Full Context reconstructs work without becoming surveillance [deferred] (1 focus-blocks)
@@ -234,7 +259,7 @@ gantt
 - Causal Work Memory [in_progress] (32 focus-blocks) {97% cov:91%}
 - Build a chronological working-memory bridge [in_progress] (19 focus-blocks) {95%}
 - Working memory supports multi-day re-entry [in_progress] (1 focus-blocks) {0%}
-- Current-State Steering [in_progress] (22 focus-blocks) {100%}
+- Current-State Steering [in_progress] (30 focus-blocks) {100% cov:73%}
 - Converge Operational Reality, day contract, and inventory [in_progress] (13 focus-blocks) {100%}
 <!-- GENERATED:END -->
 
@@ -246,6 +271,10 @@ gantt
 /usr/bin/env PYTHONPATH=../../tools/opskarta python3 -m specs.v3.tools.cli render list ../../plans/timeskein/main.plan.yaml ../../plans/timeskein/nodes.plan.yaml ../../plans/timeskein/schedule.plan.yaml ../../plans/timeskein/execution.plan.yaml ../../plans/timeskein/views.plan.yaml --view next
 -->
 <!-- GENERATED:START -->
+- Inventory Stewardship and Inbound Clarification [planned] (9 focus-blocks)
+- Give incoming fragments an explicit fate [planned] (5 focus-blocks)
+- Review and prune stale inventory [planned] (3 focus-blocks)
+- Clarification keeps inventory trusted and finite [planned] (1 focus-blocks)
 - Carry causal outcomes into period reports [planned] (3 focus-blocks)
 <!-- GENERATED:END -->
 
@@ -258,6 +287,7 @@ gantt
 -->
 <!-- GENERATED:START -->
 - Activity Evidence Layer experiments [planned] (8 focus-blocks)
+- Add verified backup, restore, and portable state [planned] (5 focus-blocks)
 - Android client path [deferred] (8 focus-blocks)
 - Automatic context proves value and trust [planned] (1 focus-blocks)
 - Canonical history survives multi-device use [deferred] (1 focus-blocks)
@@ -277,13 +307,14 @@ gantt
 - Improve readability and panel ergonomics [planned] (3 focus-blocks)
 - Keep new canonical facts sync-ready [planned] (3 focus-blocks)
 - Maintenance and deferred polish [deferred] (13 focus-blocks)
-- Multi-device Continuity [deferred] (33 focus-blocks)
+- Multi-device Continuity [deferred] (38 focus-blocks)
 - Normalize search for Cyrillic and Latin lookalikes [planned] (2 focus-blocks)
 - Opt-in Full Context and Evidence Mode [deferred] (21 focus-blocks)
 - Pause, resume, and cancel focus sessions [deferred] (5 focus-blocks)
 - Private intelligence improves a real reflection decision [deferred] (1 focus-blocks)
 - Run a bounded active-app and browser-context probe [planned] (5 focus-blocks)
 - Run period reviews inside the app [planned] (5 focus-blocks)
+- Split the dense workspace into role-based adaptive surfaces [planned] (8 focus-blocks)
 - Sync and multi-device continuity [deferred] (13 focus-blocks)
 - Trust, Privacy, and Retention [planned] (4 focus-blocks)
 - Windows packaging and tray behavior [deferred] (8 focus-blocks)

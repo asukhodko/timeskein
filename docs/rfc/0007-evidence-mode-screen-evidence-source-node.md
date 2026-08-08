@@ -4,12 +4,14 @@
 
 ## Статус
 
-**Draft**.
+**Дальний draft, не текущая цель.**
 
 Стратегическое уточнение 2026-07-10: Full Evidence Mode остаётся дальним
 opt-in слоем. Ранний bounded Context Probe из [Roadmap 0005](../roadmap/0005-causal-work-memory-roadmap.md)
 может проверить активное приложение и URL внутри ручного Focus Session, но не
 считается реализацией этого RFC и не разрешает always-on screen capture.
+Перед ним Timeskein должен принять ручную рабочую память, причинный обзор,
+обслуживание входящего и один bounded source без screen content.
 
 ## Уровень зрелости
 
@@ -23,6 +25,7 @@ opt-in слоем. Ранний bounded Context Probe из [Roadmap 0005](../roa
 - [RFC-0009: Causal Work Memory and Operational Reality](0009-causal-work-memory-and-operational-reality.md)
 - [ADR-0005: Недоверенный контекст и независимая память](../adr/0005-untrusted-context-and-consumer-neutral-memory.md)
 - [RFC-0010: Артефакты, наблюдения и Context Pack](0010-artifacts-observations-and-context-packs.md)
+- [Product Memory and Future Capabilities](../product-memory-and-future-capabilities.md)
 - [Глоссарий](../glossary.md)
 
 ---

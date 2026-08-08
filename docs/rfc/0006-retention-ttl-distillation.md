@@ -11,6 +11,11 @@ purge нужны уже для bounded Context Probe из [Roadmap 0005](../road
 Полная storage-budget и distillation инфраструктура остаётся после доказанной
 пользы автоматического контекста.
 
+Уточнение 2026-07-24: retention относится не только к тяжёлому машинному сырью.
+До automatic capture Timeskein должен проверить ручной цикл архивации,
+объединения и осознанного удаления входящих фрагментов. Автоматический TTL не
+заменяет решение пользователя о судьбе смысловой записи.
+
 ## Уровень зрелости
 
 **Level 2+** (не входит в MVP)
@@ -24,6 +29,7 @@ purge нужны уже для bounded Context Probe из [Roadmap 0005](../road
 - [RFC-0009: Causal Work Memory and Operational Reality](0009-causal-work-memory-and-operational-reality.md)
 - [ADR-0005: Недоверенный контекст и независимая память](../adr/0005-untrusted-context-and-consumer-neutral-memory.md)
 - [RFC-0010: Артефакты, наблюдения и Context Pack](0010-artifacts-observations-and-context-packs.md)
+- [Product Memory and Future Capabilities](../product-memory-and-future-capabilities.md)
 - [Глоссарий](../glossary.md)
 
 ---

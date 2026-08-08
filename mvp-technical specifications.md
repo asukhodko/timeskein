@@ -2,6 +2,14 @@
 
 ## Timeskein MVP v0.1 — Manual‑first Work Inventory (Desktop + Local Agent)
 
+> **Статус: исходное историческое ТЗ.** Оно сохраняет требования раннего
+> Manual-first MVP и полезную продуктовую гигиену, но больше не является
+> текущим Definition of Done или порядком реализации. Фактическое состояние
+> описано в [Current Implementation](docs/current-implementation.md), маршрут —
+> в [Roadmap 0005](docs/roadmap/0005-causal-work-memory-roadmap.md) и
+> [opskarta](docs/roadmap/opskarta.md), а сохранённые ранние идеи — в
+> [Product Memory](docs/product-memory-and-future-capabilities.md).
+
 ### 0) Цель и критерий успеха
 
 **Цель MVP:** сделать локальное desktop‑приложение, которое позволяет пользователю за 10–60 секунд:
@@ -20,9 +28,9 @@
 * Собираются релизные артефакты для Windows и macOS (минимум: build + installer/bundle).
 * Проект соответствует принципу **manual‑first** (нет фонового мониторинга/collectors/evidence/sync).
 
-### 0.1) Текущее состояние реализации
+### 0.1) Историческая контрольная точка на 2026-06-30
 
-По состоянию на 2026-06-30 это ТЗ остаётся целевым Definition of Done для MVP, но фактический baseline уже частично восстановлен:
+На 2026-06-30 фактический baseline был частично восстановлен:
 
 * browser development mode работает через mock server (`127.0.0.1:3456`);
 * macOS `.app` собирается и запускает embedded Rust agent;
@@ -30,7 +38,8 @@
 * agent хранит данные в SQLite в `~/Library/Application Support/Timeskein/`;
 * Windows installer, DMG, cross-platform CI и автоматизированные e2e ещё не сделаны.
 
-Актуальная техническая сводка: [docs/current-implementation.md](docs/current-implementation.md).
+Этот раздел не обновляется как журнал текущего состояния. Актуальная
+техническая сводка: [docs/current-implementation.md](docs/current-implementation.md).
 
 ---
 

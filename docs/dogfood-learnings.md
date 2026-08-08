@@ -1,8 +1,8 @@
-# Dogfood findings: 2026-07-01 through 2026-07-22
+# Dogfood findings: 2026-07-01 through 2026-07-24
 
 ## Status
 
-This document summarizes sixteen real workdays of using Timeskein as the primary
+This document summarizes eighteen real workdays of using Timeskein as the primary
 personal work journal. It records product conclusions, not a complete diary.
 Internal work names, people, links, and identifiers are intentionally omitted.
 
@@ -82,17 +82,45 @@ Timeskein must preserve the difference between:
 - what was reconstructed from current data;
 - what remains unknown.
 
-### Capture works, but working memory is still split
+### Working memory is implemented, but long re-entry is still unproven
 
 Capture Inbox proved that an incoming event can be preserved without switching
 the active focus. Day Events and Work Item Events preserved useful thoughts in
-reports. Even so, an external text notebook remained easier for reviewing a
-long chronological stream, materials, intermediate reasoning, and product
-observations side by side.
+reports. Working Memory Bridge now adds the missing calm surface: chronology,
+materials, stages, revisions, results, changed state, next actions, and
+deterministic Work Item/Track Context Packs.
 
-The remaining gap is not another note field. Timeskein needs a calm working
-memory surface available with or without active focus, with explicit material,
-thought, decision, result, and next-action semantics.
+The first real confirmed result was added on 2026-07-23. On 2026-07-24 the
+same Work Item was opened again, received another real entry and a 16-minute
+focus block, while the ordinary day still closed cleanly in 37 seconds. Seven
+later ordinary workdays produced `52:13:58` tracked and 104 entrances, including
+`12:18` on the selected Work Item, without adding new memory, materials, causal
+stop traces, or re-entry actions. This natural pre-D0 baseline proves runtime
+compatibility, but it also shows that ordinary tracking cannot substitute for
+the explicit memory-return path. D0 therefore has not started. Product
+acceptance still depends on one complete baseline and returns after distinct 1,
+3, and 7 day pauses without an external task-memory notebook; unrelated daily
+contract and closure rituals are not required on intervening days.
+
+### Portability, synchronization, and interface density are separate problems
+
+The eighteenth real day exposed three future needs without changing the
+current gate:
+
+- trustworthy state portability starts with a verified backup/restore bundle;
+  cloud or multi-device synchronization is a later conflict-resolution
+  problem, not a substitute for backup;
+- the power-user desktop workspace now contains enough capability that compact
+  desktop and mobile clients need role-based surfaces, not a uniformly scaled
+  version of the full canvas;
+- a redundant Work Item should be merged into its canonical item, while real
+  substructure belongs in stages or a deliberate hierarchy. The `ППП` /
+  `ППП: Работа с материалами` case is a real acceptance candidate for the
+  already implemented merge path.
+
+The missed-block dialog also revealed a smaller consistency issue: exact title
+matching preserves identity, but correction should use the same searchable
+Work Item picker as contract composition to avoid accidental near-duplicates.
 
 ### Operational Reality is the strongest new direction
 
@@ -105,6 +133,14 @@ Operational Workspace resolved the structural split between Operational
 Reality, dispatch, the day contract, and the full inventory. Its four-day gate
 proved morning entry, post-break return, immutable revisions, and normal
 closure without a parallel external active-list.
+
+Day 19 exposed an overcorrection in that convergence. The UI had started to
+call the entire surface `Рабочий контур` and hid the full derived Reality when
+there was no contract. These are different things: Reality is what the stored
+facts currently imply; Contour is what the user has deliberately selected for
+the day. The corrected workspace keeps both as explicit views, allows normal
+work without a contract, and asks for contract review only when observable
+drift exists.
 
 The accepted workspace also clarified the next boundary. A protected active
 set of two or three directions is useful, while the remaining real obligations
@@ -124,11 +160,24 @@ The day contract is deliberately small. It selects a current working set from
 known Work Items and Tracks, records why the choice is legitimate, and keeps
 the rest parked without pretending the backlog has disappeared.
 
+### More capture is unsafe without clarification and pruning
+
+The early product idea “chaos is incoming without a fate” matches the observed
+inventory pressure. Captures, unknown states, duplicate Work Items, stale
+tails, and items without a next action remain cognitively active even when
+they are stored reliably.
+
+Before Timeskein increases the input stream through automatic sources, it
+needs a regular clarification loop: continue, connect, delegate, wait, defer,
+preserve as reference, merge, archive, or delete. Retention alone is not
+memory quality.
+
 ## Product principles derived from dogfood
 
 1. Optimize transitions and re-entry before optimizing total tracked time.
-2. Keep one authoritative operational workspace; move inventory maintenance
-   and taxonomy administration out of the primary attention path.
+2. Keep one authoritative operational workspace with distinct Reality and
+   Contour views; move inventory maintenance and taxonomy administration out of
+   the primary attention path.
 3. Keep the current day contract visible and revisable throughout the day.
 4. Capture quickly, classify later, and never interrupt focus merely to file a
    thought correctly.
@@ -141,6 +190,8 @@ the rest parked without pretending the backlog has disappeared.
    on demand.
 10. Accept a feature only after it changes a real workday, not merely after its
     code and tests pass.
+11. Clarify and prune before collecting more; every significant incoming
+    fragment should receive an explicit fate or remain visibly unclassified.
 
 ## Development route after the trial
 
@@ -156,10 +207,10 @@ days accepted the combined surface with `4/3` contract/start/closure days,
 
 ### M3: Working Memory Bridge
 
-Add a persistent chronological stream for thoughts and materials, explicit
-Work Item stages, calm long-note review, semantic deduplication, and a cheap
-`action -> changed state` record. The external notebook should no longer be
-needed to reconstruct a long block or a return after several days.
+The implementation provides a persistent chronological stream for thoughts
+and materials, explicit Work Item stages, calm long-note review, duplicate
+merge, and a cheap `action -> changed state -> next action` record. Acceptance
+now depends on real 1/3/7-day returns without an external task-memory notebook.
 
 ### M4: Causal period review
 
@@ -167,12 +218,20 @@ Promote confirmed changes, decisions, unresolved commitments, and next actions
 into ordinary weekly and Track reports. Then move the review loop into the app
 without losing Markdown/JSON portability.
 
-### M5: Bounded Context Capture Probe
+### M5: Inventory Stewardship and Inbound Clarification
 
-Only after the manual operational and working-memory loops are coherent, test
-one focus-scoped automatic source with a visible indicator, local storage,
-short raw TTL, pause, purge, provenance, and a measured re-entry benefit. Do
-not build a general SourceNode platform before this gate passes.
+Turn captures, unknown items, stale tails, duplicates, and items without a next
+action into explicit outcomes. The review must support continuation, linking,
+waiting, delegation, deferral, reference, merge, archive, and deletion without
+creating a second universal task manager.
+
+### M6: Bounded Context Capture Probe
+
+Only after the manual operational, working-memory, period-review, and
+clarification loops are coherent, test one focus-scoped automatic source with
+a visible indicator, local storage, short raw TTL, pause, purge, provenance,
+and a measured re-entry benefit. Do not build a general SourceNode platform
+before this gate passes.
 
 ## Accepted Operational Workspace gate
 

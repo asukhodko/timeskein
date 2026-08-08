@@ -4,12 +4,13 @@
 
 ## Статус
 
-**Планируется** (post-MVP).
+**Сохранённый дальний план, не текущая цель** (post-MVP).
 
 С 2026-07-10 этот документ описывает дальний Full Context слой. Он не является
 следующим исполнительным планом. [Roadmap 0005](0005-causal-work-memory-roadmap.md)
-раньше проверяет bounded Context Probe с одним источником, видимым контролем и
-коротким TTL. Только успешный value/trust gate разблокирует обобщение в
+раньше проверяет ручную рабочую память, причинный обзор, обслуживание входящего
+и bounded Context Probe с одним источником, видимым контролем и коротким TTL.
+Только успешные clarification/value/trust gates разблокируют обобщение в
 SourceNodes и затем полный Evidence Mode.
 
 ## Уровень зрелости
@@ -26,6 +27,7 @@ SourceNodes и затем полный Evidence Mode.
 - [UI/UX: Evidence-Mode](../mvp/03_evidence_mode_ui_ux.md)
 - [Глоссарий](../glossary.md)
 - [Roadmap 0005: Causal Work Memory and Context Fabric](0005-causal-work-memory-roadmap.md)
+- [Product Memory and Future Capabilities](../product-memory-and-future-capabilities.md)
 
 ---
 

@@ -4,7 +4,11 @@
 
 ## Статус
 
-**Draft**.
+**Реализованный развивающийся контракт.**
+
+Граница Surface ↔ Agent работает в browser mock и macOS-приложении. Этот RFC
+фиксирует архитектурный стиль; точные методы, DTO и ошибки определяются
+`packages/contracts`, Rust API и [Current Implementation](../current-implementation.md).
 
 ## Уровень зрелости
 

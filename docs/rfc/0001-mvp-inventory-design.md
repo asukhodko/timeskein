@@ -4,9 +4,13 @@
 
 ## Статус
 
-**Draft** (предложение к реализации).
+**Исторический baseline, частично реализован и расширен.**
 
-Текущая реализация 2026-06-30 частично закрывает Part A для browser dev mode и macOS `.app`: UI, mock server, Rust agent, SQLite и Local API работают в recovery-baseline. Полная приёмка MVP, e2e, CI и Windows packaging ещё не закрыты. См. [Current Implementation](../current-implementation.md).
+Part A дал исходную модель Manual Inventory, но текущий продукт ушёл дальше:
+Focus Sessions, Operational Workspace, Causal Work Memory и Working Memory
+Bridge описаны в [Current Implementation](../current-implementation.md). Этот
+RFC сохраняет ранние требования и незакрытую продуктовую гигиену; он не
+является точным контрактом работающего API или текущим порядком реализации.
 
 ## Уровень зрелости
 

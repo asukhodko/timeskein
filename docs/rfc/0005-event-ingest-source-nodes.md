@@ -11,6 +11,12 @@
 проверяет один focus-scoped источник через bounded Context Probe. Этот RFC
 становится контрактом обобщения только после прохождения value/trust gate.
 
+Уточнение 2026-07-24: даже bounded probe начинается только после
+`Inventory Stewardship and Inbound Clarification`. Система должна сначала
+доказать, что умеет придавать уже существующим captures, unknown, stale tails и
+дублям явную судьбу; иначе новый SourceNode лишь ускорит накопление
+неразобранного.
+
 ## Уровень зрелости
 
 **Level 2+** (не входит в MVP)
@@ -25,6 +31,7 @@
 - [RFC-0009: Causal Work Memory and Operational Reality](0009-causal-work-memory-and-operational-reality.md)
 - [ADR-0005: Недоверенный контекст и независимая память](../adr/0005-untrusted-context-and-consumer-neutral-memory.md)
 - [RFC-0010: Артефакты, наблюдения и Context Pack](0010-artifacts-observations-and-context-packs.md)
+- [Product Memory and Future Capabilities](../product-memory-and-future-capabilities.md)
 - [Глоссарий](../glossary.md)
 
 ---

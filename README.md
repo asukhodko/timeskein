@@ -23,7 +23,7 @@ background monitoring.
 | Evidence-backed Track story | Working baseline | Typed result/decision/blocker/next-step/observation events, immutable Ref snapshots, and decision follow-ups in Track retrospectives |
 | Causal Work Spine | Working baseline | Append-only intent, state, result, decision, next-action, confirmation, and correction records with provenance and semantic snapshots |
 | Operational Reality | Accepted baseline | Explainable current projection with unknowns, confidence, manual correction, Reflection follow-up, next-action lifecycle, JSON export, and a passed two-real-day gate |
-| Operational Workspace | Accepted baseline | Item-backed day contract, immutable revisions, one primary steering surface, morning start, re-entry, export, telemetry, and a passed four-day gate |
+| Operational Workspace | Accepted baseline | Distinct Reality and Contour views in one surface, optional item-backed day contract, immutable revisions, morning start, re-entry, export, telemetry, and a passed four-day gate |
 | Working Memory Bridge | Implemented, acceptance pending | Chronological memory, revisions and tombstones, stages, materials, daily outcomes, WIP overflow, duplicate merge, re-entry surface, and deterministic Work Item/Track Context Packs |
 | North-star architecture | Implemented foundation | Causal Work Memory, user-truth and untrusted-content boundaries, portable Context Packs, risk gates, bounded Context Probe, and the long-horizon map are defined in ADR-0004/0005, RFC-0009/0010, Roadmap 0005, and opskarta |
 | Dogfood Telemetry | Working baseline | Local app-event journal and CLI metrics for tracking UX friction |
@@ -40,13 +40,26 @@ open until the real 1/3/7-day re-entry protocol passes.
 
 **Current focus:** The manual day, period reflection, semantic history,
 evidence-backed Track story, and `Causal Work Spine + Operational Reality v1`
-and Operational Workspace are accepted. The workspace now converges Operational
-Reality, an item-backed day contract, active focus, and the secondary inventory;
+and Operational Workspace are accepted. The workspace now keeps Operational
+Reality as the derived foundation and the contract-backed Working Contour as
+an optional view, alongside active focus and the secondary inventory;
 its gate passed with `4/3` contract/start/closure days, `3/2` re-entry days, and
 `1/1` revised day. Working Memory Bridge is code-ready and is now in real-use
-acceptance; causal period review and a bounded untrusted-context probe follow it.
-Full SourceNodes, sync, private intelligence, and opt-in Evidence Mode remain
-later capabilities.
+acceptance. Real use from 30 July through 7 August produced seven workdays,
+`52:13:58` tracked, 104 entrances, and `12:18` on the selected long-running
+Work Item, while adding no new memory, material, causal stop trace, or re-entry.
+That period is retained as a natural pre-D0 baseline rather than backdated
+acceptance. The soft gate reports four active memory entries, one semantic
+entry, five stages, two stage transitions, 11 daily-result snapshots, and an
+assigned Track, but still no complete D0 baseline or re-entry. The executable gate now
+accepts only active evidence, exact successful re-entry Focus Sessions with
+their own causal stop traces, and final Context Pack exports produced after the
+latest return. Causal period review follows the
+1/3/7-day gate. Inventory stewardship and inbound
+clarification then give uncategorized fragments an explicit fate before a
+bounded untrusted-context probe is allowed to increase the input stream. Full
+SourceNodes, sync, private intelligence, and opt-in Evidence Mode remain later
+capabilities.
 
 See [Current Implementation](docs/current-implementation.md) for the exact state of what runs today.
 Use [Dogfood Day Protocol](docs/dogfood-day.md) when testing Timeskein as a Session replacement for a real workday.
@@ -56,9 +69,15 @@ See [Periodic Report Dogfood](docs/dogfood-periodic-report.md) for the first rea
 See [Operational Reality Dogfood](docs/dogfood-operational-reality.md) for the accepted two-real-day evidence and reproducible protocol.
 Use [Operational Workspace Dogfood](docs/dogfood-operational-workspace.md) for the required three-real-day acceptance protocol and executable gate.
 Use [Working Memory Bridge Dogfood](docs/dogfood-working-memory.md) for the long-lived Work Item protocol and strict 1/3/7-day gate.
+See [Working Memory Bridge Acceptance Audit](docs/acceptance-working-memory-bridge-v1.md)
+for the requirement-by-requirement evidence, current pre-D0 state, and exact
+completion boundary.
 See [Causal Work Spine Acceptance Audit](docs/acceptance-causal-work-spine-v1.md) for requirement-by-requirement implementation and real-use evidence.
 See [Dogfood Findings](docs/dogfood-learnings.md) for the product conclusions
-and route derived from sixteen real workdays.
+and route derived from nineteen real workdays.
+See [Product Memory and Future Capabilities](docs/product-memory-and-future-capabilities.md)
+for valuable ideas recovered from early notes and RFCs, their current status,
+and the rule for promoting one into the executable roadmap.
 
 The current execution roadmap is maintained as an opskarta v3 plan set:
 [Timeskein opskarta roadmap](docs/roadmap/opskarta.md).
@@ -195,7 +214,8 @@ It builds the same Track slice as JSON and Markdown, then requires at least thre
 
 ### Using Operational Reality
 
-The `Рабочая реальность` panel is shown above the focus/day controls. It is a
+The `Рабочая реальность` view is available above the focus/day controls inside
+the shared Operational Workspace. It is a
 projection of saved Work Items, Tracks, captures, typed evidence, causal
 records, focus state, and unresolved Reflection decisions. A card explains why
 it is visible, distinguishes confirmed, derived, and legacy state, lists known
@@ -242,13 +262,20 @@ with a Ref to a next action, and normal day closure on both days.
 
 ### Operational Workspace
 
-`Рабочий контур` is now the primary steering surface. A morning contract selects
-2–3 Work Items or Tracks, one first-action Work Item, 1–3 parked
+The Operational Workspace has two explicit views. `Рабочая реальность` is the
+full derived and correctable projection; `Рабочий контур` is the optional
+user-authored Day Contract lens. Without a contract, Reality, normal focus
+start, and tracking remain available. A morning contract selects 2–3 Work
+Items or Tracks, one first-action Work Item, 1–3 parked
 competitors, and one `why now` statement. The saved contract remains visible
 after focus starts, shows Operational Reality grounds beside the selection,
 supports post-break re-entry, and records every adjustment as an append-only
 revision. The complete Work Item inventory is collapsed by default and remains
 available through `Дела` for search and maintenance.
+
+If the first action becomes non-actionable or tracked work appears outside the
+contract, the workspace marks Contour for review and explains the observed
+drift. It does not infer loss of control from duration or gaps alone.
 
 Each active direction can carry a concrete daily outcome. Obligations beyond
 the protected WIP 2–3 are recorded separately as visible overflow. Searching
@@ -277,8 +304,8 @@ pnpm operational-workspace:gate -- --from YYYY-MM-DD --to YYYY-MM-DD
 
 The exact daily protocol and interpretation boundary are in
 [Operational Workspace Dogfood](docs/dogfood-operational-workspace.md). Code,
-tests, macOS packaging, and the browser scenario are ready; the product result
-is deliberately not marked accepted before the real-use gate.
+tests, macOS packaging, and the browser scenario passed; the product result was
+accepted on 2026-07-22 after its four-day real-use gate.
 
 Focus corrections cannot create overlapping stopped blocks. Existing
 historical overlaps block final day closure and appear as an explicit period
@@ -291,10 +318,13 @@ The report separates facts, observations, data-quality warnings, profile-specifi
 Open a selected Work Item's `Рабочая память` surface to keep chronological
 thoughts, questions, decisions, observations, results, state changes, next
 actions, and manual materials. Long entries have a dedicated resizable editor;
-edits append revisions, and deletion leaves an explicit historical tombstone.
+edits append revisions, and deletion leaves a visible, immutable historical
+tombstone whose earlier content remains available through `История`.
 Named stages can be planned, activated, completed, or archived. A Focus Session
 snapshots its stage and current daily outcome so later edits do not rewrite the
-past.
+past. The daily Markdown report groups staged focus time by the immutable
+session snapshots, keeps mixed unclassified blocks visible as `Без этапа`, and
+shows the saved daily outcome beside each stage.
 
 The stop panel can optionally preserve one causal trace without making it a
 condition of stopping: result, changed state, and next physical action. On
@@ -304,8 +334,11 @@ stage, unknowns, materials, and next action, then starts the Work Item through
 item while keeping focus, memory, stages, classification, and an alias from the
 old id.
 
-The UI can copy deterministic `work-item-reentry` and `track-reentry` Context
-Packs as Markdown and JSON. CLI export uses the same projection:
+The UI can preview and copy deterministic `work-item-reentry` and
+`track-reentry` Context Packs as Markdown and JSON. The Markdown includes the
+exact canonical JSON payload, and integration tests assert that it equals the
+JSON API projection rather than merely resembling it. CLI export uses the same
+projection:
 
 ```bash
 pnpm context-pack -- --profile work-item-reentry --scope WORK_ITEM_UUID \
@@ -325,7 +358,9 @@ pnpm working-memory:gate -- --work-item WORK_ITEM_UUID \
 Implementation tests are green, but Working Memory Bridge is not accepted until
 the real protocol in [Working Memory Bridge Dogfood](docs/dogfood-working-memory.md)
 proves returns after pauses of at least 1, 3, and 7 days without an external
-task-memory notebook.
+task-memory notebook. A direct restart integration test already proves that
+memory revisions, stages, materials, daily outcomes, focus snapshots, and the
+next action survive closing the agent and reopening the same SQLite database.
 
 ### Starting a Timeskein Day on macOS
 
@@ -616,12 +651,15 @@ If macOS rejects all three, use the macOS menu bar item or normal app switching.
 - **Activity zone correction is basic** - new focus blocks snapshot the Work Item zone and stopped blocks can be corrected, but there is no bulk zone editor yet
 - **Semantic classification is intentionally optional** - unclassified work remains visible; old rows created before semantic snapshots are clearly reported as restored from the Work Item's current classification
 - **Taxonomy UI is minimal** - Tracks and Labels can be created, renamed, archived, and assigned, but there is no drag tree, bulk classifier, merge action, or automatic LLM classification
-- **Operational Workspace has accepted follow-up polish** - contract composition still needs easier access to Operational Reality, creating an item from the contract picker is indirect, and accidental day-closure start has no cancel action
+- **Operational Workspace has accepted follow-up polish** - contract composition still needs easier access to Operational Reality, and accidental day-closure start has no cancel action
 - **macOS Command+Tab restore is still unreliable** - tray click, global shortcut, and macOS reopen can show the window, but selecting a hidden Timeskein through Command+Tab did not restore it on 2026-07-20
 - **macOS packaging produces `.app` only** - DMG packaging is deferred
 - **Windows packaging deferred** - current recovery baseline targets browser and macOS first
 - **Automated browser e2e tests are not implemented yet** - current validation combines Rust/API tests, mock parity, UI structure smoke, release build, packaged-app smoke, and manual browser inspection
-- **Operational Reality still has integration polish** - the accepted projection is not yet visible enough while assembling a contract; Command+Tab restore, light theme, and a chronological thought workspace remain backlog items
+- **Operational Reality still has integration polish** - the accepted projection is not yet visible enough while assembling a contract; Command+Tab restore and a light theme remain backlog items
+- **Portable state is not productized** - local reset-time backups exist, but there is no verified in-app backup/restore bundle or transfer flow for moving the canonical database between machines
+- **The desktop workspace is information-dense** - the current full-width canvas works for the macOS power-user path, but compact desktop and future mobile surfaces need role-based navigation rather than a scaled copy of every panel
+- **Missed-block Work Item selection is text-only** - an exact title reuses the existing Work Item and an unknown title creates one, but the dialog does not yet offer the searchable inventory picker used by the day contract
 
 ## Documentation
 
@@ -629,11 +667,14 @@ If macOS rejects all three, use the macOS menu bar item or normal app switching.
 - [Current Implementation](docs/current-implementation.md) - what runs today
 - [Dogfood Day Protocol](docs/dogfood-day.md) - one-day Session replacement trial
 - [Operational Reality Dogfood](docs/dogfood-operational-reality.md) - accepted two-day gate for the explainable current projection
+- [Working Memory Bridge Dogfood](docs/dogfood-working-memory.md) - current D0 and 1/3/7-day real-use gate
 - [Causal Work Spine Acceptance Audit](docs/acceptance-causal-work-spine-v1.md) - implementation and real-use proof
+- [Product Memory and Future Capabilities](docs/product-memory-and-future-capabilities.md) - recovered early ideas and future capability register
 - [opskarta Roadmap](docs/roadmap/opskarta.md) - current machine-checkable roadmap
+- [Causal Work Memory Roadmap](docs/roadmap/0005-causal-work-memory-roadmap.md) - current strategic route and gates
 - [In-Day Structure Roadmap](docs/roadmap/0004-in-day-structure-roadmap.md) - in-day thoughts, stages, live zone balance, dispatching, and recovery/lost-control gap classification
 - [Periodic Reflection Roadmap](docs/roadmap/0003-periodic-reflection-roadmap.md) - arbitrary-period reports and reflection loops
-- [MVP Technical Spec](mvp-technical%20specifications.md) - detailed requirements
+- [Original MVP Technical Spec](mvp-technical%20specifications.md) - historical Manual-first requirements and retained product hygiene
 - [Glossary](docs/glossary.md) - term definitions
 - [ADRs](docs/adr/) - architecture decision records
 - [RFCs](docs/rfc/) - design proposals

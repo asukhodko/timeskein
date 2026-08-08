@@ -4,7 +4,12 @@
 
 ## Статус
 
-**Draft** (актуальный).
+**Стратегический draft, частично реализован локальный срез.**
+
+Rust agent, Local API, browser mock и macOS Surface работают. Hub, sync,
+Android и SourceNodes остаются будущей архитектурой. Текущий порядок задают
+[Roadmap 0005](../roadmap/0005-causal-work-memory-roadmap.md) и
+[opskarta](../roadmap/opskarta.md), а не последовательность этого RFC.
 
 ## Уровень зрелости
 

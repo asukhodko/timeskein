@@ -15,7 +15,9 @@ const checkedFiles = [
   "docs/dogfood-operational-reality.md",
   "docs/dogfood-operational-workspace.md",
   "docs/dogfood-working-memory.md",
+  "docs/acceptance-working-memory-bridge-v1.md",
   "docs/dogfood-learnings.md",
+  "docs/product-memory-and-future-capabilities.md",
   "docs/acceptance-causal-work-spine-v1.md",
   "docs/roadmap/README.md",
   "docs/roadmap/0003-periodic-reflection-roadmap.md",
@@ -116,9 +118,10 @@ for (const file of checkedFiles) {
       !text.includes("Accept the implemented working-memory bridge") ||
       !text.includes("Operational Workspace convergence") ||
       !text.includes("Bounded Context Capture Probe") ||
+      !text.includes("Inventory Stewardship and Inbound Clarification") ||
       !text.includes("Working Memory Bridge") ||
       !text.includes("Causal period review") ||
-      !text.includes("Sixteen real workdays"))
+      !text.includes("Nineteen real workdays"))
   ) {
     failures.push(`${file}: roadmap README does not preserve the north-star product order`);
   }
@@ -145,15 +148,26 @@ for (const file of checkedFiles) {
   }
   if (
     file === "docs/dogfood-learnings.md" &&
-    (!text.includes("sixteen real workdays") ||
+    (!text.includes("eighteen real workdays") ||
       !text.includes("The difficult part is usually the transition") ||
       !text.includes("Operational Reality is the strongest new direction") ||
       !text.includes("M2: Operational Workspace convergence") ||
       !text.includes("accepted baseline unifies") ||
       !text.includes("M3: Working Memory Bridge") ||
-      !text.includes("M5: Bounded Context Capture Probe"))
+      !text.includes("M5: Inventory Stewardship and Inbound Clarification") ||
+      !text.includes("M6: Bounded Context Capture Probe"))
   ) {
     failures.push(`${file}: cross-day findings or the evidence-derived route is missing`);
+  }
+  if (
+    file === "docs/product-memory-and-future-capabilities.md" &&
+    (!text.includes("Хаос — это входящее без судьбы") ||
+      !text.includes("Inventory Stewardship and Inbound Clarification") ||
+      !text.includes("Bounded Context Capture Probe") ||
+      !text.includes("Manual Source остаётся каноническим") ||
+      !text.includes("Удаление здесь является полноценным результатом"))
+  ) {
+    failures.push(`${file}: recovered product memory or clarification-before-capture boundary is missing`);
   }
   if (
     file === "docs/roadmap/0003-periodic-reflection-roadmap.md" &&
@@ -204,7 +218,8 @@ for (const file of checkedFiles) {
       !text.includes("M2. Operational Workspace convergence") ||
       !text.includes("M3. Working Memory Bridge") ||
       !text.includes("M4. Causal Period Review") ||
-      !text.includes("M5. Bounded Context Capture Probe") ||
+      !text.includes("M5. Inventory Stewardship and Inbound Clarification") ||
+      !text.includes("M6. Bounded Context Capture Probe") ||
       !text.includes("Статус: **принято 2026-07-22.**") ||
       !text.includes("Статус: **реализация готова 2026-07-22, приёмка идёт.**") ||
       !text.includes("`1/1` день с честными ревизиями") ||

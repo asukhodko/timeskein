@@ -2,13 +2,13 @@
 
 ## Status
 
-Last updated: 2026-07-22.
+Last updated: 2026-08-08.
 
 This document describes what the repository actually runs today. Target architecture and future plans remain in RFCs and roadmap documents.
 
 ## Product Evidence and Current Boundary
 
-Sixteen real workdays established that Timeskein is already a usable local
+Nineteen real workdays established that Timeskein is already a usable local
 replacement for a standalone focus timer. Daily tracking, corrections,
 captures, zones, period reports, semantic history, the causal spine, and
 Operational Reality all produced useful evidence on real work.
@@ -17,10 +17,14 @@ The remaining product boundary is now clearer:
 
 - the main cost is choosing and resuming work after transitions, not keeping a
   timer running once contact has been established;
-- the accepted Operational Workspace removes the former UI split and preserves
-  a revisable day contract across starts, breaks, and real context changes;
-- Day and Work Item Events are reportable, but an external notebook remains
-  more comfortable for long chronological reasoning and materials;
+- the accepted Operational Workspace keeps one surface while preserving the
+  semantic boundary between derived `Рабочая реальность` and the user-authored
+  `Рабочий контур`;
+- Working Memory Bridge now provides chronological entries, materials, stages,
+  revision history and deterministic Context Packs; a direct restart test proves
+  that this state survives reopening the same SQLite database, but real
+  multi-day use has not yet proved that it replaces the external task-memory
+  notebook;
 - duration is trustworthy only as evidence of contact, while confirmed change,
   evidence, decision, and next action carry progress meaning;
 - automatic context collection remains unproven and is intentionally sequenced
@@ -35,7 +39,17 @@ protocol. See
 [Operational Workspace Dogfood](dogfood-operational-workspace.md),
 [Working Memory Bridge Dogfood](dogfood-working-memory.md),
 [Dogfood Findings](dogfood-learnings.md), and
-[Roadmap 0005](roadmap/0005-causal-work-memory-roadmap.md). The future source
+[Roadmap 0005](roadmap/0005-causal-work-memory-roadmap.md). From 30 July through
+7 August, seven ordinary workdays produced `52:13:58` tracked and 104 entrances,
+including `12:18` on `ППП`, without new memory, materials, causal stop traces,
+or re-entry. This is retained as a natural pre-D0 baseline. The 8 August soft
+gate reports four active memory entries, one semantic entry, five stages, two
+stage transitions, an assigned Track, and 11 daily-result snapshots, but still
+no complete D0 baseline or re-entry. The gate requires the D0 memory entry and
+material to be recorded before that day's qualifying focus block. Ordinary use
+therefore proves runtime stability, but it is not D0 yet.
+
+The future source
 boundary is fixed in
 [ADR-0005](adr/0005-untrusted-context-and-consumer-neutral-memory.md) and
 [RFC-0010](rfc/0010-artifacts-observations-and-context-packs.md); neither is
@@ -140,6 +154,9 @@ pnpm smoke:operational-reality-api
 pnpm smoke:operational-workspace-api
 pnpm smoke:operational-workspace-gate
 pnpm smoke:operational-workspace-ui
+pnpm smoke:working-memory-api
+pnpm smoke:working-memory-cli
+pnpm smoke:working-memory-ui
 pnpm smoke:mock-api
 pnpm --filter @timeskein/desktop build
 pnpm smoke:macos-app
@@ -178,6 +195,7 @@ Runtime smoke on macOS:
 - `pnpm smoke:macos-app` also creates and re-reads a real day contract through the packaged Rust agent, while the dedicated workspace smoke tests cover validation, immutable revision chains, mock parity, gate success/failure fixtures, and primary/secondary UI boundaries
 - `pnpm smoke:macos-app` also verifies Day Event add/update/delete/list against the packaged SQLite-backed app while ensuring day notes do not interrupt the active focus session
 - `pnpm smoke:macos-app` also verifies startup normalization of legacy active Work Items, orphan active focus sessions, stale `agent.lock` / `agent.port` recovery, and migration of older `app_events` kind constraints
+- `cargo test -p timeskein-agent --test working_memory_api` writes memory, a material, an active stage, a daily outcome and a causal focus handoff, closes the first agent state, reopens the same SQLite file, and verifies the complete re-entry point and focus snapshots
 - `pnpm smoke:export-focus-day` verifies the Russian fallback Markdown export, the raw `--internal` format used by scripts, Day Events, Work Item notes, timestamped Work Item Events for touched items, and legacy focus-session schemas without Activity Zone columns, against temporary SQLite databases
 - `pnpm smoke:semantic-api` verifies hierarchical Track and Label creation, rename/archive, Work Item assignment, and taxonomy reads through the Local API; it runs as part of `pnpm smoke:mock-api`
 - `pnpm smoke:evidence-api` verifies typed evidence with a newly created Ref through the mock Local API and proves that recording the event does not stop or switch the active focus block; it runs as part of `pnpm smoke:mock-api`
@@ -234,6 +252,8 @@ Runtime smoke in browser/mock mode:
 - `pnpm smoke:mock-api` starts an isolated mock server, runs `smoke:focus-api`, `smoke:corrections-api`, `smoke:capture-api`, and `smoke:day-events-api`, and stops it
 - mock API also exposes `app_event.log`, `app_event.list`, and `app_event.summary`, including correction and correction-review telemetry counters
 - manual browser UI smoke was checked on 2026-06-30: start by typed title, switch by typed title, stop with note, Today list, totals, and dogfood report Markdown with both Work Items
+- Working Memory browser UI was visually checked on 2026-07-24 at 1280×900 and 720×900: the modal reflows to one column at reduced width, has no horizontal document overflow or overlapping controls, and the Context Pack preview remains bounded and independently scrollable; the browser console contained no errors
+- the Context Pack integration test parses the canonical JSON fenced inside Markdown and asserts exact equality with the API `pack`; the UI preview renders that same returned Markdown, while the JSON copy action serializes the same `pack`
 
 First real dogfood day:
 
@@ -523,13 +543,25 @@ The Rust agent and browser mock expose matching APIs:
   version;
 - `day_contract.list` returns immutable revisions for an arbitrary date range.
 
-The React `Рабочий контур` is mounted above the ordinary focus/day controls. It
-keeps the current contract visible after start, places Operational Reality
-grounds beside the selected direction, starts the first action, supports
-`Вернуться по договору` and honest post-break revision, and exposes history on
-demand. The old free-text dispatch form is removed from the primary path. The
-full inventory is collapsed by default, persists its disclosure choice, and is
-opened through `Дела` for search and maintenance.
+The React operational workspace is mounted above the ordinary focus/day
+controls. It exposes two views without creating competing data models:
+
+- `Рабочая реальность` shows the complete derived and correctable projection,
+  including its attention queue, grounds, unknowns and next actions;
+- `Рабочий контур` shows the current Day Contract as a user-authored lens over
+  that projection.
+
+Without a contract, Reality remains available and normal focus tracking is not
+blocked. With a contract, Contour keeps the active set visible after start,
+places Operational Reality grounds beside the selected direction, starts the
+first action, supports `Вернуться по договору` and honest post-break revision,
+and exposes history on demand. Observable drift returns attention to Contour
+when the first action is no longer actionable or tracked work appears outside
+the contract. This signal is based on stored facts; the application does not
+infer a psychological loss of control. The old free-text dispatch form is
+removed from the primary path. The full inventory is collapsed by default,
+persists its disclosure choice, and is opened through `Дела` for search and
+maintenance.
 
 The 2026-07-20 real-use pass tightened the transition path. Opening the
 contract editor without an active focus starts Coordination tracking; an
@@ -601,7 +633,18 @@ Changing either later does not rewrite a stopped or running session. Context
 Packs are deterministic projections with explicit scope, `as_of`, facts,
 unknowns, warnings, redactions, and provenance; UI, Markdown, and JSON read the
 same model. External text is kept as data and is never promoted into an
-instruction.
+instruction. Working-memory revisions, tombstones, restores, and stage events
+are projected at their exact RFC3339 time: a later edit, deletion, restore,
+rename, or stage transition does not leak into an earlier `as_of` pack.
+The daily Markdown report also aggregates time and saved daily outcomes by
+these immutable stage snapshots. If a day mixes staged and unstaged blocks,
+the latter remain visible as `Без этапа`; old databases without the snapshot
+table continue to export normally without a synthetic stage section.
+
+Duplicate merge unions refs, labels, focus history, stages, memory, events, and
+aliases. If both items currently belong to different Tracks, merge is rejected
+until the user explicitly aligns their Track; current classification is never
+discarded silently.
 
 Commands:
 
@@ -613,9 +656,27 @@ pnpm working-memory:gate -- --work-item UUID --from YYYY-MM-DD --to YYYY-MM-DD
 
 Automated coverage includes migration and restart behavior, API and mock
 parity, invalid-input atomicity, revisions and tombstones, stage and daily
-outcome snapshots, duplicate merge and alias resolution, deterministic Context
-Packs, CLI export, strict gate fixtures, and source-level UI contracts. Real
-acceptance remains pending until one long-lived Work Item is resumed through
+outcome snapshots, conflict-safe duplicate merge and alias resolution,
+historical `as_of` after later edit/delete/restore and stage transition,
+deterministic Context Packs, daily stage aggregation with a legacy-schema
+fallback, CLI export, strict gate fixtures, and source-level UI contracts.
+`working-memory:gate` interprets date boundaries as local
+calendar midnights and converts them to exact instants before querying SQLite.
+It reports an explicit experiment phase:
+`pre_d0 -> d0 -> d1 -> d4 -> d11`. A wide requested interval is never treated
+as elapsed acceptance time: the observed span starts only at the first focus
+session that has a Track, material recorded by that moment, stage snapshot,
+daily outcome, and complete `result -> state change -> next action` trace.
+Re-entry evidence before that baseline is ignored, and later returns must
+satisfy the 1-, 3-, and 7-day pauses in chronological order. A return event is
+written only after `focus.start` succeeds and references that exact
+`focus_session_id`; an already-active block, failed start, or nearby manual
+start cannot satisfy the gate. Each accepted return focus must itself end with
+a complete `result -> state change -> next action` chain. Deleted current
+memory remains auditable but is excluded from D0, semantic, material, and
+causal evidence. The final Work Item and Track Context Packs and all four
+Markdown/JSON exports must be produced after the latest accepted return.
+Real acceptance remains pending until one long-lived Work Item is resumed through
 the memory surface after distinct pauses of at least 1, 3, and 7 days without
 an external task-memory notebook.
 
@@ -765,18 +826,25 @@ On multi-monitor macOS setups, the tray/status item is controlled by the system 
 - A hidden macOS window still cannot reliably be restored through `Cmd+Tab`; the menu-bar item remains the dependable entrypoint.
 - The UI is dark-only. A light theme remains planned polish.
 - Working Memory Bridge supports manual text, URL, and file-path materials, but not binary storage or preview.
-- Operational Workspace is accepted; remaining issues are follow-up polish around contract composition context and accidental closure start. Item creation, daily outcomes, and visible WIP overflow are now available in the contract editor. The formerly ambiguous edit/re-entry buttons are one `Пересмотреть договор` action; the application records adjustment versus re-entry from the current day state.
+- Working Memory Bridge has four real write-path records, five stages, and two stage transitions on the selected Work Item. D0 still requires same-day memory and material recorded before the qualifying block and a causal stop trace; the distinct 1/3/7-day returns remain unaccepted product evidence.
+- Operational Workspace is accepted; Reality and Contour are again explicit views, but the contract editor still cannot keep the full Reality projection visible while composing. Accidental closure start also has no cancel action. Item creation, daily outcomes, and visible WIP overflow are available in the contract editor. The formerly ambiguous edit/re-entry buttons are one `Пересмотреть договор` action; the application records adjustment versus re-entry from the current day state.
 - Reflection follow-up is shown only for points with an unresolved review decision; the UI does not yet explain this eligibility or re-open the latest saved follow-up.
 - Gap explanations are stored as Day Events and can still produce competing classifications instead of a single corrected gap entity.
+- Reset-time backups exist, but verified backup, restore, transfer, and integrity checking are not yet a user-facing continuity path.
+- The current desktop workspace is intentionally dense and works best at large width. Compact desktop and future mobile clients still need separate role-based surfaces for `Сейчас`, `День`, `Работа`, `Обзор`, and `Настройки/синхронизация`.
+- Adding a missed focus block resolves an exact Work Item title or creates a new item, but the correction dialog has no searchable Work Item picker and therefore remains typo-prone.
 
 ## Next Engineering Steps
 
 The semantic-history, evidence-backed Track story, Causal Work Spine,
 Operational Reality v1, and Operational Workspace gates are accepted. Working
 Memory Bridge is implemented and is now waiting for its real 1/3/7-day
-acceptance evidence. Causal period review follows only after that gate. The bounded
-Context Capture Probe then tests whether untrusted automatic observations
-improve re-entry enough to justify their privacy and noise cost.
+acceptance evidence. Causal period review follows only after that gate.
+Inventory stewardship and inbound clarification then give captures, unknown
+items, duplicates, stale tails, and items without a next action an explicit
+fate. The bounded Context Capture Probe follows that control loop and tests
+whether untrusted automatic observations improve re-entry enough to justify
+their privacy and noise cost.
 
 After those gates, the planned capabilities are Context Fabric, explainable
 Episodes/Threads, in-app reflection and cited private intelligence,
@@ -785,6 +853,8 @@ Findings](dogfood-learnings.md), [Roadmap
 0005](roadmap/0005-causal-work-memory-roadmap.md),
 [RFC-0009](rfc/0009-causal-work-memory-and-operational-reality.md), and
 [RFC-0010](rfc/0010-artifacts-observations-and-context-packs.md) are the current
-source of direction.
+source of direction. [Product Memory and Future
+Capabilities](product-memory-and-future-capabilities.md) preserves useful
+earlier ideas without making them current commitments.
 
-Navigation polish remains backlog work unless it blocks daily trust: mixed Cyrillic/Latin search normalization such as `sync` / `сynс`, light theme, and more reliable upper/lower panel resizing.
+Navigation polish remains backlog work unless it blocks daily trust: mixed Cyrillic/Latin search normalization such as `sync` / `сynс`, light theme, and reliable `Cmd+Tab` restoration of a hidden window.

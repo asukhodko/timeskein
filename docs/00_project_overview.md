@@ -18,6 +18,7 @@
 - [RFC-0010: Артефакты, наблюдения и Context Pack](rfc/0010-artifacts-observations-and-context-packs.md)
 - [Roadmap 0005: Causal Work Memory](roadmap/0005-causal-work-memory-roadmap.md)
 - [Dogfood findings](dogfood-learnings.md)
+- [Память продукта и будущие возможности](product-memory-and-future-capabilities.md)
 - [Operational Workspace dogfood](dogfood-operational-workspace.md)
 - [User Story: Ручной инвентарь](mvp/02_user_story_manual_inventory.md)
 - [Current Implementation](current-implementation.md)
@@ -26,7 +27,7 @@
 
 ## Текущее состояние реализации
 
-По состоянию на 2026-07-17 в репозитории есть рабочий baseline для:
+По состоянию на 2026-07-28 в репозитории есть рабочий baseline для:
 
 - browser development mode: React UI + mock server;
 - macOS desktop mode: Tauri `.app` со встроенным Rust agent;
@@ -38,15 +39,18 @@
 - typed evidence и проверки последствий прежних решений Track.
 - append-only Causal Work Spine и принятой на двух реальных днях проекции
   Operational Reality;
-- release candidate Operational Workspace: item-backed договор дня, единый
-  рабочий контур, история ревизий и строгий трёхдневный gate;
+- принятого Operational Workspace: отдельные представления производной
+  Рабочей реальности и договорного Рабочего контура, item-backed договор дня,
+  история ревизий и пройденный четырёхдневный gate;
+- реализованного Working Memory Bridge: хронологическая память, материалы,
+  этапы, редакции, причинное завершение блока и Work Item/Track Context Packs;
 - обнаружения пересекающихся исторических фокус-блоков без молчаливого
   переписывания пользовательских данных.
 
 Windows packaging, Android, sync, SourceNodes, Context Capture и Evidence-Mode пока не реализованы.
 
 Актуальная техническая сводка живёт в [Current Implementation](current-implementation.md),
-а принятые выводы первых шестнадцати дней — в [Dogfood findings](dogfood-learnings.md).
+а принятые выводы первых девятнадцати дней — в [Dogfood findings](dogfood-learnings.md).
 
 ## Рабочее название и метафора
 
@@ -81,17 +85,23 @@ Observation -> Derivation -> Accepted Claim`, а UI, отчёты и разны�
 
 Маршрут строится обратным проектированием от дальней цели. Privacy,
 provenance, историческая честность и ручная коррекция проектируются до
-автоматического сбора. Operational Reality и договор дня уже сведены в
-кандидат единого рабочего контура; теперь его нужно принять на трёх реальных
-днях, после чего ручная рабочая память закроет внешний блокнот. Затем риск
-автоматического контекста проверяется bounded probe внутри ручного Focus Session, а полная
-SourceNode-платформа и Evidence Mode появляются только после доказанной пользы.
+автоматического сбора. Operational Reality и договор дня уже приняты внутри
+единого Operational Workspace, но остаются разными представлениями: реальность
+производится из фактов, контур задаётся договором. Реализованная ручная рабочая память теперь проходит
+1/3/7-дневную проверку на замену внешнего блокнота. После неё причинный обзор
+периода и обслуживание входящего должны научить систему превращать
+неразобранные фрагменты в действие, ожидание, справку, отложенное решение,
+объединение или удаление. Только затем риск автоматического контекста
+проверяется bounded probe внутри ручного Focus Session; полная
+SourceNode-платформа и Evidence Mode появляются после доказанной пользы.
 
 См. [ADR-0004](adr/0004-user-truth-and-derived-inference.md),
 [ADR-0005](adr/0005-untrusted-context-and-consumer-neutral-memory.md),
 [RFC-0009](rfc/0009-causal-work-memory-and-operational-reality.md),
 [RFC-0010](rfc/0010-artifacts-observations-and-context-packs.md) и
-[Roadmap 0005](roadmap/0005-causal-work-memory-roadmap.md).
+[Roadmap 0005](roadmap/0005-causal-work-memory-roadmap.md). Сохранённые ранние
+идеи и граница между намерением и текущим планом собраны в
+[Памяти продукта](product-memory-and-future-capabilities.md).
 
 ## Зачем это нужно
 
@@ -287,10 +297,11 @@ MVP ориентирован на одну функцию:
 ## Дальнейшее расширение (архитектурные уровни)
 
 Уровни ниже описывают способности, а не обязательную очередь. Текущий порядок
-задаёт [Roadmap 0005](roadmap/0005-causal-work-memory-roadmap.md): причинный
-стержень и Operational Reality, затем ранний bounded probe, после него
-Context Fabric, объяснимые Episodes/Threads, private intelligence и только по
-реальной потребности sync и Full Context.
+задаёт [Roadmap 0005](roadmap/0005-causal-work-memory-roadmap.md): принятые
+причинный стержень и Operational Reality, проверка Working Memory, причинный
+обзор периода, обслуживание входящего, затем bounded probe. После него
+следуют Context Fabric, объяснимые Episodes/Threads, private intelligence и
+только по реальной потребности sync и Full Context.
 
 ### Level 1: Sync
 - Синхронизация между устройствами

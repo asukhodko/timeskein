@@ -1,15 +1,23 @@
 # MVP User Stories
 
-This directory contains user stories and UX specifications for MVP features.
+This directory preserves the original user stories and UX specifications.
+They are design history and an idea reservoir, not the current implementation
+contract or delivery order. Use [Current Implementation](../current-implementation.md),
+[Roadmap 0005](../roadmap/0005-causal-work-memory-roadmap.md), and
+[opskarta](../roadmap/opskarta.md) for current status and sequence.
 
-## Implementation Order
+## Historical Implementation Order
 
-For MVP (Level 0), implement in this order:
+The original Level 0 plan used this order:
 
 1. **[02_user_story_manual_inventory.md](02_user_story_manual_inventory.md)** - Core MVP feature
 2. **[02_manual_inventory_ui_ux.md](02_manual_inventory_ui_ux.md)** - UI/UX for manual inventory
 
 Current implementation status is tracked in [../current-implementation.md](../current-implementation.md).
+Retained unscheduled ideas such as onboarding, Settings, denylist, export,
+conflict resolution, inventory grooming, SourceNode controls, and Evidence
+Mode boundaries are summarized in
+[Product Memory and Future Capabilities](../product-memory-and-future-capabilities.md).
 
 ## User Story Index
 

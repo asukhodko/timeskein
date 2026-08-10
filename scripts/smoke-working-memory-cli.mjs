@@ -28,6 +28,14 @@ try {
   assert(passed.stdout.includes("наблюдаемый период после D0: 11/7 дней"), "actual experiment span is missing");
   assert(passed.stdout.includes("возвратов после пауз 1/3/7 дней: 3/3"), "pause evidence is missing");
 
+  await sqlite("UPDATE work_memory_entries SET deleted_at = '2026-07-01T08:53:00Z' WHERE id = 'memory-n1';");
+  const preparedWithoutBaseline = await runGate();
+  assert(preparedWithoutBaseline.code === 1, "preparation without a causal D0 block unexpectedly passed gate");
+  assert(preparedWithoutBaseline.stdout.includes("запись памяти до старта D0: есть"), "prepared memory was hidden before D0 completion");
+  assert(preparedWithoutBaseline.stdout.includes("материал до старта D0: есть"), "prepared material was hidden before D0 completion");
+  assert(preparedWithoutBaseline.stdout.includes("базовый день D0: ещё не зафиксирован"), "unfinished D0 was reported as complete");
+  await sqlite("UPDATE work_memory_entries SET deleted_at = NULL WHERE id = 'memory-n1';");
+
   await sqlite(`UPDATE app_events SET payload = '{"action_id":"action-7","stage_id":"${stageTwo}","has_next_action":false}' WHERE id = 'reentry-7';`);
   const unverifiedReentry = await runGate();
   assert(unverifiedReentry.code === 1, "re-entry without a saved next action unexpectedly passed gate");
@@ -107,6 +115,16 @@ try {
   assert(failed.stdout.includes("наблюдаемый период после D0: 0/7 дней"), "requested range leaked into D0 progress");
   assert(failed.stdout.includes("возвратов после пауз 1/3/7 дней: 0/3"), "pre-D0 returns were counted");
   assert(failed.stdout.includes("До этого календарные дни и возвраты не засчитываются"), "pre-D0 guidance is missing");
+
+  await sqlite(`
+    INSERT INTO refs VALUES ('work-ref', 'url', 'https://example.test/work-item-artifact', 'https://example.test/work-item-artifact', '2026-07-01T07:48:00Z');
+    INSERT INTO work_item_refs VALUES (${sql(canonicalId)}, 'work-ref', 0, '2026-07-01T07:48:00Z');
+  `);
+  const workItemRefMaterial = await runGate();
+  assert(workItemRefMaterial.code === 0, "a Work Item reference recorded before D0 was not accepted as material");
+  assert(workItemRefMaterial.stdout.includes("материал до старта D0: есть"), "Work Item reference did not satisfy D0 preparation");
+  assert(workItemRefMaterial.stdout.includes("зарегистрированных материалов: 1/1"), "Work Item reference was not counted as a registered material");
+  await sqlite("DELETE FROM work_item_refs WHERE ref_id = 'work-ref'; DELETE FROM refs WHERE id = 'work-ref';");
 
   const preD0Json = await runGate(["--format", "json", "--soft-fail"]);
   const preD0Result = JSON.parse(preD0Json.stdout);
@@ -202,6 +220,15 @@ function schemaSql() {
   return `
     CREATE TABLE work_items (id TEXT PRIMARY KEY, title TEXT NOT NULL, deleted_at TEXT);
     CREATE TABLE work_item_tracks (work_item_id TEXT PRIMARY KEY, track_id TEXT NOT NULL);
+    CREATE TABLE refs (
+      id TEXT PRIMARY KEY, kind TEXT NOT NULL, value TEXT NOT NULL,
+      normalized_value TEXT NOT NULL, created_at TEXT NOT NULL
+    );
+    CREATE TABLE work_item_refs (
+      work_item_id TEXT NOT NULL, ref_id TEXT NOT NULL,
+      is_primary INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL,
+      PRIMARY KEY (work_item_id, ref_id)
+    );
     CREATE TABLE work_item_aliases (
       source_work_item_id TEXT PRIMARY KEY, canonical_work_item_id TEXT NOT NULL,
       source_title_snapshot TEXT, merged_at TEXT, merge_reason TEXT

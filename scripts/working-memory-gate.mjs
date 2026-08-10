@@ -26,7 +26,7 @@ try {
   const fromTs = localMidnightIso(options.from);
   const toTs = localMidnightIso(options.to);
 
-  const [memory, stages, stageEvents, sessions, appEvents, aliases] = await Promise.all([
+  const [memory, workItemRefMaterials, stages, stageEvents, sessions, appEvents, aliases] = await Promise.all([
     query(dbPath, `
       SELECT wme.id, wme.occurred_at, wme.recorded_at, wme.focus_session_id,
              wme.stage_id, wme.day_contract_revision_id, wme.provenance,
@@ -40,6 +40,16 @@ try {
         AND datetime(wme.occurred_at) >= datetime(${sql(fromTs)})
         AND datetime(wme.occurred_at) < datetime(${sql(toTs)})
       ORDER BY datetime(wme.occurred_at), wme.id;
+    `),
+    query(dbPath, `
+      SELECT wir.created_at AS occurred_at, wir.created_at AS recorded_at,
+             r.kind AS material_kind, r.value AS material_value
+      FROM work_item_refs wir
+      JOIN refs r ON r.id = wir.ref_id
+      WHERE wir.work_item_id = ${sql(canonicalId)}
+        AND datetime(wir.created_at) >= datetime(${sql(fromTs)})
+        AND datetime(wir.created_at) < datetime(${sql(toTs)})
+      ORDER BY datetime(wir.created_at), r.id;
     `),
     query(dbPath, `
       SELECT id, title, state, created_at, completed_at, deleted_at
@@ -94,7 +104,10 @@ try {
   );
   const semanticKinds = new Set(["thought", "question", "decision", "observation"]);
   const semanticEntries = activeMemory.filter((entry) => semanticKinds.has(entry.entry_kind));
-  const materials = activeMemory.filter((entry) => entry.entry_kind === "material" && entry.material_kind && entry.material_value);
+  const memoryMaterials = activeMemory.filter((entry) =>
+    entry.entry_kind === "material" && entry.material_kind && entry.material_value
+  );
+  const materials = [...memoryMaterials, ...workItemRefMaterials];
   const causalFocusIds = focusIdsWithCausalChain(activeMemory);
   const causalChains = causalFocusIds.size;
   const focusStageIds = new Set(sessions.map((session) => session.stage_id).filter(Boolean));
@@ -246,9 +259,8 @@ function evaluateD0Baseline({ sessions, memory, materials, causalFocusIds, track
   };
   if (!trackId) return result;
   for (const session of sessions) {
-    if (!session.stopped_at || !session.stage_id || !session.stage_title) continue;
+    if (!session.stage_id || !session.stage_title) continue;
     if (!session.daily_outcome || !session.day_contract_revision_id) continue;
-    if (!causalFocusIds.has(session.id)) continue;
     const startedAt = Date.parse(session.started_at);
     const sessionDate = localDateKey(session.started_at);
     if (!Number.isFinite(startedAt) || !sessionDate) continue;
@@ -264,6 +276,7 @@ function evaluateD0Baseline({ sessions, memory, materials, causalFocusIds, track
     };
     result.preparation.memory ||= preparation.memory;
     result.preparation.material ||= preparation.material;
+    if (!session.stopped_at || !causalFocusIds.has(session.id)) continue;
     if (preparation.memory && preparation.material) {
       result.baseline = session;
       return result;
@@ -458,7 +471,8 @@ async function ensureSchema(dbPath) {
     WHERE type = 'table' AND name IN (
       'work_memory_entries', 'work_memory_entry_revisions', 'work_item_stages',
       'work_item_stage_events', 'focus_session_work_snapshots', 'work_item_aliases',
-      'focus_sessions', 'app_events', 'work_items', 'work_item_tracks'
+      'focus_sessions', 'app_events', 'work_items', 'work_item_tracks',
+      'refs', 'work_item_refs'
     );
   `);
   const names = new Set(rows.map((row) => row.name));
@@ -466,6 +480,7 @@ async function ensureSchema(dbPath) {
     "work_memory_entries", "work_memory_entry_revisions", "work_item_stages",
     "work_item_stage_events", "focus_session_work_snapshots", "work_item_aliases",
     "focus_sessions", "app_events", "work_items", "work_item_tracks",
+    "refs", "work_item_refs",
   ];
   const missing = required.filter((name) => !names.has(name));
   if (missing.length > 0) {
